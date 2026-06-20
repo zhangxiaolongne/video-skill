@@ -52,6 +52,39 @@ def test_init_creates_only_stage_a_artifacts(tmp_path):
         assert not (tmp_path / relative).exists()
 
 
+def test_init_dry_run_does_not_write_project_files(tmp_path, capsys):
+    project_path = tmp_path / "project.yaml"
+    project_path.write_text(
+        (FIXTURES / "valid_project.yaml").read_text(encoding="utf-8"),
+        encoding="utf-8",
+    )
+
+    code = main(["init", "--project", str(project_path), "--dry-run", "--json"])
+    captured = capsys.readouterr()
+
+    assert code in (0, 1)
+    payload = json.loads(captured.out)
+    assert payload["project_id"] == "chen_haoyu_portrait_001"
+    assert not (tmp_path / ".artist-portrait").exists()
+    assert not (tmp_path / "output").exists()
+
+
+def test_status_before_init_reports_new(tmp_path, capsys):
+    project_path = tmp_path / "project.yaml"
+    project_path.write_text(
+        (FIXTURES / "valid_project.yaml").read_text(encoding="utf-8"),
+        encoding="utf-8",
+    )
+
+    code = main(["status", "--project", str(project_path), "--json"])
+    captured = capsys.readouterr()
+
+    assert code == 0
+    payload = json.loads(captured.out)
+    assert payload["overall_status"] == "new"
+    assert payload["state"] is None
+
+
 def test_status_after_init_json(tmp_path, capsys):
     project_path = tmp_path / "project.yaml"
     project_path.write_text(
@@ -67,3 +100,28 @@ def test_status_after_init_json(tmp_path, capsys):
     payload = json.loads(captured.out)
     assert payload["project_id"] == "chen_haoyu_portrait_001"
     assert payload["steps"]["scan"]["status"] == "pending"
+
+
+def test_repeated_init_keeps_stage_a_boundary(tmp_path):
+    project_path = tmp_path / "project.yaml"
+    project_path.write_text(
+        (FIXTURES / "valid_project.yaml").read_text(encoding="utf-8"),
+        encoding="utf-8",
+    )
+
+    assert main(["init", "--project", str(project_path), "--quiet"]) in (0, 1)
+    assert main(["init", "--project", str(project_path), "--quiet"]) in (0, 1)
+
+    forbidden = [
+        ".artist-portrait/data/sources.jsonl",
+        ".artist-portrait/data/clips.jsonl",
+        ".artist-portrait/data/transcripts.jsonl",
+        ".artist-portrait/data/relations.jsonl",
+        ".artist-portrait/data/proposals.json",
+        "output/material_map.md",
+        "output/proposals.md",
+        "output/timeline_draft.json",
+        "output/risk_report.md",
+    ]
+    for relative in forbidden:
+        assert not (tmp_path / relative).exists()

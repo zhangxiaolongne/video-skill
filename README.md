@@ -6,6 +6,18 @@ Stage A engineering foundation for the `artist-portrait-editor` skill.
 
 - [artist_portrait_editor_revision5_optimized.md](artist_portrait_editor_revision5_optimized.md)
 
+## Spec Entrypoints
+
+- [Vision](docs/VISION.md)
+- [Product Spec V0](docs/PRODUCT_SPEC_V0.md)
+- [Engineering Spec V0](docs/ENGINEERING_SPEC_V0.md)
+- [CLI Spec](docs/CLI_SPEC.md)
+- [State And Invalidation](docs/STATE_AND_INVALIDATION.md)
+- [Data Contracts](docs/DATA_CONTRACTS.md)
+- [Model Boundaries](docs/MODEL_BOUNDARIES.md)
+- [Acceptance Tests V0](docs/ACCEPTANCE_TESTS_V0.md)
+- [Non Goals](docs/NON_GOALS.md)
+
 ## Current Gate
 
 Only Phase A is allowed:
