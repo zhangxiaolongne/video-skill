@@ -7,6 +7,7 @@ from pathlib import Path
 from artist_portrait_editor.capabilities import capability_warnings, detect_capabilities
 from artist_portrait_editor.config_loader import load_project_config
 from artist_portrait_editor.constants import CACHE_DIR, DATA_DIR, RUNS_DIR, WORKSPACE_DIR
+from artist_portrait_editor.media.scanner import ScanResult, scan_project_sources, write_sources_jsonl
 from artist_portrait_editor.models.state import (
     OverallStatus,
     ProjectState,
@@ -132,3 +133,59 @@ def render_run_report(state: ProjectState, warnings: list[str]) -> str:
 
 def state_as_dict(state: ProjectState) -> dict:
     return json.loads(state.model_dump_json())
+
+
+def scan_workspace(project_path: Path) -> tuple[ScanResult, ProjectState]:
+    config = load_project_config(project_path)
+    root = project_root(project_path)
+    state = load_state(root)
+    if state is None:
+        raise RuntimeError("scan requires initialized state")
+
+    run_id = new_run_id()
+    result = scan_project_sources(root=root, config=config)
+    output_refs: list[str] = []
+    if result.records or not result.errors:
+        output_path = write_sources_jsonl(root, result.records)
+        output_refs.append(output_path.relative_to(root).as_posix())
+
+    input_fingerprint = fingerprint_file(project_path)
+    if result.errors:
+        status = StepStatus.failed
+    elif result.warnings:
+        status = StepStatus.completed_with_warnings
+    else:
+        status = StepStatus.completed
+    state.steps["scan"] = StepLedgerEntry(
+        status=status,
+        input_fingerprint=input_fingerprint,
+        output_refs=output_refs,
+        last_run_id=run_id,
+        warnings=result.warnings + result.errors,
+    )
+    state.latest_run_id = run_id
+    state.updated_at = utc_now()
+    if result.errors:
+        state.overall_status = OverallStatus.blocked
+    elif result.warnings:
+        state.overall_status = OverallStatus.degraded
+    else:
+        state.overall_status = OverallStatus.ready
+
+    runs_dir = root / WORKSPACE_DIR / RUNS_DIR / run_id
+    runs_dir.mkdir(parents=True, exist_ok=True)
+    write_json(runs_dir / "command.json", {"command": "scan", "project": str(project_path)})
+    write_json(runs_dir / "environment.json", environment_snapshot())
+    write_json(
+        runs_dir / "step_result.json",
+        {
+            "step": "scan",
+            "status": status.value,
+            "sources": len(result.records),
+        },
+    )
+    write_json(runs_dir / "warnings.json", result.warnings)
+    write_json(runs_dir / "errors.json", result.errors)
+    (runs_dir / "log.txt").write_text("scan completed\n", encoding="utf-8")
+    save_state(root, state)
+    return result, state

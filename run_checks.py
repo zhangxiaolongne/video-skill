@@ -36,7 +36,11 @@ def check_schema_drift() -> None:
     with tempfile.TemporaryDirectory(prefix="artist-portrait-schemas-") as tmp:
         tmp_path = Path(tmp)
         run([str(ARTIST_PORTRAIT), "generate-schema", "--output-dir", str(tmp_path)])
-        for name in ("project_config.schema.json", "project_state.schema.json"):
+        for name in (
+            "project_config.schema.json",
+            "project_state.schema.json",
+            "source_record.schema.json",
+        ):
             committed = ROOT / "schemas" / name
             generated = tmp_path / name
             if committed.read_text(encoding="utf-8") != generated.read_text(encoding="utf-8"):

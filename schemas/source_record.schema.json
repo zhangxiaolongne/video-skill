@@ -1,0 +1,364 @@
+{
+  "$defs": {
+    "Assertion": {
+      "additionalProperties": false,
+      "properties": {
+        "confidence": {
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Confidence",
+          "type": "number"
+        },
+        "evidence": {
+          "items": {
+            "$ref": "#/$defs/EvidenceRef"
+          },
+          "title": "Evidence",
+          "type": "array"
+        },
+        "level": {
+          "maximum": 4,
+          "minimum": 0,
+          "title": "Level",
+          "type": "integer"
+        },
+        "method": {
+          "minLength": 1,
+          "title": "Method",
+          "type": "string"
+        },
+        "user_confirmed": {
+          "default": false,
+          "title": "User Confirmed",
+          "type": "boolean"
+        },
+        "value": {
+          "anyOf": [
+            {},
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Value"
+        }
+      },
+      "required": [
+        "method",
+        "level",
+        "confidence"
+      ],
+      "title": "Assertion",
+      "type": "object"
+    },
+    "EvidenceRef": {
+      "additionalProperties": false,
+      "properties": {
+        "ref": {
+          "minLength": 1,
+          "title": "Ref",
+          "type": "string"
+        },
+        "type": {
+          "minLength": 1,
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "ref"
+      ],
+      "title": "EvidenceRef",
+      "type": "object"
+    },
+    "MediaKind": {
+      "enum": [
+        "video",
+        "audio"
+      ],
+      "title": "MediaKind",
+      "type": "string"
+    },
+    "MediaProbe": {
+      "additionalProperties": false,
+      "properties": {
+        "audio_codec": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Audio Codec"
+        },
+        "audio_present": {
+          "title": "Audio Present",
+          "type": "boolean"
+        },
+        "duration": {
+          "exclusiveMinimum": 0,
+          "title": "Duration",
+          "type": "number"
+        },
+        "frame_rate": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Frame Rate"
+        },
+        "height": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Height"
+        },
+        "video_codec": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Video Codec"
+        },
+        "width": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Width"
+        }
+      },
+      "required": [
+        "duration",
+        "audio_present"
+      ],
+      "title": "MediaProbe",
+      "type": "object"
+    },
+    "SourceRiskFlag": {
+      "enum": [
+        "unknown_provenance",
+        "low_provenance_confidence",
+        "rights_unknown",
+        "rights_restricted",
+        "decode_failed",
+        "conflicting_metadata",
+        "forbidden_by_user"
+      ],
+      "title": "SourceRiskFlag",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "candidate_values": {
+      "items": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Candidate Values",
+      "type": "array"
+    },
+    "confirmation_history": {
+      "items": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Confirmation History",
+      "type": "array"
+    },
+    "conflicts": {
+      "items": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Conflicts",
+      "type": "array"
+    },
+    "content_hash": {
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "title": "Content Hash",
+      "type": "string"
+    },
+    "forbidden_by_user": {
+      "default": false,
+      "title": "Forbidden By User",
+      "type": "boolean"
+    },
+    "locations": {
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Locations",
+      "type": "array"
+    },
+    "media_kind": {
+      "$ref": "#/$defs/MediaKind"
+    },
+    "media_probe": {
+      "$ref": "#/$defs/MediaProbe"
+    },
+    "notes": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Notes"
+    },
+    "primary_location": {
+      "minLength": 1,
+      "title": "Primary Location",
+      "type": "string"
+    },
+    "provenance_confidence": {
+      "maximum": 1.0,
+      "minimum": 0.0,
+      "title": "Provenance Confidence",
+      "type": "number"
+    },
+    "provenance_evidence": {
+      "items": {
+        "$ref": "#/$defs/EvidenceRef"
+      },
+      "title": "Provenance Evidence",
+      "type": "array"
+    },
+    "provenance_method": {
+      "minLength": 1,
+      "title": "Provenance Method",
+      "type": "string"
+    },
+    "published_date": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Assertion"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "recorded_date": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Assertion"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "rights_status": {
+      "$ref": "#/$defs/Assertion"
+    },
+    "risk_flags": {
+      "items": {
+        "$ref": "#/$defs/SourceRiskFlag"
+      },
+      "title": "Risk Flags",
+      "type": "array"
+    },
+    "role": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Assertion"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "schema_version": {
+      "default": "0.3",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "source_id": {
+      "minLength": 1,
+      "title": "Source Id",
+      "type": "string"
+    },
+    "source_type": {
+      "$ref": "#/$defs/Assertion"
+    },
+    "supersedes_source_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Supersedes Source Id"
+    },
+    "user_confirmed": {
+      "default": false,
+      "title": "User Confirmed",
+      "type": "boolean"
+    },
+    "work": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Assertion"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    }
+  },
+  "required": [
+    "source_id",
+    "locations",
+    "primary_location",
+    "content_hash",
+    "media_kind",
+    "media_probe",
+    "source_type",
+    "rights_status",
+    "provenance_confidence",
+    "provenance_method"
+  ],
+  "title": "SourceRecord",
+  "type": "object"
+}

@@ -46,6 +46,7 @@ jobs:
           artist-portrait generate-schema --output-dir /tmp/artist-portrait-schemas
           diff -u schemas/project_config.schema.json /tmp/artist-portrait-schemas/project_config.schema.json
           diff -u schemas/project_state.schema.json /tmp/artist-portrait-schemas/project_state.schema.json
+          diff -u schemas/source_record.schema.json /tmp/artist-portrait-schemas/source_record.schema.json
 
       - name: Verify Stage A gate blocks media commands
         run: |

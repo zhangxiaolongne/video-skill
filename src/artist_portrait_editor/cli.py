@@ -5,10 +5,18 @@ import json
 import sys
 from pathlib import Path
 
+from artist_portrait_editor.capabilities import detect_capabilities
 from artist_portrait_editor.config_loader import ConfigLoadError, load_project_config
 from artist_portrait_editor.exit_codes import ExitCode
+from artist_portrait_editor.media.scanner import ScanError
 from artist_portrait_editor.schemas import write_schema_files
-from artist_portrait_editor.workspace import init_workspace, load_state, project_root, state_as_dict
+from artist_portrait_editor.workspace import (
+    init_workspace,
+    load_state,
+    project_root,
+    scan_workspace,
+    state_as_dict,
+)
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -28,8 +36,13 @@ def build_parser() -> argparse.ArgumentParser:
     schema_sub = subparsers.add_parser("generate-schema")
     schema_sub.add_argument("--output-dir", default="schemas")
 
+    scan_sub = subparsers.add_parser("scan")
+    scan_sub.add_argument("--project", required=True)
+    scan_sub.add_argument("--json", action="store_true")
+    scan_sub.add_argument("--quiet", action="store_true")
+    scan_sub.add_argument("--verbose", action="store_true")
+
     for command in (
-        "scan",
         "segment",
         "transcribe",
         "analyze",
@@ -114,6 +127,54 @@ def cmd_generate_schema(args: argparse.Namespace) -> int:
     return int(ExitCode.success)
 
 
+def cmd_scan(args: argparse.Namespace) -> int:
+    if error := _validate_common_flags(args):
+        return int(error)
+    project_path = Path(args.project)
+    try:
+        load_project_config(project_path)
+    except ConfigLoadError as exc:
+        print(str(exc), file=sys.stderr)
+        return int(ExitCode.invalid_project_config)
+    state = load_state(project_root(project_path))
+    if state is None or state.steps.get("init") is None:
+        print("scan requires init to complete first", file=sys.stderr)
+        return int(ExitCode.prerequisite_step_missing)
+    capabilities = detect_capabilities()
+    missing = [
+        name
+        for name in ("ffmpeg", "ffprobe")
+        if not getattr(capabilities, name)
+    ]
+    if missing:
+        print(
+            "missing required media dependencies for scan: " + ", ".join(missing),
+            file=sys.stderr,
+        )
+        return int(ExitCode.missing_required_dependency_for_command)
+    try:
+        result, state = scan_workspace(project_path)
+    except ScanError as exc:
+        print(str(exc), file=sys.stderr)
+        return int(ExitCode.media_operation_failed)
+    payload = {
+        "sources": len(result.records),
+        "warnings": result.warnings,
+        "errors": result.errors,
+    }
+    if args.json:
+        print(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True))
+    elif not args.quiet:
+        print(f"scanned {len(result.records)} source(s)")
+        for warning in result.warnings:
+            print(f"warning: {warning}", file=sys.stderr)
+    if result.errors:
+        return int(ExitCode.media_operation_failed)
+    if result.warnings:
+        return int(ExitCode.success_with_warnings)
+    return int(ExitCode.success)
+
+
 def blocked_stage_a_command(args: argparse.Namespace) -> int:
     print(
         f"{args.command} is outside the Stage A gate and is not implemented",
@@ -138,6 +199,7 @@ def main(argv: list[str] | None = None) -> int:
         "init": cmd_init,
         "status": cmd_status,
         "generate-schema": cmd_generate_schema,
+        "scan": cmd_scan,
     }
     handler = handlers.get(args.command, blocked_stage_a_command)
     return handler(args)
