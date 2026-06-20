@@ -1,0 +1,14 @@
+.artist-portrait/
+├── cache/
+├── data/
+├── runs/
+│   └── <run_id>/
+│       ├── command.json
+│       ├── environment.json
+│       ├── errors.json
+│       ├── log.txt
+│       ├── step_result.json
+│       └── warnings.json
+└── state.json
+output/
+└── run_report.md
