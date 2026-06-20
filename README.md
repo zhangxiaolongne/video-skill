@@ -16,6 +16,7 @@ Stage A engineering foundation for the `artist-portrait-editor` skill.
 - [Data Contracts](docs/DATA_CONTRACTS.md)
 - [Model Boundaries](docs/MODEL_BOUNDARIES.md)
 - [Acceptance Tests V0](docs/ACCEPTANCE_TESTS_V0.md)
+- [Stage A Acceptance](docs/STAGE_A_ACCEPTANCE.md)
 - [Non Goals](docs/NON_GOALS.md)
 
 ## Current Gate
@@ -60,4 +61,5 @@ passes.
 
 ```bash
 .venv/bin/python -m pytest
+.venv/bin/python run_checks.py
 ```
