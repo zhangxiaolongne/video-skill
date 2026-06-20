@@ -142,6 +142,18 @@ def write_sources_jsonl(root: Path, records: list[SourceRecord]) -> Path:
     return output
 
 
+def read_sources_jsonl(path: Path) -> list[SourceRecord]:
+    records: list[SourceRecord] = []
+    for line_number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1):
+        if not line.strip():
+            continue
+        try:
+            records.append(SourceRecord.model_validate_json(line))
+        except ValueError as exc:
+            raise ScanError(f"invalid SourceRecord JSONL at line {line_number}: {exc}") from exc
+    return records
+
+
 def hash_file(path: Path) -> str:
     digest = hashlib.sha256()
     with path.open("rb") as handle:

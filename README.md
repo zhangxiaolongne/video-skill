@@ -18,6 +18,7 @@ Stage A engineering foundation for the `artist-portrait-editor` skill.
 - [Acceptance Tests V0](docs/ACCEPTANCE_TESTS_V0.md)
 - [Stage A Acceptance](docs/STAGE_A_ACCEPTANCE.md)
 - [V0-002a Media Scan](docs/V0_002A_MEDIA_SCAN.md)
+- [V0-002b Media Scan Acceptance](docs/V0_002B_MEDIA_SCAN_ACCEPTANCE.md)
 - [Non Goals](docs/NON_GOALS.md)
 
 ## Current Gate

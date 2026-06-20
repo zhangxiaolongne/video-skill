@@ -1,6 +1,7 @@
 # V0-002a Media Scan
 
-Status: in progress.
+Status: completed; superseded by `V0_002B_MEDIA_SCAN_ACCEPTANCE.md` for
+harder real-media validation.
 
 This slice starts V0-002 without entering segmentation, transcription,
 analysis, relations, material maps, proposals, timelines, or rendering.
