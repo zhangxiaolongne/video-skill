@@ -21,6 +21,18 @@ REQUIRED_BOUNDARY_TERMS = (
 )
 
 
+def load_package_policy(path: Path) -> tuple[dict[str, Any], str | None]:
+    if not path.exists():
+        return {}, None
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        return {}, f"skill-package.json is invalid JSON: {exc}"
+    if not isinstance(payload, dict):
+        return {}, "skill-package.json must contain a JSON object"
+    return payload, None
+
+
 def load_skill_frontmatter(skill_md: Path) -> tuple[dict[str, Any] | None, str, str | None]:
     if not skill_md.exists():
         return None, "", "SKILL.md not found"
@@ -63,6 +75,15 @@ def issue(*, severity: str, code: str, detail: str) -> dict[str, str]:
 def preflight(root: Path) -> dict[str, Any]:
     root = root.resolve()
     issues: list[dict[str, str]] = []
+    policy, policy_error = load_package_policy(root / "skill-package.json")
+    if policy_error:
+        issues.append(
+            issue(
+                severity="error",
+                code="package_policy_invalid",
+                detail=policy_error,
+            )
+        )
     frontmatter, skill_content, frontmatter_error = load_skill_frontmatter(root / "SKILL.md")
     skill_name = ""
     if frontmatter_error:
@@ -101,6 +122,32 @@ def preflight(root: Path) -> dict[str, Any]:
                         detail=f"required boundary term is missing: {term}",
                     )
                 )
+
+    if policy and skill_name:
+        policy_skill_name = str(policy.get("skill_name") or "").strip()
+        canonical_install_dir = str(policy.get("canonical_install_dir") or "").strip()
+        if policy_skill_name != skill_name:
+            issues.append(
+                issue(
+                    severity="error",
+                    code="package_policy_skill_name_mismatch",
+                    detail=(
+                        f"skill-package.json skill_name `{policy_skill_name}` "
+                        f"does not match SKILL.md name `{skill_name}`"
+                    ),
+                )
+            )
+        if canonical_install_dir != skill_name:
+            issues.append(
+                issue(
+                    severity="error",
+                    code="canonical_install_dir_mismatch",
+                    detail=(
+                        f"canonical install dir `{canonical_install_dir}` "
+                        f"must match skill name `{skill_name}`"
+                    ),
+                )
+            )
 
     openai_yaml = root / "agents" / "openai.yaml"
     if not openai_yaml.exists():
@@ -152,7 +199,8 @@ def preflight(root: Path) -> dict[str, Any]:
                 )
             )
         repo_name = git_remote_repo_name(root)
-        if repo_name and repo_name != skill_name:
+        distribution_repositories = set(policy.get("distribution_repositories") or [])
+        if repo_name and repo_name != skill_name and repo_name not in distribution_repositories:
             issues.append(
                 issue(
                     severity="warning",
@@ -171,6 +219,11 @@ def preflight(root: Path) -> dict[str, Any]:
         "warning_count": len(warnings),
         "issues": issues,
         "ok": not errors,
+        "package_policy": {
+            "present": bool(policy),
+            "canonical_install_dir": policy.get("canonical_install_dir") if policy else None,
+            "distribution_repositories": policy.get("distribution_repositories", []) if policy else [],
+        },
     }
 
 

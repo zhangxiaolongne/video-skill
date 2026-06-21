@@ -31,6 +31,8 @@ Current local foundation tests cover:
 - root `SKILL.md` and `agents/openai.yaml` metadata validation
 - skill package preflight with hard errors separated from known install-name
   warnings
+- skill package policy declaring `artist-portrait-editor` as canonical install
+  directory and `video-skill` as an allowed distribution repository
 
 Future segmentation, transcription, analysis, proposal, timeline, preview,
 model, and network fixtures are intentionally not implemented yet.

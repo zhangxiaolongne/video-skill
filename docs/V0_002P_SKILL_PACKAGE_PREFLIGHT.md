@@ -26,10 +26,12 @@ It distinguishes hard metadata errors from known install-name risks.
 ## Current Known Risk
 
 The skill name is `artist-portrait-editor`, while the current local folder is
-`video skill` and the GitHub repository is `video-skill`. The official quick
-validator accepts the skill, but `skill-creator` guidance recommends the folder
-name match the skill name. Treat this as a packaging/install warning to resolve
-before a final release tag.
+`video skill`. The official quick validator accepts the skill, but
+`skill-creator` guidance recommends the folder name match the skill name. Treat
+this as a packaging/install warning to resolve before a final release tag.
+
+As of V0-002q, the GitHub repository `video-skill` is declared as an allowed
+distribution repository in `skill-package.json`.
 
 ## Boundaries
 

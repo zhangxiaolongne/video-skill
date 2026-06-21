@@ -63,7 +63,7 @@ def test_skill_package_preflight_allows_only_known_name_warnings():
     payload = yaml.safe_load(result.stdout)
     assert payload["ok"] is True
     assert payload["error_count"] == 0
-    assert {issue["code"] for issue in payload["issues"]} == {
-        "folder_name_mismatch",
-        "repo_name_mismatch",
-    }
+    assert {issue["code"] for issue in payload["issues"]} == {"folder_name_mismatch"}
+    assert payload["package_policy"]["present"] is True
+    assert payload["package_policy"]["canonical_install_dir"] == "artist-portrait-editor"
+    assert payload["package_policy"]["distribution_repositories"] == ["video-skill"]

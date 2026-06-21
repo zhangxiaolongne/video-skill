@@ -80,7 +80,7 @@ def check_skill_metadata() -> None:
     payload = json.loads(preflight.stdout)
     if payload.get("error_count") != 0:
         raise SystemExit("skill package preflight reported hard errors")
-    allowed_warnings = {"folder_name_mismatch", "repo_name_mismatch"}
+    allowed_warnings = {"folder_name_mismatch"}
     warning_codes = {
         issue.get("code")
         for issue in payload.get("issues", [])
@@ -88,6 +88,9 @@ def check_skill_metadata() -> None:
     }
     if warning_codes - allowed_warnings:
         raise SystemExit(f"unexpected skill package warnings: {sorted(warning_codes)}")
+    package_policy = payload.get("package_policy") or {}
+    if package_policy.get("canonical_install_dir") != "artist-portrait-editor":
+        raise SystemExit("skill package canonical install dir is wrong")
 
 
 def write_sine_wav(path: Path, *, seconds: float = 0.25, sample_rate: int = 8000) -> None:
