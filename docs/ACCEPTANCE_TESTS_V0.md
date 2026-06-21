@@ -2,7 +2,7 @@
 
 Authoritative source: `artist_portrait_editor_revision5_optimized.md`.
 
-Current Stage A tests cover:
+Current local foundation tests cover:
 
 - valid and invalid `project.yaml`
 - fixed exit code mapping
@@ -14,5 +14,13 @@ Current Stage A tests cover:
 - `status` before and after initialization
 - repeated `init`
 - prevention of business artifact creation during Stage A
+- supported media scan and `sources.jsonl`
+- `sources.csv` import
+- rescan identity and supersedes tracking
+- minimal `map`
+- minimal `review --scope project`
+- enhanced `status --json`
+- `run_report.md` refresh after state-mutating commands
 
-Future V0 media and creative fixtures are intentionally not implemented yet.
+Future segmentation, transcription, analysis, proposal, timeline, preview,
+model, and network fixtures are intentionally not implemented yet.

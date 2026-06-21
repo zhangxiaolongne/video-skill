@@ -26,11 +26,13 @@ Stage A engineering foundation for the `artist-portrait-editor` skill.
 - [V0-002g Minimal Project Review](docs/V0_002G_MINIMAL_PROJECT_REVIEW.md)
 - [V0-002h Status Dashboard](docs/V0_002H_STATUS_DASHBOARD.md)
 - [V0-002i Run Report Refresh](docs/V0_002I_RUN_REPORT_REFRESH.md)
+- [V0-002j Foundation Checks](docs/V0_002J_FOUNDATION_CHECKS.md)
 - [Non Goals](docs/NON_GOALS.md)
 
 ## Current Gate
 
-Only Phase A is allowed:
+Current local foundation work allows deterministic project setup, source
+ledger operations, and local read-only/reporting outputs:
 
 ```text
 project.yaml
@@ -38,13 +40,16 @@ project.yaml
 -> workspace initialization
 -> capability detection
 -> status ledger
+-> source scan ledger
+-> minimal material map from sources.jsonl
+-> minimal project risk report from sources.jsonl
 -> run report
 -> fixed exit codes
 ```
 
-Implementation of media scanning, transcription, visual analysis, creative
-proposal generation, and timeline generation is explicitly out of scope until
-Phase A passes.
+Transcription, visual analysis, embeddings, creative proposal generation,
+timeline generation, preview rendering, model calls, and network search remain
+out of scope.
 
 ## Local Setup
 
@@ -53,18 +58,20 @@ python3 -m venv .venv
 .venv/bin/python -m pip install -e '.[dev]'
 ```
 
-## Stage A Commands
+## Local Foundation Commands
 
 ```bash
 .venv/bin/artist-portrait validate --project fixtures/stage_a/valid_project.yaml
 .venv/bin/artist-portrait init --project ./project.yaml
 .venv/bin/artist-portrait status --project ./project.yaml
 .venv/bin/artist-portrait generate-schema --output-dir schemas
+.venv/bin/artist-portrait scan --project ./project.yaml
+.venv/bin/artist-portrait map --project ./project.yaml
+.venv/bin/artist-portrait review --project ./project.yaml --scope project
 ```
 
-Non-Stage-A commands such as `scan`, `segment`, `transcribe`, `analyze`,
-`propose`, and `timeline` are intentionally blocked until the Stage A gate
-passes.
+Commands such as `segment`, `transcribe`, `analyze`, `relate`, `propose`,
+`timeline`, and `run` remain intentionally blocked.
 
 ## Tests
 
