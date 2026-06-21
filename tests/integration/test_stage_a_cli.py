@@ -57,6 +57,13 @@ def write_clean_source_ledger(root: Path) -> None:
     )
 
 
+def project_fixture_with_scene_detection(value: str) -> str:
+    return (FIXTURES / "valid_project.yaml").read_text(encoding="utf-8").replace(
+        "scene_detection: auto",
+        f"scene_detection: {value}",
+    )
+
+
 def test_validate_valid_project(capsys):
     code = main(["validate", "--project", str(FIXTURES / "valid_project.yaml")])
     captured = capsys.readouterr()
@@ -74,7 +81,7 @@ def test_validate_invalid_project(capsys):
 def test_init_creates_only_stage_a_artifacts(tmp_path):
     project_path = tmp_path / "project.yaml"
     project_path.write_text(
-        (FIXTURES / "valid_project.yaml").read_text(encoding="utf-8"),
+        project_fixture_with_scene_detection("off"),
         encoding="utf-8",
     )
 
@@ -399,7 +406,7 @@ def test_segment_requires_scan_first(tmp_path, capsys):
 def test_segment_writes_fixed_window_clips_and_report(tmp_path, monkeypatch, capsys):
     project_path = tmp_path / "project.yaml"
     project_path.write_text(
-        (FIXTURES / "valid_project.yaml").read_text(encoding="utf-8"),
+        project_fixture_with_scene_detection("off"),
         encoding="utf-8",
     )
     media_dir = tmp_path / "media"
@@ -465,7 +472,7 @@ def test_segment_writes_fixed_window_clips_and_report(tmp_path, monkeypatch, cap
 
     clip_report = (tmp_path / "output" / "clip_report.md").read_text(encoding="utf-8")
     assert "# Clip Report" in clip_report
-    assert "No PySceneDetect, transcription" in clip_report
+    assert "configured local segmentation method" in clip_report
     assert "- Clip count: `3`" in clip_report
     assert "fixed_window" in clip_report
 
@@ -486,6 +493,145 @@ def test_segment_writes_fixed_window_clips_and_report(tmp_path, monkeypatch, cap
     assert status_payload["summaries"]["clips"]["count"] == 3
     assert status_payload["summaries"]["clips"]["method_counts"] == {"fixed_window": 3}
     assert status_payload["artifacts"]["clip_report"]["exists"] is True
+
+
+def test_segment_auto_missing_pyscenedetect_falls_back(tmp_path, monkeypatch, capsys):
+    project_path = tmp_path / "project.yaml"
+    project_path.write_text(
+        project_fixture_with_scene_detection("auto"),
+        encoding="utf-8",
+    )
+    assert main(["init", "--project", str(project_path), "--quiet"]) in (0, 1)
+    write_clean_source_ledger(tmp_path)
+    monkeypatch.setattr(
+        workspace,
+        "detect_capabilities",
+        lambda: Capabilities(ffmpeg=True, ffprobe=True, pyscenedetect=False),
+    )
+
+    code = main(["segment", "--project", str(project_path), "--json"])
+    captured = capsys.readouterr()
+
+    assert code == 1
+    payload = json.loads(captured.out)
+    assert payload["warnings"] == [
+        "pyscenedetect_missing: using fixed_window for media/clean.mp4"
+    ]
+    clips = [
+        json.loads(line)
+        for line in (tmp_path / ".artist-portrait" / "data" / "clips.jsonl")
+        .read_text(encoding="utf-8")
+        .splitlines()
+        if line.strip()
+    ]
+    assert clips[0]["method"] == "fixed_window"
+    assert "scene_detection_fallback" in clips[0]["risk_flags"]
+
+
+def test_segment_required_missing_pyscenedetect_returns_dependency_code(
+    tmp_path,
+    monkeypatch,
+    capsys,
+):
+    project_path = tmp_path / "project.yaml"
+    project_path.write_text(
+        project_fixture_with_scene_detection("required"),
+        encoding="utf-8",
+    )
+    assert main(["init", "--project", str(project_path), "--quiet"]) in (0, 1)
+    write_clean_source_ledger(tmp_path)
+    monkeypatch.setattr(
+        workspace,
+        "detect_capabilities",
+        lambda: Capabilities(ffmpeg=True, ffprobe=True, pyscenedetect=False),
+    )
+
+    code = main(["segment", "--project", str(project_path)])
+    captured = capsys.readouterr()
+
+    assert code == 4
+    assert "scene_detection is required but PySceneDetect is not available" in captured.err
+    assert not (tmp_path / ".artist-portrait" / "data" / "clips.jsonl").exists()
+
+    code = main(["doctor", "--project", str(project_path), "--json"])
+    captured = capsys.readouterr()
+    doctor_payload = json.loads(captured.out)
+    assert code == 1
+    assert any(
+        issue["code"] == "scene_detection_required_missing"
+        for issue in doctor_payload["issues"]
+    )
+
+
+def test_segment_uses_pyscenedetect_when_available(tmp_path, monkeypatch, capsys):
+    project_path = tmp_path / "project.yaml"
+    project_path.write_text(
+        project_fixture_with_scene_detection("auto"),
+        encoding="utf-8",
+    )
+    assert main(["init", "--project", str(project_path), "--quiet"]) in (0, 1)
+    write_clean_source_ledger(tmp_path)
+    monkeypatch.setattr(
+        workspace,
+        "detect_capabilities",
+        lambda: Capabilities(ffmpeg=True, ffprobe=True, pyscenedetect=True),
+    )
+    monkeypatch.setattr(
+        workspace,
+        "detect_scenes_pyscenedetect",
+        lambda path: [(0.0, 0.75), (0.75, 2.0)],
+    )
+    monkeypatch.setattr(workspace, "pyscenedetect_version", lambda: "test")
+
+    code = main(["segment", "--project", str(project_path), "--json"])
+    captured = capsys.readouterr()
+
+    assert code == 0
+    payload = json.loads(captured.out)
+    assert payload["warnings"] == []
+    clips = [
+        json.loads(line)
+        for line in (tmp_path / ".artist-portrait" / "data" / "clips.jsonl")
+        .read_text(encoding="utf-8")
+        .splitlines()
+        if line.strip()
+    ]
+    assert [clip["method"] for clip in clips] == ["pyscenedetect", "pyscenedetect"]
+    assert [clip["method_version"] for clip in clips] == [
+        "pyscenedetect-test",
+        "pyscenedetect-test",
+    ]
+    assert [clip["boundary"]["end_seconds"] for clip in clips] == [0.75, 2.0]
+
+
+def test_segment_required_pyscenedetect_failure_returns_dependency_code(
+    tmp_path,
+    monkeypatch,
+    capsys,
+):
+    project_path = tmp_path / "project.yaml"
+    project_path.write_text(
+        project_fixture_with_scene_detection("required"),
+        encoding="utf-8",
+    )
+    assert main(["init", "--project", str(project_path), "--quiet"]) in (0, 1)
+    write_clean_source_ledger(tmp_path)
+    monkeypatch.setattr(
+        workspace,
+        "detect_capabilities",
+        lambda: Capabilities(ffmpeg=True, ffprobe=True, pyscenedetect=True),
+    )
+
+    def fail_scene_detection(path):
+        raise workspace.SceneDetectionError("synthetic failure")
+
+    monkeypatch.setattr(workspace, "detect_scenes_pyscenedetect", fail_scene_detection)
+
+    code = main(["segment", "--project", str(project_path)])
+    captured = capsys.readouterr()
+
+    assert code == 4
+    assert "scene_detection is required but PySceneDetect failed" in captured.err
 
 
 def test_map_writes_material_map_from_sources(tmp_path, monkeypatch, capsys):
@@ -1054,7 +1200,7 @@ def test_repeated_cli_scan_invalidates_segment_outputs(
 ):
     project_path = tmp_path / "project.yaml"
     project_path.write_text(
-        (FIXTURES / "valid_project.yaml").read_text(encoding="utf-8"),
+        project_fixture_with_scene_detection("off"),
         encoding="utf-8",
     )
     media_dir = tmp_path / "media"

@@ -23,12 +23,13 @@ source ledger, local content hashes, `sources.csv` metadata, and ffprobe-derived
 media facts. It is not canonical data; `sources.jsonl` remains the canonical
 source ledger.
 
-`ClipRecord` is implemented for the fixed-window segmentation foundation and is
-written as JSON Lines to `.artist-portrait/data/clips.jsonl` by `segment`.
+`ClipRecord` is implemented for the segmentation foundation and is written as
+JSON Lines to `.artist-portrait/data/clips.jsonl` by `segment`. Current method
+values are `fixed_window` and `pyscenedetect`.
 
 `output/clip_report.md` is a rebuildable report rendered from the current clip
-ledger and fixed-window segmentation output. It is not canonical data;
-`clips.jsonl` remains the canonical clip ledger.
+ledger and selected segmentation output. It is not canonical data; `clips.jsonl`
+remains the canonical clip ledger.
 
 Diagnostic issues are plain JSON objects used by `status`, `review`, and
 `doctor`. Current common fields:
@@ -51,6 +52,7 @@ Current stable diagnostic codes include:
 - `segment_pending`
 - `review_project_pending`
 - `clips_invalid`
+- `scene_detection_required_missing`
 - `segment_invalidated`
 - `map_invalidated`
 - `review_project_invalidated`

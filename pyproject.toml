@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "artist-portrait-editor"
 version = "0.1.0"
-description = "Stage A engineering foundation for the artist portrait editor skill."
+description = "Local V0 foundation for the artist portrait editor skill."
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [

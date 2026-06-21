@@ -2,7 +2,7 @@
 
 Authoritative source: `artist_portrait_editor_revision5_optimized.md`.
 
-Implemented V0-004 fixed-window segmentation foundation commands:
+Implemented V0-005 PySceneDetect scene segmentation gate commands:
 
 ```bash
 artist-portrait validate --project ./project.yaml
@@ -39,8 +39,16 @@ It reports `output_refs` and `invalidated_steps`.
 
 `segment --json` writes `.artist-portrait/data/clips.jsonl`,
 `output/clip_report.md`, run metadata, and a refreshed `output/run_report.md`.
-It uses fixed-window segmentation only and reports `output_refs` and
-`invalidated_steps`.
+It routes video segmentation through `features.scene_detection`:
+
+- `off`: deterministic fixed-window segmentation.
+- `auto`: PySceneDetect when available, fixed-window fallback with warning when
+  missing or failing.
+- `required`: PySceneDetect is mandatory; missing or failed scene detection
+  returns `4 missing_required_dependency_for_command`.
+
+Audio sources always use fixed-window segmentation. The command reports
+`output_refs`, warnings, and `invalidated_steps`.
 
 `status --json` includes the state ledger plus local artifact, source, clip,
 scan report, and clip report summaries. It also reports `artifact_issues` when
@@ -52,5 +60,7 @@ source ledger, and artifact consistency issues with `next_action` guidance and
 `recommended_commands`. It reports `segment_invalidated`, `map_invalidated`,
 and `review_project_invalidated` after newer upstream ledgers change. It reports
 `clips_invalid` when `.artist-portrait/data/clips.jsonl` cannot be parsed. It
+reports `scene_detection_required_missing` when the project requires
+PySceneDetect but the dependency is unavailable. It
 returns `1 success_with_warnings` when diagnostics find issues and `0 success`
 when no issues are found.

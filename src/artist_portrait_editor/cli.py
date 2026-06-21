@@ -11,6 +11,7 @@ from artist_portrait_editor.exit_codes import ExitCode
 from artist_portrait_editor.media.scanner import ScanError, SourceLedgerError
 from artist_portrait_editor.schemas import write_schema_files
 from artist_portrait_editor.workspace import (
+    WorkspaceDependencyError,
     WorkspacePrerequisiteError,
     doctor_project_payload,
     init_workspace,
@@ -241,6 +242,9 @@ def cmd_segment(args: argparse.Namespace) -> int:
     except WorkspacePrerequisiteError as exc:
         print(str(exc), file=sys.stderr)
         return int(ExitCode.prerequisite_step_missing)
+    except WorkspaceDependencyError as exc:
+        print(str(exc), file=sys.stderr)
+        return int(ExitCode.missing_required_dependency_for_command)
     except SourceLedgerError as exc:
         print(str(exc), file=sys.stderr)
         return int(ExitCode.output_or_reference_validation_failed)

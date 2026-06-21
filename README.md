@@ -42,13 +42,16 @@ Local V0 segmentation foundation for the `artist-portrait-editor` skill.
 - [V0-003 Release Readiness](docs/V0_003_RELEASE_READINESS.md)
 - [V0-004 Segmentation Foundation](docs/V0_004_SEGMENTATION_FOUNDATION.md)
 - [V0-004 Release Readiness](docs/V0_004_RELEASE_READINESS.md)
+- [V0-005 Scene Segmentation Gate](docs/V0_005_SCENE_SEGMENTATION_GATE.md)
+- [V0-005 Release Readiness](docs/V0_005_RELEASE_READINESS.md)
 - [Non Goals](docs/NON_GOALS.md)
 
 ## Current Gate
 
-Current V0-004 fixed-window segmentation foundation work allows deterministic
-project setup, local media scanning, fixed-window clip segmentation, source and
-clip ledger operations, and read-only/reporting outputs:
+Current V0-005 PySceneDetect scene segmentation gate work allows deterministic
+project setup, local media scanning, fixed-window clip segmentation, optional
+PySceneDetect video scene segmentation, source and clip ledger operations, and
+read-only/reporting outputs:
 
 ```text
 project.yaml
@@ -58,7 +61,7 @@ project.yaml
 -> status ledger
 -> source scan ledger
 -> scan report from sources.jsonl
--> fixed-window clip ledger
+-> fixed-window or PySceneDetect clip ledger
 -> clip report from clips.jsonl
 -> minimal material map from sources.jsonl
 -> minimal project risk report from sources.jsonl
@@ -66,10 +69,9 @@ project.yaml
 -> fixed exit codes
 ```
 
-PySceneDetect scene detection, transcription, visual analysis, embeddings,
-creative proposal generation, timeline generation, preview rendering, BGM
-selection or beat analysis, model calls, image generation/editing, and network
-search remain out of scope.
+Transcription, visual analysis, embeddings, creative proposal generation,
+timeline generation, preview rendering, BGM selection or beat analysis, model
+calls, image generation/editing, and network search remain out of scope.
 
 ## Local Setup
 
@@ -93,8 +95,8 @@ python3 -m venv .venv
 .venv/bin/artist-portrait review --project ./project.yaml --scope all
 ```
 
-Commands such as `segment`, `transcribe`, `analyze`, `relate`, `propose`,
-`timeline`, and `run` remain intentionally blocked.
+Commands such as `transcribe`, `analyze`, `relate`, `propose`, `timeline`, and
+`run` remain intentionally blocked.
 
 ## Tests
 

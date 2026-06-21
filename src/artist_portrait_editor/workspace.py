@@ -7,12 +7,18 @@ from pathlib import Path
 from artist_portrait_editor.capabilities import capability_warnings, detect_capabilities
 from artist_portrait_editor.config_loader import load_project_config
 from artist_portrait_editor.constants import CACHE_DIR, DATA_DIR, RUNS_DIR, WORKSPACE_DIR
+from artist_portrait_editor.media.scene_detection import (
+    SceneDetectionError,
+    detect_scenes_pyscenedetect,
+    pyscenedetect_version,
+)
 from artist_portrait_editor.media.scanner import (
     ScanResult,
     read_sources_jsonl,
     scan_project_sources,
     write_sources_jsonl,
 )
+from artist_portrait_editor.models.config import FeatureSwitch
 from artist_portrait_editor.models.clip import (
     ClipBoundary,
     ClipMethod,
@@ -20,13 +26,14 @@ from artist_portrait_editor.models.clip import (
     ClipRiskFlag,
 )
 from artist_portrait_editor.models.state import (
+    Capabilities,
     OverallStatus,
     ProjectState,
     StepLedgerEntry,
     StepStatus,
     initial_steps,
 )
-from artist_portrait_editor.models.source import RightsStatus, SourceRecord
+from artist_portrait_editor.models.source import MediaKind, RightsStatus, SourceRecord
 from artist_portrait_editor.run_records import (
     environment_snapshot,
     new_run_id,
@@ -36,6 +43,10 @@ from artist_portrait_editor.run_records import (
 
 
 class WorkspacePrerequisiteError(Exception):
+    pass
+
+
+class WorkspaceDependencyError(Exception):
     pass
 
 
@@ -246,6 +257,12 @@ def render_status_panel(payload: dict) -> str:
     clips = summaries.get("clips") or {}
     if clips.get("exists") and clips.get("valid", True):
         lines.append(f"clips: {clips.get('count', 0)}")
+        method_counts = clips.get("method_counts") or {}
+        if method_counts:
+            methods = ", ".join(
+                f"{method}={count}" for method, count in sorted(method_counts.items())
+            )
+            lines.append(f"clip_methods: {methods}")
     elif clips.get("exists"):
         lines.append("clips: invalid")
     else:
@@ -300,6 +317,19 @@ def doctor_project_payload(project_path: Path) -> dict:
 
     issues.extend(ledger_output_ref_issues(root, state))
     issues.extend(invalidated_step_issues(project_path, state))
+    current_capabilities = detect_capabilities()
+    if (
+        config.features.scene_detection == FeatureSwitch.required
+        and not current_capabilities.pyscenedetect
+    ):
+        issues.append(
+            workspace_issue(
+                code="scene_detection_required_missing",
+                severity="error",
+                detail="project requires PySceneDetect but it is not available",
+                next_action="install PySceneDetect or set features.scene_detection to auto/off",
+            )
+        )
     sources_path = root / WORKSPACE_DIR / DATA_DIR / "sources.jsonl"
     sources = source_summary(sources_path)
     if sources.get("valid") is False:
@@ -375,6 +405,7 @@ def doctor_project_payload(project_path: Path) -> dict:
         "issue_count": len(issues),
         "recommended_commands": recommended_commands(issues),
         "artifacts": artifact_statuses(root),
+        "capabilities_current": current_capabilities.model_dump(mode="json"),
         "summaries": {
             **status_summaries(root),
             "state": {"exists": True, "steps": len(state.steps)},
@@ -616,46 +647,192 @@ def build_fixed_window_clips(
     records: list[SourceRecord],
     sources_fingerprint: str,
     window_seconds: float = 10.0,
+    fallback: bool = False,
 ) -> list[ClipRecord]:
     clips: list[ClipRecord] = []
     for record in sorted(records, key=lambda item: item.primary_location):
-        duration = record.media_probe.duration
-        start = 0.0
-        clip_index = 0
-        while start < duration:
-            end = min(start + window_seconds, duration)
-            clip_duration = end - start
-            risk_flags: list[ClipRiskFlag] = []
-            if record.risk_flags:
-                risk_flags.append(ClipRiskFlag.inherited_source_risk)
-            if clip_duration < min(window_seconds, duration):
-                risk_flags.append(ClipRiskFlag.short_tail)
-            clips.append(
-                ClipRecord(
-                    clip_id=stable_clip_id(record.source_id, clip_index, start, end),
-                    source_id=record.source_id,
-                    source_location=record.primary_location,
-                    source_content_hash=record.content_hash,
-                    source_fingerprint=sources_fingerprint,
-                    clip_index=clip_index,
-                    media_kind=record.media_kind,
-                    boundary=ClipBoundary(
-                        start_seconds=round(start, 3),
-                        end_seconds=round(end, 3),
-                        duration_seconds=round(clip_duration, 3),
-                    ),
-                    method=ClipMethod.fixed_window,
-                    method_version="fixed-window-v1",
-                    boundary_confidence=0.5,
-                    evidence=[{"type": "source", "ref": record.source_id}],
-                    inherited_source_risk_flags=record.risk_flags,
-                    risk_flags=risk_flags,
-                    notes="deterministic fixed-window segmentation",
+        clips.extend(
+            build_fixed_window_clips_for_record(
+                record=record,
+                sources_fingerprint=sources_fingerprint,
+                window_seconds=window_seconds,
+                fallback=fallback,
+            )
+        )
+    return clips
+
+
+def build_fixed_window_clips_for_record(
+    *,
+    record: SourceRecord,
+    sources_fingerprint: str,
+    window_seconds: float = 10.0,
+    fallback: bool = False,
+) -> list[ClipRecord]:
+    clips: list[ClipRecord] = []
+    duration = record.media_probe.duration
+    start = 0.0
+    clip_index = 0
+    while start < duration:
+        end = min(start + window_seconds, duration)
+        clip_duration = end - start
+        risk_flags: list[ClipRiskFlag] = []
+        if record.risk_flags:
+            risk_flags.append(ClipRiskFlag.inherited_source_risk)
+        if fallback:
+            risk_flags.append(ClipRiskFlag.scene_detection_fallback)
+        if clip_duration < min(window_seconds, duration):
+            risk_flags.append(ClipRiskFlag.short_tail)
+        clips.append(
+            ClipRecord(
+                clip_id=stable_clip_id(record.source_id, clip_index, start, end),
+                source_id=record.source_id,
+                source_location=record.primary_location,
+                source_content_hash=record.content_hash,
+                source_fingerprint=sources_fingerprint,
+                clip_index=clip_index,
+                media_kind=record.media_kind,
+                boundary=ClipBoundary(
+                    start_seconds=round(start, 3),
+                    end_seconds=round(end, 3),
+                    duration_seconds=round(clip_duration, 3),
+                ),
+                method=ClipMethod.fixed_window,
+                method_version="fixed-window-v1",
+                boundary_confidence=0.5,
+                evidence=[{"type": "source", "ref": record.source_id}],
+                inherited_source_risk_flags=record.risk_flags,
+                risk_flags=risk_flags,
+                notes=(
+                    "deterministic fixed-window segmentation after scene detection fallback"
+                    if fallback
+                    else "deterministic fixed-window segmentation"
+                ),
+            )
+        )
+        clip_index += 1
+        start = end
+    return clips
+
+
+def build_pyscenedetect_clips_for_record(
+    *,
+    record: SourceRecord,
+    sources_fingerprint: str,
+    boundaries: list[tuple[float, float]],
+    method_version: str,
+) -> list[ClipRecord]:
+    clips: list[ClipRecord] = []
+    duration = record.media_probe.duration
+    for clip_index, (raw_start, raw_end) in enumerate(boundaries):
+        start = max(0.0, round(raw_start, 3))
+        end = min(duration, round(raw_end, 3))
+        if end <= start:
+            continue
+        clip_duration = round(end - start, 3)
+        risk_flags: list[ClipRiskFlag] = []
+        if record.risk_flags:
+            risk_flags.append(ClipRiskFlag.inherited_source_risk)
+        clips.append(
+            ClipRecord(
+                clip_id=stable_clip_id(record.source_id, clip_index, start, end),
+                source_id=record.source_id,
+                source_location=record.primary_location,
+                source_content_hash=record.content_hash,
+                source_fingerprint=sources_fingerprint,
+                clip_index=clip_index,
+                media_kind=record.media_kind,
+                boundary=ClipBoundary(
+                    start_seconds=start,
+                    end_seconds=end,
+                    duration_seconds=clip_duration,
+                ),
+                method=ClipMethod.pyscenedetect,
+                method_version=method_version,
+                boundary_confidence=0.75,
+                evidence=[
+                    {"type": "source", "ref": record.source_id},
+                    {"type": "tool", "ref": method_version},
+                ],
+                inherited_source_risk_flags=record.risk_flags,
+                risk_flags=risk_flags,
+                notes="PySceneDetect content-detector scene segmentation",
+            )
+        )
+    if not clips:
+        raise SceneDetectionError(
+            f"PySceneDetect produced no in-range scenes for {record.primary_location}"
+        )
+    return clips
+
+
+def build_segment_clips(
+    *,
+    root: Path,
+    capabilities: Capabilities,
+    scene_detection: FeatureSwitch,
+    records: list[SourceRecord],
+    sources_fingerprint: str,
+) -> tuple[list[ClipRecord], list[str]]:
+    clips: list[ClipRecord] = []
+    warnings: list[str] = []
+    method_version = f"pyscenedetect-{pyscenedetect_version()}"
+
+    for record in sorted(records, key=lambda item: item.primary_location):
+        if record.media_kind != MediaKind.video or scene_detection == FeatureSwitch.off:
+            clips.extend(
+                build_fixed_window_clips_for_record(
+                    record=record,
+                    sources_fingerprint=sources_fingerprint,
                 )
             )
-            clip_index += 1
-            start = end
-    return clips
+            continue
+
+        if not capabilities.pyscenedetect:
+            if scene_detection == FeatureSwitch.required:
+                raise WorkspaceDependencyError(
+                    "scene_detection is required but PySceneDetect is not available"
+                )
+            warnings.append(
+                "pyscenedetect_missing: using fixed_window for "
+                f"{record.primary_location}"
+            )
+            clips.extend(
+                build_fixed_window_clips_for_record(
+                    record=record,
+                    sources_fingerprint=sources_fingerprint,
+                    fallback=True,
+                )
+            )
+            continue
+
+        try:
+            boundaries = detect_scenes_pyscenedetect(root / record.primary_location)
+            clips.extend(
+                build_pyscenedetect_clips_for_record(
+                    record=record,
+                    sources_fingerprint=sources_fingerprint,
+                    boundaries=boundaries,
+                    method_version=method_version,
+                )
+            )
+        except SceneDetectionError as exc:
+            if scene_detection == FeatureSwitch.required:
+                raise WorkspaceDependencyError(
+                    f"scene_detection is required but PySceneDetect failed: {exc}"
+                ) from exc
+            warnings.append(
+                "pyscenedetect_failed_fallback: using fixed_window for "
+                f"{record.primary_location}: {exc}"
+            )
+            clips.extend(
+                build_fixed_window_clips_for_record(
+                    record=record,
+                    sources_fingerprint=sources_fingerprint,
+                    fallback=True,
+                )
+            )
+    return clips, warnings
 
 
 def invalidate_downstream_steps_for_clips(
@@ -878,11 +1055,18 @@ def segment_workspace(project_path: Path) -> tuple[Path, ProjectState, list[str]
 
     records = read_sources_jsonl(sources_path)
     sources_fingerprint = fingerprint_file(sources_path)
-    clips = build_fixed_window_clips(
+    capabilities = detect_capabilities()
+    state.capabilities = capabilities
+    clips, segmentation_warnings = build_segment_clips(
+        root=root,
+        capabilities=capabilities,
+        scene_detection=config.features.scene_detection,
         records=records,
         sources_fingerprint=sources_fingerprint,
     )
-    warnings = ["no sources available for segmentation"] if not records else []
+    warnings = segmentation_warnings
+    if not records:
+        warnings.append("no sources available for segmentation")
     run_id = new_run_id()
     output_dir = root / config.paths.output_dir
     clips_path = write_clips_jsonl(root, clips)
@@ -929,6 +1113,8 @@ def segment_workspace(project_path: Path) -> tuple[Path, ProjectState, list[str]
             "status": status.value,
             "sources": len(records),
             "clips": len(clips),
+            "scene_detection": config.features.scene_detection.value,
+            "method_counts": count_by_value(clip.method.value for clip in clips),
             "output_refs": state.steps["segment"].output_refs,
             "invalidated_steps": invalidated_steps,
         },
@@ -959,10 +1145,12 @@ def render_clip_report(
     return (
         "# Clip Report\n\n"
         "This deterministic clip report is rendered from local source ledger data "
-        "and fixed-window segmentation only. No PySceneDetect, transcription, visual "
-        "analysis, embeddings, creative proposals, timeline generation, preview "
-        "rendering, network calls, BGM selection, image generation/editing, or model "
-        "calls were performed.\n\n"
+        "and the configured local segmentation method. It may use PySceneDetect "
+        "only when `features.scene_detection` allows it and the dependency is "
+        "available; otherwise it uses fixed-window segmentation. No transcription, "
+        "visual analysis, embeddings, creative proposals, timeline generation, "
+        "preview rendering, network calls, BGM selection, image generation/editing, "
+        "or model calls were performed.\n\n"
         "## Summary\n\n"
         f"- Source ledger: `{sources_ref}`\n"
         f"- Clip ledger: `{clips_ref}`\n"

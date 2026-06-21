@@ -29,7 +29,8 @@
     },
     "ClipMethod": {
       "enum": [
-        "fixed_window"
+        "fixed_window",
+        "pyscenedetect"
       ],
       "title": "ClipMethod",
       "type": "string"
@@ -37,7 +38,8 @@
     "ClipRiskFlag": {
       "enum": [
         "short_tail",
-        "inherited_source_risk"
+        "inherited_source_risk",
+        "scene_detection_fallback"
       ],
       "title": "ClipRiskFlag",
       "type": "string"

@@ -10,11 +10,13 @@ from artist_portrait_editor.models.source import EvidenceRef, MediaKind, SourceR
 
 class ClipMethod(str, Enum):
     fixed_window = "fixed_window"
+    pyscenedetect = "pyscenedetect"
 
 
 class ClipRiskFlag(str, Enum):
     short_tail = "short_tail"
     inherited_source_risk = "inherited_source_risk"
+    scene_detection_fallback = "scene_detection_fallback"
 
 
 class ClipBoundary(BaseModel):

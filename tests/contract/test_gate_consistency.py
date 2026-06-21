@@ -4,7 +4,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 
 
-def test_current_gate_is_fixed_window_segmentation_foundation_across_primary_docs():
+def test_current_gate_is_scene_segmentation_gate_across_primary_docs():
     agents = (ROOT / "AGENTS.md").read_text(encoding="utf-8")
     master = (ROOT / "artist_portrait_editor_revision5_optimized.md").read_text(
         encoding="utf-8"
@@ -12,16 +12,16 @@ def test_current_gate_is_fixed_window_segmentation_foundation_across_primary_doc
     readme = (ROOT / "README.md").read_text(encoding="utf-8")
     vision = (ROOT / "docs" / "VISION.md").read_text(encoding="utf-8")
     progress = (ROOT / "docs" / "DEVELOPMENT_PROGRESS.md").read_text(encoding="utf-8")
-    v004 = (ROOT / "docs" / "V0_004_SEGMENTATION_FOUNDATION.md").read_text(
+    v005 = (ROOT / "docs" / "V0_005_SCENE_SEGMENTATION_GATE.md").read_text(
         encoding="utf-8"
     )
 
-    assert "Current gate: V0-004 fixed-window segmentation foundation only." in agents
-    assert "V0-004 固定窗口切分基础" in master
-    assert "Current V0-004 fixed-window segmentation foundation work" in readme
-    assert "Current implementation gate: V0-004 fixed-window segmentation foundation only." in vision
-    assert "Current local gate: V0-004 fixed-window segmentation foundation only" in progress
-    assert "V0-004 opens deterministic fixed-window segmentation only" in v004
+    assert "Current gate: V0-005 PySceneDetect scene segmentation gate only." in agents
+    assert "V0-005 PySceneDetect 场景切分闸门" in master
+    assert "Current V0-005 PySceneDetect scene segmentation gate work" in readme
+    assert "Current implementation gate: V0-005 PySceneDetect scene segmentation gate only." in vision
+    assert "Current local gate: V0-005 PySceneDetect scene segmentation gate only" in progress
+    assert "V0-005 opens optional PySceneDetect scene segmentation" in v005
 
 
 def test_current_gate_forbids_future_media_and_creative_surfaces():
@@ -29,13 +29,12 @@ def test_current_gate_forbids_future_media_and_creative_surfaces():
         [
             (ROOT / "AGENTS.md").read_text(encoding="utf-8"),
             (ROOT / "SKILL.md").read_text(encoding="utf-8"),
-            (ROOT / "docs" / "V0_004_SEGMENTATION_FOUNDATION.md").read_text(
+            (ROOT / "docs" / "V0_005_SCENE_SEGMENTATION_GATE.md").read_text(
                 encoding="utf-8"
             ),
         ]
     )
 
-    assert "PySceneDetect" in docs
     assert "Whisper" in docs
     assert "OpenCV" in docs
     assert "BGM selection" in docs
@@ -80,3 +79,16 @@ def test_v004_release_readiness_records_scope():
     assert "canonical `.artist-portrait/data/clips.jsonl`" in content
     assert "pytest: 79 passed, 1 skipped" in content
     assert "run_checks.py: checks passed" in content
+
+
+def test_v005_release_readiness_records_scope():
+    content = (ROOT / "docs" / "V0_005_RELEASE_READINESS.md").read_text(
+        encoding="utf-8"
+    )
+
+    assert "Status: completed locally, ready to push, not tagged." in content
+    assert "`features.scene_detection` routing" in content
+    assert "Optional PySceneDetect adapter" in content
+    assert "`pyscenedetect` clip method" in content
+    assert "pytest:" in content
+    assert "run_checks.py:" in content

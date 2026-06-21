@@ -1,6 +1,6 @@
 ---
 name: artist-portrait-editor
-description: Deterministic local workflow for preparing and auditing artist portrait video-editing projects. Use when Codex needs to validate an artist portrait project config, initialize local workspace state, scan local media into a source ledger and scan report, segment sources into a fixed-window clip ledger and clip report, generate a material map, run project risk review, diagnose workspace issues, or preserve the boundary before any scene detection, transcription, visual analysis, BGM selection, proposal generation, timeline generation, preview rendering, model calls, image generation/editing, or network search.
+description: Deterministic local workflow for preparing and auditing artist portrait video-editing projects. Use when Codex needs to validate an artist portrait project config, initialize local workspace state, scan local media into a source ledger and scan report, segment sources into a fixed-window or PySceneDetect-gated clip ledger and clip report, generate a material map, run project risk review, diagnose workspace issues, or preserve the boundary before transcription, visual analysis, BGM selection, proposal generation, timeline generation, preview rendering, model calls, image generation/editing, or network search.
 ---
 
 # Artist Portrait Editor
@@ -47,7 +47,11 @@ artist portrait project preparation and audit work.
    ```
 
    `segment` writes `.artist-portrait/data/clips.jsonl` and
-   `output/clip_report.md` using fixed-window segmentation only.
+   `output/clip_report.md`. Videos use `features.scene_detection`:
+   `off` keeps fixed-window segmentation, `auto` uses PySceneDetect when
+   available and falls back to fixed-window with a warning, and `required`
+   fails with exit code 4 when PySceneDetect is missing or fails. Audio always
+   uses fixed-window segmentation.
 
 6. Use `review --scope all` only as a shallow aggregate. It runs project review
    and marks proposal/timeline review as skipped; it does not implement those
@@ -67,6 +71,8 @@ artist portrait project preparation and audit work.
   the source ledger.
 - Treat `clips_invalid` as a stop condition until `.artist-portrait/data/clips.jsonl`
   is fixed or regenerated.
+- Treat `scene_detection_required_missing` as a dependency stop condition:
+  install PySceneDetect or change `features.scene_detection` to `auto`/`off`.
 
 ## Hard Boundaries
 
@@ -75,7 +81,6 @@ gate. A later validated gate may use mature third-party tools, installed Codex
 skills, plugins, search, image generation/editing tools, models, or media
 libraries instead of rebuilding those capabilities from scratch:
 
-- PySceneDetect or scene-detection segmentation
 - transcription or Whisper
 - OpenCV or vision analysis
 - embeddings

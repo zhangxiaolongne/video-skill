@@ -41,11 +41,16 @@ Current local foundation tests cover:
 - downstream `map` and `review_project` invalidation after source ledger changes
 - committed clip record schema
 - deterministic fixed-window `segment`
+- optional PySceneDetect scene segmentation routing for `off`, `auto`, and
+  `required`
+- fixed-window fallback when `scene_detection: auto` lacks or fails
+  PySceneDetect
+- dependency exit code when `scene_detection: required` lacks or fails
+  PySceneDetect
 - canonical `clips.jsonl`
 - rebuildable `clip_report.md`
 - status and doctor visibility for clip ledgers and clip reports
 - downstream invalidation after source or clip ledger changes
 
-Future scene-detection segmentation, transcription, analysis, proposal,
-timeline, preview, model, BGM, image generation/editing, and network fixtures
-are intentionally not implemented yet.
+Future transcription, analysis, proposal, timeline, preview, model, BGM, image
+generation/editing, and network fixtures are intentionally not implemented yet.

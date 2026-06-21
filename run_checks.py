@@ -113,30 +113,30 @@ def check_gate_consistency() -> None:
         "master": ROOT / "artist_portrait_editor_revision5_optimized.md",
         "README.md": ROOT / "README.md",
         "DEVELOPMENT_PROGRESS.md": ROOT / "docs" / "DEVELOPMENT_PROGRESS.md",
-        "V0_004_SEGMENTATION_FOUNDATION.md": ROOT
+        "V0_005_SCENE_SEGMENTATION_GATE.md": ROOT
         / "docs"
-        / "V0_004_SEGMENTATION_FOUNDATION.md",
+        / "V0_005_SCENE_SEGMENTATION_GATE.md",
     }
     content = {name: path.read_text(encoding="utf-8") for name, path in docs.items()}
     if (
-        "Current gate: V0-004 fixed-window segmentation foundation only."
+        "Current gate: V0-005 PySceneDetect scene segmentation gate only."
         not in content["AGENTS.md"]
     ):
-        raise SystemExit("AGENTS.md current gate is not V0-004 segmentation foundation")
-    if "V0-004 固定窗口切分基础" not in content["master"]:
-        raise SystemExit("master document current gate is not V0-004 segmentation foundation")
-    if "Current V0-004 fixed-window segmentation foundation work" not in content["README.md"]:
-        raise SystemExit("README current gate is not V0-004 segmentation foundation")
+        raise SystemExit("AGENTS.md current gate is not V0-005 scene segmentation gate")
+    if "V0-005 PySceneDetect 场景切分闸门" not in content["master"]:
+        raise SystemExit("master document current gate is not V0-005 scene segmentation gate")
+    if "Current V0-005 PySceneDetect scene segmentation gate work" not in content["README.md"]:
+        raise SystemExit("README current gate is not V0-005 scene segmentation gate")
     if (
-        "Current local gate: V0-004 fixed-window segmentation foundation only"
+        "Current local gate: V0-005 PySceneDetect scene segmentation gate only"
         not in content["DEVELOPMENT_PROGRESS.md"]
     ):
         raise SystemExit("development progress current gate is stale")
     if (
-        "V0-004 opens deterministic fixed-window segmentation only"
-        not in content["V0_004_SEGMENTATION_FOUNDATION.md"]
+        "V0-005 opens optional PySceneDetect scene segmentation"
+        not in content["V0_005_SCENE_SEGMENTATION_GATE.md"]
     ):
-        raise SystemExit("V0-004 segmentation foundation doc is missing active gate")
+        raise SystemExit("V0-005 scene segmentation gate doc is missing active gate")
 
 
 def write_sine_wav(path: Path, *, seconds: float = 0.25, sample_rate: int = 8000) -> None:
@@ -158,10 +158,11 @@ def check_real_scan_if_available() -> None:
         tmp_path = Path(tmp)
         (tmp_path / "media").mkdir()
         project = tmp_path / "project.yaml"
+        project_text = (ROOT / "fixtures" / "stage_a" / "valid_project.yaml").read_text(
+            encoding="utf-8"
+        )
         project.write_text(
-            (ROOT / "fixtures" / "stage_a" / "valid_project.yaml").read_text(
-                encoding="utf-8"
-            ),
+            project_text.replace("scene_detection: auto", "scene_detection: off"),
             encoding="utf-8",
         )
         write_sine_wav(tmp_path / "media" / "tone.wav")
@@ -305,10 +306,11 @@ def check_local_foundation_outputs() -> None:
         tmp_path = Path(tmp)
         (tmp_path / "media").mkdir()
         project = tmp_path / "project.yaml"
+        project_text = (ROOT / "fixtures" / "stage_a" / "valid_project.yaml").read_text(
+            encoding="utf-8"
+        )
         project.write_text(
-            (ROOT / "fixtures" / "stage_a" / "valid_project.yaml").read_text(
-                encoding="utf-8"
-            ),
+            project_text.replace("scene_detection: auto", "scene_detection: off"),
             encoding="utf-8",
         )
         run(

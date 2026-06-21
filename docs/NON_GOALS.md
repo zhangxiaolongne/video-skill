@@ -14,7 +14,7 @@ V0 does not aim to provide:
 - automatic publishing
 - commercial rights guarantees
 
-The current V0-004 gate additionally forbids scene-detection segmentation,
-transcription, visual analysis, BGM selection, creative proposals, timeline
-generation, preview rendering, model calls, image generation/editing, and
-network search.
+The current V0-005 gate allows only bounded PySceneDetect scene segmentation.
+It still forbids transcription, visual analysis, BGM selection, creative
+proposals, timeline generation, preview rendering, model calls, image
+generation/editing, and network search.

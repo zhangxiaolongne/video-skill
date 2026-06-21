@@ -5,7 +5,7 @@
 > **工作名称**：`artist-portrait-editor`  
 > **中文名称**：人物向剪辑导演 / 艺人肖像剪辑 Skill  
 > **适用范围**：产品愿景、V0 产品规格、V0 工程规格  
-> **当前开发闸门**：V0-004 固定窗口切分基础。阶段 A 与 V0-003 已作为工程与媒体扫描基础验收；当前只允许确定性本地媒体扫描、哈希、ffprobe、`sources.jsonl`、`scan_report.md`、固定窗口 `segment`、`clips.jsonl`、`clip_report.md`、素材地图、项目风险报告、状态诊断和下游产物失效标记。不得实现 PySceneDetect 场景检测、转写、视觉分析、BGM 选择、创作提案、时间线生成或预览渲染。
+> **当前开发闸门**：V0-005 PySceneDetect 场景切分闸门。阶段 A、V0-003 与 V0-004 已作为工程、媒体扫描与固定窗口切分基础验收；当前只允许确定性本地媒体扫描、哈希、ffprobe、`sources.jsonl`、`scan_report.md`、固定窗口 `segment`、受 `features.scene_detection` 控制的 PySceneDetect 视频场景切分、`clips.jsonl`、`clip_report.md`、素材地图、项目风险报告、状态诊断和下游产物失效标记。不得实现转写、视觉分析、BGM 选择、创作提案、时间线生成或预览渲染。
 
 ---
 
@@ -51,7 +51,7 @@ docs/DEVELOPMENT_PROGRESS.md
 - 不重复造轮子；优先复用成熟工具，再补本项目特有的数据契约、证据链、审查和降级逻辑。
 - 第三方结果不得直接冒充 canonical truth，必须记录来源、输入、输出、置信度、失败模式和可复验路径。
 - 使用第三方模型或联网能力时，必须由对应 gate、配置开关和 review 规则控制。
-- 当前 V0-004 fixed-window segmentation foundation 仍保持本地、确定性、无模型调用、无联网、无 image generation / editing 调用。
+- 当前 V0-005 PySceneDetect scene segmentation gate 仍保持本地、无模型调用、无联网、无 image generation / editing 调用；PySceneDetect 只作为本地视频场景边界工具使用。
 
 # 0. 执行摘要
 
@@ -70,7 +70,7 @@ V0 分为两个模式：
 - `core_mode`：不依赖文本生成模型或视觉模型，负责确定性媒体处理、canonical 数据、风险规则和素材结构报告。
 - `creative_mode`：在 `core_mode` 证据基础上，生成三套可回溯创作提案，并在用户选择后生成时间线草案。
 
-阶段 A 已完成基础工程验收，V0-003 已完成媒体扫描基础。当前允许实现 V0-004 固定窗口切分基础：
+阶段 A 已完成基础工程验收，V0-003 已完成媒体扫描基础，V0-004 已完成固定窗口切分基础。当前允许实现 V0-005 PySceneDetect 场景切分闸门：
 
 ```text
 project.yaml
@@ -86,6 +86,7 @@ project.yaml
 → sources.jsonl
 → scan_report.md
 → 固定窗口 segment
+→ PySceneDetect scene segment（受配置门控）
 → clips.jsonl
 → clip_report.md
 → material_map.md
@@ -93,10 +94,9 @@ project.yaml
 → doctor/status 诊断
 ```
 
-当前 V0-004 禁止实现：
+当前 V0-005 禁止实现：
 
 ```text
-PySceneDetect 场景检测
 Whisper
 OpenCV
 Embedding
@@ -1928,11 +1928,24 @@ project.yaml
 - invalid `clips.jsonl` 可被 `status` / `doctor` 检出。
 - `scan` 更新 source ledger 后，旧 segment/map/review 状态可被 invalidated。
 
-## 16.5 V0-005：场景检测切分增强
+## 16.5 V0-005：PySceneDetect 场景切分闸门
 
-- 视频优先 PySceneDetect，缺失时固定窗口。
+- 视频受 `features.scene_detection` 控制：
+  - `off`：只使用固定窗口。
+  - `auto`：有 PySceneDetect 时使用场景切分，缺失或失败时固定窗口并警告。
+  - `required`：PySceneDetect 缺失或失败时命令失败。
 - 音频继续使用固定窗口，直到转写 gate 打开。
-- 记录场景检测工具版本、失败模式和降级路径。
+- 记录场景检测工具版本、失败模式、降级路径和 `ClipMethod`。
+- PySceneDetect 输出只作为本地工具边界证据，不构成视觉理解、创意判断、BGM 策略或时间线决策。
+- 仍不得执行 Whisper、OpenCV、模型调用、联网搜索、image generation/editing、BGM 选择、创作提案、时间线或预览。
+
+验收：
+
+- `scene_detection: off` 稳定生成 `fixed_window` clips。
+- `scene_detection: auto` 且缺少 PySceneDetect 时固定窗口回退并写入 warning。
+- `scene_detection: auto` 且 PySceneDetect 可用时生成 `pyscenedetect` clips。
+- `scene_detection: required` 且缺少或失败时返回固定依赖错误。
+- `status` / `doctor` / `clip_report.md` 能暴露方法、回退或依赖问题。
 
 ## 16.6 V0-006：转写
 

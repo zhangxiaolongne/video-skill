@@ -3,7 +3,7 @@
 Follow `artist_portrait_editor_revision5_optimized.md` as the governing V0
 engineering-freeze document.
 
-Current gate: V0-004 fixed-window segmentation foundation only.
+Current gate: V0-005 PySceneDetect scene segmentation gate only.
 
 Allowed:
 
@@ -19,6 +19,10 @@ Allowed:
 - source identity, moved-file, duplicate-file, and supersedes tracking
 - downstream artifact invalidation when `sources.jsonl` changes
 - deterministic fixed-window `segment`
+- optional PySceneDetect scene segmentation for video only when
+  `features.scene_detection` is `auto` or `required`
+- fixed-window fallback when `features.scene_detection: auto` and PySceneDetect
+  is missing or fails
 - canonical `clips.jsonl`
 - deterministic `clip_report.md`
 - downstream artifact invalidation when `clips.jsonl` changes
@@ -40,7 +44,6 @@ Forbidden before the next gate explicitly opens:
 - OpenCV analysis
 - embeddings
 - vision models
-- PySceneDetect or scene-detection segmentation
 - creative proposals
 - timeline generation
 - preview rendering
