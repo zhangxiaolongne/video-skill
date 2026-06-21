@@ -73,6 +73,23 @@ Do not implement these until the relevant gate is explicitly opened and tested:
 
 ## Non-Negotiable Future Constraints
 
+### Prefer Mature Third-Party Tools
+
+Future implementation batches may use third-party tools directly when the gate
+allows it. Do not rebuild capabilities that stable tools, installed Codex
+skills, plugins, search, image generation/editing tools, OpenAI models, ffmpeg,
+ffprobe, PySceneDetect, Whisper, OpenCV, or similar libraries already provide.
+
+Tactical rule for future batches:
+
+- check available tools, skills, plugins, and libraries before implementing a
+  capability from scratch
+- use third-party outputs as evidence with provenance, not unreviewed truth
+- keep config gates, failure modes, and review rules around every non-local or
+  model-backed capability
+- keep current Stage A local and deterministic until a later gate explicitly
+  opens third-party/model/network/image use
+
 ### BGM Is Part Of Editing Logic
 
 BGM must not be treated as a final decorative layer. Different video outputs

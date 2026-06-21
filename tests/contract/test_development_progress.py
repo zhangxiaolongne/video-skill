@@ -27,3 +27,18 @@ def test_master_and_development_docs_have_distinct_roles():
     assert "BGM 不是最后装饰层，而是视听结构的一部分" in master
     assert "The master document" in progress
     assert "This development document owns tactics" in progress
+
+
+def test_third_party_tool_policy_is_recorded():
+    master = (ROOT / "artist_portrait_editor_revision5_optimized.md").read_text(
+        encoding="utf-8"
+    )
+    progress = (ROOT / "docs" / "DEVELOPMENT_PROGRESS.md").read_text(encoding="utf-8")
+    skill = (ROOT / "SKILL.md").read_text(encoding="utf-8")
+
+    assert "第三方能力复用原则" in master
+    assert "不重复造轮子" in master
+    assert "公开素材场景下，第三方工具调用不是默认禁区" in master
+    assert "Prefer Mature Third-Party Tools" in progress
+    assert "check available tools, skills, plugins, and libraries" in progress
+    assert "later validated gate may use mature third-party tools" in skill

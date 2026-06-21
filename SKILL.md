@@ -57,8 +57,10 @@ artist portrait project preparation and audit work.
 
 ## Hard Boundaries
 
-Do not perform these actions through this skill unless the repository explicitly
-implements and validates them in a later gate:
+Do not perform these actions through this skill in the current local foundation
+gate. A later validated gate may use mature third-party tools, installed Codex
+skills, plugins, search, image generation/editing tools, models, or media
+libraries instead of rebuilding those capabilities from scratch:
 
 - media segmentation
 - transcription or Whisper
@@ -71,4 +73,4 @@ implements and validates them in a later gate:
 - network search
 - image generation or image editing
 
-Keep all current outputs local and deterministic.
+Keep all current foundation outputs local and deterministic.
