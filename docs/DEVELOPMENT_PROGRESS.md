@@ -55,6 +55,7 @@ When a user requirement changes long-term product behavior, update both files:
 - V0-002o: root `SKILL.md` and `agents/openai.yaml` metadata.
 - V0-002p: skill package preflight.
 - V0-002q: skill package policy.
+- V0-002r: canonical install simulation.
 
 ## Current Hard Boundaries
 
@@ -121,7 +122,6 @@ carried into the future proposal, timeline, review, and preview gates.
 
 ## Next Likely Batch
 
-V0-002r should simulate canonical installation by copying the repository to a
-temporary `artist-portrait-editor/` folder and running skill validation and
-package preflight there. The target result is zero package preflight warnings in
-the simulated install shape.
+V0-002s should prepare the local batch for a larger release point: review all
+unpushed commits, decide whether to tag, and push only after the current local
+foundation and skill packaging checks are still green.

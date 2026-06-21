@@ -26,6 +26,7 @@ QUICK_VALIDATE = (
     / "quick_validate.py"
 )
 PACKAGE_PREFLIGHT = ROOT / "scripts" / "skill_package_preflight.py"
+SIMULATE_INSTALL = ROOT / "scripts" / "simulate_skill_install.py"
 
 
 def run(command: list[str], *, expect: int | tuple[int, ...] = 0) -> None:
@@ -91,6 +92,18 @@ def check_skill_metadata() -> None:
     package_policy = payload.get("package_policy") or {}
     if package_policy.get("canonical_install_dir") != "artist-portrait-editor":
         raise SystemExit("skill package canonical install dir is wrong")
+    install = subprocess.run(
+        [str(PYTHON), str(SIMULATE_INSTALL), str(ROOT), "--json"],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+    )
+    if install.returncode != 0:
+        raise SystemExit(f"canonical install simulation failed: {install.stdout}")
+    install_payload = json.loads(install.stdout)
+    install_preflight = install_payload.get("package_preflight") or {}
+    if install_preflight.get("warning_count") != 0:
+        raise SystemExit("canonical install simulation has package warnings")
 
 
 def write_sine_wav(path: Path, *, seconds: float = 0.25, sample_rate: int = 8000) -> None:

@@ -17,6 +17,7 @@ QUICK_VALIDATE = (
     / "quick_validate.py"
 )
 PACKAGE_PREFLIGHT = ROOT / "scripts" / "skill_package_preflight.py"
+SIMULATE_INSTALL = ROOT / "scripts" / "simulate_skill_install.py"
 
 
 def test_skill_metadata_is_valid():
@@ -67,3 +68,19 @@ def test_skill_package_preflight_allows_only_known_name_warnings():
     assert payload["package_policy"]["present"] is True
     assert payload["package_policy"]["canonical_install_dir"] == "artist-portrait-editor"
     assert payload["package_policy"]["distribution_repositories"] == ["video-skill"]
+
+
+def test_canonical_install_simulation_has_no_package_warnings():
+    result = subprocess.run(
+        [sys.executable, str(SIMULATE_INSTALL), str(ROOT), "--json"],
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    payload = yaml.safe_load(result.stdout)
+    assert payload["ok"] is True
+    assert payload["canonical_dir"] == "artist-portrait-editor"
+    assert payload["quick_validate"]["returncode"] == 0
+    assert payload["package_preflight"]["error_count"] == 0
+    assert payload["package_preflight"]["warning_count"] == 0
