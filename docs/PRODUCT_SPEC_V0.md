@@ -9,8 +9,9 @@ V0 has two future modes:
 - `creative_mode`: evidence-grounded proposals and timeline drafts after valid
   `core_mode` data exists.
 
-Current repository implementation must not enter either media or creative
-capability yet. The only allowed work is Stage A:
+Current repository implementation has entered deterministic core-mode
+foundation work only. The active gate is V0-004 fixed-window segmentation
+foundation:
 
 ```text
 project.yaml
@@ -18,9 +19,17 @@ project.yaml
 -> workspace initialization
 -> capability detection
 -> status ledger
+-> source scan ledger
+-> scan report
+-> fixed-window clip ledger
+-> clip report
+-> minimal material map
+-> minimal project risk report
 -> run report
 -> fixed exit codes
 ```
 
-Before Stage A passes, do not implement scanning, transcription, visual
-analysis, proposal generation, timeline generation, or preview rendering.
+Do not implement scene-detection segmentation, transcription, visual analysis,
+proposal generation, timeline generation, preview rendering, BGM selection,
+model calls, image generation/editing, or network search until a later gate
+explicitly opens them.

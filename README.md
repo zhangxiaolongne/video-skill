@@ -1,6 +1,6 @@
 # artist-portrait-editor
 
-Local V0 media-scan foundation for the `artist-portrait-editor` skill.
+Local V0 segmentation foundation for the `artist-portrait-editor` skill.
 
 ## Master Document
 
@@ -40,12 +40,15 @@ Local V0 media-scan foundation for the `artist-portrait-editor` skill.
 - [V0-002s Release Readiness](docs/V0_002S_RELEASE_READINESS.md)
 - [V0-003 Media Scan Foundation](docs/V0_003_MEDIA_SCAN_FOUNDATION.md)
 - [V0-003 Release Readiness](docs/V0_003_RELEASE_READINESS.md)
+- [V0-004 Segmentation Foundation](docs/V0_004_SEGMENTATION_FOUNDATION.md)
+- [V0-004 Release Readiness](docs/V0_004_RELEASE_READINESS.md)
 - [Non Goals](docs/NON_GOALS.md)
 
 ## Current Gate
 
-Current V0-003 media scan foundation work allows deterministic project setup,
-local media scanning, source ledger operations, and read-only/reporting outputs:
+Current V0-004 fixed-window segmentation foundation work allows deterministic
+project setup, local media scanning, fixed-window clip segmentation, source and
+clip ledger operations, and read-only/reporting outputs:
 
 ```text
 project.yaml
@@ -55,15 +58,18 @@ project.yaml
 -> status ledger
 -> source scan ledger
 -> scan report from sources.jsonl
+-> fixed-window clip ledger
+-> clip report from clips.jsonl
 -> minimal material map from sources.jsonl
 -> minimal project risk report from sources.jsonl
 -> run report
 -> fixed exit codes
 ```
 
-Transcription, visual analysis, embeddings, creative proposal generation,
-timeline generation, preview rendering, BGM selection or beat analysis, model
-calls, image generation/editing, and network search remain out of scope.
+PySceneDetect scene detection, transcription, visual analysis, embeddings,
+creative proposal generation, timeline generation, preview rendering, BGM
+selection or beat analysis, model calls, image generation/editing, and network
+search remain out of scope.
 
 ## Local Setup
 
@@ -81,6 +87,7 @@ python3 -m venv .venv
 .venv/bin/artist-portrait doctor --project ./project.yaml
 .venv/bin/artist-portrait generate-schema --output-dir schemas
 .venv/bin/artist-portrait scan --project ./project.yaml
+.venv/bin/artist-portrait segment --project ./project.yaml
 .venv/bin/artist-portrait map --project ./project.yaml
 .venv/bin/artist-portrait review --project ./project.yaml --scope project
 .venv/bin/artist-portrait review --project ./project.yaml --scope all

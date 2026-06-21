@@ -14,6 +14,7 @@ BUSINESS_ARTIFACTS = {
     ".artist-portrait/data/relations.jsonl",
     ".artist-portrait/data/proposals.json",
     "output/scan_report.md",
+    "output/clip_report.md",
     "output/material_map.md",
     "output/proposals.md",
     "output/timeline_draft.json",

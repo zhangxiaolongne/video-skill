@@ -19,4 +19,4 @@ research materials
 V0 success is not one-click finished video. V0 should first become a reliable
 material researcher and explainable editing planner.
 
-Current implementation gate: Stage A only.
+Current implementation gate: V0-004 fixed-window segmentation foundation only.

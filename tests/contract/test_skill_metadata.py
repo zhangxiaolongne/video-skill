@@ -41,10 +41,12 @@ def test_skill_frontmatter_and_boundaries():
     assert "network search" in frontmatter["description"]
     assert "model calls" in frontmatter["description"]
     assert "scan report" in frontmatter["description"]
+    assert "fixed-window clip ledger" in frontmatter["description"]
     assert "BGM selection" in frontmatter["description"]
     assert "artist-portrait doctor --project ./project.yaml --json" in content
     assert "image generation or image editing" in content
     assert "output/scan_report.md" in content
+    assert "output/clip_report.md" in content
 
 
 def test_openai_yaml_matches_skill():

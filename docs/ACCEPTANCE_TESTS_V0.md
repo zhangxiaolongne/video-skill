@@ -39,7 +39,13 @@ Current local foundation tests cover:
 - deterministic `scan_report.md`
 - status and doctor visibility for scan reports
 - downstream `map` and `review_project` invalidation after source ledger changes
+- committed clip record schema
+- deterministic fixed-window `segment`
+- canonical `clips.jsonl`
+- rebuildable `clip_report.md`
+- status and doctor visibility for clip ledgers and clip reports
+- downstream invalidation after source or clip ledger changes
 
-Future segmentation, transcription, analysis, proposal, timeline, preview,
-model, BGM, image generation/editing, and network fixtures are intentionally not
-implemented yet.
+Future scene-detection segmentation, transcription, analysis, proposal,
+timeline, preview, model, BGM, image generation/editing, and network fixtures
+are intentionally not implemented yet.

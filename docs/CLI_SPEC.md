@@ -2,7 +2,7 @@
 
 Authoritative source: `artist_portrait_editor_revision5_optimized.md`.
 
-Implemented V0-003 media scan foundation commands:
+Implemented V0-004 fixed-window segmentation foundation commands:
 
 ```bash
 artist-portrait validate --project ./project.yaml
@@ -11,6 +11,7 @@ artist-portrait status --project ./project.yaml
 artist-portrait doctor --project ./project.yaml
 artist-portrait generate-schema --output-dir schemas
 artist-portrait scan --project ./project.yaml
+artist-portrait segment --project ./project.yaml
 artist-portrait map --project ./project.yaml
 artist-portrait review --project ./project.yaml --scope project
 artist-portrait review --project ./project.yaml --scope all
@@ -36,14 +37,20 @@ Commands outside the current gate currently return `7 prerequisite_step_missing`
 `output/scan_report.md`, run metadata, and a refreshed `output/run_report.md`.
 It reports `output_refs` and `invalidated_steps`.
 
-`status --json` includes the state ledger plus local artifact, scan report, and
-source summaries. It also reports `artifact_issues` when completed ledger steps
-refer to outputs that no longer exist. It does not run media operations or
-mutate project files.
+`segment --json` writes `.artist-portrait/data/clips.jsonl`,
+`output/clip_report.md`, run metadata, and a refreshed `output/run_report.md`.
+It uses fixed-window segmentation only and reports `output_refs` and
+`invalidated_steps`.
+
+`status --json` includes the state ledger plus local artifact, source, clip,
+scan report, and clip report summaries. It also reports `artifact_issues` when
+completed ledger steps refer to outputs that no longer exist. It does not run
+media operations or mutate project files.
 
 `doctor --json` is a read-only diagnostic command. It reports local workspace,
 source ledger, and artifact consistency issues with `next_action` guidance and
-`recommended_commands`. It reports `map_invalidated` and
-`review_project_invalidated` after a newer scan changes the source ledger. It
+`recommended_commands`. It reports `segment_invalidated`, `map_invalidated`,
+and `review_project_invalidated` after newer upstream ledgers change. It reports
+`clips_invalid` when `.artist-portrait/data/clips.jsonl` cannot be parsed. It
 returns `1 success_with_warnings` when diagnostics find issues and `0 success`
 when no issues are found.

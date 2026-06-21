@@ -14,4 +14,7 @@ V0 does not aim to provide:
 - automatic publishing
 - commercial rights guarantees
 
-Stage A additionally forbids all media and creative pipeline implementation.
+The current V0-004 gate additionally forbids scene-detection segmentation,
+transcription, visual analysis, BGM selection, creative proposals, timeline
+generation, preview rendering, model calls, image generation/editing, and
+network search.

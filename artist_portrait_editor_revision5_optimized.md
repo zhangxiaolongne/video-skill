@@ -5,7 +5,7 @@
 > **工作名称**：`artist-portrait-editor`  
 > **中文名称**：人物向剪辑导演 / 艺人肖像剪辑 Skill  
 > **适用范围**：产品愿景、V0 产品规格、V0 工程规格  
-> **当前开发闸门**：V0-003 媒体扫描基础。阶段 A 已作为工程基础验收；当前只允许确定性本地媒体扫描、哈希、ffprobe、`sources.jsonl`、`scan_report.md`、素材地图、项目风险报告、状态诊断和下游产物失效标记。不得实现切分、转写、视觉分析、BGM 选择、创作提案、时间线生成或预览渲染。
+> **当前开发闸门**：V0-004 固定窗口切分基础。阶段 A 与 V0-003 已作为工程与媒体扫描基础验收；当前只允许确定性本地媒体扫描、哈希、ffprobe、`sources.jsonl`、`scan_report.md`、固定窗口 `segment`、`clips.jsonl`、`clip_report.md`、素材地图、项目风险报告、状态诊断和下游产物失效标记。不得实现 PySceneDetect 场景检测、转写、视觉分析、BGM 选择、创作提案、时间线生成或预览渲染。
 
 ---
 
@@ -51,7 +51,7 @@ docs/DEVELOPMENT_PROGRESS.md
 - 不重复造轮子；优先复用成熟工具，再补本项目特有的数据契约、证据链、审查和降级逻辑。
 - 第三方结果不得直接冒充 canonical truth，必须记录来源、输入、输出、置信度、失败模式和可复验路径。
 - 使用第三方模型或联网能力时，必须由对应 gate、配置开关和 review 规则控制。
-- 当前 V0-003 media scan foundation 仍保持本地、确定性、无模型调用、无联网、无 image generation / editing 调用。
+- 当前 V0-004 fixed-window segmentation foundation 仍保持本地、确定性、无模型调用、无联网、无 image generation / editing 调用。
 
 # 0. 执行摘要
 
@@ -70,7 +70,7 @@ V0 分为两个模式：
 - `core_mode`：不依赖文本生成模型或视觉模型，负责确定性媒体处理、canonical 数据、风险规则和素材结构报告。
 - `creative_mode`：在 `core_mode` 证据基础上，生成三套可回溯创作提案，并在用户选择后生成时间线草案。
 
-阶段 A 已完成基础工程验收。当前允许实现 V0-003 媒体扫描基础：
+阶段 A 已完成基础工程验收，V0-003 已完成媒体扫描基础。当前允许实现 V0-004 固定窗口切分基础：
 
 ```text
 project.yaml
@@ -85,15 +85,18 @@ project.yaml
 → 内容哈希
 → sources.jsonl
 → scan_report.md
+→ 固定窗口 segment
+→ clips.jsonl
+→ clip_report.md
 → material_map.md
 → risk_report.md
 → doctor/status 诊断
 ```
 
-当前 V0-003 禁止实现：
+当前 V0-004 禁止实现：
 
 ```text
-PySceneDetect
+PySceneDetect 场景检测
 Whisper
 OpenCV
 Embedding
@@ -1293,7 +1296,7 @@ artist-portrait status --project ./project.yaml
 | `validate` | 验证配置、路径和策略；可在初始化前运行 | 无业务产物 |
 | `init` | 调用验证、创建工作区、能力检测、状态与运行记录 | `state.json`、run 记录、`run_report.md` |
 | `scan` | 扫描媒体、哈希、ffprobe、导入 CSV、记录扫描证据 | `sources.jsonl`、`scan_report.md` |
-| `segment` | 视频场景切分；音频按转写或固定窗口切分 | `clips.jsonl` |
+| `segment` | 固定窗口切分当前 source ledger；不做场景检测或转写 | `clips.jsonl`、`clip_report.md` |
 | `transcribe` | 可选 ASR | `transcripts.jsonl` |
 | `analyze` | 基础标签、算法推断和风险 | 更新 canonical |
 | `relate` | 基础关系；可选实验关系 | `relations.jsonl` |
@@ -1904,27 +1907,47 @@ project.yaml
 - 文件移动、重复、同路径替换和 supersedes 行为稳定。
 - 下游失效可被 `status` / `doctor` / `run_checks.py` 检出。
 
-## 16.4 V0-004：切分
+## 16.4 V0-004：固定窗口切分基础
+
+- `segment` 读取 `sources.jsonl`。
+- 对视频和音频统一使用固定窗口切分。
+- 生成 canonical `clips.jsonl`。
+- 生成 rebuildable `clip_report.md`。
+- 保留 source_id、source hash、source fingerprint、原始时间码、切分方法和方法版本。
+- 稳定生成 `clip_id`。
+- `status`、`doctor`、`review` 识别 clip report、invalid clips ledger 和下游失效状态。
+- 重扫后如果 `sources.jsonl` 变化，旧 `clips.jsonl` / `clip_report.md` 对应步骤必须标记为 `invalidated`。
+- 当前 V0-004 不调用 PySceneDetect、Whisper、OpenCV、模型、联网、image generation/editing、BGM 选择、创作提案、时间线或预览。
+
+验收：
+
+- `segment` 缺 `scan` 返回固定前置错误。
+- 25 秒素材按 10 秒窗口生成 3 个 clips。
+- 音频素材也可固定窗口切分。
+- clip report 可重建、可审计、包含边界声明。
+- invalid `clips.jsonl` 可被 `status` / `doctor` 检出。
+- `scan` 更新 source ledger 后，旧 segment/map/review 状态可被 invalidated。
+
+## 16.5 V0-005：场景检测切分增强
 
 - 视频优先 PySceneDetect，缺失时固定窗口。
-- 音频使用转写窗口或固定窗口。
-- 保留原始时间码和切分算法版本。
-- 稳定生成 `clip_id`。
+- 音频继续使用固定窗口，直到转写 gate 打开。
+- 记录场景检测工具版本、失败模式和降级路径。
 
-## 16.5 V0-005：转写
+## 16.6 V0-006：转写
 
 - 生成可回溯时间戳。
 - 不自动认定采访、歌词或角色台词。
 - 缺少 ASR 时按功能开关规则处理。
 
-## 16.6 V0-006：关键帧与缓存
+## 16.7 V0-007：关键帧与缓存
 
 - 为视频片段抽取关键帧。
 - 音频片段不要求关键帧。
 - 缓存可安全重建。
 - canonical 不依赖缓存永久存在。
 
-## 16.7 V0-007：基础分析
+## 16.8 V0-008：基础分析
 
 - 素材类型
 - 景别
@@ -1936,7 +1959,7 @@ project.yaml
 
 所有算法结果必须带 `method / level / confidence / evidence`。
 
-## 16.8 V0-008：素材地图
+## 16.9 V0-009：素材地图
 
 生成：
 
@@ -1953,7 +1976,7 @@ output/material_map.md
 - 待确认项
 - 风险项
 
-## 16.9 V0-009：创作提案
+## 16.10 V0-010：创作提案
 
 生成：
 
@@ -1964,7 +1987,7 @@ output/proposals.md
 
 三套方案必须结构不同、证据可回溯且不使用禁用素材。
 
-## 16.10 V0-010：时间线草案
+## 16.11 V0-011：时间线草案
 
 在用户选择提案后生成：
 
@@ -1981,7 +2004,7 @@ output/timeline_draft.json
 - 禁用素材
 - 权利与事实风险
 
-## 16.11 V0-011：整体验收
+## 16.12 V0-012：整体验收
 
 生成或更新：
 

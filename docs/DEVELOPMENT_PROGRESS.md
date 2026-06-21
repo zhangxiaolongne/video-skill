@@ -34,7 +34,7 @@ When a user requirement changes long-term product behavior, update both files:
 - Canonical skill name: `artist-portrait-editor`
 - Canonical install directory: `artist-portrait-editor`
 - Distribution repository: `video-skill`
-- Current local gate: V0-003 media scan foundation only
+- Current local gate: V0-004 fixed-window segmentation foundation only
 
 ## Completed Local Versions
 
@@ -60,12 +60,17 @@ When a user requirement changes long-term product behavior, update both files:
 - V0-003a: gate reconciliation from Stage A-only to media scan foundation.
 - V0-003b: deterministic scan report and scan artifact status.
 - V0-003c: downstream map/review invalidation after source ledger changes.
+- V0-004a: clip record schema and committed JSON Schema.
+- V0-004b: deterministic fixed-window `segment`.
+- V0-004c: canonical `clips.jsonl` and rebuildable `clip_report.md`.
+- V0-004d: clip status, doctor diagnostics, and invalidation chain.
 
 ## Current Hard Boundaries
 
 Do not implement these until the relevant gate is explicitly opened and tested:
 
-- media segmentation
+- non-fixed-window segmentation
+- PySceneDetect or scene-detection segmentation
 - transcription
 - OpenCV or vision analysis
 - embeddings
@@ -93,7 +98,7 @@ Tactical rule for future batches:
 - use third-party outputs as evidence with provenance, not unreviewed truth
 - keep config gates, failure modes, and review rules around every non-local or
   model-backed capability
-- keep current V0-003 media scan foundation local and deterministic until a
+- keep current V0-004 fixed-window segmentation foundation local and deterministic until a
   later gate explicitly opens third-party/model/network/image use
 
 ### BGM Is Part Of Editing Logic
@@ -127,6 +132,6 @@ carried into the future proposal, timeline, review, and preview gates.
 
 ## Next Likely Batch
 
-Next action should finish V0-003 release readiness: run the full local
+Next action should finish V0-004 release readiness: run the full local
 validation set, record the release checkpoint, commit the batch locally, and
 push only after the batch is reviewed.

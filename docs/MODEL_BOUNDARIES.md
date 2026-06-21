@@ -13,4 +13,6 @@ Models may organize evidence in later phases, but they must not create facts,
 material IDs, timecodes, dialogue, provenance, identity, rights status, or
 timeline references.
 
-Stage A performs no model calls.
+The current V0-004 fixed-window segmentation foundation performs no model
+calls. `scan`, `segment`, `map`, `review`, `status`, and `doctor` must remain
+local and deterministic.

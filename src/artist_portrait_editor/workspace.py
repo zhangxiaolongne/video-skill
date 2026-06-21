@@ -13,6 +13,12 @@ from artist_portrait_editor.media.scanner import (
     scan_project_sources,
     write_sources_jsonl,
 )
+from artist_portrait_editor.models.clip import (
+    ClipBoundary,
+    ClipMethod,
+    ClipRecord,
+    ClipRiskFlag,
+)
 from artist_portrait_editor.models.state import (
     OverallStatus,
     ProjectState,
@@ -162,13 +168,18 @@ def write_run_report(output_dir: Path, state: ProjectState, warnings: list[str])
     return atomic_write_text(output_path, render_run_report(state, warnings))
 
 
+def stable_clip_id(source_id: str, clip_index: int, start_seconds: float, end_seconds: float) -> str:
+    payload = f"{source_id}:{clip_index}:{start_seconds:.3f}:{end_seconds:.3f}"
+    return "clip_" + hashlib.sha256(payload.encode("utf-8")).hexdigest()[:24]
+
+
 def invalidate_downstream_steps_for_sources(
     state: ProjectState,
     *,
     sources_fingerprint: str,
 ) -> list[str]:
     invalidated: list[str] = []
-    for step_name in ("map", "review_project"):
+    for step_name in ("segment", "map", "review_project"):
         entry = state.steps.get(step_name)
         if entry is None:
             continue
@@ -232,12 +243,22 @@ def render_status_panel(payload: dict) -> str:
         lines.append(f"sources: {sources.get('count', 0)}")
     else:
         lines.append("sources: missing")
+    clips = summaries.get("clips") or {}
+    if clips.get("exists") and clips.get("valid", True):
+        lines.append(f"clips: {clips.get('count', 0)}")
+    elif clips.get("exists"):
+        lines.append("clips: invalid")
+    else:
+        lines.append("clips: missing")
     risk = summaries.get("risk_report") or {}
     if risk.get("exists"):
         lines.append(f"risk_report: present ({risk.get('bytes', 0)} bytes)")
     scan_report = summaries.get("scan_report") or {}
     if scan_report.get("exists"):
         lines.append(f"scan_report: present ({scan_report.get('bytes', 0)} bytes)")
+    clip_report = summaries.get("clip_report") or {}
+    if clip_report.get("exists"):
+        lines.append(f"clip_report: present ({clip_report.get('bytes', 0)} bytes)")
     material_map = summaries.get("material_map") or {}
     if material_map.get("exists"):
         lines.append(f"material_map: present ({material_map.get('bytes', 0)} bytes)")
@@ -245,7 +266,7 @@ def render_status_panel(payload: dict) -> str:
     if artifact_issues:
         lines.append(f"artifact_issues: {len(artifact_issues)}")
     steps = payload.get("steps") or {}
-    for step in ("scan", "map", "review_project"):
+    for step in ("scan", "segment", "map", "review_project"):
         if step in steps:
             lines.append(f"{step}: {steps[step].get('status')}")
     return "\n".join(lines) + "\n"
@@ -303,6 +324,34 @@ def doctor_project_payload(project_path: Path) -> dict:
                 severity="info",
                 detail="source ledger exists but material map has not been generated",
                 next_action=f"artist-portrait map --project {project_path}",
+            )
+        )
+    if (
+        sources.get("valid") is True
+        and clips_summary(root).get("valid") is False
+    ):
+        clips_path = root / WORKSPACE_DIR / DATA_DIR / "clips.jsonl"
+        issues.append(
+            workspace_issue(
+                code="clips_invalid",
+                severity="error",
+                detail=str(clips_summary(root).get("error") or "clips ledger is invalid"),
+                next_action=(
+                    f"fix {clips_path.relative_to(root).as_posix()} or rerun "
+                    f"artist-portrait segment --project {project_path}"
+                ),
+            )
+        )
+    elif (
+        sources.get("valid") is True
+        and state.steps.get("segment", StepLedgerEntry()).status == StepStatus.pending
+    ):
+        issues.append(
+            workspace_issue(
+                code="segment_pending",
+                severity="info",
+                detail="source ledger exists but clips have not been generated",
+                next_action=f"artist-portrait segment --project {project_path}",
             )
         )
     if (
@@ -394,6 +443,7 @@ def artifact_statuses(root: Path) -> dict[str, dict]:
         "proposals_json": root / WORKSPACE_DIR / DATA_DIR / "proposals.json",
         "run_report": root / "output" / "run_report.md",
         "scan_report": root / "output" / "scan_report.md",
+        "clip_report": root / "output" / "clip_report.md",
         "material_map": root / "output" / "material_map.md",
         "proposals_md": root / "output" / "proposals.md",
         "timeline_draft": root / "output" / "timeline_draft.json",
@@ -451,12 +501,16 @@ def ledger_output_ref_issues(
 
 def status_summaries(root: Path) -> dict:
     sources_path = root / WORKSPACE_DIR / DATA_DIR / "sources.jsonl"
+    clips_path = root / WORKSPACE_DIR / DATA_DIR / "clips.jsonl"
     scan_report_path = root / "output" / "scan_report.md"
+    clip_report_path = root / "output" / "clip_report.md"
     material_map_path = root / "output" / "material_map.md"
     risk_report_path = root / "output" / "risk_report.md"
     return {
         "sources": source_summary(sources_path),
+        "clips": clip_summary(clips_path),
         "scan_report": output_summary(scan_report_path),
+        "clip_report": output_summary(clip_report_path),
         "material_map": output_summary(material_map_path),
         "risk_report": output_summary(risk_report_path),
     }
@@ -495,6 +549,141 @@ def output_summary(path: Path) -> dict:
         "exists": True,
         "bytes": path.stat().st_size,
     }
+
+
+def clips_summary(root: Path) -> dict:
+    return clip_summary(root / WORKSPACE_DIR / DATA_DIR / "clips.jsonl")
+
+
+def clip_summary(path: Path) -> dict:
+    if not path.exists():
+        return {"exists": False}
+    try:
+        clips = read_clips_jsonl(path)
+    except Exception as exc:
+        return {
+            "exists": True,
+            "valid": False,
+            "error": str(exc),
+        }
+    method_counts = count_by_value(clip.method.value for clip in clips)
+    media_counts = count_by_value(clip.media_kind.value for clip in clips)
+    return {
+        "exists": True,
+        "valid": True,
+        "count": len(clips),
+        "method_counts": method_counts,
+        "media_kind_counts": media_counts,
+        "total_duration_seconds": round(
+            sum(clip.boundary.duration_seconds for clip in clips),
+            3,
+        ),
+    }
+
+
+def write_clips_jsonl(root: Path, clips: list[ClipRecord]) -> Path:
+    output = root / WORKSPACE_DIR / DATA_DIR / "clips.jsonl"
+    output.parent.mkdir(parents=True, exist_ok=True)
+    tmp = output.with_suffix(".jsonl.tmp")
+    tmp.write_text(
+        "".join(
+            json.dumps(clip.model_dump(mode="json"), ensure_ascii=False, sort_keys=True)
+            + "\n"
+            for clip in clips
+        ),
+        encoding="utf-8",
+    )
+    tmp.replace(output)
+    return output
+
+
+def read_clips_jsonl(path: Path) -> list[ClipRecord]:
+    clips: list[ClipRecord] = []
+    for line_number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1):
+        if not line.strip():
+            continue
+        try:
+            clips.append(ClipRecord.model_validate_json(line))
+        except ValueError as exc:
+            raise WorkspacePrerequisiteError(
+                f"invalid ClipRecord JSONL at line {line_number}: {exc}"
+            ) from exc
+    return clips
+
+
+def build_fixed_window_clips(
+    *,
+    records: list[SourceRecord],
+    sources_fingerprint: str,
+    window_seconds: float = 10.0,
+) -> list[ClipRecord]:
+    clips: list[ClipRecord] = []
+    for record in sorted(records, key=lambda item: item.primary_location):
+        duration = record.media_probe.duration
+        start = 0.0
+        clip_index = 0
+        while start < duration:
+            end = min(start + window_seconds, duration)
+            clip_duration = end - start
+            risk_flags: list[ClipRiskFlag] = []
+            if record.risk_flags:
+                risk_flags.append(ClipRiskFlag.inherited_source_risk)
+            if clip_duration < min(window_seconds, duration):
+                risk_flags.append(ClipRiskFlag.short_tail)
+            clips.append(
+                ClipRecord(
+                    clip_id=stable_clip_id(record.source_id, clip_index, start, end),
+                    source_id=record.source_id,
+                    source_location=record.primary_location,
+                    source_content_hash=record.content_hash,
+                    source_fingerprint=sources_fingerprint,
+                    clip_index=clip_index,
+                    media_kind=record.media_kind,
+                    boundary=ClipBoundary(
+                        start_seconds=round(start, 3),
+                        end_seconds=round(end, 3),
+                        duration_seconds=round(clip_duration, 3),
+                    ),
+                    method=ClipMethod.fixed_window,
+                    method_version="fixed-window-v1",
+                    boundary_confidence=0.5,
+                    evidence=[{"type": "source", "ref": record.source_id}],
+                    inherited_source_risk_flags=record.risk_flags,
+                    risk_flags=risk_flags,
+                    notes="deterministic fixed-window segmentation",
+                )
+            )
+            clip_index += 1
+            start = end
+    return clips
+
+
+def invalidate_downstream_steps_for_clips(
+    state: ProjectState,
+    *,
+    clips_fingerprint: str,
+) -> list[str]:
+    invalidated: list[str] = []
+    for step_name in ("map", "review_project"):
+        entry = state.steps.get(step_name)
+        if entry is None:
+            continue
+        if entry.status not in {StepStatus.completed, StepStatus.completed_with_warnings}:
+            continue
+        if entry.input_fingerprint == clips_fingerprint:
+            continue
+        state.steps[step_name] = StepLedgerEntry(
+            status=StepStatus.invalidated,
+            input_fingerprint=entry.input_fingerprint,
+            output_refs=entry.output_refs,
+            last_run_id=entry.last_run_id,
+            warnings=[
+                *entry.warnings,
+                "clips ledger changed; rerun this step before trusting its output",
+            ],
+        )
+        invalidated.append(step_name)
+    return invalidated
 
 
 def latest_run_summary(root: Path, run_id: str | None) -> dict:
@@ -672,6 +861,143 @@ def render_scan_source_sections(records: list[SourceRecord]) -> str:
             f"- Rights status: `{record.rights_status.value}`\n"
             f"- Supersedes source ID: `{record.supersedes_source_id or 'none'}`\n"
             f"- Locations: {locations}\n"
+        )
+    return "\n".join(sections)
+
+
+def segment_workspace(project_path: Path) -> tuple[Path, ProjectState, list[str]]:
+    config = load_project_config(project_path)
+    root = project_root(project_path)
+    state = load_state(root)
+    if state is None:
+        raise WorkspacePrerequisiteError("segment requires init to complete first")
+
+    sources_path = root / WORKSPACE_DIR / DATA_DIR / "sources.jsonl"
+    if not sources_path.exists():
+        raise WorkspacePrerequisiteError("segment requires scan to complete first")
+
+    records = read_sources_jsonl(sources_path)
+    sources_fingerprint = fingerprint_file(sources_path)
+    clips = build_fixed_window_clips(
+        records=records,
+        sources_fingerprint=sources_fingerprint,
+    )
+    warnings = ["no sources available for segmentation"] if not records else []
+    run_id = new_run_id()
+    output_dir = root / config.paths.output_dir
+    clips_path = write_clips_jsonl(root, clips)
+    clips_fingerprint = fingerprint_file(clips_path)
+    invalidated_steps = invalidate_downstream_steps_for_clips(
+        state,
+        clips_fingerprint=clips_fingerprint,
+    )
+    clip_report_path = output_dir / "clip_report.md"
+    atomic_write_text(
+        clip_report_path,
+        render_clip_report(
+            clips=clips,
+            warnings=warnings,
+            clips_ref=clips_path.relative_to(root).as_posix(),
+            sources_ref=sources_path.relative_to(root).as_posix(),
+            invalidated_steps=invalidated_steps,
+        ),
+    )
+
+    status = StepStatus.completed_with_warnings if warnings else StepStatus.completed
+    state.steps["segment"] = StepLedgerEntry(
+        status=status,
+        input_fingerprint=sources_fingerprint,
+        output_refs=[
+            clips_path.relative_to(root).as_posix(),
+            clip_report_path.relative_to(root).as_posix(),
+        ],
+        last_run_id=run_id,
+        warnings=warnings,
+    )
+    state.latest_run_id = run_id
+    state.updated_at = utc_now()
+    state.overall_status = OverallStatus.degraded if warnings else OverallStatus.ready
+
+    runs_dir = root / WORKSPACE_DIR / RUNS_DIR / run_id
+    runs_dir.mkdir(parents=True, exist_ok=True)
+    write_json(runs_dir / "command.json", {"command": "segment", "project": str(project_path)})
+    write_json(runs_dir / "environment.json", environment_snapshot())
+    write_json(
+        runs_dir / "step_result.json",
+        {
+            "step": "segment",
+            "status": status.value,
+            "sources": len(records),
+            "clips": len(clips),
+            "output_refs": state.steps["segment"].output_refs,
+            "invalidated_steps": invalidated_steps,
+        },
+    )
+    write_json(runs_dir / "warnings.json", warnings)
+    write_json(runs_dir / "errors.json", [])
+    (runs_dir / "log.txt").write_text("segment completed\n", encoding="utf-8")
+    save_state(root, state)
+    write_run_report(output_dir, state, warnings)
+    return clip_report_path, state, warnings
+
+
+def render_clip_report(
+    *,
+    clips: list[ClipRecord],
+    warnings: list[str],
+    clips_ref: str,
+    sources_ref: str,
+    invalidated_steps: list[str],
+) -> str:
+    sorted_clips = sorted(clips, key=lambda clip: (clip.source_location, clip.clip_index))
+    method_counts = count_by_value(clip.method.value for clip in sorted_clips)
+    media_counts = count_by_value(clip.media_kind.value for clip in sorted_clips)
+    source_counts = count_by_value(clip.source_location for clip in sorted_clips)
+    total_duration = sum(clip.boundary.duration_seconds for clip in sorted_clips)
+    warning_lines = "\n".join(f"- {warning}" for warning in warnings) or "- None"
+    invalidated_lines = "\n".join(f"- `{step}`" for step in invalidated_steps) or "- None"
+    return (
+        "# Clip Report\n\n"
+        "This deterministic clip report is rendered from local source ledger data "
+        "and fixed-window segmentation only. No PySceneDetect, transcription, visual "
+        "analysis, embeddings, creative proposals, timeline generation, preview "
+        "rendering, network calls, BGM selection, image generation/editing, or model "
+        "calls were performed.\n\n"
+        "## Summary\n\n"
+        f"- Source ledger: `{sources_ref}`\n"
+        f"- Clip ledger: `{clips_ref}`\n"
+        f"- Clip count: `{len(sorted_clips)}`\n"
+        f"- Source count: `{len(source_counts)}`\n"
+        f"- Total clip duration seconds: `{total_duration:.3f}`\n\n"
+        "## Distribution\n\n"
+        "### Method\n\n"
+        f"{render_count_lines(method_counts)}"
+        "### Media Kind\n\n"
+        f"{render_count_lines(media_counts)}"
+        "## Invalidated Downstream Steps\n\n"
+        f"{invalidated_lines}\n\n"
+        "## Warnings\n\n"
+        f"{warning_lines}\n\n"
+        "## Clips\n\n"
+        f"{render_clip_sections(sorted_clips)}"
+    )
+
+
+def render_clip_sections(clips: list[ClipRecord]) -> str:
+    if not clips:
+        return "No clips were generated from the current source ledger.\n"
+    sections = []
+    for index, clip in enumerate(clips, start=1):
+        sections.append(
+            f"### {index}. `{clip.clip_id}`\n\n"
+            f"- Source ID: `{clip.source_id}`\n"
+            f"- Source location: `{clip.source_location}`\n"
+            f"- Clip index: `{clip.clip_index}`\n"
+            f"- Start seconds: `{clip.boundary.start_seconds:.3f}`\n"
+            f"- End seconds: `{clip.boundary.end_seconds:.3f}`\n"
+            f"- Duration seconds: `{clip.boundary.duration_seconds:.3f}`\n"
+            f"- Method: `{clip.method.value}`\n"
+            f"- Boundary confidence: `{clip.boundary_confidence:.3f}`\n"
         )
     return "\n".join(sections)
 

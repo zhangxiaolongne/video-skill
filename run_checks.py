@@ -55,6 +55,7 @@ def check_schema_drift() -> None:
         tmp_path = Path(tmp)
         run([str(ARTIST_PORTRAIT), "generate-schema", "--output-dir", str(tmp_path)])
         for name in (
+            "clip_record.schema.json",
             "project_config.schema.json",
             "project_state.schema.json",
             "source_record.schema.json",
@@ -112,27 +113,30 @@ def check_gate_consistency() -> None:
         "master": ROOT / "artist_portrait_editor_revision5_optimized.md",
         "README.md": ROOT / "README.md",
         "DEVELOPMENT_PROGRESS.md": ROOT / "docs" / "DEVELOPMENT_PROGRESS.md",
-        "V0_003_MEDIA_SCAN_FOUNDATION.md": ROOT
+        "V0_004_SEGMENTATION_FOUNDATION.md": ROOT
         / "docs"
-        / "V0_003_MEDIA_SCAN_FOUNDATION.md",
+        / "V0_004_SEGMENTATION_FOUNDATION.md",
     }
     content = {name: path.read_text(encoding="utf-8") for name, path in docs.items()}
-    if "Current gate: V0-003 media scan foundation only." not in content["AGENTS.md"]:
-        raise SystemExit("AGENTS.md current gate is not V0-003 media scan foundation")
-    if "V0-003 媒体扫描基础" not in content["master"]:
-        raise SystemExit("master document current gate is not V0-003 media scan foundation")
-    if "Current V0-003 media scan foundation work" not in content["README.md"]:
-        raise SystemExit("README current gate is not V0-003 media scan foundation")
     if (
-        "Current local gate: V0-003 media scan foundation only"
+        "Current gate: V0-004 fixed-window segmentation foundation only."
+        not in content["AGENTS.md"]
+    ):
+        raise SystemExit("AGENTS.md current gate is not V0-004 segmentation foundation")
+    if "V0-004 固定窗口切分基础" not in content["master"]:
+        raise SystemExit("master document current gate is not V0-004 segmentation foundation")
+    if "Current V0-004 fixed-window segmentation foundation work" not in content["README.md"]:
+        raise SystemExit("README current gate is not V0-004 segmentation foundation")
+    if (
+        "Current local gate: V0-004 fixed-window segmentation foundation only"
         not in content["DEVELOPMENT_PROGRESS.md"]
     ):
         raise SystemExit("development progress current gate is stale")
     if (
-        "active gate is now deterministic media scan foundation"
-        not in content["V0_003_MEDIA_SCAN_FOUNDATION.md"]
+        "V0-004 opens deterministic fixed-window segmentation only"
+        not in content["V0_004_SEGMENTATION_FOUNDATION.md"]
     ):
-        raise SystemExit("V0-003 media scan foundation doc is missing active gate")
+        raise SystemExit("V0-004 segmentation foundation doc is missing active gate")
 
 
 def write_sine_wav(path: Path, *, seconds: float = 0.25, sample_rate: int = 8000) -> None:
@@ -188,6 +192,16 @@ def check_real_scan_if_available() -> None:
         if "# Scan Report" not in report or "ffprobe-derived media facts" not in report:
             raise SystemExit("real scan check did not write scan_report")
 
+        run([str(ARTIST_PORTRAIT), "segment", "--project", str(project), "--quiet"])
+        clip_report = (tmp_path / "output" / "clip_report.md").read_text(
+            encoding="utf-8"
+        )
+        if "# Clip Report" not in clip_report or "fixed-window segmentation" not in clip_report:
+            raise SystemExit("clip_report content check failed")
+        clips = tmp_path / ".artist-portrait" / "data" / "clips.jsonl"
+        if not clips.exists():
+            raise SystemExit("segment did not write clips.jsonl")
+
         run([str(ARTIST_PORTRAIT), "map", "--project", str(project), "--quiet"])
         run(
             [
@@ -214,6 +228,7 @@ def check_real_scan_if_available() -> None:
         if sorted(rescan_payload.get("invalidated_steps", [])) != [
             "map",
             "review_project",
+            "segment",
         ]:
             raise SystemExit("real rescan did not invalidate downstream outputs")
         doctor = subprocess.run(
@@ -226,7 +241,7 @@ def check_real_scan_if_available() -> None:
             raise SystemExit("doctor did not report invalidated downstream outputs")
         doctor_payload = json.loads(doctor.stdout)
         issue_codes = {issue.get("code") for issue in doctor_payload.get("issues", [])}
-        if {"map_invalidated", "review_project_invalidated"} - issue_codes:
+        if {"segment_invalidated", "map_invalidated", "review_project_invalidated"} - issue_codes:
             raise SystemExit("doctor did not classify invalidated downstream outputs")
 
 
@@ -316,6 +331,16 @@ def check_local_foundation_outputs() -> None:
             encoding="utf-8",
         )
 
+        run([str(ARTIST_PORTRAIT), "segment", "--project", str(project), "--quiet"])
+        clip_report = (tmp_path / "output" / "clip_report.md").read_text(
+            encoding="utf-8"
+        )
+        if "# Clip Report" not in clip_report or "fixed-window segmentation" not in clip_report:
+            raise SystemExit("clip_report content check failed")
+        clips = tmp_path / ".artist-portrait" / "data" / "clips.jsonl"
+        if not clips.exists():
+            raise SystemExit("segment did not write clips.jsonl")
+
         run([str(ARTIST_PORTRAIT), "map", "--project", str(project), "--quiet"])
         material_map = (tmp_path / "output" / "material_map.md").read_text(
             encoding="utf-8"
@@ -339,6 +364,10 @@ def check_local_foundation_outputs() -> None:
         payload = json.loads(status.stdout)
         if payload["summaries"]["sources"]["count"] != 1:
             raise SystemExit("status dashboard did not summarize sources")
+        if payload["summaries"]["clips"]["count"] != 1:
+            raise SystemExit("status dashboard did not summarize clips")
+        if not payload["artifacts"]["clip_report"]["exists"]:
+            raise SystemExit("status dashboard did not report clip_report")
         if payload["artifacts"]["material_map"]["exists"]:
             raise SystemExit("status dashboard did not report missing material_map")
         if not payload["artifacts"]["risk_report"]["exists"]:
@@ -373,7 +402,12 @@ def check_local_foundation_outputs() -> None:
         report = run_report.read_text(encoding="utf-8")
         if "- `review_project`: `completed_with_warnings`" not in report:
             raise SystemExit("run_report was not refreshed after review")
-        for name in ("material_map.md.tmp", "risk_report.md.tmp", "run_report.md.tmp"):
+        for name in (
+            "clip_report.md.tmp",
+            "material_map.md.tmp",
+            "risk_report.md.tmp",
+            "run_report.md.tmp",
+        ):
             if (tmp_path / "output" / name).exists():
                 raise SystemExit(f"temporary output file was left behind: {name}")
 

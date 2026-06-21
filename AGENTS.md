@@ -3,7 +3,7 @@
 Follow `artist_portrait_editor_revision5_optimized.md` as the governing V0
 engineering-freeze document.
 
-Current gate: V0-003 media scan foundation only.
+Current gate: V0-004 fixed-window segmentation foundation only.
 
 Allowed:
 
@@ -18,6 +18,10 @@ Allowed:
 - deterministic `scan_report.md`
 - source identity, moved-file, duplicate-file, and supersedes tracking
 - downstream artifact invalidation when `sources.jsonl` changes
+- deterministic fixed-window `segment`
+- canonical `clips.jsonl`
+- deterministic `clip_report.md`
+- downstream artifact invalidation when `clips.jsonl` changes
 - `map`
 - `review --scope project`
 - `review --scope all` only as project review plus skipped future scopes
@@ -32,11 +36,11 @@ Allowed:
 
 Forbidden before the next gate explicitly opens:
 
-- PySceneDetect
 - Whisper
 - OpenCV analysis
 - embeddings
 - vision models
+- PySceneDetect or scene-detection segmentation
 - creative proposals
 - timeline generation
 - preview rendering

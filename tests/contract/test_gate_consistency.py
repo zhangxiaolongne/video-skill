@@ -4,22 +4,24 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 
 
-def test_current_gate_is_media_scan_foundation_across_primary_docs():
+def test_current_gate_is_fixed_window_segmentation_foundation_across_primary_docs():
     agents = (ROOT / "AGENTS.md").read_text(encoding="utf-8")
     master = (ROOT / "artist_portrait_editor_revision5_optimized.md").read_text(
         encoding="utf-8"
     )
     readme = (ROOT / "README.md").read_text(encoding="utf-8")
+    vision = (ROOT / "docs" / "VISION.md").read_text(encoding="utf-8")
     progress = (ROOT / "docs" / "DEVELOPMENT_PROGRESS.md").read_text(encoding="utf-8")
-    v003 = (ROOT / "docs" / "V0_003_MEDIA_SCAN_FOUNDATION.md").read_text(
+    v004 = (ROOT / "docs" / "V0_004_SEGMENTATION_FOUNDATION.md").read_text(
         encoding="utf-8"
     )
 
-    assert "Current gate: V0-003 media scan foundation only." in agents
-    assert "V0-003 媒体扫描基础" in master
-    assert "Current V0-003 media scan foundation work" in readme
-    assert "Current local gate: V0-003 media scan foundation only" in progress
-    assert "active gate is now deterministic media scan foundation" in v003
+    assert "Current gate: V0-004 fixed-window segmentation foundation only." in agents
+    assert "V0-004 固定窗口切分基础" in master
+    assert "Current V0-004 fixed-window segmentation foundation work" in readme
+    assert "Current implementation gate: V0-004 fixed-window segmentation foundation only." in vision
+    assert "Current local gate: V0-004 fixed-window segmentation foundation only" in progress
+    assert "V0-004 opens deterministic fixed-window segmentation only" in v004
 
 
 def test_current_gate_forbids_future_media_and_creative_surfaces():
@@ -27,7 +29,7 @@ def test_current_gate_forbids_future_media_and_creative_surfaces():
         [
             (ROOT / "AGENTS.md").read_text(encoding="utf-8"),
             (ROOT / "SKILL.md").read_text(encoding="utf-8"),
-            (ROOT / "docs" / "V0_003_MEDIA_SCAN_FOUNDATION.md").read_text(
+            (ROOT / "docs" / "V0_004_SEGMENTATION_FOUNDATION.md").read_text(
                 encoding="utf-8"
             ),
         ]
@@ -63,4 +65,18 @@ def test_v003_release_readiness_records_local_validation_scope():
     assert "deterministic `output/scan_report.md`" in content
     assert "downstream map/review invalidation" in content
     assert "pytest: 74 passed, 1 skipped" in content
+    assert "run_checks.py: checks passed" in content
+
+
+def test_v004_release_readiness_records_scope():
+    content = (ROOT / "docs" / "V0_004_RELEASE_READINESS.md").read_text(
+        encoding="utf-8"
+    )
+
+    assert "Status: completed locally, ready to push, not tagged." in content
+    assert "6760831 Close V0-003 media scan foundation" in content
+    assert "`ClipRecord` schema" in content
+    assert "deterministic fixed-window segmentation" in content
+    assert "canonical `.artist-portrait/data/clips.jsonl`" in content
+    assert "pytest: 79 passed, 1 skipped" in content
     assert "run_checks.py: checks passed" in content
