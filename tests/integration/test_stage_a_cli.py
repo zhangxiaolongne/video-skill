@@ -4,7 +4,7 @@ from pathlib import Path
 import artist_portrait_editor.cli as cli
 import artist_portrait_editor.workspace as workspace
 from artist_portrait_editor.cli import main
-from artist_portrait_editor.media.scanner import ScanResult
+from artist_portrait_editor.media.scanner import ScanResult, read_sources_jsonl
 from artist_portrait_editor.models.source import (
     Assertion,
     MediaKind,
@@ -245,3 +245,55 @@ def test_scan_writes_sources_and_updates_state(tmp_path, monkeypatch, capsys):
     )
     assert state_payload["steps"]["scan"]["status"] == "completed"
     assert state_payload["steps"]["segment"]["status"] == "pending"
+
+
+def test_repeated_cli_scan_updates_moved_location(tmp_path, monkeypatch, capsys):
+    project_path = tmp_path / "project.yaml"
+    project_path.write_text(
+        (FIXTURES / "valid_project.yaml").read_text(encoding="utf-8"),
+        encoding="utf-8",
+    )
+    media_dir = tmp_path / "media"
+    media_dir.mkdir()
+    original = media_dir / "a.mp4"
+    moved = media_dir / "moved.mp4"
+    original.write_bytes(b"same-content")
+    assert main(["init", "--project", str(project_path), "--quiet"]) in (0, 1)
+    monkeypatch.setattr(
+        cli,
+        "detect_capabilities",
+        lambda: Capabilities(ffmpeg=True, ffprobe=True),
+    )
+
+    def fake_probe(path):
+        return (
+            MediaKind.video,
+            MediaProbe(
+                duration=1.0,
+                width=16,
+                height=16,
+                frame_rate=24.0,
+                video_codec="h264",
+                audio_present=False,
+                audio_codec=None,
+            ),
+        )
+
+    from artist_portrait_editor.media import scanner
+
+    original_scan_project_sources = scanner.scan_project_sources
+
+    def scan_with_fake_probe(*, root, config):
+        return original_scan_project_sources(root=root, config=config, probe_fn=fake_probe)
+
+    monkeypatch.setattr(workspace, "scan_project_sources", scan_with_fake_probe)
+
+    assert main(["scan", "--project", str(project_path), "--quiet"]) == 0
+    sources_path = tmp_path / ".artist-portrait" / "data" / "sources.jsonl"
+    first_record = read_sources_jsonl(sources_path)[0]
+    original.rename(moved)
+    assert main(["scan", "--project", str(project_path), "--quiet"]) == 0
+    second_record = read_sources_jsonl(sources_path)[0]
+
+    assert second_record.source_id == first_record.source_id
+    assert second_record.locations == ["media/moved.mp4"]

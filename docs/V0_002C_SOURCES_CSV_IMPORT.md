@@ -1,6 +1,7 @@
 # V0-002c Sources CSV Import
 
-Status: in progress.
+Status: completed; superseded by `V0_002D_RESCAN_IDENTITY.md` for repeated scan
+identity semantics.
 
 This slice adds optional `sources.csv` import during `scan`. It does not create
 media entities that are absent from the filesystem; it only annotates scanned

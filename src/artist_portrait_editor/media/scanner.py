@@ -79,8 +79,6 @@ def scan_project_sources(
     warnings: list[str] = []
     source_csv = load_sources_csv(root)
     warnings.extend(source_csv.warnings)
-    namespace = uuid.uuid5(uuid.NAMESPACE_URL, f"artist-portrait-editor:{config.project.id}")
-
     for content_hash in sorted(grouped_locations):
         locations = sorted(grouped_locations[content_hash])
         primary_path = sorted(grouped_paths[content_hash], key=lambda p: p.as_posix())[0]
@@ -89,7 +87,7 @@ def scan_project_sources(
         except ProbeError as exc:
             errors.append(f"{locations[0]}: {exc}")
             continue
-        source_id = str(uuid.uuid5(namespace, content_hash))
+        source_id = stable_source_id(config.project.id, content_hash)
         annotation = first_annotation_for_locations(locations, source_csv.annotations)
         records.append(
             build_source_record(
@@ -107,6 +105,11 @@ def scan_project_sources(
         return ScanResult(records=[], warnings=warnings, errors=errors)
     warnings.extend(errors)
     return ScanResult(records=records, warnings=warnings, errors=[])
+
+
+def stable_source_id(project_id: str, content_hash: str) -> str:
+    namespace = uuid.uuid5(uuid.NAMESPACE_URL, f"artist-portrait-editor:{project_id}")
+    return str(uuid.uuid5(namespace, content_hash))
 
 
 def first_annotation_for_locations(

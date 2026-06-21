@@ -4,7 +4,13 @@ import pytest
 
 from artist_portrait_editor.config_loader import load_project_config
 from artist_portrait_editor.media.probe import ProbeError
-from artist_portrait_editor.media.scanner import read_sources_jsonl, scan_project_sources, write_sources_jsonl
+from artist_portrait_editor.media.scanner import (
+    hash_file,
+    read_sources_jsonl,
+    scan_project_sources,
+    stable_source_id,
+    write_sources_jsonl,
+)
 from artist_portrait_editor.models.source import MediaKind, MediaProbe
 
 
@@ -63,6 +69,77 @@ def test_scan_deduplicates_identical_media_content(tmp_path):
     assert record.locations == ["media/a.mp4", "media/b.mp4"]
     assert record.primary_location == "media/a.mp4"
     assert record.media_kind == MediaKind.video
+
+
+def test_stable_source_id_depends_on_project_and_content_hash_only():
+    content_hash = "sha256:" + "a" * 64
+
+    first = stable_source_id("project-a", content_hash)
+    second = stable_source_id("project-a", content_hash)
+    different_project = stable_source_id("project-b", content_hash)
+    different_hash = stable_source_id("project-a", "sha256:" + "b" * 64)
+
+    assert first == second
+    assert first != different_project
+    assert first != different_hash
+
+
+def test_file_move_keeps_source_id_and_updates_location(tmp_path):
+    project_path = write_project(tmp_path)
+    media_dir = tmp_path / "media"
+    media_dir.mkdir()
+    original = media_dir / "a.mp4"
+    moved = media_dir / "moved.mp4"
+    original.write_bytes(b"same-content")
+    config = load_project_config(project_path)
+
+    first = scan_project_sources(root=tmp_path, config=config, probe_fn=fake_video_probe)
+    first_record = first.records[0]
+    original.rename(moved)
+    second = scan_project_sources(root=tmp_path, config=config, probe_fn=fake_video_probe)
+    second_record = second.records[0]
+
+    assert second_record.source_id == first_record.source_id
+    assert second_record.content_hash == first_record.content_hash
+    assert second_record.locations == ["media/moved.mp4"]
+    assert second_record.primary_location == "media/moved.mp4"
+
+
+def test_file_content_change_creates_new_source_id(tmp_path):
+    project_path = write_project(tmp_path)
+    media_dir = tmp_path / "media"
+    media_dir.mkdir()
+    media = media_dir / "a.mp4"
+    media.write_bytes(b"first-content")
+    config = load_project_config(project_path)
+
+    first = scan_project_sources(root=tmp_path, config=config, probe_fn=fake_video_probe)
+    media.write_bytes(b"changed-content")
+    second = scan_project_sources(root=tmp_path, config=config, probe_fn=fake_video_probe)
+
+    assert second.records[0].content_hash != first.records[0].content_hash
+    assert second.records[0].source_id != first.records[0].source_id
+
+
+def test_repeated_write_replaces_sources_jsonl_locations(tmp_path):
+    project_path = write_project(tmp_path)
+    media_dir = tmp_path / "media"
+    media_dir.mkdir()
+    original = media_dir / "a.mp4"
+    moved = media_dir / "moved.mp4"
+    original.write_bytes(b"same-content")
+    config = load_project_config(project_path)
+
+    first = scan_project_sources(root=tmp_path, config=config, probe_fn=fake_video_probe)
+    output = write_sources_jsonl(tmp_path, first.records)
+    original.rename(moved)
+    second = scan_project_sources(root=tmp_path, config=config, probe_fn=fake_video_probe)
+    write_sources_jsonl(tmp_path, second.records)
+    records = read_sources_jsonl(output)
+
+    assert records[0].source_id == first.records[0].source_id
+    assert records[0].locations == ["media/moved.mp4"]
+    assert not any(location == "media/a.mp4" for location in records[0].locations)
 
 
 def test_scan_applies_sources_csv_annotation(tmp_path):
@@ -171,6 +248,16 @@ def test_sources_jsonl_round_trips_through_pydantic(tmp_path):
 
     assert len(records) == 1
     assert records[0].source_id == result.records[0].source_id
+
+
+def test_hash_file_uses_sha256_prefix(tmp_path):
+    path = tmp_path / "file.bin"
+    path.write_bytes(b"abc")
+
+    assert hash_file(path) == (
+        "sha256:ba7816bf8f01cfea414140de5dae2223"
+        "b00361a396177a9cb410ff61f20015ad"
+    )
 
 
 def test_invalid_sources_jsonl_fails_validation(tmp_path):
