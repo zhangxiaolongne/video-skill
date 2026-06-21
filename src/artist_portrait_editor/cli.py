@@ -201,6 +201,12 @@ def cmd_scan(args: argparse.Namespace) -> int:
         "sources": len(result.records),
         "warnings": result.warnings,
         "errors": result.errors,
+        "output_refs": state.steps["scan"].output_refs,
+        "invalidated_steps": [
+            name
+            for name in ("map", "review_project")
+            if state.steps.get(name) and state.steps[name].status.value == "invalidated"
+        ],
     }
     if args.json:
         print(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True))

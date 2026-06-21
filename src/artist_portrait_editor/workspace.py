@@ -162,6 +162,34 @@ def write_run_report(output_dir: Path, state: ProjectState, warnings: list[str])
     return atomic_write_text(output_path, render_run_report(state, warnings))
 
 
+def invalidate_downstream_steps_for_sources(
+    state: ProjectState,
+    *,
+    sources_fingerprint: str,
+) -> list[str]:
+    invalidated: list[str] = []
+    for step_name in ("map", "review_project"):
+        entry = state.steps.get(step_name)
+        if entry is None:
+            continue
+        if entry.status not in {StepStatus.completed, StepStatus.completed_with_warnings}:
+            continue
+        if entry.input_fingerprint == sources_fingerprint:
+            continue
+        state.steps[step_name] = StepLedgerEntry(
+            status=StepStatus.invalidated,
+            input_fingerprint=entry.input_fingerprint,
+            output_refs=entry.output_refs,
+            last_run_id=entry.last_run_id,
+            warnings=[
+                *entry.warnings,
+                "source ledger changed; rerun this step before trusting its output",
+            ],
+        )
+        invalidated.append(step_name)
+    return invalidated
+
+
 def state_as_dict(state: ProjectState) -> dict:
     return json.loads(state.model_dump_json())
 
@@ -207,6 +235,9 @@ def render_status_panel(payload: dict) -> str:
     risk = summaries.get("risk_report") or {}
     if risk.get("exists"):
         lines.append(f"risk_report: present ({risk.get('bytes', 0)} bytes)")
+    scan_report = summaries.get("scan_report") or {}
+    if scan_report.get("exists"):
+        lines.append(f"scan_report: present ({scan_report.get('bytes', 0)} bytes)")
     material_map = summaries.get("material_map") or {}
     if material_map.get("exists"):
         lines.append(f"material_map: present ({material_map.get('bytes', 0)} bytes)")
@@ -247,6 +278,7 @@ def doctor_project_payload(project_path: Path) -> dict:
         }
 
     issues.extend(ledger_output_ref_issues(root, state))
+    issues.extend(invalidated_step_issues(project_path, state))
     sources_path = root / WORKSPACE_DIR / DATA_DIR / "sources.jsonl"
     sources = source_summary(sources_path)
     if sources.get("valid") is False:
@@ -330,6 +362,28 @@ def recommended_commands(issues: list[dict[str, str]]) -> list[str]:
     return commands
 
 
+def invalidated_step_issues(
+    project_path: Path,
+    state: ProjectState,
+) -> list[dict[str, str]]:
+    issues: list[dict[str, str]] = []
+    for step_name, entry in sorted(state.steps.items()):
+        if entry.status != StepStatus.invalidated:
+            continue
+        issues.append(
+            workspace_issue(
+                code=f"{step_name}_invalidated",
+                severity="warning",
+                detail=f"step `{step_name}` was invalidated by newer source data",
+                next_action=rebuild_command_for_step(step_name).replace(
+                    "<project.yaml>",
+                    str(project_path),
+                ),
+            )
+        )
+    return issues
+
+
 def artifact_statuses(root: Path) -> dict[str, dict]:
     artifact_paths = {
         "state": root / WORKSPACE_DIR / "state.json",
@@ -339,6 +393,7 @@ def artifact_statuses(root: Path) -> dict[str, dict]:
         "relations": root / WORKSPACE_DIR / DATA_DIR / "relations.jsonl",
         "proposals_json": root / WORKSPACE_DIR / DATA_DIR / "proposals.json",
         "run_report": root / "output" / "run_report.md",
+        "scan_report": root / "output" / "scan_report.md",
         "material_map": root / "output" / "material_map.md",
         "proposals_md": root / "output" / "proposals.md",
         "timeline_draft": root / "output" / "timeline_draft.json",
@@ -396,10 +451,12 @@ def ledger_output_ref_issues(
 
 def status_summaries(root: Path) -> dict:
     sources_path = root / WORKSPACE_DIR / DATA_DIR / "sources.jsonl"
+    scan_report_path = root / "output" / "scan_report.md"
     material_map_path = root / "output" / "material_map.md"
     risk_report_path = root / "output" / "risk_report.md"
     return {
         "sources": source_summary(sources_path),
+        "scan_report": output_summary(scan_report_path),
         "material_map": output_summary(material_map_path),
         "risk_report": output_summary(risk_report_path),
     }
@@ -482,9 +539,28 @@ def scan_workspace(project_path: Path) -> tuple[ScanResult, ProjectState]:
     )
     result = scan_project_sources(root=root, config=config, previous_records=previous_records)
     output_refs: list[str] = []
+    output_dir = root / config.paths.output_dir
+    invalidated_steps: list[str] = []
     if result.records or not result.errors:
         output_path = write_sources_jsonl(root, result.records)
         output_refs.append(output_path.relative_to(root).as_posix())
+        sources_fingerprint = fingerprint_file(output_path)
+        invalidated_steps = invalidate_downstream_steps_for_sources(
+            state,
+            sources_fingerprint=sources_fingerprint,
+        )
+        scan_report_path = output_dir / "scan_report.md"
+        atomic_write_text(
+            scan_report_path,
+            render_scan_report(
+                records=result.records,
+                warnings=result.warnings,
+                errors=result.errors,
+                sources_ref=output_path.relative_to(root).as_posix(),
+                invalidated_steps=invalidated_steps,
+            ),
+        )
+        output_refs.append(scan_report_path.relative_to(root).as_posix())
 
     input_fingerprint = fingerprint_file(project_path)
     if result.errors:
@@ -519,14 +595,85 @@ def scan_workspace(project_path: Path) -> tuple[ScanResult, ProjectState]:
             "step": "scan",
             "status": status.value,
             "sources": len(result.records),
+            "output_refs": output_refs,
+            "invalidated_steps": invalidated_steps,
         },
     )
     write_json(runs_dir / "warnings.json", result.warnings)
     write_json(runs_dir / "errors.json", result.errors)
     (runs_dir / "log.txt").write_text("scan completed\n", encoding="utf-8")
     save_state(root, state)
-    write_run_report(root / config.paths.output_dir, state, result.warnings + result.errors)
+    write_run_report(output_dir, state, result.warnings + result.errors)
     return result, state
+
+
+def render_scan_report(
+    *,
+    records: list[SourceRecord],
+    warnings: list[str],
+    errors: list[str],
+    sources_ref: str,
+    invalidated_steps: list[str],
+) -> str:
+    sorted_records = sorted(records, key=lambda record: record.primary_location)
+    media_counts = count_by_value(record.media_kind.value for record in sorted_records)
+    rights_counts = count_by_value(str(record.rights_status.value) for record in sorted_records)
+    total_duration = sum(record.media_probe.duration for record in sorted_records)
+    warning_lines = "\n".join(f"- {warning}" for warning in warnings) or "- None"
+    error_lines = "\n".join(f"- {error}" for error in errors) or "- None"
+    invalidated_lines = "\n".join(f"- `{step}`" for step in invalidated_steps) or "- None"
+    return (
+        "# Scan Report\n\n"
+        "This deterministic scan report is rendered from local filesystem, content "
+        "hashes, sources.csv metadata, and ffprobe-derived media facts only. No "
+        "transcription, visual analysis, embeddings, creative proposals, timeline "
+        "generation, preview rendering, network calls, image generation/editing, or "
+        "model calls were performed.\n\n"
+        "## Summary\n\n"
+        f"- Source ledger: `{sources_ref}`\n"
+        f"- Source count: `{len(sorted_records)}`\n"
+        f"- Total duration seconds: `{total_duration:.3f}`\n\n"
+        "## Distribution\n\n"
+        "### Media Kind\n\n"
+        f"{render_count_lines(media_counts)}"
+        "### Rights Status\n\n"
+        f"{render_count_lines(rights_counts)}"
+        "## Invalidated Downstream Steps\n\n"
+        f"{invalidated_lines}\n\n"
+        "## Warnings\n\n"
+        f"{warning_lines}\n\n"
+        "## Errors\n\n"
+        f"{error_lines}\n\n"
+        "## Sources\n\n"
+        f"{render_scan_source_sections(sorted_records)}"
+    )
+
+
+def render_scan_source_sections(records: list[SourceRecord]) -> str:
+    if not records:
+        return "No sources were found in the current scan ledger.\n"
+    sections = []
+    for index, record in enumerate(records, start=1):
+        probe = record.media_probe
+        frame_rate = f"{probe.frame_rate:.3f}" if probe.frame_rate else "n/a"
+        locations = ", ".join(f"`{location}`" for location in record.locations)
+        sections.append(
+            f"### {index}. `{record.primary_location}`\n\n"
+            f"- Source ID: `{record.source_id}`\n"
+            f"- Content hash: `{record.content_hash}`\n"
+            f"- Media kind: `{record.media_kind.value}`\n"
+            f"- Duration seconds: `{probe.duration:.3f}`\n"
+            f"- Width: `{probe.width or 'n/a'}`\n"
+            f"- Height: `{probe.height or 'n/a'}`\n"
+            f"- Frame rate: `{frame_rate}`\n"
+            f"- Video codec: `{probe.video_codec or 'n/a'}`\n"
+            f"- Audio present: `{str(probe.audio_present).lower()}`\n"
+            f"- Audio codec: `{probe.audio_codec or 'n/a'}`\n"
+            f"- Rights status: `{record.rights_status.value}`\n"
+            f"- Supersedes source ID: `{record.supersedes_source_id or 'none'}`\n"
+            f"- Locations: {locations}\n"
+        )
+    return "\n".join(sections)
 
 
 def map_workspace(project_path: Path) -> tuple[Path, ProjectState, list[str]]:
@@ -691,6 +838,11 @@ def review_project_workspace(
         allow_restricted_rights=config.content_policy.allow_restricted_rights,
     )
     issues.extend(ledger_output_ref_issues(root, state))
+    issues.extend(
+        issue
+        for issue in invalidated_step_issues(project_path, state)
+        if issue.get("code") != "review_project_invalidated"
+    )
     if scope == "all":
         issues.extend(review_all_scope_issues())
     warnings = [f"{len(issues)} project review issue(s) found"] if issues else []

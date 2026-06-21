@@ -1,6 +1,12 @@
 # Stage A Acceptance
 
-Status: accepted for the current Stage A engineering foundation.
+Status: accepted historical engineering foundation.
+
+Stage A is no longer the active implementation gate. The active gate is
+V0-003 media scan foundation, which opens deterministic local scan/report
+behavior while keeping segmentation, transcription, visual analysis, BGM
+selection, proposals, timelines, preview rendering, model calls, image
+generation/editing, and network search closed.
 
 Verified commit:
 
@@ -66,8 +72,9 @@ Local check entrypoint:
 - timeline generation
 - preview rendering
 
-## Next Gate
+## Follow-On Gate
 
-Only after this acceptance stays green should V0-002 media scanning begin.
-V0-002 must start with data contracts and tests before implementing media
-operations.
+V0-002 opened the narrow source ledger, minimal map, project review, and skill
+packaging foundation. V0-003 closes the media scan foundation by reconciling
+the gate, adding deterministic scan reporting, and invalidating downstream
+outputs when the source ledger changes.

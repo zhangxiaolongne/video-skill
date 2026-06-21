@@ -1,6 +1,6 @@
 ---
 name: artist-portrait-editor
-description: Deterministic local workflow for preparing and auditing artist portrait video-editing projects. Use when Codex needs to validate an artist portrait project config, initialize local workspace state, scan local media into a source ledger, generate a material map, run project risk review, diagnose workspace issues, or preserve the boundary before any transcription, visual analysis, proposal generation, timeline generation, preview rendering, model calls, or network search.
+description: Deterministic local workflow for preparing and auditing artist portrait video-editing projects. Use when Codex needs to validate an artist portrait project config, initialize local workspace state, scan local media into a source ledger and scan report, generate a material map, run project risk review, diagnose workspace issues, or preserve the boundary before any segmentation, transcription, visual analysis, BGM selection, proposal generation, timeline generation, preview rendering, model calls, image generation/editing, or network search.
 ---
 
 # Artist Portrait Editor
@@ -35,6 +35,9 @@ artist portrait project preparation and audit work.
    artist-portrait scan --project ./project.yaml
    ```
 
+   This writes `.artist-portrait/data/sources.jsonl` and
+   `output/scan_report.md`.
+
 5. Generate deterministic local reports from `.artist-portrait/data/sources.jsonl`:
 
    ```bash
@@ -54,6 +57,8 @@ artist portrait project preparation and audit work.
   missing artifact.
 - Treat `source_ledger_invalid` as a stop condition until
   `.artist-portrait/data/sources.jsonl` is fixed or regenerated.
+- Treat `map_invalidated` and `review_project_invalidated` as rebuild signals
+  after a newer scan changes the source ledger.
 
 ## Hard Boundaries
 
@@ -66,6 +71,7 @@ libraries instead of rebuilding those capabilities from scratch:
 - transcription or Whisper
 - OpenCV or vision analysis
 - embeddings
+- BGM selection, beat analysis, music recommendation, or music/timeline fitting
 - creative proposals
 - timeline generation
 - preview rendering

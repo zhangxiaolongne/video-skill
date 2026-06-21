@@ -3,10 +3,24 @@
 Follow `artist_portrait_editor_revision5_optimized.md` as the governing V0
 engineering-freeze document.
 
-Current gate: Stage A only.
+Current gate: V0-003 media scan foundation only.
 
 Allowed:
 
+- `validate`
+- `init`
+- `status`
+- `doctor`
+- `scan`
+- deterministic `ffmpeg` / `ffprobe` media probing
+- media content hashing
+- canonical `sources.jsonl`
+- deterministic `scan_report.md`
+- source identity, moved-file, duplicate-file, and supersedes tracking
+- downstream artifact invalidation when `sources.jsonl` changes
+- `map`
+- `review --scope project`
+- `review --scope all` only as project review plus skipped future scopes
 - repository skeleton
 - Pydantic models
 - generated JSON Schema
@@ -14,16 +28,10 @@ Allowed:
 - state ledger
 - capability detection
 - fixed exit codes
-- Stage A fixtures
-- `validate`
-- `init`
-- `status`
+- Stage A and media-scan fixtures
 
-Forbidden before Stage A passes:
+Forbidden before the next gate explicitly opens:
 
-- media scanning
-- ffprobe scan workflow
-- media hashing
 - PySceneDetect
 - Whisper
 - OpenCV analysis
@@ -32,3 +40,7 @@ Forbidden before Stage A passes:
 - creative proposals
 - timeline generation
 - preview rendering
+- BGM selection, beat analysis, music recommendation, or music/timeline fitting
+- network search
+- image generation or image editing
+- model calls

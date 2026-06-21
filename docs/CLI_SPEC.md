@@ -2,7 +2,7 @@
 
 Authoritative source: `artist_portrait_editor_revision5_optimized.md`.
 
-Implemented local foundation commands:
+Implemented V0-003 media scan foundation commands:
 
 ```bash
 artist-portrait validate --project ./project.yaml
@@ -16,7 +16,7 @@ artist-portrait review --project ./project.yaml --scope project
 artist-portrait review --project ./project.yaml --scope all
 ```
 
-Common Stage A flags:
+Common current-gate flags:
 
 ```text
 --project PATH
@@ -32,12 +32,18 @@ and timeline review as skipped warnings. `review --scope proposal` and
 
 Commands outside the current gate currently return `7 prerequisite_step_missing`.
 
-`status --json` includes the state ledger plus local artifact and source
-summaries. It also reports `artifact_issues` when completed ledger steps refer
-to outputs that no longer exist. It does not run media operations or mutate
-project files.
+`scan --json` writes `.artist-portrait/data/sources.jsonl`,
+`output/scan_report.md`, run metadata, and a refreshed `output/run_report.md`.
+It reports `output_refs` and `invalidated_steps`.
+
+`status --json` includes the state ledger plus local artifact, scan report, and
+source summaries. It also reports `artifact_issues` when completed ledger steps
+refer to outputs that no longer exist. It does not run media operations or
+mutate project files.
 
 `doctor --json` is a read-only diagnostic command. It reports local workspace,
 source ledger, and artifact consistency issues with `next_action` guidance and
-`recommended_commands`. It returns `1 success_with_warnings` when diagnostics
-find issues and `0 success` when no issues are found.
+`recommended_commands`. It reports `map_invalidated` and
+`review_project_invalidated` after a newer scan changes the source ledger. It
+returns `1 success_with_warnings` when diagnostics find issues and `0 success`
+when no issues are found.

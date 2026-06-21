@@ -35,6 +35,11 @@ Current local foundation tests cover:
   directory and `video-skill` as an allowed distribution repository
 - canonical install simulation with zero package preflight warnings
 - release readiness documentation for the unpushed local batch
+- V0-003 gate consistency from Stage A acceptance into media scan foundation
+- deterministic `scan_report.md`
+- status and doctor visibility for scan reports
+- downstream `map` and `review_project` invalidation after source ledger changes
 
 Future segmentation, transcription, analysis, proposal, timeline, preview,
-model, and network fixtures are intentionally not implemented yet.
+model, BGM, image generation/editing, and network fixtures are intentionally not
+implemented yet.

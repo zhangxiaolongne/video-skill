@@ -34,7 +34,7 @@ When a user requirement changes long-term product behavior, update both files:
 - Canonical skill name: `artist-portrait-editor`
 - Canonical install directory: `artist-portrait-editor`
 - Distribution repository: `video-skill`
-- Current local gate: deterministic local foundation only
+- Current local gate: V0-003 media scan foundation only
 
 ## Completed Local Versions
 
@@ -57,6 +57,9 @@ When a user requirement changes long-term product behavior, update both files:
 - V0-002q: skill package policy.
 - V0-002r: canonical install simulation.
 - V0-002s: release readiness for the unpushed local batch.
+- V0-003a: gate reconciliation from Stage A-only to media scan foundation.
+- V0-003b: deterministic scan report and scan artifact status.
+- V0-003c: downstream map/review invalidation after source ledger changes.
 
 ## Current Hard Boundaries
 
@@ -69,6 +72,7 @@ Do not implement these until the relevant gate is explicitly opened and tested:
 - creative proposals
 - timeline generation
 - preview rendering
+- BGM selection, beat analysis, or music/timeline fitting
 - model calls
 - network search
 - image generation or image editing
@@ -89,8 +93,8 @@ Tactical rule for future batches:
 - use third-party outputs as evidence with provenance, not unreviewed truth
 - keep config gates, failure modes, and review rules around every non-local or
   model-backed capability
-- keep current Stage A local and deterministic until a later gate explicitly
-  opens third-party/model/network/image use
+- keep current V0-003 media scan foundation local and deterministic until a
+  later gate explicitly opens third-party/model/network/image use
 
 ### BGM Is Part Of Editing Logic
 
@@ -123,6 +127,6 @@ carried into the future proposal, timeline, review, and preview gates.
 
 ## Next Likely Batch
 
-Next action should be user-confirmed release handling: either push `main` to
-`origin/main`, or create a release tag and push both commits and tag after
-rerunning the release readiness checks.
+Next action should finish V0-003 release readiness: run the full local
+validation set, record the release checkpoint, commit the batch locally, and
+push only after the batch is reviewed.

@@ -93,6 +93,7 @@ def test_init_creates_only_stage_a_artifacts(tmp_path):
         ".artist-portrait/data/transcripts.jsonl",
         ".artist-portrait/data/relations.jsonl",
         ".artist-portrait/data/proposals.json",
+        "output/scan_report.md",
         "output/material_map.md",
         "output/proposals.md",
         "output/timeline_draft.json",
@@ -224,6 +225,7 @@ def test_repeated_init_keeps_stage_a_boundary(tmp_path):
         ".artist-portrait/data/transcripts.jsonl",
         ".artist-portrait/data/relations.jsonl",
         ".artist-portrait/data/proposals.json",
+        "output/scan_report.md",
         "output/material_map.md",
         "output/proposals.md",
         "output/timeline_draft.json",
@@ -331,14 +333,29 @@ def test_scan_writes_sources_and_updates_state(tmp_path, monkeypatch, capsys):
     assert code == 0
     payload = json.loads(captured.out)
     assert payload["sources"] == 1
+    assert payload["output_refs"] == [
+        ".artist-portrait/data/sources.jsonl",
+        "output/scan_report.md",
+    ]
+    assert payload["invalidated_steps"] == []
     sources_path = tmp_path / ".artist-portrait" / "data" / "sources.jsonl"
     assert sources_path.exists()
     assert len(sources_path.read_text(encoding="utf-8").splitlines()) == 1
+    scan_report = (tmp_path / "output" / "scan_report.md").read_text(encoding="utf-8")
+    assert "# Scan Report" in scan_report
+    assert "ffprobe-derived media facts only" in scan_report
+    assert "No transcription, visual analysis" in scan_report
+    assert "- Source count: `1`" in scan_report
+    assert "- Content hash: `sha256:" in scan_report
 
     state_payload = json.loads(
         (tmp_path / ".artist-portrait" / "state.json").read_text(encoding="utf-8")
     )
     assert state_payload["steps"]["scan"]["status"] == "completed"
+    assert state_payload["steps"]["scan"]["output_refs"] == [
+        ".artist-portrait/data/sources.jsonl",
+        "output/scan_report.md",
+    ]
     assert state_payload["steps"]["segment"]["status"] == "pending"
     assert state_payload["steps"]["map"]["status"] == "pending"
     assert not (tmp_path / "output" / "material_map.md").exists()
@@ -586,6 +603,8 @@ def test_review_project_writes_risk_report_from_sources(tmp_path, monkeypatch, c
     assert code == 0
     assert status_payload["summaries"]["sources"]["count"] == 1
     assert status_payload["summaries"]["sources"]["media_kind_counts"] == {"video": 1}
+    assert status_payload["summaries"]["scan_report"]["exists"] is True
+    assert status_payload["artifacts"]["scan_report"]["exists"] is True
     assert status_payload["artifacts"]["risk_report"]["exists"] is True
     assert status_payload["latest_run"]["command"] == "review"
     assert status_payload["latest_run"]["scope"] == "project"
@@ -826,3 +845,96 @@ def test_repeated_cli_scan_records_superseded_source_for_same_location_change(
     assert second_record.source_id != first_record.source_id
     assert second_record.locations == ["media/a.mp4"]
     assert second_record.supersedes_source_id == first_record.source_id
+
+
+def test_repeated_cli_scan_invalidates_map_and_project_review(
+    tmp_path,
+    monkeypatch,
+    capsys,
+):
+    project_path = tmp_path / "project.yaml"
+    project_path.write_text(
+        (FIXTURES / "valid_project.yaml").read_text(encoding="utf-8"),
+        encoding="utf-8",
+    )
+    media_dir = tmp_path / "media"
+    media_dir.mkdir()
+    media = media_dir / "a.mp4"
+    media.write_bytes(b"first-content")
+    assert main(["init", "--project", str(project_path), "--quiet"]) in (0, 1)
+    monkeypatch.setattr(
+        cli,
+        "detect_capabilities",
+        lambda: Capabilities(ffmpeg=True, ffprobe=True),
+    )
+
+    def fake_probe(path):
+        return (
+            MediaKind.video,
+            MediaProbe(
+                duration=1.0,
+                width=16,
+                height=16,
+                frame_rate=24.0,
+                video_codec="h264",
+                audio_present=False,
+                audio_codec=None,
+            ),
+        )
+
+    from artist_portrait_editor.media import scanner
+
+    original_scan_project_sources = scanner.scan_project_sources
+
+    def scan_with_fake_probe(*, root, config, previous_records=None):
+        return original_scan_project_sources(
+            root=root,
+            config=config,
+            probe_fn=fake_probe,
+            previous_records=previous_records,
+        )
+
+    monkeypatch.setattr(workspace, "scan_project_sources", scan_with_fake_probe)
+
+    assert main(["scan", "--project", str(project_path), "--quiet"]) == 0
+    assert main(["map", "--project", str(project_path), "--quiet"]) == 0
+    assert main(["review", "--project", str(project_path), "--scope", "project", "--quiet"]) == 1
+
+    media.write_bytes(b"changed-content")
+    code = main(["scan", "--project", str(project_path), "--json"])
+    captured = capsys.readouterr()
+
+    assert code == 0
+    payload = json.loads(captured.out)
+    assert payload["invalidated_steps"] == ["map", "review_project"]
+    state_payload = json.loads(
+        (tmp_path / ".artist-portrait" / "state.json").read_text(encoding="utf-8")
+    )
+    assert state_payload["steps"]["map"]["status"] == "invalidated"
+    assert state_payload["steps"]["review_project"]["status"] == "invalidated"
+    scan_report = (tmp_path / "output" / "scan_report.md").read_text(encoding="utf-8")
+    assert "## Invalidated Downstream Steps" in scan_report
+    assert "- `map`" in scan_report
+    assert "- `review_project`" in scan_report
+
+    code = main(["doctor", "--project", str(project_path), "--json"])
+    captured = capsys.readouterr()
+    doctor_payload = json.loads(captured.out)
+
+    assert code == 1
+    assert {issue["code"] for issue in doctor_payload["issues"]} == {
+        "map_invalidated",
+        "review_project_invalidated",
+    }
+
+    code = main(["review", "--project", str(project_path), "--scope", "project", "--json"])
+    captured = capsys.readouterr()
+    review_payload = json.loads(captured.out)
+
+    assert code == 1
+    issue_codes = [issue["code"] for issue in review_payload["issues"]]
+    assert "map_invalidated" in issue_codes
+    assert "review_project_invalidated" not in issue_codes
+    risk_report = (tmp_path / "output" / "risk_report.md").read_text(encoding="utf-8")
+    assert "map_invalidated" in risk_report
+    assert "review_project_invalidated" not in risk_report

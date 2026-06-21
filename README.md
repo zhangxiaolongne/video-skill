@@ -1,6 +1,6 @@
 # artist-portrait-editor
 
-Stage A engineering foundation for the `artist-portrait-editor` skill.
+Local V0 media-scan foundation for the `artist-portrait-editor` skill.
 
 ## Master Document
 
@@ -38,12 +38,14 @@ Stage A engineering foundation for the `artist-portrait-editor` skill.
 - [V0-002q Skill Package Policy](docs/V0_002Q_SKILL_PACKAGE_POLICY.md)
 - [V0-002r Canonical Install Simulation](docs/V0_002R_CANONICAL_INSTALL_SIMULATION.md)
 - [V0-002s Release Readiness](docs/V0_002S_RELEASE_READINESS.md)
+- [V0-003 Media Scan Foundation](docs/V0_003_MEDIA_SCAN_FOUNDATION.md)
+- [V0-003 Release Readiness](docs/V0_003_RELEASE_READINESS.md)
 - [Non Goals](docs/NON_GOALS.md)
 
 ## Current Gate
 
-Current local foundation work allows deterministic project setup, source
-ledger operations, and local read-only/reporting outputs:
+Current V0-003 media scan foundation work allows deterministic project setup,
+local media scanning, source ledger operations, and read-only/reporting outputs:
 
 ```text
 project.yaml
@@ -52,6 +54,7 @@ project.yaml
 -> capability detection
 -> status ledger
 -> source scan ledger
+-> scan report from sources.jsonl
 -> minimal material map from sources.jsonl
 -> minimal project risk report from sources.jsonl
 -> run report
@@ -59,8 +62,8 @@ project.yaml
 ```
 
 Transcription, visual analysis, embeddings, creative proposal generation,
-timeline generation, preview rendering, model calls, and network search remain
-out of scope.
+timeline generation, preview rendering, BGM selection or beat analysis, model
+calls, image generation/editing, and network search remain out of scope.
 
 ## Local Setup
 

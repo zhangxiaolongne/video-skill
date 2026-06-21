@@ -14,8 +14,13 @@ Current committed schemas:
 Current contract tests assert that committed schemas match live Pydantic schema
 generation.
 
-`SourceRecord` is implemented for V0-002a and is written as JSON Lines to
-`.artist-portrait/data/sources.jsonl` by `scan`.
+`SourceRecord` is implemented for the media scan foundation and is written as
+JSON Lines to `.artist-portrait/data/sources.jsonl` by `scan`.
+
+`output/scan_report.md` is a rebuildable report rendered from the current
+source ledger, local content hashes, `sources.csv` metadata, and ffprobe-derived
+media facts. It is not canonical data; `sources.jsonl` remains the canonical
+source ledger.
 
 Diagnostic issues are plain JSON objects used by `status`, `review`, and
 `doctor`. Current common fields:
@@ -29,6 +34,16 @@ Diagnostic issues are plain JSON objects used by `status`, `review`, and
 
 Scope-specific fields are allowed when needed, including `source_id`,
 `location`, `step`, `ref`, and `review_scope`.
+
+Current stable diagnostic codes include:
+
+- `missing_output_ref`
+- `source_ledger_invalid`
+- `map_pending`
+- `review_project_pending`
+- `map_invalidated`
+- `review_project_invalidated`
+- `review_scope_skipped`
 
 Canonical contracts such as `clips.jsonl`, `transcripts.jsonl`,
 `relations.jsonl`, and `proposals.json` are specified in the master document
