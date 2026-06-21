@@ -23,6 +23,9 @@ Current local foundation tests cover:
 - `run_report.md` refresh after state-mutating commands
 - invalid `sources.jsonl` handling for `scan`, `status`, `map`, and `review`
 - atomic writes for rebuildable report outputs
+- ledger output reference consistency in `status` and `review`
+- minimal `review --scope all` that runs project review and marks proposal and
+  timeline review as skipped
 
 Future segmentation, transcription, analysis, proposal, timeline, preview,
 model, and network fixtures are intentionally not implemented yet.

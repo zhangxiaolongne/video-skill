@@ -29,6 +29,7 @@ Stage A engineering foundation for the `artist-portrait-editor` skill.
 - [V0-002j Foundation Checks](docs/V0_002J_FOUNDATION_CHECKS.md)
 - [V0-002k Invalid Ledger Handling](docs/V0_002K_INVALID_LEDGER_HANDLING.md)
 - [V0-002l Atomic Report Writes](docs/V0_002L_ATOMIC_REPORT_WRITES.md)
+- [V0-002m Artifact Consistency](docs/V0_002M_ARTIFACT_CONSISTENCY.md)
 - [Non Goals](docs/NON_GOALS.md)
 
 ## Current Gate
@@ -70,6 +71,7 @@ python3 -m venv .venv
 .venv/bin/artist-portrait scan --project ./project.yaml
 .venv/bin/artist-portrait map --project ./project.yaml
 .venv/bin/artist-portrait review --project ./project.yaml --scope project
+.venv/bin/artist-portrait review --project ./project.yaml --scope all
 ```
 
 Commands such as `segment`, `transcribe`, `analyze`, `relate`, `propose`,

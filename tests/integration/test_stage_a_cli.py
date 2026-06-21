@@ -18,6 +18,45 @@ from artist_portrait_editor.models.state import Capabilities
 FIXTURES = Path(__file__).resolve().parents[2] / "fixtures" / "stage_a"
 
 
+def write_clean_source_ledger(root: Path) -> None:
+    source = SourceRecord(
+        source_id="clean-source-1",
+        locations=["media/clean.mp4"],
+        primary_location="media/clean.mp4",
+        content_hash="sha256:" + "1" * 64,
+        media_kind=MediaKind.video,
+        media_probe=MediaProbe(
+            duration=2.0,
+            width=16,
+            height=16,
+            frame_rate=24.0,
+            video_codec="h264",
+            audio_present=False,
+            audio_codec=None,
+        ),
+        source_type=Assertion(
+            value="interview",
+            method="test",
+            level=4,
+            confidence=1.0,
+        ),
+        rights_status=Assertion(
+            value=RightsStatus.owned,
+            method="test",
+            level=4,
+            confidence=1.0,
+        ),
+        provenance_confidence=1.0,
+        provenance_method="test",
+    )
+    data_dir = root / ".artist-portrait" / "data"
+    data_dir.mkdir(parents=True, exist_ok=True)
+    (data_dir / "sources.jsonl").write_text(
+        source.model_dump_json() + "\n",
+        encoding="utf-8",
+    )
+
+
 def test_validate_valid_project(capsys):
     code = main(["validate", "--project", str(FIXTURES / "valid_project.yaml")])
     captured = capsys.readouterr()
@@ -391,6 +430,44 @@ def test_review_non_project_scope_remains_blocked(tmp_path, capsys):
     assert "review --scope proposal" in captured.err
 
 
+def test_review_all_runs_project_review_and_marks_unimplemented_scopes(
+    tmp_path,
+    capsys,
+):
+    project_path = tmp_path / "project.yaml"
+    project_path.write_text(
+        (FIXTURES / "valid_project.yaml").read_text(encoding="utf-8"),
+        encoding="utf-8",
+    )
+    assert main(["init", "--project", str(project_path), "--quiet"]) in (0, 1)
+    write_clean_source_ledger(tmp_path)
+
+    code = main(["review", "--project", str(project_path), "--scope", "all", "--json"])
+    captured = capsys.readouterr()
+
+    assert code == 1
+    payload = json.loads(captured.out)
+    assert payload["output"] == "output/risk_report.md"
+    assert [issue["code"] for issue in payload["issues"]] == [
+        "review_scope_skipped",
+        "review_scope_skipped",
+    ]
+    assert {issue["review_scope"] for issue in payload["issues"]} == {
+        "proposal",
+        "timeline",
+    }
+    risk_report = (tmp_path / "output" / "risk_report.md").read_text(encoding="utf-8")
+    assert "Review scope: `proposal`" in risk_report
+    assert "Review scope: `timeline`" in risk_report
+
+    code = main(["status", "--project", str(project_path), "--json"])
+    captured = capsys.readouterr()
+    status_payload = json.loads(captured.out)
+
+    assert code == 0
+    assert status_payload["latest_run"]["scope"] == "all"
+
+
 def test_review_project_writes_risk_report_from_sources(tmp_path, monkeypatch, capsys):
     project_path = tmp_path / "project.yaml"
     project_path.write_text(
@@ -466,7 +543,7 @@ def test_review_project_writes_risk_report_from_sources(tmp_path, monkeypatch, c
     assert state_payload["steps"]["review_project"]["output_refs"] == ["output/risk_report.md"]
     run_report = (tmp_path / "output" / "run_report.md").read_text(encoding="utf-8")
     assert "- `review_project`: `completed_with_warnings`" in run_report
-    assert "2 project risk issue(s) found" in run_report
+    assert "2 project review issue(s) found" in run_report
 
     code = main(["status", "--project", str(project_path), "--json"])
     captured = capsys.readouterr()
@@ -479,6 +556,56 @@ def test_review_project_writes_risk_report_from_sources(tmp_path, monkeypatch, c
     assert status_payload["latest_run"]["command"] == "review"
     assert status_payload["latest_run"]["scope"] == "project"
     assert status_payload["latest_run"]["step_result"]["issues"] == 2
+
+
+def test_status_and_review_report_missing_output_ref(tmp_path, capsys):
+    project_path = tmp_path / "project.yaml"
+    project_path.write_text(
+        (FIXTURES / "valid_project.yaml").read_text(encoding="utf-8"),
+        encoding="utf-8",
+    )
+    assert main(["init", "--project", str(project_path), "--quiet"]) in (0, 1)
+    write_clean_source_ledger(tmp_path)
+    assert main(["map", "--project", str(project_path), "--quiet"]) == 0
+    (tmp_path / "output" / "material_map.md").unlink()
+
+    code = main(["status", "--project", str(project_path), "--json"])
+    captured = capsys.readouterr()
+    status_payload = json.loads(captured.out)
+
+    assert code == 0
+    assert status_payload["artifacts"]["material_map"]["exists"] is False
+    assert status_payload["artifact_issues"] == [
+        {
+            "code": "missing_output_ref",
+            "detail": (
+                "step `map` is marked `completed` but referenced output "
+                "`output/material_map.md` is missing"
+            ),
+            "location": "output/material_map.md",
+            "ref": "output/material_map.md",
+            "scope": "artifact",
+            "severity": "warning",
+            "step": "map",
+        }
+    ]
+
+    code = main(["status", "--project", str(project_path)])
+    captured = capsys.readouterr()
+
+    assert code == 0
+    assert "artifact_issues: 1" in captured.out
+
+    code = main(["review", "--project", str(project_path), "--scope", "project", "--json"])
+    captured = capsys.readouterr()
+    review_payload = json.loads(captured.out)
+
+    assert code == 1
+    assert [issue["code"] for issue in review_payload["issues"]] == ["missing_output_ref"]
+    assert review_payload["issues"][0]["step"] == "map"
+    risk_report = (tmp_path / "output" / "risk_report.md").read_text(encoding="utf-8")
+    assert "missing_output_ref" in risk_report
+    assert "Output ref: `output/material_map.md`" in risk_report
 
 
 def test_invalid_sources_jsonl_blocks_scan_map_and_review_but_status_reports_it(

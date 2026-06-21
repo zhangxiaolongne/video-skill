@@ -183,6 +183,13 @@ def check_local_foundation_outputs() -> None:
         )
 
         run([str(ARTIST_PORTRAIT), "map", "--project", str(project), "--quiet"])
+        material_map = (tmp_path / "output" / "material_map.md").read_text(
+            encoding="utf-8"
+        )
+        if "# Material Map" not in material_map or "No transcription" not in material_map:
+            raise SystemExit("material_map content check failed")
+
+        (tmp_path / "output" / "material_map.md").unlink()
         run(
             [str(ARTIST_PORTRAIT), "review", "--project", str(project), "--quiet"],
             expect=1,
@@ -198,23 +205,22 @@ def check_local_foundation_outputs() -> None:
         payload = json.loads(status.stdout)
         if payload["summaries"]["sources"]["count"] != 1:
             raise SystemExit("status dashboard did not summarize sources")
-        if not payload["artifacts"]["material_map"]["exists"]:
-            raise SystemExit("status dashboard did not report material_map")
+        if payload["artifacts"]["material_map"]["exists"]:
+            raise SystemExit("status dashboard did not report missing material_map")
         if not payload["artifacts"]["risk_report"]["exists"]:
             raise SystemExit("status dashboard did not report risk_report")
         if payload["latest_run"].get("command") != "review":
             raise SystemExit("status dashboard did not report latest review run")
-
-        material_map = (tmp_path / "output" / "material_map.md").read_text(
-            encoding="utf-8"
-        )
-        if "# Material Map" not in material_map or "No transcription" not in material_map:
-            raise SystemExit("material_map content check failed")
+        artifact_issues = payload.get("artifact_issues") or []
+        if not any(issue.get("code") == "missing_output_ref" for issue in artifact_issues):
+            raise SystemExit("status dashboard did not report missing output ref")
         risk_report = (tmp_path / "output" / "risk_report.md").read_text(
             encoding="utf-8"
         )
         if "# Risk Report" not in risk_report or "rights_unknown" not in risk_report:
             raise SystemExit("risk_report content check failed")
+        if "missing_output_ref" not in risk_report:
+            raise SystemExit("risk_report did not include missing output ref")
         run_report = tmp_path / "output" / "run_report.md"
         report = run_report.read_text(encoding="utf-8")
         if "- `review_project`: `completed_with_warnings`" not in report:

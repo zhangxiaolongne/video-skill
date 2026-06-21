@@ -180,9 +180,12 @@ def project_status_payload(project_path: Path) -> dict:
         }
     else:
         payload = state_as_dict(state)
+        payload["artifact_issues"] = ledger_output_ref_issues(root, state)
     payload["artifacts"] = artifacts
     payload["summaries"] = status_summaries(root)
     payload["latest_run"] = latest_run_summary(root, state.latest_run_id if state else None)
+    if state is None:
+        payload["artifact_issues"] = []
     return payload
 
 
@@ -207,6 +210,9 @@ def render_status_panel(payload: dict) -> str:
     material_map = summaries.get("material_map") or {}
     if material_map.get("exists"):
         lines.append(f"material_map: present ({material_map.get('bytes', 0)} bytes)")
+    artifact_issues = payload.get("artifact_issues") or []
+    if artifact_issues:
+        lines.append(f"artifact_issues: {len(artifact_issues)}")
     steps = payload.get("steps") or {}
     for step in ("scan", "map", "review_project"):
         if step in steps:
@@ -243,6 +249,39 @@ def artifact_status(root: Path, path: Path) -> dict:
     if exists and path.is_file():
         payload["bytes"] = path.stat().st_size
     return payload
+
+
+def ledger_output_ref_issues(
+    root: Path,
+    state: ProjectState,
+) -> list[dict[str, str]]:
+    issues: list[dict[str, str]] = []
+    completed_statuses = {
+        StepStatus.completed,
+        StepStatus.completed_with_warnings,
+    }
+    for step_name, entry in sorted(state.steps.items()):
+        if entry.status not in completed_statuses:
+            continue
+        for output_ref in entry.output_refs:
+            if not output_ref:
+                continue
+            output_path = root / output_ref
+            if output_path.exists():
+                continue
+            issues.append(
+                artifact_issue(
+                    step=step_name,
+                    ref=output_ref,
+                    code="missing_output_ref",
+                    severity="warning",
+                    detail=(
+                        f"step `{step_name}` is marked `{entry.status.value}` but "
+                        f"referenced output `{output_ref}` is missing"
+                    ),
+                )
+            )
+    return issues
 
 
 def status_summaries(root: Path) -> dict:
@@ -521,6 +560,8 @@ def render_source_section(index: int, record: SourceRecord) -> str:
 
 def review_project_workspace(
     project_path: Path,
+    *,
+    scope: str = "project",
 ) -> tuple[Path, ProjectState, list[str], list[dict[str, str]]]:
     config = load_project_config(project_path)
     root = project_root(project_path)
@@ -539,9 +580,10 @@ def review_project_workspace(
         records,
         allow_restricted_rights=config.content_policy.allow_restricted_rights,
     )
-    warnings = [
-        f"{len(issues)} project risk issue(s) found",
-    ] if issues else []
+    issues.extend(ledger_output_ref_issues(root, state))
+    if scope == "all":
+        issues.extend(review_all_scope_issues())
+    warnings = [f"{len(issues)} project review issue(s) found"] if issues else []
     run_id = new_run_id()
     output_dir = root / config.paths.output_dir
     output_path = output_dir / "risk_report.md"
@@ -571,7 +613,7 @@ def review_project_workspace(
     runs_dir.mkdir(parents=True, exist_ok=True)
     write_json(
         runs_dir / "command.json",
-        {"command": "review", "scope": "project", "project": str(project_path)},
+        {"command": "review", "scope": scope, "project": str(project_path)},
     )
     write_json(runs_dir / "environment.json", environment_snapshot())
     write_json(
@@ -590,6 +632,19 @@ def review_project_workspace(
     save_state(root, state)
     write_run_report(output_dir, state, warnings)
     return output_path, state, warnings, issues
+
+
+def review_all_scope_issues() -> list[dict[str, str]]:
+    return [
+        review_scope_issue(
+            scope="proposal",
+            detail="proposal review is not implemented in the current local foundation gate",
+        ),
+        review_scope_issue(
+            scope="timeline",
+            detail="timeline review is not implemented in the current local foundation gate",
+        ),
+    ]
 
 
 def review_source_risks(
@@ -649,10 +704,40 @@ def risk_issue(
     detail: str,
 ) -> dict[str, str]:
     return {
+        "scope": "source",
         "source_id": source.source_id,
         "location": source.primary_location,
         "code": code,
         "severity": severity,
+        "detail": detail,
+    }
+
+
+def artifact_issue(
+    *,
+    step: str,
+    ref: str,
+    code: str,
+    severity: str,
+    detail: str,
+) -> dict[str, str]:
+    return {
+        "scope": "artifact",
+        "step": step,
+        "ref": ref,
+        "location": ref,
+        "code": code,
+        "severity": severity,
+        "detail": detail,
+    }
+
+
+def review_scope_issue(*, scope: str, detail: str) -> dict[str, str]:
+    return {
+        "scope": "review_scope",
+        "review_scope": scope,
+        "code": "review_scope_skipped",
+        "severity": "warning",
         "detail": detail,
     }
 
@@ -685,14 +770,25 @@ def render_risk_report(
 
 def render_issue_sections(issues: list[dict[str, str]]) -> str:
     if not issues:
-        return "No project risk issues were found in the current scan ledger.\n"
+        return "No project review issues were found in the current scan ledger.\n"
     sections = []
     for index, issue in enumerate(issues, start=1):
+        optional_lines = ""
+        if issue.get("source_id"):
+            optional_lines += f"- Source ID: `{issue['source_id']}`\n"
+        if issue.get("step"):
+            optional_lines += f"- Step: `{issue['step']}`\n"
+        if issue.get("review_scope"):
+            optional_lines += f"- Review scope: `{issue['review_scope']}`\n"
+        if issue.get("location"):
+            optional_lines += f"- Location: `{issue['location']}`\n"
+        if issue.get("ref"):
+            optional_lines += f"- Output ref: `{issue['ref']}`\n"
         sections.append(
             f"### {index}. `{issue['code']}`\n\n"
             f"- Severity: `{issue['severity']}`\n"
-            f"- Source ID: `{issue['source_id']}`\n"
-            f"- Location: `{issue['location']}`\n"
+            f"- Scope: `{issue.get('scope', 'source')}`\n"
+            f"{optional_lines}"
             f"- Detail: {issue['detail']}\n"
         )
     return "\n".join(sections)

@@ -12,6 +12,7 @@ artist-portrait generate-schema --output-dir schemas
 artist-portrait scan --project ./project.yaml
 artist-portrait map --project ./project.yaml
 artist-portrait review --project ./project.yaml --scope project
+artist-portrait review --project ./project.yaml --scope all
 ```
 
 Common Stage A flags:
@@ -24,7 +25,13 @@ Common Stage A flags:
 --dry-run   # init only
 ```
 
+`review --scope all` runs the implemented project review, then records proposal
+and timeline review as skipped warnings. `review --scope proposal` and
+`review --scope timeline` still return `7 prerequisite_step_missing`.
+
 Commands outside the current gate currently return `7 prerequisite_step_missing`.
 
 `status --json` includes the state ledger plus local artifact and source
-summaries. It does not run media operations or mutate project files.
+summaries. It also reports `artifact_issues` when completed ledger steps refer
+to outputs that no longer exist. It does not run media operations or mutate
+project files.

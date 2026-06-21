@@ -226,7 +226,7 @@ def cmd_map(args: argparse.Namespace) -> int:
 def cmd_review(args: argparse.Namespace) -> int:
     if error := _validate_common_flags(args):
         return int(error)
-    if args.scope != "project":
+    if args.scope in {"proposal", "timeline"}:
         print(
             f"review --scope {args.scope} is outside the current gate and is not implemented",
             file=sys.stderr,
@@ -239,7 +239,10 @@ def cmd_review(args: argparse.Namespace) -> int:
         print(str(exc), file=sys.stderr)
         return int(ExitCode.invalid_project_config)
     try:
-        output_path, _state, warnings, issues = review_project_workspace(project_path)
+        output_path, _state, warnings, issues = review_project_workspace(
+            project_path,
+            scope=args.scope,
+        )
     except WorkspacePrerequisiteError as exc:
         print(str(exc), file=sys.stderr)
         return int(ExitCode.prerequisite_step_missing)

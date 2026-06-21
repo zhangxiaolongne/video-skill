@@ -14,8 +14,10 @@ deterministic risk report from the existing scan ledger.
   of the source ledger.
 - Project risk issues return exit code `1 success_with_warnings`, not a fatal
   command failure.
-- `review --scope proposal`, `review --scope timeline`, and `review --scope all`
-  remain outside the current gate.
+- `review --scope proposal` and `review --scope timeline` remain outside the
+  current gate.
+- As of V0-002m, `review --scope all` runs the implemented project review and
+  records proposal/timeline review as skipped warnings.
 
 ## Current Checks
 
