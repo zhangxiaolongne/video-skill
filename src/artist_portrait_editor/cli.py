@@ -8,7 +8,7 @@ from pathlib import Path
 from artist_portrait_editor.capabilities import detect_capabilities
 from artist_portrait_editor.config_loader import ConfigLoadError, load_project_config
 from artist_portrait_editor.exit_codes import ExitCode
-from artist_portrait_editor.media.scanner import ScanError
+from artist_portrait_editor.media.scanner import ScanError, SourceLedgerError
 from artist_portrait_editor.schemas import write_schema_files
 from artist_portrait_editor.workspace import (
     WorkspacePrerequisiteError,
@@ -168,6 +168,9 @@ def cmd_scan(args: argparse.Namespace) -> int:
         return int(ExitCode.missing_required_dependency_for_command)
     try:
         result, state = scan_workspace(project_path)
+    except SourceLedgerError as exc:
+        print(str(exc), file=sys.stderr)
+        return int(ExitCode.output_or_reference_validation_failed)
     except ScanError as exc:
         print(str(exc), file=sys.stderr)
         return int(ExitCode.media_operation_failed)
@@ -203,6 +206,9 @@ def cmd_map(args: argparse.Namespace) -> int:
     except WorkspacePrerequisiteError as exc:
         print(str(exc), file=sys.stderr)
         return int(ExitCode.prerequisite_step_missing)
+    except SourceLedgerError as exc:
+        print(str(exc), file=sys.stderr)
+        return int(ExitCode.output_or_reference_validation_failed)
     root = project_root(project_path)
     payload = {
         "output": output_path.relative_to(root).as_posix(),
@@ -237,6 +243,9 @@ def cmd_review(args: argparse.Namespace) -> int:
     except WorkspacePrerequisiteError as exc:
         print(str(exc), file=sys.stderr)
         return int(ExitCode.prerequisite_step_missing)
+    except SourceLedgerError as exc:
+        print(str(exc), file=sys.stderr)
+        return int(ExitCode.output_or_reference_validation_failed)
     root = project_root(project_path)
     payload = {
         "output": output_path.relative_to(root).as_posix(),

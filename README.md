@@ -27,6 +27,7 @@ Stage A engineering foundation for the `artist-portrait-editor` skill.
 - [V0-002h Status Dashboard](docs/V0_002H_STATUS_DASHBOARD.md)
 - [V0-002i Run Report Refresh](docs/V0_002I_RUN_REPORT_REFRESH.md)
 - [V0-002j Foundation Checks](docs/V0_002J_FOUNDATION_CHECKS.md)
+- [V0-002k Invalid Ledger Handling](docs/V0_002K_INVALID_LEDGER_HANDLING.md)
 - [Non Goals](docs/NON_GOALS.md)
 
 ## Current Gate

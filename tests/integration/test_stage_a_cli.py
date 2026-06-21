@@ -481,6 +481,53 @@ def test_review_project_writes_risk_report_from_sources(tmp_path, monkeypatch, c
     assert status_payload["latest_run"]["step_result"]["issues"] == 2
 
 
+def test_invalid_sources_jsonl_blocks_scan_map_and_review_but_status_reports_it(
+    tmp_path,
+    monkeypatch,
+    capsys,
+):
+    project_path = tmp_path / "project.yaml"
+    project_path.write_text(
+        (FIXTURES / "valid_project.yaml").read_text(encoding="utf-8"),
+        encoding="utf-8",
+    )
+    assert main(["init", "--project", str(project_path), "--quiet"]) in (0, 1)
+    monkeypatch.setattr(
+        cli,
+        "detect_capabilities",
+        lambda: Capabilities(ffmpeg=True, ffprobe=True),
+    )
+    sources_path = tmp_path / ".artist-portrait" / "data" / "sources.jsonl"
+    sources_path.write_text('{"source_id": "missing-required-fields"}\n', encoding="utf-8")
+
+    code = main(["scan", "--project", str(project_path)])
+    captured = capsys.readouterr()
+
+    assert code == 9
+    assert "invalid SourceRecord JSONL" in captured.err
+
+    code = main(["map", "--project", str(project_path)])
+    captured = capsys.readouterr()
+
+    assert code == 9
+    assert "invalid SourceRecord JSONL" in captured.err
+
+    code = main(["review", "--project", str(project_path), "--scope", "project"])
+    captured = capsys.readouterr()
+
+    assert code == 9
+    assert "invalid SourceRecord JSONL" in captured.err
+
+    code = main(["status", "--project", str(project_path), "--json"])
+    captured = capsys.readouterr()
+    payload = json.loads(captured.out)
+
+    assert code == 0
+    assert payload["summaries"]["sources"]["exists"] is True
+    assert payload["summaries"]["sources"]["valid"] is False
+    assert "invalid SourceRecord JSONL" in payload["summaries"]["sources"]["error"]
+
+
 def test_repeated_cli_scan_updates_moved_location(tmp_path, monkeypatch, capsys):
     project_path = tmp_path / "project.yaml"
     project_path.write_text(

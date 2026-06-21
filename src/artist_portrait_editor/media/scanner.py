@@ -38,6 +38,10 @@ class ScanError(Exception):
     pass
 
 
+class SourceLedgerError(ScanError):
+    pass
+
+
 class ScanResult:
     def __init__(self, records: list[SourceRecord], warnings: list[str], errors: list[str]):
         self.records = records
@@ -257,7 +261,9 @@ def read_sources_jsonl(path: Path) -> list[SourceRecord]:
         try:
             records.append(SourceRecord.model_validate_json(line))
         except ValueError as exc:
-            raise ScanError(f"invalid SourceRecord JSONL at line {line_number}: {exc}") from exc
+            raise SourceLedgerError(
+                f"invalid SourceRecord JSONL at line {line_number}: {exc}"
+            ) from exc
     return records
 
 

@@ -210,6 +210,35 @@ def check_local_foundation_outputs() -> None:
         if "- `review_project`: `completed_with_warnings`" not in report:
             raise SystemExit("run_report was not refreshed after review")
 
+        (data_dir / "sources.jsonl").write_text(
+            '{"source_id": "missing-required-fields"}\n',
+            encoding="utf-8",
+        )
+        for command in ("map", "review"):
+            failed = subprocess.run(
+                [str(ARTIST_PORTRAIT), command, "--project", str(project), "--quiet"],
+                cwd=ROOT,
+                capture_output=True,
+                text=True,
+            )
+            if failed.returncode != 9:
+                raise SystemExit(
+                    f"{command} accepted invalid sources unexpectedly: {failed.stderr}"
+                )
+            if "invalid SourceRecord JSONL" not in failed.stderr:
+                raise SystemExit(f"{command} did not report invalid sources")
+        invalid_status = subprocess.run(
+            [str(ARTIST_PORTRAIT), "status", "--project", str(project), "--json"],
+            cwd=ROOT,
+            capture_output=True,
+            text=True,
+        )
+        if invalid_status.returncode != 0:
+            raise SystemExit(f"invalid source status check failed: {invalid_status.stderr}")
+        invalid_payload = json.loads(invalid_status.stdout)
+        if invalid_payload["summaries"]["sources"].get("valid") is not False:
+            raise SystemExit("status dashboard did not report invalid sources")
+
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser()
