@@ -5,6 +5,7 @@ Stage A engineering foundation for the `artist-portrait-editor` skill.
 ## Master Document
 
 - [artist_portrait_editor_revision5_optimized.md](artist_portrait_editor_revision5_optimized.md)
+- [SKILL.md](SKILL.md)
 
 ## Spec Entrypoints
 
@@ -31,6 +32,7 @@ Stage A engineering foundation for the `artist-portrait-editor` skill.
 - [V0-002l Atomic Report Writes](docs/V0_002L_ATOMIC_REPORT_WRITES.md)
 - [V0-002m Artifact Consistency](docs/V0_002M_ARTIFACT_CONSISTENCY.md)
 - [V0-002n Doctor Diagnostics](docs/V0_002N_DOCTOR_DIAGNOSTICS.md)
+- [V0-002o Skill Metadata](docs/V0_002O_SKILL_METADATA.md)
 - [Non Goals](docs/NON_GOALS.md)
 
 ## Current Gate

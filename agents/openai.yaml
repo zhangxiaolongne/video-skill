@@ -1,0 +1,4 @@
+interface:
+  display_name: "Artist Portrait Editor"
+  short_description: "Local artist portrait project prep"
+  default_prompt: "Use $artist-portrait-editor to validate and diagnose my local artist portrait project."

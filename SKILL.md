@@ -1,0 +1,74 @@
+---
+name: artist-portrait-editor
+description: Deterministic local workflow for preparing and auditing artist portrait video-editing projects. Use when Codex needs to validate an artist portrait project config, initialize local workspace state, scan local media into a source ledger, generate a material map, run project risk review, diagnose workspace issues, or preserve the boundary before any transcription, visual analysis, proposal generation, timeline generation, preview rendering, model calls, or network search.
+---
+
+# Artist Portrait Editor
+
+Use this skill to operate the local `artist-portrait` CLI for deterministic
+artist portrait project preparation and audit work.
+
+## Operating Order
+
+1. Read `project.yaml` and run validation:
+
+   ```bash
+   artist-portrait validate --project ./project.yaml
+   ```
+
+2. Initialize local state before any other workspace command:
+
+   ```bash
+   artist-portrait init --project ./project.yaml
+   ```
+
+3. Inspect current state and diagnostics:
+
+   ```bash
+   artist-portrait status --project ./project.yaml --json
+   artist-portrait doctor --project ./project.yaml --json
+   ```
+
+4. Scan local media only when `ffmpeg` and `ffprobe` are available:
+
+   ```bash
+   artist-portrait scan --project ./project.yaml
+   ```
+
+5. Generate deterministic local reports from `.artist-portrait/data/sources.jsonl`:
+
+   ```bash
+   artist-portrait map --project ./project.yaml
+   artist-portrait review --project ./project.yaml --scope project
+   ```
+
+6. Use `review --scope all` only as a shallow aggregate. It runs project review
+   and marks proposal/timeline review as skipped; it does not implement those
+   review surfaces.
+
+## Diagnostics
+
+- Use `doctor --json` before deciding the next command.
+- Treat `recommended_commands` as guidance, not automatic repair.
+- Treat `missing_output_ref` as a rebuild signal for the step that produced the
+  missing artifact.
+- Treat `source_ledger_invalid` as a stop condition until
+  `.artist-portrait/data/sources.jsonl` is fixed or regenerated.
+
+## Hard Boundaries
+
+Do not perform these actions through this skill unless the repository explicitly
+implements and validates them in a later gate:
+
+- media segmentation
+- transcription or Whisper
+- OpenCV or vision analysis
+- embeddings
+- creative proposals
+- timeline generation
+- preview rendering
+- model calls
+- network search
+- image generation or image editing
+
+Keep all current outputs local and deterministic.

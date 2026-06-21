@@ -16,6 +16,15 @@ PYTHON = Path(sys.executable)
 ARTIST_PORTRAIT = Path(
     shutil.which("artist-portrait") or ROOT / ".venv" / "bin" / "artist-portrait"
 )
+QUICK_VALIDATE = (
+    Path.home()
+    / ".codex"
+    / "skills"
+    / ".system"
+    / "skill-creator"
+    / "scripts"
+    / "quick_validate.py"
+)
 
 
 def run(command: list[str], *, expect: int | tuple[int, ...] = 0) -> None:
@@ -52,6 +61,13 @@ def check_schema_drift() -> None:
             generated = tmp_path / name
             if committed.read_text(encoding="utf-8") != generated.read_text(encoding="utf-8"):
                 raise SystemExit(f"schema drift detected: {name}")
+
+
+def check_skill_metadata() -> None:
+    run([str(PYTHON), str(QUICK_VALIDATE), str(ROOT)])
+    openai_yaml = ROOT / "agents" / "openai.yaml"
+    if "$artist-portrait-editor" not in openai_yaml.read_text(encoding="utf-8"):
+        raise SystemExit("agents/openai.yaml default_prompt must mention $artist-portrait-editor")
 
 
 def write_sine_wav(path: Path, *, seconds: float = 0.25, sample_rate: int = 8000) -> None:
@@ -312,6 +328,7 @@ def main(argv: list[str] | None = None) -> int:
         ]
     )
     check_schema_drift()
+    check_skill_metadata()
     run(
         [
             str(ARTIST_PORTRAIT),
