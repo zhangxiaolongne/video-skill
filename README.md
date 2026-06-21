@@ -22,6 +22,7 @@ Stage A engineering foundation for the `artist-portrait-editor` skill.
 - [V0-002c Sources CSV Import](docs/V0_002C_SOURCES_CSV_IMPORT.md)
 - [V0-002d Rescan Identity](docs/V0_002D_RESCAN_IDENTITY.md)
 - [V0-002e Supersedes Tracking](docs/V0_002E_SUPERSEDES.md)
+- [V0-002f Minimal Material Map](docs/V0_002F_MINIMAL_MATERIAL_MAP.md)
 - [Non Goals](docs/NON_GOALS.md)
 
 ## Current Gate

@@ -245,6 +245,96 @@ def test_scan_writes_sources_and_updates_state(tmp_path, monkeypatch, capsys):
     )
     assert state_payload["steps"]["scan"]["status"] == "completed"
     assert state_payload["steps"]["segment"]["status"] == "pending"
+    assert state_payload["steps"]["map"]["status"] == "pending"
+    assert not (tmp_path / "output" / "material_map.md").exists()
+
+
+def test_map_requires_scan_first(tmp_path, capsys):
+    project_path = tmp_path / "project.yaml"
+    project_path.write_text(
+        (FIXTURES / "valid_project.yaml").read_text(encoding="utf-8"),
+        encoding="utf-8",
+    )
+    assert main(["init", "--project", str(project_path), "--quiet"]) in (0, 1)
+
+    code = main(["map", "--project", str(project_path)])
+    captured = capsys.readouterr()
+
+    assert code == 7
+    assert "map requires scan" in captured.err
+
+
+def test_map_writes_material_map_from_sources(tmp_path, monkeypatch, capsys):
+    project_path = tmp_path / "project.yaml"
+    project_path.write_text(
+        (FIXTURES / "valid_project.yaml").read_text(encoding="utf-8"),
+        encoding="utf-8",
+    )
+    media_dir = tmp_path / "media"
+    media_dir.mkdir()
+    (media_dir / "a.mp4").write_bytes(b"content")
+    (tmp_path / "sources.csv").write_text(
+        "location,source_type,work,role,rights_status,forbidden_by_user,notes\n"
+        "media/a.mp4,interview,Work A,Role A,owned,false,Primary interview\n",
+        encoding="utf-8",
+    )
+    assert main(["init", "--project", str(project_path), "--quiet"]) in (0, 1)
+    monkeypatch.setattr(
+        cli,
+        "detect_capabilities",
+        lambda: Capabilities(ffmpeg=True, ffprobe=True),
+    )
+
+    def fake_probe(path):
+        return (
+            MediaKind.video,
+            MediaProbe(
+                duration=12.5,
+                width=1920,
+                height=1080,
+                frame_rate=29.97,
+                video_codec="h264",
+                audio_present=True,
+                audio_codec="aac",
+            ),
+        )
+
+    from artist_portrait_editor.media import scanner
+
+    original_scan_project_sources = scanner.scan_project_sources
+
+    def scan_with_fake_probe(*, root, config, previous_records=None):
+        return original_scan_project_sources(
+            root=root,
+            config=config,
+            probe_fn=fake_probe,
+            previous_records=previous_records,
+        )
+
+    monkeypatch.setattr(workspace, "scan_project_sources", scan_with_fake_probe)
+
+    assert main(["scan", "--project", str(project_path), "--quiet"]) == 0
+    code = main(["map", "--project", str(project_path), "--json"])
+    captured = capsys.readouterr()
+
+    assert code == 0
+    payload = json.loads(captured.out)
+    assert payload["output"] == "output/material_map.md"
+    material_map = (tmp_path / "output" / "material_map.md").read_text(encoding="utf-8")
+    assert "# Material Map" in material_map
+    assert "No transcription, visual analysis" in material_map
+    assert "- Source count: `1`" in material_map
+    assert "- Total duration seconds: `12.500`" in material_map
+    assert "### 1. `media/a.mp4`" in material_map
+    assert "- Source type: `interview`" in material_map
+    assert "- Rights status: `owned`" in material_map
+    assert "- Notes: Primary interview" in material_map
+
+    state_payload = json.loads(
+        (tmp_path / ".artist-portrait" / "state.json").read_text(encoding="utf-8")
+    )
+    assert state_payload["steps"]["map"]["status"] == "completed"
+    assert state_payload["steps"]["map"]["output_refs"] == ["output/material_map.md"]
 
 
 def test_repeated_cli_scan_updates_moved_location(tmp_path, monkeypatch, capsys):

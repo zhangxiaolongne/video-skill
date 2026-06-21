@@ -11,8 +11,10 @@ from artist_portrait_editor.exit_codes import ExitCode
 from artist_portrait_editor.media.scanner import ScanError
 from artist_portrait_editor.schemas import write_schema_files
 from artist_portrait_editor.workspace import (
+    WorkspacePrerequisiteError,
     init_workspace,
     load_state,
+    map_workspace,
     project_root,
     scan_workspace,
     state_as_dict,
@@ -42,12 +44,17 @@ def build_parser() -> argparse.ArgumentParser:
     scan_sub.add_argument("--quiet", action="store_true")
     scan_sub.add_argument("--verbose", action="store_true")
 
+    map_sub = subparsers.add_parser("map")
+    map_sub.add_argument("--project", required=True)
+    map_sub.add_argument("--json", action="store_true")
+    map_sub.add_argument("--quiet", action="store_true")
+    map_sub.add_argument("--verbose", action="store_true")
+
     for command in (
         "segment",
         "transcribe",
         "analyze",
         "relate",
-        "map",
         "propose",
         "timeline",
         "review",
@@ -175,6 +182,34 @@ def cmd_scan(args: argparse.Namespace) -> int:
     return int(ExitCode.success)
 
 
+def cmd_map(args: argparse.Namespace) -> int:
+    if error := _validate_common_flags(args):
+        return int(error)
+    project_path = Path(args.project)
+    try:
+        load_project_config(project_path)
+    except ConfigLoadError as exc:
+        print(str(exc), file=sys.stderr)
+        return int(ExitCode.invalid_project_config)
+    try:
+        output_path, _state, warnings = map_workspace(project_path)
+    except WorkspacePrerequisiteError as exc:
+        print(str(exc), file=sys.stderr)
+        return int(ExitCode.prerequisite_step_missing)
+    root = project_root(project_path)
+    payload = {
+        "output": output_path.relative_to(root).as_posix(),
+        "warnings": warnings,
+    }
+    if args.json:
+        print(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True))
+    elif not args.quiet:
+        print(f"wrote {payload['output']}")
+        for warning in warnings:
+            print(f"warning: {warning}", file=sys.stderr)
+    return int(ExitCode.success_with_warnings if warnings else ExitCode.success)
+
+
 def blocked_stage_a_command(args: argparse.Namespace) -> int:
     print(
         f"{args.command} is outside the Stage A gate and is not implemented",
@@ -200,6 +235,7 @@ def main(argv: list[str] | None = None) -> int:
         "status": cmd_status,
         "generate-schema": cmd_generate_schema,
         "scan": cmd_scan,
+        "map": cmd_map,
     }
     handler = handlers.get(args.command, blocked_stage_a_command)
     return handler(args)

@@ -20,12 +20,17 @@ from artist_portrait_editor.models.state import (
     StepStatus,
     initial_steps,
 )
+from artist_portrait_editor.models.source import SourceRecord
 from artist_portrait_editor.run_records import (
     environment_snapshot,
     new_run_id,
     utc_now,
     write_json,
 )
+
+
+class WorkspacePrerequisiteError(Exception):
+    pass
 
 
 def project_root(project_path: Path) -> Path:
@@ -200,3 +205,142 @@ def scan_workspace(project_path: Path) -> tuple[ScanResult, ProjectState]:
     (runs_dir / "log.txt").write_text("scan completed\n", encoding="utf-8")
     save_state(root, state)
     return result, state
+
+
+def map_workspace(project_path: Path) -> tuple[Path, ProjectState, list[str]]:
+    config = load_project_config(project_path)
+    root = project_root(project_path)
+    state = load_state(root)
+    if state is None:
+        raise WorkspacePrerequisiteError("map requires init to complete first")
+
+    sources_path = root / WORKSPACE_DIR / DATA_DIR / "sources.jsonl"
+    if not sources_path.exists():
+        raise WorkspacePrerequisiteError("map requires scan to complete first")
+
+    records = read_sources_jsonl(sources_path)
+    warnings = ["no sources available for material map"] if not records else []
+    run_id = new_run_id()
+    output_dir = root / config.paths.output_dir
+    output_dir.mkdir(parents=True, exist_ok=True)
+    output_path = output_dir / "material_map.md"
+    output_path.write_text(
+        render_material_map(records=records, sources_ref=sources_path.relative_to(root).as_posix()),
+        encoding="utf-8",
+    )
+
+    input_fingerprint = fingerprint_file(sources_path)
+    status = StepStatus.completed_with_warnings if warnings else StepStatus.completed
+    state.steps["map"] = StepLedgerEntry(
+        status=status,
+        input_fingerprint=input_fingerprint,
+        output_refs=[output_path.relative_to(root).as_posix()],
+        last_run_id=run_id,
+        warnings=warnings,
+    )
+    state.latest_run_id = run_id
+    state.updated_at = utc_now()
+    state.overall_status = OverallStatus.degraded if warnings else OverallStatus.ready
+
+    runs_dir = root / WORKSPACE_DIR / RUNS_DIR / run_id
+    runs_dir.mkdir(parents=True, exist_ok=True)
+    write_json(runs_dir / "command.json", {"command": "map", "project": str(project_path)})
+    write_json(runs_dir / "environment.json", environment_snapshot())
+    write_json(
+        runs_dir / "step_result.json",
+        {
+            "step": "map",
+            "status": status.value,
+            "sources": len(records),
+            "output": output_path.relative_to(root).as_posix(),
+        },
+    )
+    write_json(runs_dir / "warnings.json", warnings)
+    write_json(runs_dir / "errors.json", [])
+    (runs_dir / "log.txt").write_text("map completed\n", encoding="utf-8")
+    save_state(root, state)
+    return output_path, state, warnings
+
+
+def render_material_map(*, records: list[SourceRecord], sources_ref: str) -> str:
+    sorted_records = sorted(records, key=lambda record: record.primary_location)
+    total_duration = sum(record.media_probe.duration for record in sorted_records)
+    media_counts = count_by_value(record.media_kind.value for record in sorted_records)
+    source_type_counts = count_by_value(
+        str(record.source_type.value) for record in sorted_records
+    )
+    rights_counts = count_by_value(str(record.rights_status.value) for record in sorted_records)
+
+    return (
+        "# Material Map\n\n"
+        "This deterministic source inventory is rendered from local scan data only. "
+        "No transcription, visual analysis, embeddings, creative proposals, timeline "
+        "generation, preview rendering, network calls, or model calls were performed.\n\n"
+        "## Summary\n\n"
+        f"- Source ledger: `{sources_ref}`\n"
+        f"- Source count: `{len(sorted_records)}`\n"
+        f"- Total duration seconds: `{total_duration:.3f}`\n\n"
+        "## Distribution\n\n"
+        "### Media Kind\n\n"
+        f"{render_count_lines(media_counts)}\n"
+        "### Source Type\n\n"
+        f"{render_count_lines(source_type_counts)}\n"
+        "### Rights Status\n\n"
+        f"{render_count_lines(rights_counts)}\n"
+        "## Sources\n\n"
+        f"{render_source_sections(sorted_records)}"
+    )
+
+
+def count_by_value(values) -> dict[str, int]:
+    counts: dict[str, int] = {}
+    for value in values:
+        counts[value] = counts.get(value, 0) + 1
+    return dict(sorted(counts.items()))
+
+
+def render_count_lines(counts: dict[str, int]) -> str:
+    if not counts:
+        return "- None\n\n"
+    return "".join(f"- `{key}`: {value}\n" for key, value in counts.items()) + "\n"
+
+
+def render_source_sections(records: list[SourceRecord]) -> str:
+    if not records:
+        return "No sources were found in the current scan ledger.\n"
+    sections = []
+    for index, record in enumerate(records, start=1):
+        sections.append(render_source_section(index, record))
+    return "\n".join(sections)
+
+
+def render_source_section(index: int, record: SourceRecord) -> str:
+    probe = record.media_probe
+    dimensions = f"{probe.width}x{probe.height}" if probe.width and probe.height else "n/a"
+    frame_rate = f"{probe.frame_rate:.3f}" if probe.frame_rate else "n/a"
+    supersedes = f"`{record.supersedes_source_id}`" if record.supersedes_source_id else "None"
+    risk_flags = ", ".join(f"`{flag.value}`" for flag in record.risk_flags) or "None"
+    locations = "".join(f"  - `{location}`\n" for location in record.locations)
+    notes = record.notes or "None"
+    return (
+        f"### {index}. `{record.primary_location}`\n\n"
+        f"- Source ID: `{record.source_id}`\n"
+        f"- Media kind: `{record.media_kind.value}`\n"
+        f"- Duration seconds: `{probe.duration:.3f}`\n"
+        f"- Dimensions: `{dimensions}`\n"
+        f"- Frame rate: `{frame_rate}`\n"
+        f"- Video codec: `{probe.video_codec or 'n/a'}`\n"
+        f"- Audio present: `{str(probe.audio_present).lower()}`\n"
+        f"- Audio codec: `{probe.audio_codec or 'n/a'}`\n"
+        f"- Source type: `{record.source_type.value}` "
+        f"(method `{record.source_type.method}`, confidence `{record.source_type.confidence:.3f}`)\n"
+        f"- Rights status: `{record.rights_status.value}` "
+        f"(method `{record.rights_status.method}`, confidence `{record.rights_status.confidence:.3f}`)\n"
+        f"- Provenance confidence: `{record.provenance_confidence:.3f}`\n"
+        f"- Forbidden by user: `{str(record.forbidden_by_user).lower()}`\n"
+        f"- Supersedes source ID: {supersedes}\n"
+        f"- Risk flags: {risk_flags}\n"
+        f"- Notes: {notes}\n"
+        "- Locations:\n"
+        f"{locations}"
+    )
