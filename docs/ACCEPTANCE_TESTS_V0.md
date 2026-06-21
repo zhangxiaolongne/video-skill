@@ -22,6 +22,7 @@ Current local foundation tests cover:
 - enhanced `status --json`
 - `run_report.md` refresh after state-mutating commands
 - invalid `sources.jsonl` handling for `scan`, `status`, `map`, and `review`
+- atomic writes for rebuildable report outputs
 
 Future segmentation, transcription, analysis, proposal, timeline, preview,
 model, and network fixtures are intentionally not implemented yet.

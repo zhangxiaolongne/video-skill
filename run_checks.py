@@ -205,10 +205,23 @@ def check_local_foundation_outputs() -> None:
         if payload["latest_run"].get("command") != "review":
             raise SystemExit("status dashboard did not report latest review run")
 
+        material_map = (tmp_path / "output" / "material_map.md").read_text(
+            encoding="utf-8"
+        )
+        if "# Material Map" not in material_map or "No transcription" not in material_map:
+            raise SystemExit("material_map content check failed")
+        risk_report = (tmp_path / "output" / "risk_report.md").read_text(
+            encoding="utf-8"
+        )
+        if "# Risk Report" not in risk_report or "rights_unknown" not in risk_report:
+            raise SystemExit("risk_report content check failed")
         run_report = tmp_path / "output" / "run_report.md"
         report = run_report.read_text(encoding="utf-8")
         if "- `review_project`: `completed_with_warnings`" not in report:
             raise SystemExit("run_report was not refreshed after review")
+        for name in ("material_map.md.tmp", "risk_report.md.tmp", "run_report.md.tmp"):
+            if (tmp_path / "output" / name).exists():
+                raise SystemExit(f"temporary output file was left behind: {name}")
 
         (data_dir / "sources.jsonl").write_text(
             '{"source_id": "missing-required-fields"}\n',

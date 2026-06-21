@@ -41,6 +41,14 @@ def fingerprint_file(path: Path) -> str:
     return "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest()
 
 
+def atomic_write_text(path: Path, content: str) -> Path:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_name(path.name + ".tmp")
+    tmp.write_text(content, encoding="utf-8")
+    tmp.replace(path)
+    return path
+
+
 def state_path(root: Path) -> Path:
     return root / WORKSPACE_DIR / "state.json"
 
@@ -150,10 +158,8 @@ def render_run_report(state: ProjectState, warnings: list[str]) -> str:
 
 
 def write_run_report(output_dir: Path, state: ProjectState, warnings: list[str]) -> Path:
-    output_dir.mkdir(parents=True, exist_ok=True)
     output_path = output_dir / "run_report.md"
-    output_path.write_text(render_run_report(state, warnings), encoding="utf-8")
-    return output_path
+    return atomic_write_text(output_path, render_run_report(state, warnings))
 
 
 def state_as_dict(state: ProjectState) -> dict:
@@ -389,11 +395,10 @@ def map_workspace(project_path: Path) -> tuple[Path, ProjectState, list[str]]:
     warnings = ["no sources available for material map"] if not records else []
     run_id = new_run_id()
     output_dir = root / config.paths.output_dir
-    output_dir.mkdir(parents=True, exist_ok=True)
     output_path = output_dir / "material_map.md"
-    output_path.write_text(
+    atomic_write_text(
+        output_path,
         render_material_map(records=records, sources_ref=sources_path.relative_to(root).as_posix()),
-        encoding="utf-8",
     )
 
     input_fingerprint = fingerprint_file(sources_path)
@@ -539,15 +544,14 @@ def review_project_workspace(
     ] if issues else []
     run_id = new_run_id()
     output_dir = root / config.paths.output_dir
-    output_dir.mkdir(parents=True, exist_ok=True)
     output_path = output_dir / "risk_report.md"
-    output_path.write_text(
+    atomic_write_text(
+        output_path,
         render_risk_report(
             records=records,
             issues=issues,
             sources_ref=sources_path.relative_to(root).as_posix(),
         ),
-        encoding="utf-8",
     )
 
     input_fingerprint = fingerprint_file(sources_path)
