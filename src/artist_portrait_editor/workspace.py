@@ -220,6 +220,116 @@ def render_status_panel(payload: dict) -> str:
     return "\n".join(lines) + "\n"
 
 
+def doctor_project_payload(project_path: Path) -> dict:
+    config = load_project_config(project_path)
+    root = project_root(project_path)
+    state = load_state(root)
+    issues: list[dict[str, str]] = []
+
+    if state is None:
+        issues.append(
+            workspace_issue(
+                code="workspace_not_initialized",
+                severity="warning",
+                detail="project workspace state is missing",
+                next_action=f"artist-portrait init --project {project_path}",
+            )
+        )
+        return {
+            "project_id": config.project.id,
+            "overall_status": OverallStatus.new.value,
+            "initialized": False,
+            "issues": issues,
+            "issue_count": len(issues),
+            "recommended_commands": recommended_commands(issues),
+            "artifacts": artifact_statuses(root),
+            "summaries": status_summaries(root),
+        }
+
+    issues.extend(ledger_output_ref_issues(root, state))
+    sources_path = root / WORKSPACE_DIR / DATA_DIR / "sources.jsonl"
+    sources = source_summary(sources_path)
+    if sources.get("valid") is False:
+        issues.append(
+            workspace_issue(
+                code="source_ledger_invalid",
+                severity="error",
+                detail=str(sources.get("error") or "source ledger is invalid"),
+                next_action=(
+                    f"fix {sources_path.relative_to(root).as_posix()} or rerun "
+                    f"artist-portrait scan --project {project_path}"
+                ),
+            )
+        )
+    elif (
+        sources.get("valid") is True
+        and state.steps.get("map", StepLedgerEntry()).status == StepStatus.pending
+    ):
+        issues.append(
+            workspace_issue(
+                code="map_pending",
+                severity="info",
+                detail="source ledger exists but material map has not been generated",
+                next_action=f"artist-portrait map --project {project_path}",
+            )
+        )
+    if (
+        sources.get("valid") is True
+        and state.steps.get("review_project", StepLedgerEntry()).status == StepStatus.pending
+    ):
+        issues.append(
+            workspace_issue(
+                code="review_project_pending",
+                severity="info",
+                detail="source ledger exists but project review has not been generated",
+                next_action=f"artist-portrait review --project {project_path} --scope project",
+            )
+        )
+
+    return {
+        "project_id": state.project_id,
+        "overall_status": state.overall_status.value,
+        "initialized": True,
+        "issues": issues,
+        "issue_count": len(issues),
+        "recommended_commands": recommended_commands(issues),
+        "artifacts": artifact_statuses(root),
+        "summaries": {
+            **status_summaries(root),
+            "state": {"exists": True, "steps": len(state.steps)},
+        },
+        "latest_run": latest_run_summary(root, state.latest_run_id),
+    }
+
+
+def render_doctor_panel(payload: dict) -> str:
+    lines = [
+        f"project: {payload.get('project_id')}",
+        f"overall_status: {payload.get('overall_status')}",
+        f"initialized: {str(payload.get('initialized')).lower()}",
+        f"issues: {payload.get('issue_count', 0)}",
+    ]
+    issues = payload.get("issues") or []
+    for issue in issues:
+        lines.append(
+            f"- {issue.get('severity')}: {issue.get('code')} - {issue.get('detail')}"
+        )
+        if issue.get("next_action"):
+            lines.append(f"  next: {issue['next_action']}")
+    if not issues:
+        lines.append("next: none")
+    return "\n".join(lines) + "\n"
+
+
+def recommended_commands(issues: list[dict[str, str]]) -> list[str]:
+    commands = []
+    for issue in issues:
+        command = issue.get("next_action")
+        if command and command.startswith("artist-portrait ") and command not in commands:
+            commands.append(command)
+    return commands
+
+
 def artifact_statuses(root: Path) -> dict[str, dict]:
     artifact_paths = {
         "state": root / WORKSPACE_DIR / "state.json",
@@ -721,6 +831,7 @@ def artifact_issue(
     severity: str,
     detail: str,
 ) -> dict[str, str]:
+    next_action = rebuild_command_for_step(step)
     return {
         "scope": "artifact",
         "step": step,
@@ -729,6 +840,7 @@ def artifact_issue(
         "code": code,
         "severity": severity,
         "detail": detail,
+        "next_action": next_action,
     }
 
 
@@ -740,6 +852,32 @@ def review_scope_issue(*, scope: str, detail: str) -> dict[str, str]:
         "severity": "warning",
         "detail": detail,
     }
+
+
+def workspace_issue(
+    *,
+    code: str,
+    severity: str,
+    detail: str,
+    next_action: str,
+) -> dict[str, str]:
+    return {
+        "scope": "workspace",
+        "code": code,
+        "severity": severity,
+        "detail": detail,
+        "next_action": next_action,
+    }
+
+
+def rebuild_command_for_step(step: str) -> str:
+    commands = {
+        "init": "artist-portrait init --project <project.yaml>",
+        "scan": "artist-portrait scan --project <project.yaml>",
+        "map": "artist-portrait map --project <project.yaml>",
+        "review_project": "artist-portrait review --project <project.yaml> --scope project",
+    }
+    return commands.get(step, "rerun the command that produced this output")
 
 
 def render_risk_report(
@@ -784,6 +922,8 @@ def render_issue_sections(issues: list[dict[str, str]]) -> str:
             optional_lines += f"- Location: `{issue['location']}`\n"
         if issue.get("ref"):
             optional_lines += f"- Output ref: `{issue['ref']}`\n"
+        if issue.get("next_action"):
+            optional_lines += f"- Next action: `{issue['next_action']}`\n"
         sections.append(
             f"### {index}. `{issue['code']}`\n\n"
             f"- Severity: `{issue['severity']}`\n"

@@ -8,6 +8,7 @@ Implemented local foundation commands:
 artist-portrait validate --project ./project.yaml
 artist-portrait init --project ./project.yaml
 artist-portrait status --project ./project.yaml
+artist-portrait doctor --project ./project.yaml
 artist-portrait generate-schema --output-dir schemas
 artist-portrait scan --project ./project.yaml
 artist-portrait map --project ./project.yaml
@@ -35,3 +36,8 @@ Commands outside the current gate currently return `7 prerequisite_step_missing`
 summaries. It also reports `artifact_issues` when completed ledger steps refer
 to outputs that no longer exist. It does not run media operations or mutate
 project files.
+
+`doctor --json` is a read-only diagnostic command. It reports local workspace,
+source ledger, and artifact consistency issues with `next_action` guidance and
+`recommended_commands`. It returns `1 success_with_warnings` when diagnostics
+find issues and `0 success` when no issues are found.

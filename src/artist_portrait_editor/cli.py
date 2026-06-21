@@ -12,11 +12,13 @@ from artist_portrait_editor.media.scanner import ScanError, SourceLedgerError
 from artist_portrait_editor.schemas import write_schema_files
 from artist_portrait_editor.workspace import (
     WorkspacePrerequisiteError,
+    doctor_project_payload,
     init_workspace,
     load_state,
     map_workspace,
     project_status_payload,
     project_root,
+    render_doctor_panel,
     render_status_panel,
     review_project_workspace,
     scan_workspace,
@@ -29,7 +31,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--version", action="store_true")
     subparsers = parser.add_subparsers(dest="command")
 
-    for command in ("validate", "init", "status"):
+    for command in ("validate", "init", "status", "doctor"):
         sub = subparsers.add_parser(command)
         sub.add_argument("--project", required=True)
         sub.add_argument("--json", action="store_true")
@@ -133,6 +135,27 @@ def cmd_status(args: argparse.Namespace) -> int:
     elif not args.quiet:
         print(render_status_panel(payload), end="")
     return int(ExitCode.success)
+
+
+def cmd_doctor(args: argparse.Namespace) -> int:
+    if error := _validate_common_flags(args):
+        return int(error)
+    project_path = Path(args.project)
+    try:
+        load_project_config(project_path)
+    except ConfigLoadError as exc:
+        print(str(exc), file=sys.stderr)
+        return int(ExitCode.invalid_project_config)
+    payload = doctor_project_payload(project_path)
+    if args.json:
+        print(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True))
+    elif not args.quiet:
+        print(render_doctor_panel(payload), end="")
+    return int(
+        ExitCode.success_with_warnings
+        if payload.get("issue_count")
+        else ExitCode.success
+    )
 
 
 def cmd_generate_schema(args: argparse.Namespace) -> int:
@@ -287,6 +310,7 @@ def main(argv: list[str] | None = None) -> int:
         "validate": cmd_validate,
         "init": cmd_init,
         "status": cmd_status,
+        "doctor": cmd_doctor,
         "generate-schema": cmd_generate_schema,
         "scan": cmd_scan,
         "map": cmd_map,

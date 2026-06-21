@@ -26,6 +26,8 @@ Current local foundation tests cover:
 - ledger output reference consistency in `status` and `review`
 - minimal `review --scope all` that runs project review and marks proposal and
   timeline review as skipped
+- read-only `doctor` diagnostics for uninitialized workspaces, missing output
+  refs, invalid source ledgers, and recommended next commands
 
 Future segmentation, transcription, analysis, proposal, timeline, preview,
 model, and network fixtures are intentionally not implemented yet.

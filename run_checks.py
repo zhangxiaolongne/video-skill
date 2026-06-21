@@ -174,6 +174,14 @@ def check_local_foundation_outputs() -> None:
             [str(ARTIST_PORTRAIT), "init", "--project", str(project), "--quiet"],
             expect=(0, 1),
         )
+        initial_doctor = subprocess.run(
+            [str(ARTIST_PORTRAIT), "doctor", "--project", str(project), "--json"],
+            cwd=ROOT,
+            capture_output=True,
+            text=True,
+        )
+        if initial_doctor.returncode != 0:
+            raise SystemExit(f"doctor after init reported issues: {initial_doctor.stdout}")
 
         data_dir = tmp_path / ".artist-portrait" / "data"
         data_dir.mkdir(parents=True, exist_ok=True)
@@ -214,6 +222,20 @@ def check_local_foundation_outputs() -> None:
         artifact_issues = payload.get("artifact_issues") or []
         if not any(issue.get("code") == "missing_output_ref" for issue in artifact_issues):
             raise SystemExit("status dashboard did not report missing output ref")
+        doctor = subprocess.run(
+            [str(ARTIST_PORTRAIT), "doctor", "--project", str(project), "--json"],
+            cwd=ROOT,
+            capture_output=True,
+            text=True,
+        )
+        if doctor.returncode != 1:
+            raise SystemExit(f"doctor did not report artifact issue: {doctor.stdout}")
+        doctor_payload = json.loads(doctor.stdout)
+        if not any(
+            issue.get("code") == "missing_output_ref"
+            for issue in doctor_payload.get("issues", [])
+        ):
+            raise SystemExit("doctor did not include missing output ref")
         risk_report = (tmp_path / "output" / "risk_report.md").read_text(
             encoding="utf-8"
         )
@@ -257,6 +279,20 @@ def check_local_foundation_outputs() -> None:
         invalid_payload = json.loads(invalid_status.stdout)
         if invalid_payload["summaries"]["sources"].get("valid") is not False:
             raise SystemExit("status dashboard did not report invalid sources")
+        invalid_doctor = subprocess.run(
+            [str(ARTIST_PORTRAIT), "doctor", "--project", str(project), "--json"],
+            cwd=ROOT,
+            capture_output=True,
+            text=True,
+        )
+        if invalid_doctor.returncode != 1:
+            raise SystemExit("doctor did not report invalid sources")
+        invalid_doctor_payload = json.loads(invalid_doctor.stdout)
+        if not any(
+            issue.get("code") == "source_ledger_invalid"
+            for issue in invalid_doctor_payload.get("issues", [])
+        ):
+            raise SystemExit("doctor did not classify invalid sources")
 
 
 def main(argv: list[str] | None = None) -> int:

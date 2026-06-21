@@ -174,6 +174,40 @@ def test_status_after_init_human_panel(tmp_path, capsys):
     assert "scan: pending" in captured.out
 
 
+def test_doctor_before_init_recommends_init(tmp_path, capsys):
+    project_path = tmp_path / "project.yaml"
+    project_path.write_text(
+        (FIXTURES / "valid_project.yaml").read_text(encoding="utf-8"),
+        encoding="utf-8",
+    )
+
+    code = main(["doctor", "--project", str(project_path), "--json"])
+    captured = capsys.readouterr()
+
+    assert code == 1
+    payload = json.loads(captured.out)
+    assert payload["initialized"] is False
+    assert payload["issue_count"] == 1
+    assert payload["issues"][0]["code"] == "workspace_not_initialized"
+    assert "artist-portrait init --project" in payload["issues"][0]["next_action"]
+
+
+def test_doctor_after_init_reports_no_issues(tmp_path, capsys):
+    project_path = tmp_path / "project.yaml"
+    project_path.write_text(
+        (FIXTURES / "valid_project.yaml").read_text(encoding="utf-8"),
+        encoding="utf-8",
+    )
+    assert main(["init", "--project", str(project_path), "--quiet"]) in (0, 1)
+
+    code = main(["doctor", "--project", str(project_path)])
+    captured = capsys.readouterr()
+
+    assert code == 0
+    assert "issues: 0" in captured.out
+    assert "next: none" in captured.out
+
+
 def test_repeated_init_keeps_stage_a_boundary(tmp_path):
     project_path = tmp_path / "project.yaml"
     project_path.write_text(
@@ -587,6 +621,7 @@ def test_status_and_review_report_missing_output_ref(tmp_path, capsys):
             "scope": "artifact",
             "severity": "warning",
             "step": "map",
+            "next_action": "artist-portrait map --project <project.yaml>",
         }
     ]
 
@@ -606,6 +641,17 @@ def test_status_and_review_report_missing_output_ref(tmp_path, capsys):
     risk_report = (tmp_path / "output" / "risk_report.md").read_text(encoding="utf-8")
     assert "missing_output_ref" in risk_report
     assert "Output ref: `output/material_map.md`" in risk_report
+
+    code = main(["doctor", "--project", str(project_path), "--json"])
+    captured = capsys.readouterr()
+    doctor_payload = json.loads(captured.out)
+
+    assert code == 1
+    assert doctor_payload["issue_count"] == 1
+    assert doctor_payload["issues"][0]["code"] == "missing_output_ref"
+    assert doctor_payload["recommended_commands"] == [
+        "artist-portrait map --project <project.yaml>"
+    ]
 
 
 def test_invalid_sources_jsonl_blocks_scan_map_and_review_but_status_reports_it(
@@ -653,6 +699,15 @@ def test_invalid_sources_jsonl_blocks_scan_map_and_review_but_status_reports_it(
     assert payload["summaries"]["sources"]["exists"] is True
     assert payload["summaries"]["sources"]["valid"] is False
     assert "invalid SourceRecord JSONL" in payload["summaries"]["sources"]["error"]
+
+    code = main(["doctor", "--project", str(project_path), "--json"])
+    captured = capsys.readouterr()
+    doctor_payload = json.loads(captured.out)
+
+    assert code == 1
+    assert doctor_payload["issue_count"] == 1
+    assert doctor_payload["issues"][0]["code"] == "source_ledger_invalid"
+    assert "invalid SourceRecord JSONL" in doctor_payload["issues"][0]["detail"]
 
 
 def test_repeated_cli_scan_updates_moved_location(tmp_path, monkeypatch, capsys):

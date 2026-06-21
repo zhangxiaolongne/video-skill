@@ -30,6 +30,7 @@ Stage A engineering foundation for the `artist-portrait-editor` skill.
 - [V0-002k Invalid Ledger Handling](docs/V0_002K_INVALID_LEDGER_HANDLING.md)
 - [V0-002l Atomic Report Writes](docs/V0_002L_ATOMIC_REPORT_WRITES.md)
 - [V0-002m Artifact Consistency](docs/V0_002M_ARTIFACT_CONSISTENCY.md)
+- [V0-002n Doctor Diagnostics](docs/V0_002N_DOCTOR_DIAGNOSTICS.md)
 - [Non Goals](docs/NON_GOALS.md)
 
 ## Current Gate
@@ -67,6 +68,7 @@ python3 -m venv .venv
 .venv/bin/artist-portrait validate --project fixtures/stage_a/valid_project.yaml
 .venv/bin/artist-portrait init --project ./project.yaml
 .venv/bin/artist-portrait status --project ./project.yaml
+.venv/bin/artist-portrait doctor --project ./project.yaml
 .venv/bin/artist-portrait generate-schema --output-dir schemas
 .venv/bin/artist-portrait scan --project ./project.yaml
 .venv/bin/artist-portrait map --project ./project.yaml
