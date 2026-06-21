@@ -111,6 +111,28 @@ def test_status_after_init_json(tmp_path, capsys):
     payload = json.loads(captured.out)
     assert payload["project_id"] == "chen_haoyu_portrait_001"
     assert payload["steps"]["scan"]["status"] == "pending"
+    assert payload["artifacts"]["state"]["exists"] is True
+    assert payload["artifacts"]["run_report"]["exists"] is True
+    assert payload["artifacts"]["sources"]["exists"] is False
+    assert payload["summaries"]["sources"]["exists"] is False
+
+
+def test_status_after_init_human_panel(tmp_path, capsys):
+    project_path = tmp_path / "project.yaml"
+    project_path.write_text(
+        (FIXTURES / "valid_project.yaml").read_text(encoding="utf-8"),
+        encoding="utf-8",
+    )
+    assert main(["init", "--project", str(project_path), "--quiet"]) in (0, 1)
+
+    code = main(["status", "--project", str(project_path)])
+    captured = capsys.readouterr()
+
+    assert code == 0
+    assert "project: chen_haoyu_portrait_001" in captured.out
+    assert "overall_status:" in captured.out
+    assert "sources: missing" in captured.out
+    assert "scan: pending" in captured.out
 
 
 def test_repeated_init_keeps_stage_a_boundary(tmp_path):
@@ -247,6 +269,9 @@ def test_scan_writes_sources_and_updates_state(tmp_path, monkeypatch, capsys):
     assert state_payload["steps"]["segment"]["status"] == "pending"
     assert state_payload["steps"]["map"]["status"] == "pending"
     assert not (tmp_path / "output" / "material_map.md").exists()
+    run_report = (tmp_path / "output" / "run_report.md").read_text(encoding="utf-8")
+    assert "- `scan`: `completed`" in run_report
+    assert "- `map`: `pending`" in run_report
 
 
 def test_map_requires_scan_first(tmp_path, capsys):
@@ -439,6 +464,21 @@ def test_review_project_writes_risk_report_from_sources(tmp_path, monkeypatch, c
     )
     assert state_payload["steps"]["review_project"]["status"] == "completed_with_warnings"
     assert state_payload["steps"]["review_project"]["output_refs"] == ["output/risk_report.md"]
+    run_report = (tmp_path / "output" / "run_report.md").read_text(encoding="utf-8")
+    assert "- `review_project`: `completed_with_warnings`" in run_report
+    assert "2 project risk issue(s) found" in run_report
+
+    code = main(["status", "--project", str(project_path), "--json"])
+    captured = capsys.readouterr()
+    status_payload = json.loads(captured.out)
+
+    assert code == 0
+    assert status_payload["summaries"]["sources"]["count"] == 1
+    assert status_payload["summaries"]["sources"]["media_kind_counts"] == {"video": 1}
+    assert status_payload["artifacts"]["risk_report"]["exists"] is True
+    assert status_payload["latest_run"]["command"] == "review"
+    assert status_payload["latest_run"]["scope"] == "project"
+    assert status_payload["latest_run"]["step_result"]["issues"] == 2
 
 
 def test_repeated_cli_scan_updates_moved_location(tmp_path, monkeypatch, capsys):

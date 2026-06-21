@@ -24,6 +24,8 @@ Stage A engineering foundation for the `artist-portrait-editor` skill.
 - [V0-002e Supersedes Tracking](docs/V0_002E_SUPERSEDES.md)
 - [V0-002f Minimal Material Map](docs/V0_002F_MINIMAL_MATERIAL_MAP.md)
 - [V0-002g Minimal Project Review](docs/V0_002G_MINIMAL_PROJECT_REVIEW.md)
+- [V0-002h Status Dashboard](docs/V0_002H_STATUS_DASHBOARD.md)
+- [V0-002i Run Report Refresh](docs/V0_002I_RUN_REPORT_REFRESH.md)
 - [Non Goals](docs/NON_GOALS.md)
 
 ## Current Gate

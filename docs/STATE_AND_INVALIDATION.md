@@ -30,3 +30,10 @@ blocked
 
 Stage A initializes ledger entries for future V0 steps but leaves media and
 creative steps pending.
+
+`status --json` is read-only. It reports the current ledger, local artifact
+presence, source ledger summaries, and latest run metadata without triggering
+scan, map, review, model calls, or network access.
+
+`output/run_report.md` is a rebuildable status artifact. Foundation commands
+that update the ledger refresh it after writing state.

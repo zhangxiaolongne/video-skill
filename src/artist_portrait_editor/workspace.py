@@ -121,28 +121,194 @@ def init_workspace(project_path: Path, dry_run: bool = False) -> tuple[ProjectSt
     write_json(runs_dir / "errors.json", [])
     (runs_dir / "log.txt").write_text("init completed\n", encoding="utf-8")
     save_state(root, state)
-    (output_dir / "run_report.md").write_text(render_run_report(state, warnings), encoding="utf-8")
+    write_run_report(output_dir, state, warnings)
     return state, warnings
 
 
 def render_run_report(state: ProjectState, warnings: list[str]) -> str:
     warning_lines = "\n".join(f"- {warning}" for warning in warnings) or "- None"
+    step_lines = "\n".join(
+        f"- `{name}`: `{entry.status.value}`"
+        for name, entry in sorted(state.steps.items())
+    )
     return (
         "# Run Report\n\n"
         f"- Project ID: `{state.project_id}`\n"
         f"- Run ID: `{state.latest_run_id}`\n"
         f"- Overall Status: `{state.overall_status.value}`\n"
         f"- Updated At: `{state.updated_at}`\n\n"
-        "## Stage A\n\n"
-        "No media scanning, transcription, visual analysis, proposals, or timeline "
-        "generation was performed.\n\n"
+        "## Boundary\n\n"
+        "This report is generated from local project state and deterministic local "
+        "artifacts. No transcription, visual analysis, embeddings, creative proposals, "
+        "timeline generation, preview rendering, network calls, or model calls were "
+        "performed by this report step.\n\n"
+        "## Steps\n\n"
+        f"{step_lines}\n\n"
         "## Warnings\n\n"
         f"{warning_lines}\n"
     )
 
 
+def write_run_report(output_dir: Path, state: ProjectState, warnings: list[str]) -> Path:
+    output_dir.mkdir(parents=True, exist_ok=True)
+    output_path = output_dir / "run_report.md"
+    output_path.write_text(render_run_report(state, warnings), encoding="utf-8")
+    return output_path
+
+
 def state_as_dict(state: ProjectState) -> dict:
     return json.loads(state.model_dump_json())
+
+
+def project_status_payload(project_path: Path) -> dict:
+    config = load_project_config(project_path)
+    root = project_root(project_path)
+    state = load_state(root)
+    artifacts = artifact_statuses(root)
+    payload: dict
+    if state is None:
+        payload = {
+            "project_id": config.project.id,
+            "overall_status": OverallStatus.new.value,
+            "state": None,
+        }
+    else:
+        payload = state_as_dict(state)
+    payload["artifacts"] = artifacts
+    payload["summaries"] = status_summaries(root)
+    payload["latest_run"] = latest_run_summary(root, state.latest_run_id if state else None)
+    return payload
+
+
+def render_status_panel(payload: dict) -> str:
+    lines = [
+        f"project: {payload.get('project_id')}",
+        f"overall_status: {payload.get('overall_status')}",
+    ]
+    latest_run = payload.get("latest_run") or {}
+    if latest_run.get("run_id"):
+        command = latest_run.get("command") or "unknown"
+        lines.append(f"latest_run: {latest_run['run_id']} ({command})")
+    summaries = payload.get("summaries") or {}
+    sources = summaries.get("sources") or {}
+    if sources.get("exists"):
+        lines.append(f"sources: {sources.get('count', 0)}")
+    else:
+        lines.append("sources: missing")
+    risk = summaries.get("risk_report") or {}
+    if risk.get("exists"):
+        lines.append(f"risk_report: present ({risk.get('bytes', 0)} bytes)")
+    material_map = summaries.get("material_map") or {}
+    if material_map.get("exists"):
+        lines.append(f"material_map: present ({material_map.get('bytes', 0)} bytes)")
+    steps = payload.get("steps") or {}
+    for step in ("scan", "map", "review_project"):
+        if step in steps:
+            lines.append(f"{step}: {steps[step].get('status')}")
+    return "\n".join(lines) + "\n"
+
+
+def artifact_statuses(root: Path) -> dict[str, dict]:
+    artifact_paths = {
+        "state": root / WORKSPACE_DIR / "state.json",
+        "sources": root / WORKSPACE_DIR / DATA_DIR / "sources.jsonl",
+        "clips": root / WORKSPACE_DIR / DATA_DIR / "clips.jsonl",
+        "transcripts": root / WORKSPACE_DIR / DATA_DIR / "transcripts.jsonl",
+        "relations": root / WORKSPACE_DIR / DATA_DIR / "relations.jsonl",
+        "proposals_json": root / WORKSPACE_DIR / DATA_DIR / "proposals.json",
+        "run_report": root / "output" / "run_report.md",
+        "material_map": root / "output" / "material_map.md",
+        "proposals_md": root / "output" / "proposals.md",
+        "timeline_draft": root / "output" / "timeline_draft.json",
+        "risk_report": root / "output" / "risk_report.md",
+    }
+    return {
+        name: artifact_status(root, path)
+        for name, path in artifact_paths.items()
+    }
+
+
+def artifact_status(root: Path, path: Path) -> dict:
+    exists = path.exists()
+    payload = {
+        "path": path.relative_to(root).as_posix(),
+        "exists": exists,
+    }
+    if exists and path.is_file():
+        payload["bytes"] = path.stat().st_size
+    return payload
+
+
+def status_summaries(root: Path) -> dict:
+    sources_path = root / WORKSPACE_DIR / DATA_DIR / "sources.jsonl"
+    material_map_path = root / "output" / "material_map.md"
+    risk_report_path = root / "output" / "risk_report.md"
+    return {
+        "sources": source_summary(sources_path),
+        "material_map": output_summary(material_map_path),
+        "risk_report": output_summary(risk_report_path),
+    }
+
+
+def source_summary(path: Path) -> dict:
+    if not path.exists():
+        return {"exists": False}
+    try:
+        records = read_sources_jsonl(path)
+    except Exception as exc:
+        return {
+            "exists": True,
+            "valid": False,
+            "error": str(exc),
+        }
+    media_counts = count_by_value(record.media_kind.value for record in records)
+    rights_counts = count_by_value(str(record.rights_status.value) for record in records)
+    return {
+        "exists": True,
+        "valid": True,
+        "count": len(records),
+        "media_kind_counts": media_counts,
+        "rights_status_counts": rights_counts,
+        "total_duration_seconds": round(
+            sum(record.media_probe.duration for record in records),
+            3,
+        ),
+    }
+
+
+def output_summary(path: Path) -> dict:
+    if not path.exists():
+        return {"exists": False}
+    return {
+        "exists": True,
+        "bytes": path.stat().st_size,
+    }
+
+
+def latest_run_summary(root: Path, run_id: str | None) -> dict:
+    if not run_id:
+        return {"run_id": None}
+    run_dir = root / WORKSPACE_DIR / RUNS_DIR / run_id
+    payload = {
+        "run_id": run_id,
+        "exists": run_dir.exists(),
+    }
+    command_path = run_dir / "command.json"
+    if command_path.exists():
+        try:
+            command = json.loads(command_path.read_text(encoding="utf-8"))
+            payload["command"] = command.get("command")
+            if "scope" in command:
+                payload["scope"] = command["scope"]
+        except json.JSONDecodeError as exc:
+            payload["command_error"] = str(exc)
+    step_result_path = run_dir / "step_result.json"
+    if step_result_path.exists():
+        try:
+            payload["step_result"] = json.loads(step_result_path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError as exc:
+            payload["step_result_error"] = str(exc)
+    return payload
 
 
 def scan_workspace(project_path: Path) -> tuple[ScanResult, ProjectState]:
@@ -204,6 +370,7 @@ def scan_workspace(project_path: Path) -> tuple[ScanResult, ProjectState]:
     write_json(runs_dir / "errors.json", result.errors)
     (runs_dir / "log.txt").write_text("scan completed\n", encoding="utf-8")
     save_state(root, state)
+    write_run_report(root / config.paths.output_dir, state, result.warnings + result.errors)
     return result, state
 
 
@@ -259,6 +426,7 @@ def map_workspace(project_path: Path) -> tuple[Path, ProjectState, list[str]]:
     write_json(runs_dir / "errors.json", [])
     (runs_dir / "log.txt").write_text("map completed\n", encoding="utf-8")
     save_state(root, state)
+    write_run_report(output_dir, state, warnings)
     return output_path, state, warnings
 
 
@@ -416,6 +584,7 @@ def review_project_workspace(
     write_json(runs_dir / "errors.json", [])
     (runs_dir / "log.txt").write_text("review project completed\n", encoding="utf-8")
     save_state(root, state)
+    write_run_report(output_dir, state, warnings)
     return output_path, state, warnings, issues
 
 

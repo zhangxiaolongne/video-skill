@@ -15,7 +15,9 @@ from artist_portrait_editor.workspace import (
     init_workspace,
     load_state,
     map_workspace,
+    project_status_payload,
     project_root,
+    render_status_panel,
     review_project_workspace,
     scan_workspace,
     state_as_dict,
@@ -119,23 +121,17 @@ def cmd_init(args: argparse.Namespace) -> int:
 def cmd_status(args: argparse.Namespace) -> int:
     if error := _validate_common_flags(args):
         return int(error)
+    project_path = Path(args.project)
     try:
-        load_project_config(Path(args.project))
+        load_project_config(project_path)
     except ConfigLoadError as exc:
         print(str(exc), file=sys.stderr)
         return int(ExitCode.invalid_project_config)
-    state = load_state(project_root(Path(args.project)))
-    if state is None:
-        payload = {"overall_status": "new", "state": None}
-        if args.json:
-            print(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True))
-        elif not args.quiet:
-            print("new")
-        return int(ExitCode.success)
+    payload = project_status_payload(project_path)
     if args.json:
-        print(json.dumps(state_as_dict(state), ensure_ascii=False, indent=2, sort_keys=True))
+        print(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True))
     elif not args.quiet:
-        print(state.overall_status)
+        print(render_status_panel(payload), end="")
     return int(ExitCode.success)
 
 
