@@ -3,6 +3,30 @@
 This file records project progress and non-negotiable design decisions that
 must survive across implementation batches.
 
+## Relationship To Master Document
+
+The master document `artist_portrait_editor_revision5_optimized.md` owns
+strategy:
+
+- product direction
+- capability boundaries
+- data contracts
+- creative principles
+- long-term design constraints
+
+This development document owns tactics:
+
+- completed local batches
+- current implementation state
+- known packaging or validation risks
+- next likely batch
+- tactical reminders that must be carried into implementation
+
+When a user requirement changes long-term product behavior, update both files:
+
+- record the strategic principle in the master document
+- record the implementation status, current gate, and next tactical step here
+
 ## Current State
 
 - Branch: `main`
