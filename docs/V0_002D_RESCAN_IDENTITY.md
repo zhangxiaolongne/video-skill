@@ -1,6 +1,6 @@
 # V0-002d Rescan Identity
 
-Status: in progress.
+Status: completed.
 
 This slice hardens repeated `scan` behavior for moved files and changed file
 contents.
@@ -16,10 +16,11 @@ contents.
 - Changing file bytes changes the content hash and therefore creates a new
   `source_id`.
 
-## Current Boundary
+## Boundary
 
-`supersedes_source_id` is not populated yet. That requires history-aware scan
-state and is intentionally deferred to a later slice.
+This slice only established current-scan identity semantics. Historical
+replacement tracking is covered by
+[`V0_002E_SUPERSEDES.md`](V0_002E_SUPERSEDES.md).
 
 ## Validation
 

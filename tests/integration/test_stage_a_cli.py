@@ -190,7 +190,7 @@ def test_scan_writes_sources_and_updates_state(tmp_path, monkeypatch, capsys):
         lambda: Capabilities(ffmpeg=True, ffprobe=True),
     )
 
-    def fake_scan_project_sources(*, root, config):
+    def fake_scan_project_sources(*, root, config, previous_records=None):
         return ScanResult(
             records=[
                 SourceRecord(
@@ -283,8 +283,13 @@ def test_repeated_cli_scan_updates_moved_location(tmp_path, monkeypatch, capsys)
 
     original_scan_project_sources = scanner.scan_project_sources
 
-    def scan_with_fake_probe(*, root, config):
-        return original_scan_project_sources(root=root, config=config, probe_fn=fake_probe)
+    def scan_with_fake_probe(*, root, config, previous_records=None):
+        return original_scan_project_sources(
+            root=root,
+            config=config,
+            probe_fn=fake_probe,
+            previous_records=previous_records,
+        )
 
     monkeypatch.setattr(workspace, "scan_project_sources", scan_with_fake_probe)
 
@@ -297,3 +302,64 @@ def test_repeated_cli_scan_updates_moved_location(tmp_path, monkeypatch, capsys)
 
     assert second_record.source_id == first_record.source_id
     assert second_record.locations == ["media/moved.mp4"]
+
+
+def test_repeated_cli_scan_records_superseded_source_for_same_location_change(
+    tmp_path,
+    monkeypatch,
+    capsys,
+):
+    project_path = tmp_path / "project.yaml"
+    project_path.write_text(
+        (FIXTURES / "valid_project.yaml").read_text(encoding="utf-8"),
+        encoding="utf-8",
+    )
+    media_dir = tmp_path / "media"
+    media_dir.mkdir()
+    media = media_dir / "a.mp4"
+    media.write_bytes(b"first-content")
+    assert main(["init", "--project", str(project_path), "--quiet"]) in (0, 1)
+    monkeypatch.setattr(
+        cli,
+        "detect_capabilities",
+        lambda: Capabilities(ffmpeg=True, ffprobe=True),
+    )
+
+    def fake_probe(path):
+        return (
+            MediaKind.video,
+            MediaProbe(
+                duration=1.0,
+                width=16,
+                height=16,
+                frame_rate=24.0,
+                video_codec="h264",
+                audio_present=False,
+                audio_codec=None,
+            ),
+        )
+
+    from artist_portrait_editor.media import scanner
+
+    original_scan_project_sources = scanner.scan_project_sources
+
+    def scan_with_fake_probe(*, root, config, previous_records=None):
+        return original_scan_project_sources(
+            root=root,
+            config=config,
+            probe_fn=fake_probe,
+            previous_records=previous_records,
+        )
+
+    monkeypatch.setattr(workspace, "scan_project_sources", scan_with_fake_probe)
+
+    assert main(["scan", "--project", str(project_path), "--quiet"]) == 0
+    sources_path = tmp_path / ".artist-portrait" / "data" / "sources.jsonl"
+    first_record = read_sources_jsonl(sources_path)[0]
+    media.write_bytes(b"changed-content")
+    assert main(["scan", "--project", str(project_path), "--quiet"]) == 0
+    second_record = read_sources_jsonl(sources_path)[0]
+
+    assert second_record.source_id != first_record.source_id
+    assert second_record.locations == ["media/a.mp4"]
+    assert second_record.supersedes_source_id == first_record.source_id

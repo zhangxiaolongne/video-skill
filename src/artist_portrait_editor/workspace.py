@@ -7,7 +7,12 @@ from pathlib import Path
 from artist_portrait_editor.capabilities import capability_warnings, detect_capabilities
 from artist_portrait_editor.config_loader import load_project_config
 from artist_portrait_editor.constants import CACHE_DIR, DATA_DIR, RUNS_DIR, WORKSPACE_DIR
-from artist_portrait_editor.media.scanner import ScanResult, scan_project_sources, write_sources_jsonl
+from artist_portrait_editor.media.scanner import (
+    ScanResult,
+    read_sources_jsonl,
+    scan_project_sources,
+    write_sources_jsonl,
+)
 from artist_portrait_editor.models.state import (
     OverallStatus,
     ProjectState,
@@ -143,7 +148,13 @@ def scan_workspace(project_path: Path) -> tuple[ScanResult, ProjectState]:
         raise RuntimeError("scan requires initialized state")
 
     run_id = new_run_id()
-    result = scan_project_sources(root=root, config=config)
+    previous_sources_path = root / WORKSPACE_DIR / DATA_DIR / "sources.jsonl"
+    previous_records = (
+        read_sources_jsonl(previous_sources_path)
+        if previous_sources_path.exists()
+        else []
+    )
+    result = scan_project_sources(root=root, config=config, previous_records=previous_records)
     output_refs: list[str] = []
     if result.records or not result.errors:
         output_path = write_sources_jsonl(root, result.records)

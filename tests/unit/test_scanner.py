@@ -121,6 +121,51 @@ def test_file_content_change_creates_new_source_id(tmp_path):
     assert second.records[0].source_id != first.records[0].source_id
 
 
+def test_file_content_change_at_same_location_sets_supersedes_source_id(tmp_path):
+    project_path = write_project(tmp_path)
+    media_dir = tmp_path / "media"
+    media_dir.mkdir()
+    media = media_dir / "a.mp4"
+    media.write_bytes(b"first-content")
+    config = load_project_config(project_path)
+
+    first = scan_project_sources(root=tmp_path, config=config, probe_fn=fake_video_probe)
+    media.write_bytes(b"changed-content")
+    second = scan_project_sources(
+        root=tmp_path,
+        config=config,
+        probe_fn=fake_video_probe,
+        previous_records=first.records,
+    )
+
+    assert second.records[0].source_id != first.records[0].source_id
+    assert second.records[0].supersedes_source_id == first.records[0].source_id
+
+
+def test_file_move_and_content_change_does_not_infer_supersedes_source_id(tmp_path):
+    project_path = write_project(tmp_path)
+    media_dir = tmp_path / "media"
+    media_dir.mkdir()
+    original = media_dir / "a.mp4"
+    moved = media_dir / "moved.mp4"
+    original.write_bytes(b"first-content")
+    config = load_project_config(project_path)
+
+    first = scan_project_sources(root=tmp_path, config=config, probe_fn=fake_video_probe)
+    original.rename(moved)
+    moved.write_bytes(b"changed-content")
+    second = scan_project_sources(
+        root=tmp_path,
+        config=config,
+        probe_fn=fake_video_probe,
+        previous_records=first.records,
+    )
+
+    assert second.records[0].source_id != first.records[0].source_id
+    assert second.records[0].locations == ["media/moved.mp4"]
+    assert second.records[0].supersedes_source_id is None
+
+
 def test_repeated_write_replaces_sources_jsonl_locations(tmp_path):
     project_path = write_project(tmp_path)
     media_dir = tmp_path / "media"

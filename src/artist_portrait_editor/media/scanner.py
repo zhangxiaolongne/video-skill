@@ -50,6 +50,7 @@ def scan_project_sources(
     root: Path,
     config: ProjectConfig,
     probe_fn: ProbeFn = probe_media,
+    previous_records: list[SourceRecord] | None = None,
 ) -> ScanResult:
     media_dir = root / config.paths.media_dir
     if not media_dir.exists():
@@ -79,6 +80,7 @@ def scan_project_sources(
     warnings: list[str] = []
     source_csv = load_sources_csv(root)
     warnings.extend(source_csv.warnings)
+    previous_by_location = previous_record_by_location(previous_records or [])
     for content_hash in sorted(grouped_locations):
         locations = sorted(grouped_locations[content_hash])
         primary_path = sorted(grouped_paths[content_hash], key=lambda p: p.as_posix())[0]
@@ -89,6 +91,12 @@ def scan_project_sources(
             continue
         source_id = stable_source_id(config.project.id, content_hash)
         annotation = first_annotation_for_locations(locations, source_csv.annotations)
+        supersedes_source_id = supersedes_for_locations(
+            locations=locations,
+            content_hash=content_hash,
+            source_id=source_id,
+            previous_by_location=previous_by_location,
+        )
         records.append(
             build_source_record(
                 annotation=annotation,
@@ -98,6 +106,7 @@ def scan_project_sources(
                 content_hash=content_hash,
                 media_kind=media_kind,
                 media_probe=media_probe,
+                supersedes_source_id=supersedes_source_id,
             )
         )
 
@@ -122,6 +131,32 @@ def first_annotation_for_locations(
     return None
 
 
+def previous_record_by_location(records: list[SourceRecord]) -> dict[str, SourceRecord]:
+    previous: dict[str, SourceRecord] = {}
+    for record in records:
+        for location in record.locations:
+            previous[location] = record
+    return previous
+
+
+def supersedes_for_locations(
+    *,
+    locations: list[str],
+    content_hash: str,
+    source_id: str,
+    previous_by_location: dict[str, SourceRecord],
+) -> str | None:
+    for location in locations:
+        previous = previous_by_location.get(location)
+        if (
+            previous is not None
+            and previous.content_hash != content_hash
+            and previous.source_id != source_id
+        ):
+            return previous.source_id
+    return None
+
+
 def build_source_record(
     *,
     annotation: SourceAnnotation | None,
@@ -131,6 +166,7 @@ def build_source_record(
     content_hash: str,
     media_kind: MediaKind,
     media_probe: MediaProbe,
+    supersedes_source_id: str | None = None,
 ) -> SourceRecord:
     csv_evidence = [
         EvidenceRef(type="sources_csv", ref=f"sources.csv:{annotation.line_number}")
@@ -170,6 +206,7 @@ def build_source_record(
         locations=locations,
         primary_location=primary_location,
         content_hash=content_hash,
+        supersedes_source_id=supersedes_source_id,
         media_kind=media_kind,
         media_probe=media_probe,
         source_type=source_type,
