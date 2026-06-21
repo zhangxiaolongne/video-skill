@@ -12,8 +12,10 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parent
-PYTHON = ROOT / ".venv" / "bin" / "python"
-ARTIST_PORTRAIT = ROOT / ".venv" / "bin" / "artist-portrait"
+PYTHON = Path(sys.executable)
+ARTIST_PORTRAIT = Path(
+    shutil.which("artist-portrait") or ROOT / ".venv" / "bin" / "artist-portrait"
+)
 
 
 def run(command: list[str], *, expect: int = 0) -> None:
