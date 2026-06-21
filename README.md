@@ -6,6 +6,7 @@ Stage A engineering foundation for the `artist-portrait-editor` skill.
 
 - [artist_portrait_editor_revision5_optimized.md](artist_portrait_editor_revision5_optimized.md)
 - [SKILL.md](SKILL.md)
+- [Development Progress](docs/DEVELOPMENT_PROGRESS.md)
 
 ## Spec Entrypoints
 
