@@ -29,6 +29,8 @@ Current local foundation tests cover:
 - read-only `doctor` diagnostics for uninitialized workspaces, missing output
   refs, invalid source ledgers, and recommended next commands
 - root `SKILL.md` and `agents/openai.yaml` metadata validation
+- skill package preflight with hard errors separated from known install-name
+  warnings
 
 Future segmentation, transcription, analysis, proposal, timeline, preview,
 model, and network fixtures are intentionally not implemented yet.

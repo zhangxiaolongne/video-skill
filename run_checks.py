@@ -25,6 +25,7 @@ QUICK_VALIDATE = (
     / "scripts"
     / "quick_validate.py"
 )
+PACKAGE_PREFLIGHT = ROOT / "scripts" / "skill_package_preflight.py"
 
 
 def run(command: list[str], *, expect: int | tuple[int, ...] = 0) -> None:
@@ -68,6 +69,25 @@ def check_skill_metadata() -> None:
     openai_yaml = ROOT / "agents" / "openai.yaml"
     if "$artist-portrait-editor" not in openai_yaml.read_text(encoding="utf-8"):
         raise SystemExit("agents/openai.yaml default_prompt must mention $artist-portrait-editor")
+    preflight = subprocess.run(
+        [str(PYTHON), str(PACKAGE_PREFLIGHT), str(ROOT), "--json"],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+    )
+    if preflight.returncode != 0:
+        raise SystemExit(f"skill package preflight failed: {preflight.stdout}")
+    payload = json.loads(preflight.stdout)
+    if payload.get("error_count") != 0:
+        raise SystemExit("skill package preflight reported hard errors")
+    allowed_warnings = {"folder_name_mismatch", "repo_name_mismatch"}
+    warning_codes = {
+        issue.get("code")
+        for issue in payload.get("issues", [])
+        if issue.get("severity") == "warning"
+    }
+    if warning_codes - allowed_warnings:
+        raise SystemExit(f"unexpected skill package warnings: {sorted(warning_codes)}")
 
 
 def write_sine_wav(path: Path, *, seconds: float = 0.25, sample_rate: int = 8000) -> None:

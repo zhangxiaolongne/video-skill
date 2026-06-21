@@ -16,6 +16,7 @@ QUICK_VALIDATE = (
     / "scripts"
     / "quick_validate.py"
 )
+PACKAGE_PREFLIGHT = ROOT / "scripts" / "skill_package_preflight.py"
 
 
 def test_skill_metadata_is_valid():
@@ -49,3 +50,20 @@ def test_openai_yaml_matches_skill():
     assert interface["display_name"] == "Artist Portrait Editor"
     assert interface["short_description"] == "Local artist portrait project prep"
     assert "$artist-portrait-editor" in interface["default_prompt"]
+
+
+def test_skill_package_preflight_allows_only_known_name_warnings():
+    result = subprocess.run(
+        [sys.executable, str(PACKAGE_PREFLIGHT), str(ROOT), "--json"],
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    payload = yaml.safe_load(result.stdout)
+    assert payload["ok"] is True
+    assert payload["error_count"] == 0
+    assert {issue["code"] for issue in payload["issues"]} == {
+        "folder_name_mismatch",
+        "repo_name_mismatch",
+    }

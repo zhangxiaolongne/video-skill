@@ -33,6 +33,7 @@ Stage A engineering foundation for the `artist-portrait-editor` skill.
 - [V0-002m Artifact Consistency](docs/V0_002M_ARTIFACT_CONSISTENCY.md)
 - [V0-002n Doctor Diagnostics](docs/V0_002N_DOCTOR_DIAGNOSTICS.md)
 - [V0-002o Skill Metadata](docs/V0_002O_SKILL_METADATA.md)
+- [V0-002p Skill Package Preflight](docs/V0_002P_SKILL_PACKAGE_PREFLIGHT.md)
 - [Non Goals](docs/NON_GOALS.md)
 
 ## Current Gate
