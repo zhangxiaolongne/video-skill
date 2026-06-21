@@ -20,7 +20,7 @@ from artist_portrait_editor.models.state import (
     StepStatus,
     initial_steps,
 )
-from artist_portrait_editor.models.source import SourceRecord
+from artist_portrait_editor.models.source import RightsStatus, SourceRecord
 from artist_portrait_editor.run_records import (
     environment_snapshot,
     new_run_id,
@@ -344,3 +344,182 @@ def render_source_section(index: int, record: SourceRecord) -> str:
         "- Locations:\n"
         f"{locations}"
     )
+
+
+def review_project_workspace(
+    project_path: Path,
+) -> tuple[Path, ProjectState, list[str], list[dict[str, str]]]:
+    config = load_project_config(project_path)
+    root = project_root(project_path)
+    state = load_state(root)
+    if state is None:
+        raise WorkspacePrerequisiteError("review requires init to complete first")
+
+    sources_path = root / WORKSPACE_DIR / DATA_DIR / "sources.jsonl"
+    if not sources_path.exists():
+        raise WorkspacePrerequisiteError(
+            "review --scope project requires scan to complete first"
+        )
+
+    records = read_sources_jsonl(sources_path)
+    issues = review_source_risks(
+        records,
+        allow_restricted_rights=config.content_policy.allow_restricted_rights,
+    )
+    warnings = [
+        f"{len(issues)} project risk issue(s) found",
+    ] if issues else []
+    run_id = new_run_id()
+    output_dir = root / config.paths.output_dir
+    output_dir.mkdir(parents=True, exist_ok=True)
+    output_path = output_dir / "risk_report.md"
+    output_path.write_text(
+        render_risk_report(
+            records=records,
+            issues=issues,
+            sources_ref=sources_path.relative_to(root).as_posix(),
+        ),
+        encoding="utf-8",
+    )
+
+    input_fingerprint = fingerprint_file(sources_path)
+    status = StepStatus.completed_with_warnings if warnings else StepStatus.completed
+    state.steps["review_project"] = StepLedgerEntry(
+        status=status,
+        input_fingerprint=input_fingerprint,
+        output_refs=[output_path.relative_to(root).as_posix()],
+        last_run_id=run_id,
+        warnings=warnings,
+    )
+    state.latest_run_id = run_id
+    state.updated_at = utc_now()
+    state.overall_status = OverallStatus.degraded if warnings else OverallStatus.ready
+
+    runs_dir = root / WORKSPACE_DIR / RUNS_DIR / run_id
+    runs_dir.mkdir(parents=True, exist_ok=True)
+    write_json(
+        runs_dir / "command.json",
+        {"command": "review", "scope": "project", "project": str(project_path)},
+    )
+    write_json(runs_dir / "environment.json", environment_snapshot())
+    write_json(
+        runs_dir / "step_result.json",
+        {
+            "step": "review_project",
+            "status": status.value,
+            "sources": len(records),
+            "issues": len(issues),
+            "output": output_path.relative_to(root).as_posix(),
+        },
+    )
+    write_json(runs_dir / "warnings.json", warnings)
+    write_json(runs_dir / "errors.json", [])
+    (runs_dir / "log.txt").write_text("review project completed\n", encoding="utf-8")
+    save_state(root, state)
+    return output_path, state, warnings, issues
+
+
+def review_source_risks(
+    records: list[SourceRecord],
+    *,
+    allow_restricted_rights: bool,
+) -> list[dict[str, str]]:
+    issues: list[dict[str, str]] = []
+    for record in sorted(records, key=lambda item: item.primary_location):
+        if record.provenance_confidence < 0.7:
+            issues.append(
+                risk_issue(
+                    source=record,
+                    code="low_provenance_confidence",
+                    severity="warning",
+                    detail=(
+                        "provenance_confidence is below 0.7; do not use this source "
+                        "as a confirmed factual basis without user confirmation"
+                    ),
+                )
+            )
+        if record.rights_status.value == RightsStatus.permission_unknown:
+            issues.append(
+                risk_issue(
+                    source=record,
+                    code="rights_unknown",
+                    severity="warning",
+                    detail="rights_status is permission_unknown",
+                )
+            )
+        if record.rights_status.value == RightsStatus.restricted and not allow_restricted_rights:
+            issues.append(
+                risk_issue(
+                    source=record,
+                    code="rights_restricted",
+                    severity="error",
+                    detail="rights_status is restricted and project policy does not allow restricted rights",
+                )
+            )
+        if record.forbidden_by_user:
+            issues.append(
+                risk_issue(
+                    source=record,
+                    code="forbidden_by_user",
+                    severity="error",
+                    detail="source is marked forbidden_by_user and must not enter proposals, timelines, or previews",
+                )
+            )
+    return issues
+
+
+def risk_issue(
+    *,
+    source: SourceRecord,
+    code: str,
+    severity: str,
+    detail: str,
+) -> dict[str, str]:
+    return {
+        "source_id": source.source_id,
+        "location": source.primary_location,
+        "code": code,
+        "severity": severity,
+        "detail": detail,
+    }
+
+
+def render_risk_report(
+    *,
+    records: list[SourceRecord],
+    issues: list[dict[str, str]],
+    sources_ref: str,
+) -> str:
+    severity_counts = count_by_value(issue["severity"] for issue in issues)
+    code_counts = count_by_value(issue["code"] for issue in issues)
+    return (
+        "# Risk Report\n\n"
+        "This deterministic project review is rendered from local scan data only. "
+        "No transcription, visual analysis, embeddings, creative proposals, timeline "
+        "generation, preview rendering, network calls, or model calls were performed.\n\n"
+        "## Summary\n\n"
+        f"- Source ledger: `{sources_ref}`\n"
+        f"- Source count: `{len(records)}`\n"
+        f"- Issue count: `{len(issues)}`\n\n"
+        "## Severity Counts\n\n"
+        f"{render_count_lines(severity_counts)}"
+        "## Issue Counts\n\n"
+        f"{render_count_lines(code_counts)}"
+        "## Issues\n\n"
+        f"{render_issue_sections(issues)}"
+    )
+
+
+def render_issue_sections(issues: list[dict[str, str]]) -> str:
+    if not issues:
+        return "No project risk issues were found in the current scan ledger.\n"
+    sections = []
+    for index, issue in enumerate(issues, start=1):
+        sections.append(
+            f"### {index}. `{issue['code']}`\n\n"
+            f"- Severity: `{issue['severity']}`\n"
+            f"- Source ID: `{issue['source_id']}`\n"
+            f"- Location: `{issue['location']}`\n"
+            f"- Detail: {issue['detail']}\n"
+        )
+    return "\n".join(sections)

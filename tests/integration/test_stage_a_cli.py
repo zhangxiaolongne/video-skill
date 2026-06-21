@@ -337,6 +337,110 @@ def test_map_writes_material_map_from_sources(tmp_path, monkeypatch, capsys):
     assert state_payload["steps"]["map"]["output_refs"] == ["output/material_map.md"]
 
 
+def test_review_project_requires_scan_first(tmp_path, capsys):
+    project_path = tmp_path / "project.yaml"
+    project_path.write_text(
+        (FIXTURES / "valid_project.yaml").read_text(encoding="utf-8"),
+        encoding="utf-8",
+    )
+    assert main(["init", "--project", str(project_path), "--quiet"]) in (0, 1)
+
+    code = main(["review", "--project", str(project_path), "--scope", "project"])
+    captured = capsys.readouterr()
+
+    assert code == 7
+    assert "review --scope project requires scan" in captured.err
+
+
+def test_review_non_project_scope_remains_blocked(tmp_path, capsys):
+    project_path = tmp_path / "project.yaml"
+    project_path.write_text(
+        (FIXTURES / "valid_project.yaml").read_text(encoding="utf-8"),
+        encoding="utf-8",
+    )
+
+    code = main(["review", "--project", str(project_path), "--scope", "proposal"])
+    captured = capsys.readouterr()
+
+    assert code == 7
+    assert "review --scope proposal" in captured.err
+
+
+def test_review_project_writes_risk_report_from_sources(tmp_path, monkeypatch, capsys):
+    project_path = tmp_path / "project.yaml"
+    project_path.write_text(
+        (FIXTURES / "valid_project.yaml").read_text(encoding="utf-8"),
+        encoding="utf-8",
+    )
+    media_dir = tmp_path / "media"
+    media_dir.mkdir()
+    (media_dir / "restricted.mp4").write_bytes(b"restricted")
+    (tmp_path / "sources.csv").write_text(
+        "location,source_type,rights_status,forbidden_by_user,notes\n"
+        "media/restricted.mp4,interview,restricted,true,Do not use\n",
+        encoding="utf-8",
+    )
+    assert main(["init", "--project", str(project_path), "--quiet"]) in (0, 1)
+    monkeypatch.setattr(
+        cli,
+        "detect_capabilities",
+        lambda: Capabilities(ffmpeg=True, ffprobe=True),
+    )
+
+    def fake_probe(path):
+        return (
+            MediaKind.video,
+            MediaProbe(
+                duration=3.0,
+                width=1280,
+                height=720,
+                frame_rate=24.0,
+                video_codec="h264",
+                audio_present=False,
+                audio_codec=None,
+            ),
+        )
+
+    from artist_portrait_editor.media import scanner
+
+    original_scan_project_sources = scanner.scan_project_sources
+
+    def scan_with_fake_probe(*, root, config, previous_records=None):
+        return original_scan_project_sources(
+            root=root,
+            config=config,
+            probe_fn=fake_probe,
+            previous_records=previous_records,
+        )
+
+    monkeypatch.setattr(workspace, "scan_project_sources", scan_with_fake_probe)
+
+    assert main(["scan", "--project", str(project_path), "--quiet"]) == 0
+    code = main(["review", "--project", str(project_path), "--scope", "project", "--json"])
+    captured = capsys.readouterr()
+
+    assert code == 1
+    payload = json.loads(captured.out)
+    assert payload["output"] == "output/risk_report.md"
+    assert len(payload["issues"]) == 2
+    assert {issue["code"] for issue in payload["issues"]} == {
+        "forbidden_by_user",
+        "rights_restricted",
+    }
+    risk_report = (tmp_path / "output" / "risk_report.md").read_text(encoding="utf-8")
+    assert "# Risk Report" in risk_report
+    assert "No transcription, visual analysis" in risk_report
+    assert "- Issue count: `2`" in risk_report
+    assert "rights_status is restricted" in risk_report
+    assert "forbidden_by_user" in risk_report
+
+    state_payload = json.loads(
+        (tmp_path / ".artist-portrait" / "state.json").read_text(encoding="utf-8")
+    )
+    assert state_payload["steps"]["review_project"]["status"] == "completed_with_warnings"
+    assert state_payload["steps"]["review_project"]["output_refs"] == ["output/risk_report.md"]
+
+
 def test_repeated_cli_scan_updates_moved_location(tmp_path, monkeypatch, capsys):
     project_path = tmp_path / "project.yaml"
     project_path.write_text(

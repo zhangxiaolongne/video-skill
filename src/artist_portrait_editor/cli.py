@@ -16,6 +16,7 @@ from artist_portrait_editor.workspace import (
     load_state,
     map_workspace,
     project_root,
+    review_project_workspace,
     scan_workspace,
     state_as_dict,
 )
@@ -50,6 +51,17 @@ def build_parser() -> argparse.ArgumentParser:
     map_sub.add_argument("--quiet", action="store_true")
     map_sub.add_argument("--verbose", action="store_true")
 
+    review_sub = subparsers.add_parser("review")
+    review_sub.add_argument("--project", required=True)
+    review_sub.add_argument(
+        "--scope",
+        default="project",
+        choices=("project", "proposal", "timeline", "all"),
+    )
+    review_sub.add_argument("--json", action="store_true")
+    review_sub.add_argument("--quiet", action="store_true")
+    review_sub.add_argument("--verbose", action="store_true")
+
     for command in (
         "segment",
         "transcribe",
@@ -57,7 +69,6 @@ def build_parser() -> argparse.ArgumentParser:
         "relate",
         "propose",
         "timeline",
-        "review",
         "run",
     ):
         sub = subparsers.add_parser(command)
@@ -210,6 +221,41 @@ def cmd_map(args: argparse.Namespace) -> int:
     return int(ExitCode.success_with_warnings if warnings else ExitCode.success)
 
 
+def cmd_review(args: argparse.Namespace) -> int:
+    if error := _validate_common_flags(args):
+        return int(error)
+    if args.scope != "project":
+        print(
+            f"review --scope {args.scope} is outside the current gate and is not implemented",
+            file=sys.stderr,
+        )
+        return int(ExitCode.prerequisite_step_missing)
+    project_path = Path(args.project)
+    try:
+        load_project_config(project_path)
+    except ConfigLoadError as exc:
+        print(str(exc), file=sys.stderr)
+        return int(ExitCode.invalid_project_config)
+    try:
+        output_path, _state, warnings, issues = review_project_workspace(project_path)
+    except WorkspacePrerequisiteError as exc:
+        print(str(exc), file=sys.stderr)
+        return int(ExitCode.prerequisite_step_missing)
+    root = project_root(project_path)
+    payload = {
+        "output": output_path.relative_to(root).as_posix(),
+        "warnings": warnings,
+        "issues": issues,
+    }
+    if args.json:
+        print(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True))
+    elif not args.quiet:
+        print(f"wrote {payload['output']}")
+        for warning in warnings:
+            print(f"warning: {warning}", file=sys.stderr)
+    return int(ExitCode.success_with_warnings if warnings else ExitCode.success)
+
+
 def blocked_stage_a_command(args: argparse.Namespace) -> int:
     print(
         f"{args.command} is outside the Stage A gate and is not implemented",
@@ -236,6 +282,7 @@ def main(argv: list[str] | None = None) -> int:
         "generate-schema": cmd_generate_schema,
         "scan": cmd_scan,
         "map": cmd_map,
+        "review": cmd_review,
     }
     handler = handlers.get(args.command, blocked_stage_a_command)
     return handler(args)
