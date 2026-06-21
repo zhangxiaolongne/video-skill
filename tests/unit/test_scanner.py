@@ -65,6 +65,74 @@ def test_scan_deduplicates_identical_media_content(tmp_path):
     assert record.media_kind == MediaKind.video
 
 
+def test_scan_applies_sources_csv_annotation(tmp_path):
+    project_path = write_project(tmp_path)
+    media_dir = tmp_path / "media"
+    media_dir.mkdir()
+    (media_dir / "a.mp4").write_bytes(b"content")
+    (tmp_path / "sources.csv").write_text(
+        "location,source_type,work,role,rights_status,forbidden_by_user,notes\n"
+        "media/a.mp4,interview,Work A,Role A,restricted,true,Do not use\n",
+        encoding="utf-8",
+    )
+    config = load_project_config(project_path)
+
+    result = scan_project_sources(root=tmp_path, config=config, probe_fn=fake_video_probe)
+
+    assert result.warnings == []
+    record = result.records[0]
+    assert record.source_type.value == "interview"
+    assert record.source_type.method == "sources_csv"
+    assert record.work.value == "Work A"
+    assert record.role.value == "Role A"
+    assert record.rights_status.value == "restricted"
+    assert record.forbidden_by_user is True
+    assert "rights_restricted" in [flag.value for flag in record.risk_flags]
+    assert "forbidden_by_user" in [flag.value for flag in record.risk_flags]
+    assert record.notes == "Do not use"
+
+
+def test_scan_sources_csv_annotation_can_match_duplicate_location(tmp_path):
+    project_path = write_project(tmp_path)
+    media_dir = tmp_path / "media"
+    media_dir.mkdir()
+    (media_dir / "a.mp4").write_bytes(b"same-content")
+    (media_dir / "b.mp4").write_bytes(b"same-content")
+    (tmp_path / "sources.csv").write_text(
+        "location,source_type,rights_status\n"
+        "media/b.mp4,stage_performance,owned\n",
+        encoding="utf-8",
+    )
+    config = load_project_config(project_path)
+
+    result = scan_project_sources(root=tmp_path, config=config, probe_fn=fake_video_probe)
+
+    assert result.warnings == []
+    assert len(result.records) == 1
+    record = result.records[0]
+    assert record.locations == ["media/a.mp4", "media/b.mp4"]
+    assert record.source_type.value == "stage_performance"
+    assert record.rights_status.value == "owned"
+
+
+def test_scan_reports_sources_csv_warnings(tmp_path):
+    project_path = write_project(tmp_path)
+    media_dir = tmp_path / "media"
+    media_dir.mkdir()
+    (media_dir / "a.mp4").write_bytes(b"content")
+    (tmp_path / "sources.csv").write_text(
+        "location,source_type\n"
+        "media/a.mp4,bad_type\n",
+        encoding="utf-8",
+    )
+    config = load_project_config(project_path)
+
+    result = scan_project_sources(root=tmp_path, config=config, probe_fn=fake_video_probe)
+
+    assert result.warnings == ["sources.csv:2: invalid source_type: bad_type"]
+    assert result.records[0].source_type.value == "other"
+
+
 def test_scan_all_probe_failures_are_errors(tmp_path):
     project_path = write_project(tmp_path)
     media_dir = tmp_path / "media"

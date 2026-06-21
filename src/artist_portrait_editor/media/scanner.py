@@ -20,6 +20,7 @@ from artist_portrait_editor.models.source import (
     SourceType,
 )
 from artist_portrait_editor.media.probe import ProbeError, probe_media
+from artist_portrait_editor.media.sources_csv import SourceAnnotation, load_sources_csv
 
 SUPPORTED_MEDIA_EXTENSIONS = {
     ".mp4",
@@ -76,6 +77,8 @@ def scan_project_sources(
 
     records: list[SourceRecord] = []
     warnings: list[str] = []
+    source_csv = load_sources_csv(root)
+    warnings.extend(source_csv.warnings)
     namespace = uuid.uuid5(uuid.NAMESPACE_URL, f"artist-portrait-editor:{config.project.id}")
 
     for content_hash in sorted(grouped_locations):
@@ -87,36 +90,16 @@ def scan_project_sources(
             errors.append(f"{locations[0]}: {exc}")
             continue
         source_id = str(uuid.uuid5(namespace, content_hash))
+        annotation = first_annotation_for_locations(locations, source_csv.annotations)
         records.append(
-            SourceRecord(
+            build_source_record(
+                annotation=annotation,
                 source_id=source_id,
                 locations=locations,
                 primary_location=locations[0],
                 content_hash=content_hash,
                 media_kind=media_kind,
                 media_probe=media_probe,
-                source_type=Assertion(
-                    value=SourceType.other,
-                    method="extension_scan",
-                    level=1,
-                    confidence=0.2,
-                    evidence=[EvidenceRef(type="path", ref=locations[0])],
-                ),
-                rights_status=Assertion(
-                    value=RightsStatus.permission_unknown,
-                    method="default_policy",
-                    level=1,
-                    confidence=0.0,
-                    evidence=[],
-                ),
-                provenance_confidence=0.0,
-                provenance_method="filesystem_scan",
-                provenance_evidence=[EvidenceRef(type="path", ref=location) for location in locations],
-                risk_flags=[
-                    SourceRiskFlag.unknown_provenance,
-                    SourceRiskFlag.low_provenance_confidence,
-                    SourceRiskFlag.rights_unknown,
-                ],
             )
         )
 
@@ -124,6 +107,90 @@ def scan_project_sources(
         return ScanResult(records=[], warnings=warnings, errors=errors)
     warnings.extend(errors)
     return ScanResult(records=records, warnings=warnings, errors=[])
+
+
+def first_annotation_for_locations(
+    locations: list[str],
+    annotations: dict[str, SourceAnnotation],
+) -> SourceAnnotation | None:
+    for location in locations:
+        if location in annotations:
+            return annotations[location]
+    return None
+
+
+def build_source_record(
+    *,
+    annotation: SourceAnnotation | None,
+    source_id: str,
+    locations: list[str],
+    primary_location: str,
+    content_hash: str,
+    media_kind: MediaKind,
+    media_probe: MediaProbe,
+) -> SourceRecord:
+    csv_evidence = [
+        EvidenceRef(type="sources_csv", ref=f"sources.csv:{annotation.line_number}")
+    ] if annotation else []
+    source_type = Assertion(
+        value=annotation.source_type if annotation and annotation.source_type else SourceType.other,
+        method="sources_csv" if annotation and annotation.source_type else "extension_scan",
+        level=1,
+        confidence=0.7 if annotation and annotation.source_type else 0.2,
+        evidence=csv_evidence or [EvidenceRef(type="path", ref=primary_location)],
+    )
+    rights_value = (
+        annotation.rights_status
+        if annotation and annotation.rights_status
+        else RightsStatus.permission_unknown
+    )
+    rights_status = Assertion(
+        value=rights_value,
+        method="sources_csv" if annotation and annotation.rights_status else "default_policy",
+        level=1,
+        confidence=0.7 if annotation and annotation.rights_status else 0.0,
+        evidence=csv_evidence,
+    )
+    risk_flags = [
+        SourceRiskFlag.unknown_provenance,
+        SourceRiskFlag.low_provenance_confidence,
+    ]
+    if rights_value == RightsStatus.permission_unknown:
+        risk_flags.append(SourceRiskFlag.rights_unknown)
+    if rights_value == RightsStatus.restricted:
+        risk_flags.append(SourceRiskFlag.rights_restricted)
+    if annotation and annotation.forbidden_by_user:
+        risk_flags.append(SourceRiskFlag.forbidden_by_user)
+
+    return SourceRecord(
+        source_id=source_id,
+        locations=locations,
+        primary_location=primary_location,
+        content_hash=content_hash,
+        media_kind=media_kind,
+        media_probe=media_probe,
+        source_type=source_type,
+        work=text_assertion(annotation.work, csv_evidence) if annotation and annotation.work else None,
+        role=text_assertion(annotation.role, csv_evidence) if annotation and annotation.role else None,
+        rights_status=rights_status,
+        provenance_confidence=0.7 if annotation else 0.0,
+        provenance_method="sources_csv" if annotation else "filesystem_scan",
+        provenance_evidence=csv_evidence
+        or [EvidenceRef(type="path", ref=location) for location in locations],
+        forbidden_by_user=bool(annotation and annotation.forbidden_by_user),
+        risk_flags=risk_flags,
+        notes=annotation.notes if annotation else None,
+    )
+
+
+def text_assertion(value: str, evidence: list[EvidenceRef]) -> Assertion:
+    return Assertion(
+        value=value,
+        method="sources_csv",
+        level=1,
+        confidence=0.7,
+        evidence=evidence,
+    )
 
 
 def write_sources_jsonl(root: Path, records: list[SourceRecord]) -> Path:

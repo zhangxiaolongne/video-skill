@@ -1,6 +1,7 @@
 # V0-002b Media Scan Acceptance
 
-Status: in progress.
+Status: completed; superseded by `V0_002C_SOURCES_CSV_IMPORT.md` for CSV
+annotation import.
 
 This slice hardens V0-002a by adding real-media validation and source JSONL
 round-trip checks.

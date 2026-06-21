@@ -77,6 +77,11 @@ def check_real_scan_if_available() -> None:
             encoding="utf-8",
         )
         write_sine_wav(tmp_path / "media" / "tone.wav")
+        (tmp_path / "sources.csv").write_text(
+            "location,source_type,work,role,rights_status,forbidden_by_user,notes\n"
+            "media/tone.wav,interview,Generated Tone,Test Role,owned,false,check fixture\n",
+            encoding="utf-8",
+        )
         run([str(ARTIST_PORTRAIT), "init", "--project", str(project), "--quiet"])
         run([str(ARTIST_PORTRAIT), "scan", "--project", str(project), "--json"])
         sources = tmp_path / ".artist-portrait" / "data" / "sources.jsonl"
@@ -87,6 +92,10 @@ def check_real_scan_if_available() -> None:
         ]
         if len(records) != 1 or records[0]["media_kind"] != "audio":
             raise SystemExit("real scan check did not produce one audio source")
+        if records[0]["source_type"]["value"] != "interview":
+            raise SystemExit("real scan check did not apply sources.csv")
+        if records[0]["work"]["value"] != "Generated Tone":
+            raise SystemExit("real scan check did not preserve sources.csv work")
 
 
 def main(argv: list[str] | None = None) -> int:

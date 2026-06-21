@@ -19,6 +19,7 @@ Stage A engineering foundation for the `artist-portrait-editor` skill.
 - [Stage A Acceptance](docs/STAGE_A_ACCEPTANCE.md)
 - [V0-002a Media Scan](docs/V0_002A_MEDIA_SCAN.md)
 - [V0-002b Media Scan Acceptance](docs/V0_002B_MEDIA_SCAN_ACCEPTANCE.md)
+- [V0-002c Sources CSV Import](docs/V0_002C_SOURCES_CSV_IMPORT.md)
 - [Non Goals](docs/NON_GOALS.md)
 
 ## Current Gate
