@@ -2,7 +2,7 @@
 
 Authoritative source: `artist_portrait_editor_revision5_optimized.md`.
 
-Implemented V0-005 PySceneDetect scene segmentation gate commands:
+Implemented V0-006 local transcription gate commands:
 
 ```bash
 artist-portrait validate --project ./project.yaml
@@ -12,6 +12,7 @@ artist-portrait doctor --project ./project.yaml
 artist-portrait generate-schema --output-dir schemas
 artist-portrait scan --project ./project.yaml
 artist-portrait segment --project ./project.yaml
+artist-portrait transcribe --project ./project.yaml
 artist-portrait map --project ./project.yaml
 artist-portrait review --project ./project.yaml --scope project
 artist-portrait review --project ./project.yaml --scope all
@@ -50,6 +51,20 @@ It routes video segmentation through `features.scene_detection`:
 Audio sources always use fixed-window segmentation. The command reports
 `output_refs`, warnings, and `invalidated_steps`.
 
+`transcribe --json` routes source transcription through
+`features.transcription`:
+
+- `off`: marks `transcribe` as `skipped` and writes no transcript ledger.
+- `auto`: uses local faster-whisper when available; otherwise skips with a
+  warning and writes no fake transcripts.
+- `required`: local faster-whisper and local model loading are mandatory;
+  missing or failed dependencies return `4
+  missing_required_dependency_for_command`.
+
+Successful transcription writes `.artist-portrait/data/transcripts.jsonl`, run
+metadata, and a refreshed `output/run_report.md`. The faster-whisper adapter
+uses local-only model loading and must not download models.
+
 `status --json` includes the state ledger plus local artifact, source, clip,
 scan report, and clip report summaries. It also reports `artifact_issues` when
 completed ledger steps refer to outputs that no longer exist. It does not run
@@ -57,10 +72,12 @@ media operations or mutate project files.
 
 `doctor --json` is a read-only diagnostic command. It reports local workspace,
 source ledger, and artifact consistency issues with `next_action` guidance and
-`recommended_commands`. It reports `segment_invalidated`, `map_invalidated`,
-and `review_project_invalidated` after newer upstream ledgers change. It reports
-`clips_invalid` when `.artist-portrait/data/clips.jsonl` cannot be parsed. It
-reports `scene_detection_required_missing` when the project requires
-PySceneDetect but the dependency is unavailable. It
+`recommended_commands`. It reports `segment_invalidated`,
+`transcribe_invalidated`, `map_invalidated`, and `review_project_invalidated`
+after newer upstream ledgers change. It reports `clips_invalid` when
+`.artist-portrait/data/clips.jsonl` cannot be parsed and `transcripts_invalid`
+when `.artist-portrait/data/transcripts.jsonl` cannot be parsed. It reports
+`scene_detection_required_missing` or `transcription_required_missing` when the
+project requires an unavailable dependency. It
 returns `1 success_with_warnings` when diagnostics find issues and `0 success`
 when no issues are found.

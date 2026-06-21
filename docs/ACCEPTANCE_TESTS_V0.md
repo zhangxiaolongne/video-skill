@@ -51,6 +51,13 @@ Current local foundation tests cover:
 - rebuildable `clip_report.md`
 - status and doctor visibility for clip ledgers and clip reports
 - downstream invalidation after source or clip ledger changes
+- committed transcript record schema
+- `transcribe` routing for `transcription: off`, `auto`, and `required`
+- local-only faster-whisper adapter behavior without requiring faster-whisper in
+  tests
+- canonical `transcripts.jsonl`
+- status and doctor visibility for transcript ledgers
+- downstream invalidation after source ledger changes
 
-Future transcription, analysis, proposal, timeline, preview, model, BGM, image
+Future analysis, proposal, timeline, preview, remote model, BGM, image
 generation/editing, and network fixtures are intentionally not implemented yet.

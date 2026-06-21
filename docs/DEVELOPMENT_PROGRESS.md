@@ -34,7 +34,7 @@ When a user requirement changes long-term product behavior, update both files:
 - Canonical skill name: `artist-portrait-editor`
 - Canonical install directory: `artist-portrait-editor`
 - Distribution repository: `video-skill`
-- Current local gate: V0-005 PySceneDetect scene segmentation gate only
+- Current local gate: V0-006 local transcription gate only
 
 ## Completed Local Versions
 
@@ -69,14 +69,19 @@ When a user requirement changes long-term product behavior, update both files:
 - V0-005b: optional PySceneDetect adapter and scene-clip method records.
 - V0-005c: fixed-window fallback diagnostics and required-dependency failure
   handling.
+- V0-006a: `TranscriptRecord` schema and committed JSON Schema.
+- V0-006b: `transcribe` CLI with `features.transcription` routing for `off`,
+  `auto`, and `required`.
+- V0-006c: local-only faster-whisper adapter, transcript ledger validation,
+  status/doctor diagnostics, and source-ledger invalidation.
 
 ## Current Hard Boundaries
 
 Do not implement these until the relevant gate is explicitly opened and tested:
 
-- transcription
 - OpenCV or vision analysis
 - embeddings
+- remote ASR, model downloads, or ungrounded text classification
 - creative proposals
 - timeline generation
 - preview rendering
@@ -101,8 +106,9 @@ Tactical rule for future batches:
 - use third-party outputs as evidence with provenance, not unreviewed truth
 - keep config gates, failure modes, and review rules around every non-local or
   model-backed capability
-- keep current V0-005 scene segmentation local and bounded to PySceneDetect;
-  third-party outputs are evidence, not unreviewed truth
+- keep current V0-006 transcription local and bounded to faster-whisper with
+  local-only model loading; third-party outputs are evidence, not unreviewed
+  truth
 
 ### BGM Is Part Of Editing Logic
 
@@ -135,6 +141,6 @@ carried into the future proposal, timeline, review, and preview gates.
 
 ## Next Likely Batch
 
-Next action should finish V0-005 release readiness: run the full local
+Next action should finish V0-006 release readiness: run the full local
 validation set, record the release checkpoint, commit the batch locally, and
 push only after the batch is reviewed.

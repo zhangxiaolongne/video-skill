@@ -10,8 +10,7 @@ V0 has two future modes:
   `core_mode` data exists.
 
 Current repository implementation has entered deterministic core-mode
-foundation work only. The active gate is V0-005 PySceneDetect scene
-segmentation gate:
+foundation work only. The active gate is V0-006 local transcription gate:
 
 ```text
 project.yaml
@@ -23,12 +22,13 @@ project.yaml
 -> scan report
 -> fixed-window or PySceneDetect clip ledger
 -> clip report
+-> transcript ledger
 -> minimal material map
 -> minimal project risk report
 -> run report
 -> fixed exit codes
 ```
 
-Do not implement transcription, visual analysis, proposal generation, timeline
-generation, preview rendering, BGM selection, model calls, image
+Do not implement visual analysis, proposal generation, timeline generation,
+preview rendering, BGM selection, remote model calls, model downloads, image
 generation/editing, or network search until a later gate explicitly opens them.

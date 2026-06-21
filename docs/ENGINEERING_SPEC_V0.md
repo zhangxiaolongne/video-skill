@@ -27,7 +27,7 @@ Required Stage A properties:
 - state and run records are auditable.
 - repeated `init` does not cross the Stage A boundary.
 
-Current V0-005 implementation scope additionally allows:
+Current V0-006 implementation scope additionally allows:
 
 - `scan`
 - deterministic `sources.jsonl`
@@ -38,6 +38,8 @@ Current V0-005 implementation scope additionally allows:
 - fixed-window fallback for `scene_detection: auto`
 - deterministic `clips.jsonl`
 - deterministic `clip_report.md`
+- local-only faster-whisper gated `transcribe`
+- deterministic `transcripts.jsonl`
 - minimal `map`
 - minimal `review --scope project`
 - read-only `doctor`

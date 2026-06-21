@@ -3,7 +3,7 @@
 Follow `artist_portrait_editor_revision5_optimized.md` as the governing V0
 engineering-freeze document.
 
-Current gate: V0-005 PySceneDetect scene segmentation gate only.
+Current gate: V0-006 local transcription gate only.
 
 Allowed:
 
@@ -26,6 +26,11 @@ Allowed:
 - canonical `clips.jsonl`
 - deterministic `clip_report.md`
 - downstream artifact invalidation when `clips.jsonl` changes
+- `transcribe`
+- `features.transcription` gate handling for `off`, `auto`, and `required`
+- optional local-only faster-whisper transcription when available
+- canonical `transcripts.jsonl`
+- transcript status, doctor diagnostics, and source-ledger invalidation
 - `map`
 - `review --scope project`
 - `review --scope all` only as project review plus skipped future scopes
@@ -40,7 +45,7 @@ Allowed:
 
 Forbidden before the next gate explicitly opens:
 
-- Whisper
+- remote ASR, model-downloading transcription, or ungrounded text classification
 - OpenCV analysis
 - embeddings
 - vision models

@@ -1,6 +1,6 @@
 ---
 name: artist-portrait-editor
-description: Deterministic local workflow for preparing and auditing artist portrait video-editing projects. Use when Codex needs to validate an artist portrait project config, initialize local workspace state, scan local media into a source ledger and scan report, segment sources into a fixed-window or PySceneDetect-gated clip ledger and clip report, generate a material map, run project risk review, diagnose workspace issues, or preserve the boundary before transcription, visual analysis, BGM selection, proposal generation, timeline generation, preview rendering, model calls, image generation/editing, or network search.
+description: Deterministic local workflow for preparing and auditing artist portrait video-editing projects. Use when Codex needs to validate an artist portrait project config, initialize local workspace state, scan local media into a source ledger and scan report, segment sources into a fixed-window or PySceneDetect-gated clip ledger and clip report, transcribe sources through a local-only faster-whisper gate into a transcript ledger, generate a material map, run project risk review, diagnose workspace issues, or preserve the boundary before visual analysis, BGM selection, proposal generation, timeline generation, preview rendering, model calls, image generation/editing, or network search.
 ---
 
 # Artist Portrait Editor
@@ -42,6 +42,7 @@ artist portrait project preparation and audit work.
 
    ```bash
    artist-portrait segment --project ./project.yaml
+   artist-portrait transcribe --project ./project.yaml
    artist-portrait map --project ./project.yaml
    artist-portrait review --project ./project.yaml --scope project
    ```
@@ -52,6 +53,13 @@ artist portrait project preparation and audit work.
    available and falls back to fixed-window with a warning, and `required`
    fails with exit code 4 when PySceneDetect is missing or fails. Audio always
    uses fixed-window segmentation.
+
+   `transcribe` writes `.artist-portrait/data/transcripts.jsonl` only when
+   `features.transcription` allows it and local faster-whisper plus a local
+   model are available. `off` marks the step skipped, `auto` skips with a
+   warning when faster-whisper is unavailable or local model loading fails, and
+   `required` fails with exit code 4 in those cases. It must not download
+   models or invent transcript text.
 
 6. Use `review --scope all` only as a shallow aggregate. It runs project review
    and marks proposal/timeline review as skipped; it does not implement those
@@ -73,6 +81,13 @@ artist portrait project preparation and audit work.
   is fixed or regenerated.
 - Treat `scene_detection_required_missing` as a dependency stop condition:
   install PySceneDetect or change `features.scene_detection` to `auto`/`off`.
+- Treat `transcripts_invalid` as a stop condition until
+  `.artist-portrait/data/transcripts.jsonl` is fixed or regenerated.
+- Treat `transcription_required_missing` as a dependency stop condition:
+  install faster-whisper/local model or change `features.transcription` to
+  `auto`/`off`.
+- Treat `transcribe_invalidated` as a rebuild signal after a newer scan changes
+  the source ledger.
 
 ## Hard Boundaries
 
@@ -81,7 +96,7 @@ gate. A later validated gate may use mature third-party tools, installed Codex
 skills, plugins, search, image generation/editing tools, models, or media
 libraries instead of rebuilding those capabilities from scratch:
 
-- transcription or Whisper
+- remote ASR, model-downloading transcription, or ungrounded text classification
 - OpenCV or vision analysis
 - embeddings
 - BGM selection, beat analysis, music recommendation, or music/timeline fitting

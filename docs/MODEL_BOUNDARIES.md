@@ -13,7 +13,8 @@ Models may organize evidence in later phases, but they must not create facts,
 material IDs, timecodes, dialogue, provenance, identity, rights status, or
 timeline references.
 
-The current V0-005 PySceneDetect scene segmentation gate performs no model
-calls. `scan`, `segment`, `map`, `review`, `status`, and `doctor` must remain
-local. PySceneDetect output is a local tool-derived boundary signal, not a
-model-generated creative judgment.
+The current V0-006 local transcription gate performs no remote model calls.
+`scan`, `segment`, `transcribe`, `map`, `review`, `status`, and `doctor` must
+remain local. PySceneDetect output is a local tool-derived boundary signal, and
+faster-whisper output is local ASR evidence. Neither is a creative judgment,
+text classification, BGM strategy, or timeline decision.

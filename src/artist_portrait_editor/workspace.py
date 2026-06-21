@@ -12,6 +12,12 @@ from artist_portrait_editor.media.scene_detection import (
     detect_scenes_pyscenedetect,
     pyscenedetect_version,
 )
+from artist_portrait_editor.media.transcription import (
+    TranscribedSegment,
+    TranscriptionError,
+    faster_whisper_version,
+    transcribe_source_faster_whisper,
+)
 from artist_portrait_editor.media.scanner import (
     ScanResult,
     read_sources_jsonl,
@@ -34,6 +40,11 @@ from artist_portrait_editor.models.state import (
     initial_steps,
 )
 from artist_portrait_editor.models.source import MediaKind, RightsStatus, SourceRecord
+from artist_portrait_editor.models.transcript import (
+    TranscriptRecord,
+    TranscriptRiskFlag,
+    WordTimestamp,
+)
 from artist_portrait_editor.run_records import (
     environment_snapshot,
     new_run_id,
@@ -184,13 +195,23 @@ def stable_clip_id(source_id: str, clip_index: int, start_seconds: float, end_se
     return "clip_" + hashlib.sha256(payload.encode("utf-8")).hexdigest()[:24]
 
 
+def stable_transcript_id(
+    source_id: str,
+    segment_index: int,
+    start_seconds: float,
+    end_seconds: float,
+) -> str:
+    payload = f"{source_id}:{segment_index}:{start_seconds:.3f}:{end_seconds:.3f}"
+    return "trn_" + hashlib.sha256(payload.encode("utf-8")).hexdigest()[:24]
+
+
 def invalidate_downstream_steps_for_sources(
     state: ProjectState,
     *,
     sources_fingerprint: str,
 ) -> list[str]:
     invalidated: list[str] = []
-    for step_name in ("segment", "map", "review_project"):
+    for step_name in ("segment", "transcribe", "map", "review_project"):
         entry = state.steps.get(step_name)
         if entry is None:
             continue
@@ -267,6 +288,13 @@ def render_status_panel(payload: dict) -> str:
         lines.append("clips: invalid")
     else:
         lines.append("clips: missing")
+    transcripts = summaries.get("transcripts") or {}
+    if transcripts.get("exists") and transcripts.get("valid", True):
+        lines.append(f"transcripts: {transcripts.get('count', 0)}")
+    elif transcripts.get("exists"):
+        lines.append("transcripts: invalid")
+    else:
+        lines.append("transcripts: missing")
     risk = summaries.get("risk_report") or {}
     if risk.get("exists"):
         lines.append(f"risk_report: present ({risk.get('bytes', 0)} bytes)")
@@ -283,7 +311,7 @@ def render_status_panel(payload: dict) -> str:
     if artifact_issues:
         lines.append(f"artifact_issues: {len(artifact_issues)}")
     steps = payload.get("steps") or {}
-    for step in ("scan", "segment", "map", "review_project"):
+    for step in ("scan", "segment", "transcribe", "map", "review_project"):
         if step in steps:
             lines.append(f"{step}: {steps[step].get('status')}")
     return "\n".join(lines) + "\n"
@@ -330,6 +358,18 @@ def doctor_project_payload(project_path: Path) -> dict:
                 next_action="install PySceneDetect or set features.scene_detection to auto/off",
             )
         )
+    if (
+        config.features.transcription == FeatureSwitch.required
+        and not current_capabilities.faster_whisper
+    ):
+        issues.append(
+            workspace_issue(
+                code="transcription_required_missing",
+                severity="error",
+                detail="project requires faster-whisper but it is not available",
+                next_action="install faster-whisper or set features.transcription to auto/off",
+            )
+        )
     sources_path = root / WORKSPACE_DIR / DATA_DIR / "sources.jsonl"
     sources = source_summary(sources_path)
     if sources.get("valid") is False:
@@ -372,7 +412,37 @@ def doctor_project_payload(project_path: Path) -> dict:
                 ),
             )
         )
+    transcripts = transcript_summary(root / WORKSPACE_DIR / DATA_DIR / "transcripts.jsonl")
+    if (
+        sources.get("valid") is True
+        and transcripts.get("valid") is False
+    ):
+        transcripts_path = root / WORKSPACE_DIR / DATA_DIR / "transcripts.jsonl"
+        issues.append(
+            workspace_issue(
+                code="transcripts_invalid",
+                severity="error",
+                detail=str(transcripts.get("error") or "transcripts ledger is invalid"),
+                next_action=(
+                    f"fix {transcripts_path.relative_to(root).as_posix()} or rerun "
+                    f"artist-portrait transcribe --project {project_path}"
+                ),
+            )
+        )
     elif (
+        sources.get("valid") is True
+        and config.features.transcription != FeatureSwitch.off
+        and state.steps.get("transcribe", StepLedgerEntry()).status == StepStatus.pending
+    ):
+        issues.append(
+            workspace_issue(
+                code="transcribe_pending",
+                severity="info",
+                detail="source ledger exists but transcription has not been run",
+                next_action=f"artist-portrait transcribe --project {project_path}",
+            )
+        )
+    if (
         sources.get("valid") is True
         and state.steps.get("segment", StepLedgerEntry()).status == StepStatus.pending
     ):
@@ -533,6 +603,7 @@ def ledger_output_ref_issues(
 def status_summaries(root: Path) -> dict:
     sources_path = root / WORKSPACE_DIR / DATA_DIR / "sources.jsonl"
     clips_path = root / WORKSPACE_DIR / DATA_DIR / "clips.jsonl"
+    transcripts_path = root / WORKSPACE_DIR / DATA_DIR / "transcripts.jsonl"
     scan_report_path = root / "output" / "scan_report.md"
     clip_report_path = root / "output" / "clip_report.md"
     material_map_path = root / "output" / "material_map.md"
@@ -540,6 +611,7 @@ def status_summaries(root: Path) -> dict:
     return {
         "sources": source_summary(sources_path),
         "clips": clip_summary(clips_path),
+        "transcripts": transcript_summary(transcripts_path),
         "scan_report": output_summary(scan_report_path),
         "clip_report": output_summary(clip_report_path),
         "material_map": output_summary(material_map_path),
@@ -640,6 +712,148 @@ def read_clips_jsonl(path: Path) -> list[ClipRecord]:
                 f"invalid ClipRecord JSONL at line {line_number}: {exc}"
             ) from exc
     return clips
+
+
+def write_transcripts_jsonl(root: Path, transcripts: list[TranscriptRecord]) -> Path:
+    output = root / WORKSPACE_DIR / DATA_DIR / "transcripts.jsonl"
+    output.parent.mkdir(parents=True, exist_ok=True)
+    tmp = output.with_suffix(".jsonl.tmp")
+    tmp.write_text(
+        "".join(
+            json.dumps(transcript.model_dump(mode="json"), ensure_ascii=False, sort_keys=True)
+            + "\n"
+            for transcript in transcripts
+        ),
+        encoding="utf-8",
+    )
+    tmp.replace(output)
+    return output
+
+
+def read_transcripts_jsonl(path: Path) -> list[TranscriptRecord]:
+    transcripts: list[TranscriptRecord] = []
+    for line_number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1):
+        if not line.strip():
+            continue
+        try:
+            transcripts.append(TranscriptRecord.model_validate_json(line))
+        except ValueError as exc:
+            raise WorkspacePrerequisiteError(
+                f"invalid TranscriptRecord JSONL at line {line_number}: {exc}"
+            ) from exc
+    return transcripts
+
+
+def transcript_summary(path: Path) -> dict:
+    if not path.exists():
+        return {"exists": False}
+    try:
+        transcripts = read_transcripts_jsonl(path)
+    except Exception as exc:
+        return {
+            "exists": True,
+            "valid": False,
+            "error": str(exc),
+        }
+    language_counts = count_by_value(
+        transcript.language or "unknown" for transcript in transcripts
+    )
+    return {
+        "exists": True,
+        "valid": True,
+        "count": len(transcripts),
+        "language_counts": language_counts,
+        "total_duration_seconds": round(
+            sum(
+                transcript.end_seconds - transcript.start_seconds
+                for transcript in transcripts
+            ),
+            3,
+        ),
+    }
+
+
+def build_transcript_records_for_source(
+    *,
+    record: SourceRecord,
+    source_fingerprint: str,
+    segments: list[TranscribedSegment],
+    method_version: str,
+) -> list[TranscriptRecord]:
+    transcripts: list[TranscriptRecord] = []
+    for segment_index, segment in enumerate(segments):
+        risk_flags: list[TranscriptRiskFlag] = []
+        text = segment.text.strip()
+        if not text:
+            risk_flags.append(TranscriptRiskFlag.empty_text)
+        if segment.confidence < 0.5:
+            risk_flags.append(TranscriptRiskFlag.low_confidence)
+        risk_flags.append(TranscriptRiskFlag.unclassified_text_type)
+        transcripts.append(
+            TranscriptRecord(
+                transcript_id=stable_transcript_id(
+                    record.source_id,
+                    segment_index,
+                    segment.start_seconds,
+                    segment.end_seconds,
+                ),
+                source_id=record.source_id,
+                source_location=record.primary_location,
+                source_content_hash=record.content_hash,
+                source_fingerprint=source_fingerprint,
+                segment_index=segment_index,
+                start_seconds=segment.start_seconds,
+                end_seconds=segment.end_seconds,
+                text=text,
+                language=segment.language,
+                speaker=None,
+                text_type=None,
+                word_timestamps=[
+                    WordTimestamp(
+                        word=word.word,
+                        start_seconds=word.start_seconds,
+                        end_seconds=word.end_seconds,
+                        confidence=word.confidence,
+                    )
+                    for word in segment.words
+                ],
+                method="faster_whisper",
+                method_version=method_version,
+                confidence=segment.confidence,
+                evidence=[
+                    {"type": "source", "ref": record.source_id},
+                    {"type": "tool", "ref": method_version},
+                ],
+                user_confirmed=False,
+                risk_flags=risk_flags,
+                notes=(
+                    "ASR text is an audible-content candidate only; it does not "
+                    "classify interview, lyrics, role dialogue, or captions"
+                ),
+            )
+        )
+    return transcripts
+
+
+def build_transcripts(
+    *,
+    root: Path,
+    records: list[SourceRecord],
+    source_fingerprint: str,
+) -> list[TranscriptRecord]:
+    transcripts: list[TranscriptRecord] = []
+    method_version = f"faster-whisper-{faster_whisper_version()}"
+    for record in sorted(records, key=lambda item: item.primary_location):
+        segments = transcribe_source_faster_whisper(root / record.primary_location)
+        transcripts.extend(
+            build_transcript_records_for_source(
+                record=record,
+                source_fingerprint=source_fingerprint,
+                segments=segments,
+                method_version=method_version,
+            )
+        )
+    return transcripts
 
 
 def build_fixed_window_clips(
@@ -1190,6 +1404,97 @@ def render_clip_sections(clips: list[ClipRecord]) -> str:
     return "\n".join(sections)
 
 
+def transcribe_workspace(project_path: Path) -> tuple[Path | None, ProjectState, list[str]]:
+    config = load_project_config(project_path)
+    root = project_root(project_path)
+    state = load_state(root)
+    if state is None:
+        raise WorkspacePrerequisiteError("transcribe requires init to complete first")
+
+    sources_path = root / WORKSPACE_DIR / DATA_DIR / "sources.jsonl"
+    if not sources_path.exists():
+        raise WorkspacePrerequisiteError("transcribe requires scan to complete first")
+
+    records = read_sources_jsonl(sources_path)
+    source_fingerprint = fingerprint_file(sources_path)
+    capabilities = detect_capabilities()
+    state.capabilities = capabilities
+    run_id = new_run_id()
+    output_dir = root / config.paths.output_dir
+    warnings: list[str] = []
+    output_path: Path | None = None
+    output_refs: list[str] = []
+
+    if config.features.transcription == FeatureSwitch.off:
+        status = StepStatus.skipped
+        warnings = []
+    elif not capabilities.faster_whisper:
+        if config.features.transcription == FeatureSwitch.required:
+            raise WorkspaceDependencyError(
+                "transcription is required but faster-whisper is not available"
+            )
+        status = StepStatus.skipped
+        warnings = ["faster_whisper_missing: transcription skipped"]
+    else:
+        try:
+            transcripts = build_transcripts(
+                root=root,
+                records=records,
+                source_fingerprint=source_fingerprint,
+            )
+        except TranscriptionError as exc:
+            if config.features.transcription == FeatureSwitch.required:
+                raise WorkspaceDependencyError(
+                    f"transcription is required but faster-whisper failed: {exc}"
+                ) from exc
+            status = StepStatus.skipped
+            warnings = [f"faster_whisper_failed: transcription skipped: {exc}"]
+        else:
+            output_path = write_transcripts_jsonl(root, transcripts)
+            output_refs = [output_path.relative_to(root).as_posix()]
+            warnings = ["no transcript segments generated"] if not transcripts else []
+            status = StepStatus.completed_with_warnings if warnings else StepStatus.completed
+
+    state.steps["transcribe"] = StepLedgerEntry(
+        status=status,
+        input_fingerprint=source_fingerprint,
+        output_refs=output_refs,
+        last_run_id=run_id,
+        warnings=warnings,
+    )
+    state.latest_run_id = run_id
+    state.updated_at = utc_now()
+    state.overall_status = (
+        OverallStatus.degraded
+        if warnings
+        else OverallStatus.ready
+    )
+
+    runs_dir = root / WORKSPACE_DIR / RUNS_DIR / run_id
+    runs_dir.mkdir(parents=True, exist_ok=True)
+    write_json(runs_dir / "command.json", {"command": "transcribe", "project": str(project_path)})
+    write_json(runs_dir / "environment.json", environment_snapshot())
+    write_json(
+        runs_dir / "step_result.json",
+        {
+            "step": "transcribe",
+            "status": status.value,
+            "sources": len(records),
+            "transcripts": transcript_summary(output_path).get("count", 0)
+            if output_path
+            else 0,
+            "transcription": config.features.transcription.value,
+            "output_refs": output_refs,
+        },
+    )
+    write_json(runs_dir / "warnings.json", warnings)
+    write_json(runs_dir / "errors.json", [])
+    (runs_dir / "log.txt").write_text("transcribe completed\n", encoding="utf-8")
+    save_state(root, state)
+    write_run_report(output_dir, state, warnings)
+    return output_path, state, warnings
+
+
 def map_workspace(project_path: Path) -> tuple[Path, ProjectState, list[str]]:
     config = load_project_config(project_path)
     root = project_root(project_path)
@@ -1540,6 +1845,8 @@ def rebuild_command_for_step(step: str) -> str:
     commands = {
         "init": "artist-portrait init --project <project.yaml>",
         "scan": "artist-portrait scan --project <project.yaml>",
+        "transcribe": "artist-portrait transcribe --project <project.yaml>",
+        "segment": "artist-portrait segment --project <project.yaml>",
         "map": "artist-portrait map --project <project.yaml>",
         "review_project": "artist-portrait review --project <project.yaml> --scope project",
     }

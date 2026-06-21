@@ -42,6 +42,7 @@ def test_skill_frontmatter_and_boundaries():
     assert "model calls" in frontmatter["description"]
     assert "scan report" in frontmatter["description"]
     assert "fixed-window or PySceneDetect-gated clip ledger" in frontmatter["description"]
+    assert "transcript ledger" in frontmatter["description"]
     assert "BGM selection" in frontmatter["description"]
     assert "artist-portrait doctor --project ./project.yaml --json" in content
     assert "image generation or image editing" in content

@@ -4,6 +4,7 @@ from pathlib import Path
 import artist_portrait_editor.cli as cli
 import artist_portrait_editor.workspace as workspace
 from artist_portrait_editor.cli import main
+from artist_portrait_editor.media.transcription import TranscribedSegment, TranscribedWord
 from artist_portrait_editor.media.scanner import ScanResult, read_sources_jsonl
 from artist_portrait_editor.models.source import (
     Assertion,
@@ -61,6 +62,13 @@ def project_fixture_with_scene_detection(value: str) -> str:
     return (FIXTURES / "valid_project.yaml").read_text(encoding="utf-8").replace(
         "scene_detection: auto",
         f"scene_detection: {value}",
+    )
+
+
+def project_fixture_with_transcription(value: str) -> str:
+    return (FIXTURES / "valid_project.yaml").read_text(encoding="utf-8").replace(
+        "transcription: auto",
+        f"transcription: {value}",
     )
 
 
@@ -632,6 +640,284 @@ def test_segment_required_pyscenedetect_failure_returns_dependency_code(
 
     assert code == 4
     assert "scene_detection is required but PySceneDetect failed" in captured.err
+
+
+def test_transcribe_requires_scan_first(tmp_path, capsys):
+    project_path = tmp_path / "project.yaml"
+    project_path.write_text(
+        (FIXTURES / "valid_project.yaml").read_text(encoding="utf-8"),
+        encoding="utf-8",
+    )
+    assert main(["init", "--project", str(project_path), "--quiet"]) in (0, 1)
+
+    code = main(["transcribe", "--project", str(project_path)])
+    captured = capsys.readouterr()
+
+    assert code == 7
+    assert "transcribe requires scan" in captured.err
+
+
+def test_transcribe_off_skips_without_transcripts_file(tmp_path, capsys):
+    project_path = tmp_path / "project.yaml"
+    project_path.write_text(
+        project_fixture_with_transcription("off"),
+        encoding="utf-8",
+    )
+    assert main(["init", "--project", str(project_path), "--quiet"]) in (0, 1)
+    write_clean_source_ledger(tmp_path)
+
+    code = main(["transcribe", "--project", str(project_path), "--json"])
+    captured = capsys.readouterr()
+
+    assert code == 0
+    payload = json.loads(captured.out)
+    assert payload["status"] == "skipped"
+    assert payload["output"] is None
+    assert payload["warnings"] == []
+    assert not (tmp_path / ".artist-portrait" / "data" / "transcripts.jsonl").exists()
+    state_payload = json.loads(
+        (tmp_path / ".artist-portrait" / "state.json").read_text(encoding="utf-8")
+    )
+    assert state_payload["steps"]["transcribe"]["status"] == "skipped"
+
+
+def test_transcribe_auto_missing_faster_whisper_skips(tmp_path, monkeypatch, capsys):
+    project_path = tmp_path / "project.yaml"
+    project_path.write_text(
+        project_fixture_with_transcription("auto"),
+        encoding="utf-8",
+    )
+    assert main(["init", "--project", str(project_path), "--quiet"]) in (0, 1)
+    write_clean_source_ledger(tmp_path)
+    monkeypatch.setattr(
+        workspace,
+        "detect_capabilities",
+        lambda: Capabilities(ffmpeg=True, ffprobe=True, faster_whisper=False),
+    )
+
+    code = main(["transcribe", "--project", str(project_path), "--json"])
+    captured = capsys.readouterr()
+
+    assert code == 1
+    payload = json.loads(captured.out)
+    assert payload["status"] == "skipped"
+    assert payload["warnings"] == ["faster_whisper_missing: transcription skipped"]
+    assert not (tmp_path / ".artist-portrait" / "data" / "transcripts.jsonl").exists()
+
+
+def test_transcribe_required_missing_faster_whisper_returns_dependency_code(
+    tmp_path,
+    monkeypatch,
+    capsys,
+):
+    project_path = tmp_path / "project.yaml"
+    project_path.write_text(
+        project_fixture_with_transcription("required"),
+        encoding="utf-8",
+    )
+    assert main(["init", "--project", str(project_path), "--quiet"]) in (0, 1)
+    write_clean_source_ledger(tmp_path)
+    monkeypatch.setattr(
+        workspace,
+        "detect_capabilities",
+        lambda: Capabilities(ffmpeg=True, ffprobe=True, faster_whisper=False),
+    )
+
+    code = main(["transcribe", "--project", str(project_path)])
+    captured = capsys.readouterr()
+
+    assert code == 4
+    assert "transcription is required but faster-whisper is not available" in captured.err
+
+    code = main(["doctor", "--project", str(project_path), "--json"])
+    captured = capsys.readouterr()
+    doctor_payload = json.loads(captured.out)
+    assert code == 1
+    assert any(
+        issue["code"] == "transcription_required_missing"
+        for issue in doctor_payload["issues"]
+    )
+
+
+def test_transcribe_writes_transcripts_when_faster_whisper_available(
+    tmp_path,
+    monkeypatch,
+    capsys,
+):
+    project_path = tmp_path / "project.yaml"
+    project_path.write_text(
+        project_fixture_with_transcription("auto"),
+        encoding="utf-8",
+    )
+    assert main(["init", "--project", str(project_path), "--quiet"]) in (0, 1)
+    write_clean_source_ledger(tmp_path)
+    monkeypatch.setattr(
+        workspace,
+        "detect_capabilities",
+        lambda: Capabilities(ffmpeg=True, ffprobe=True, faster_whisper=True),
+    )
+    monkeypatch.setattr(workspace, "faster_whisper_version", lambda: "test")
+    monkeypatch.setattr(
+        workspace,
+        "transcribe_source_faster_whisper",
+        lambda path: [
+            TranscribedSegment(
+                start_seconds=0.0,
+                end_seconds=1.25,
+                text="hello world",
+                language="en",
+                confidence=0.8,
+                words=[
+                    TranscribedWord("hello", 0.0, 0.5, 0.9),
+                    TranscribedWord("world", 0.5, 1.25, 0.85),
+                ],
+            )
+        ],
+    )
+
+    code = main(["transcribe", "--project", str(project_path), "--json"])
+    captured = capsys.readouterr()
+
+    assert code == 0
+    payload = json.loads(captured.out)
+    assert payload["output"] == ".artist-portrait/data/transcripts.jsonl"
+    transcripts_path = tmp_path / ".artist-portrait" / "data" / "transcripts.jsonl"
+    records = [
+        json.loads(line)
+        for line in transcripts_path.read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    ]
+    assert len(records) == 1
+    assert records[0]["text"] == "hello world"
+    assert records[0]["language"] == "en"
+    assert records[0]["method"] == "faster_whisper"
+    assert records[0]["method_version"] == "faster-whisper-test"
+    assert records[0]["text_type"] is None
+    assert records[0]["risk_flags"] == ["unclassified_text_type"]
+
+    code = main(["status", "--project", str(project_path), "--json"])
+    captured = capsys.readouterr()
+    status_payload = json.loads(captured.out)
+    assert code == 0
+    assert status_payload["summaries"]["transcripts"]["count"] == 1
+    assert status_payload["summaries"]["transcripts"]["language_counts"] == {"en": 1}
+
+
+def test_invalid_transcripts_jsonl_status_and_doctor(tmp_path, capsys):
+    project_path = tmp_path / "project.yaml"
+    project_path.write_text(
+        project_fixture_with_transcription("auto"),
+        encoding="utf-8",
+    )
+    assert main(["init", "--project", str(project_path), "--quiet"]) in (0, 1)
+    write_clean_source_ledger(tmp_path)
+    transcripts_path = tmp_path / ".artist-portrait" / "data" / "transcripts.jsonl"
+    transcripts_path.write_text('{"transcript_id": "missing-required-fields"}\n', encoding="utf-8")
+
+    code = main(["status", "--project", str(project_path), "--json"])
+    captured = capsys.readouterr()
+    payload = json.loads(captured.out)
+
+    assert code == 0
+    assert payload["summaries"]["transcripts"]["valid"] is False
+    assert "invalid TranscriptRecord JSONL" in payload["summaries"]["transcripts"]["error"]
+
+    code = main(["doctor", "--project", str(project_path), "--json"])
+    captured = capsys.readouterr()
+    doctor_payload = json.loads(captured.out)
+
+    assert code == 1
+    assert any(issue["code"] == "transcripts_invalid" for issue in doctor_payload["issues"])
+
+
+def test_repeated_cli_scan_invalidates_transcribe_outputs(
+    tmp_path,
+    monkeypatch,
+    capsys,
+):
+    project_path = tmp_path / "project.yaml"
+    project_path.write_text(
+        project_fixture_with_transcription("auto"),
+        encoding="utf-8",
+    )
+    media_dir = tmp_path / "media"
+    media_dir.mkdir()
+    media = media_dir / "a.mp4"
+    media.write_bytes(b"first-content")
+    assert main(["init", "--project", str(project_path), "--quiet"]) in (0, 1)
+    monkeypatch.setattr(
+        cli,
+        "detect_capabilities",
+        lambda: Capabilities(ffmpeg=True, ffprobe=True),
+    )
+    monkeypatch.setattr(
+        workspace,
+        "detect_capabilities",
+        lambda: Capabilities(ffmpeg=True, ffprobe=True, faster_whisper=True),
+    )
+
+    def fake_probe(path):
+        return (
+            MediaKind.video,
+            MediaProbe(
+                duration=3.0,
+                width=16,
+                height=16,
+                frame_rate=24.0,
+                video_codec="h264",
+                audio_present=True,
+                audio_codec="aac",
+            ),
+        )
+
+    from artist_portrait_editor.media import scanner
+
+    original_scan_project_sources = scanner.scan_project_sources
+
+    def scan_with_fake_probe(*, root, config, previous_records=None):
+        return original_scan_project_sources(
+            root=root,
+            config=config,
+            probe_fn=fake_probe,
+            previous_records=previous_records,
+        )
+
+    monkeypatch.setattr(workspace, "scan_project_sources", scan_with_fake_probe)
+    monkeypatch.setattr(
+        workspace,
+        "transcribe_source_faster_whisper",
+        lambda path: [
+            TranscribedSegment(
+                start_seconds=0.0,
+                end_seconds=1.0,
+                text="first",
+                language="en",
+                confidence=0.8,
+            )
+        ],
+    )
+
+    assert main(["scan", "--project", str(project_path), "--quiet"]) == 0
+    assert main(["transcribe", "--project", str(project_path), "--quiet"]) == 0
+    media.write_bytes(b"changed-content")
+
+    code = main(["scan", "--project", str(project_path), "--json"])
+    captured = capsys.readouterr()
+
+    assert code == 0
+    payload = json.loads(captured.out)
+    assert payload["invalidated_steps"] == ["transcribe"]
+    state_payload = json.loads(
+        (tmp_path / ".artist-portrait" / "state.json").read_text(encoding="utf-8")
+    )
+    assert state_payload["steps"]["transcribe"]["status"] == "invalidated"
+
+    code = main(["doctor", "--project", str(project_path), "--json"])
+    captured = capsys.readouterr()
+    doctor_payload = json.loads(captured.out)
+
+    assert code == 1
+    assert any(issue["code"] == "transcribe_invalidated" for issue in doctor_payload["issues"])
 
 
 def test_map_writes_material_map_from_sources(tmp_path, monkeypatch, capsys):

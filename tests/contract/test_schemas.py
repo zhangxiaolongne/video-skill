@@ -5,6 +5,7 @@ from artist_portrait_editor.models.clip import ClipRecord
 from artist_portrait_editor.models.config import ProjectConfig
 from artist_portrait_editor.models.source import SourceRecord
 from artist_portrait_editor.models.state import ProjectState
+from artist_portrait_editor.models.transcript import TranscriptRecord
 
 
 def test_schema_generation_from_pydantic_models():
@@ -12,15 +13,18 @@ def test_schema_generation_from_pydantic_models():
     clip_schema = ClipRecord.model_json_schema()
     state_schema = ProjectState.model_json_schema()
     source_schema = SourceRecord.model_json_schema()
+    transcript_schema = TranscriptRecord.model_json_schema()
 
     assert config_schema["title"] == "ProjectConfig"
     assert clip_schema["title"] == "ClipRecord"
     assert state_schema["title"] == "ProjectState"
     assert source_schema["title"] == "SourceRecord"
+    assert transcript_schema["title"] == "TranscriptRecord"
     assert "project" in config_schema["properties"]
     assert "clip_id" in clip_schema["properties"]
     assert "steps" in state_schema["properties"]
     assert "source_id" in source_schema["properties"]
+    assert "transcript_id" in transcript_schema["properties"]
 
 
 def test_committed_schemas_match_pydantic_generation():
@@ -37,6 +41,9 @@ def test_committed_schemas_match_pydantic_generation():
     committed_source = json.loads(
         (schema_dir / "source_record.schema.json").read_text(encoding="utf-8")
     )
+    committed_transcript = json.loads(
+        (schema_dir / "transcript_record.schema.json").read_text(encoding="utf-8")
+    )
 
     assert committed_config == json.loads(
         json.dumps(ProjectConfig.model_json_schema(), sort_keys=True)
@@ -49,4 +56,7 @@ def test_committed_schemas_match_pydantic_generation():
     )
     assert committed_source == json.loads(
         json.dumps(SourceRecord.model_json_schema(), sort_keys=True)
+    )
+    assert committed_transcript == json.loads(
+        json.dumps(TranscriptRecord.model_json_schema(), sort_keys=True)
     )

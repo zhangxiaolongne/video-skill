@@ -19,4 +19,4 @@ research materials
 V0 success is not one-click finished video. V0 should first become a reliable
 material researcher and explainable editing planner.
 
-Current implementation gate: V0-005 PySceneDetect scene segmentation gate only.
+Current implementation gate: V0-006 local transcription gate only.

@@ -4,7 +4,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 
 
-def test_current_gate_is_scene_segmentation_gate_across_primary_docs():
+def test_current_gate_is_transcription_gate_across_primary_docs():
     agents = (ROOT / "AGENTS.md").read_text(encoding="utf-8")
     master = (ROOT / "artist_portrait_editor_revision5_optimized.md").read_text(
         encoding="utf-8"
@@ -12,16 +12,16 @@ def test_current_gate_is_scene_segmentation_gate_across_primary_docs():
     readme = (ROOT / "README.md").read_text(encoding="utf-8")
     vision = (ROOT / "docs" / "VISION.md").read_text(encoding="utf-8")
     progress = (ROOT / "docs" / "DEVELOPMENT_PROGRESS.md").read_text(encoding="utf-8")
-    v005 = (ROOT / "docs" / "V0_005_SCENE_SEGMENTATION_GATE.md").read_text(
+    v006 = (ROOT / "docs" / "V0_006_TRANSCRIPTION_GATE.md").read_text(
         encoding="utf-8"
     )
 
-    assert "Current gate: V0-005 PySceneDetect scene segmentation gate only." in agents
-    assert "V0-005 PySceneDetect 场景切分闸门" in master
-    assert "Current V0-005 PySceneDetect scene segmentation gate work" in readme
-    assert "Current implementation gate: V0-005 PySceneDetect scene segmentation gate only." in vision
-    assert "Current local gate: V0-005 PySceneDetect scene segmentation gate only" in progress
-    assert "V0-005 opens optional PySceneDetect scene segmentation" in v005
+    assert "Current gate: V0-006 local transcription gate only." in agents
+    assert "V0-006 本地转写闸门" in master
+    assert "Current V0-006 local transcription gate work" in readme
+    assert "Current implementation gate: V0-006 local transcription gate only." in vision
+    assert "Current local gate: V0-006 local transcription gate only" in progress
+    assert "V0-006 opens a local transcription gate" in v006
 
 
 def test_current_gate_forbids_future_media_and_creative_surfaces():
@@ -29,13 +29,12 @@ def test_current_gate_forbids_future_media_and_creative_surfaces():
         [
             (ROOT / "AGENTS.md").read_text(encoding="utf-8"),
             (ROOT / "SKILL.md").read_text(encoding="utf-8"),
-            (ROOT / "docs" / "V0_005_SCENE_SEGMENTATION_GATE.md").read_text(
+            (ROOT / "docs" / "V0_006_TRANSCRIPTION_GATE.md").read_text(
                 encoding="utf-8"
             ),
         ]
     )
 
-    assert "Whisper" in docs
     assert "OpenCV" in docs
     assert "BGM selection" in docs
     assert "timeline generation" in docs
@@ -90,5 +89,18 @@ def test_v005_release_readiness_records_scope():
     assert "`features.scene_detection` routing" in content
     assert "Optional PySceneDetect adapter" in content
     assert "`pyscenedetect` clip method" in content
+    assert "pytest:" in content
+    assert "run_checks.py:" in content
+
+
+def test_v006_release_readiness_records_scope():
+    content = (ROOT / "docs" / "V0_006_RELEASE_READINESS.md").read_text(
+        encoding="utf-8"
+    )
+
+    assert "Status: completed locally, ready to push, not tagged." in content
+    assert "`TranscriptRecord` Pydantic model" in content
+    assert "`artist-portrait transcribe --project`" in content
+    assert "local-only faster-whisper adapter" in content
     assert "pytest:" in content
     assert "run_checks.py:" in content

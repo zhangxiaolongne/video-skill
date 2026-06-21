@@ -1,6 +1,6 @@
 # artist-portrait-editor
 
-Local V0 segmentation foundation for the `artist-portrait-editor` skill.
+Local V0 media research foundation for the `artist-portrait-editor` skill.
 
 ## Master Document
 
@@ -44,13 +44,16 @@ Local V0 segmentation foundation for the `artist-portrait-editor` skill.
 - [V0-004 Release Readiness](docs/V0_004_RELEASE_READINESS.md)
 - [V0-005 Scene Segmentation Gate](docs/V0_005_SCENE_SEGMENTATION_GATE.md)
 - [V0-005 Release Readiness](docs/V0_005_RELEASE_READINESS.md)
+- [V0-006 Transcription Gate](docs/V0_006_TRANSCRIPTION_GATE.md)
+- [V0-006 Release Readiness](docs/V0_006_RELEASE_READINESS.md)
 - [Non Goals](docs/NON_GOALS.md)
 
 ## Current Gate
 
-Current V0-005 PySceneDetect scene segmentation gate work allows deterministic
-project setup, local media scanning, fixed-window clip segmentation, optional
-PySceneDetect video scene segmentation, source and clip ledger operations, and
+Current V0-006 local transcription gate work allows deterministic project
+setup, local media scanning, fixed-window clip segmentation, optional
+PySceneDetect video scene segmentation, local-only faster-whisper transcription
+when available, source/clip/transcript ledger operations, and
 read-only/reporting outputs:
 
 ```text
@@ -63,15 +66,17 @@ project.yaml
 -> scan report from sources.jsonl
 -> fixed-window or PySceneDetect clip ledger
 -> clip report from clips.jsonl
+-> transcript ledger
 -> minimal material map from sources.jsonl
 -> minimal project risk report from sources.jsonl
 -> run report
 -> fixed exit codes
 ```
 
-Transcription, visual analysis, embeddings, creative proposal generation,
-timeline generation, preview rendering, BGM selection or beat analysis, model
-calls, image generation/editing, and network search remain out of scope.
+Visual analysis, embeddings, creative proposal generation, timeline generation,
+preview rendering, BGM selection or beat analysis, model calls, image
+generation/editing, remote ASR/model downloads, and network search remain out
+of scope.
 
 ## Local Setup
 
@@ -90,13 +95,14 @@ python3 -m venv .venv
 .venv/bin/artist-portrait generate-schema --output-dir schemas
 .venv/bin/artist-portrait scan --project ./project.yaml
 .venv/bin/artist-portrait segment --project ./project.yaml
+.venv/bin/artist-portrait transcribe --project ./project.yaml
 .venv/bin/artist-portrait map --project ./project.yaml
 .venv/bin/artist-portrait review --project ./project.yaml --scope project
 .venv/bin/artist-portrait review --project ./project.yaml --scope all
 ```
 
-Commands such as `transcribe`, `analyze`, `relate`, `propose`, `timeline`, and
-`run` remain intentionally blocked.
+Commands such as `analyze`, `relate`, `propose`, `timeline`, and `run` remain
+intentionally blocked.
 
 ## Tests
 

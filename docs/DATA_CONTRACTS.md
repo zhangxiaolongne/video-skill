@@ -11,6 +11,7 @@ Current committed schemas:
 - `schemas/project_config.schema.json`
 - `schemas/project_state.schema.json`
 - `schemas/source_record.schema.json`
+- `schemas/transcript_record.schema.json`
 
 Current contract tests assert that committed schemas match live Pydantic schema
 generation.
@@ -30,6 +31,14 @@ values are `fixed_window` and `pyscenedetect`.
 `output/clip_report.md` is a rebuildable report rendered from the current clip
 ledger and selected segmentation output. It is not canonical data; `clips.jsonl`
 remains the canonical clip ledger.
+
+`TranscriptRecord` is implemented for the local transcription gate and is
+written as JSON Lines to `.artist-portrait/data/transcripts.jsonl` by
+`transcribe`. It records audible text candidates with source identity,
+timestamps, method, method version, confidence, evidence, and optional word
+timestamps. `text_type` remains `null` unless a later gate or user confirmation
+classifies the transcript as interview, lyrics, role dialogue, captions, or
+another text type.
 
 Diagnostic issues are plain JSON objects used by `status`, `review`, and
 `doctor`. Current common fields:
@@ -52,12 +61,14 @@ Current stable diagnostic codes include:
 - `segment_pending`
 - `review_project_pending`
 - `clips_invalid`
+- `transcripts_invalid`
 - `scene_detection_required_missing`
+- `transcription_required_missing`
 - `segment_invalidated`
+- `transcribe_invalidated`
 - `map_invalidated`
 - `review_project_invalidated`
 - `review_scope_skipped`
 
-Canonical contracts such as `transcripts.jsonl`, `relations.jsonl`, and
-`proposals.json` are specified in the master document but intentionally not
-implemented yet.
+Canonical contracts such as `relations.jsonl` and `proposals.json` are
+specified in the master document but intentionally not implemented yet.
