@@ -37,6 +37,7 @@ Stage A engineering foundation for the `artist-portrait-editor` skill.
 - [V0-002p Skill Package Preflight](docs/V0_002P_SKILL_PACKAGE_PREFLIGHT.md)
 - [V0-002q Skill Package Policy](docs/V0_002Q_SKILL_PACKAGE_POLICY.md)
 - [V0-002r Canonical Install Simulation](docs/V0_002R_CANONICAL_INSTALL_SIMULATION.md)
+- [V0-002s Release Readiness](docs/V0_002S_RELEASE_READINESS.md)
 - [Non Goals](docs/NON_GOALS.md)
 
 ## Current Gate

@@ -56,6 +56,7 @@ When a user requirement changes long-term product behavior, update both files:
 - V0-002p: skill package preflight.
 - V0-002q: skill package policy.
 - V0-002r: canonical install simulation.
+- V0-002s: release readiness for the unpushed local batch.
 
 ## Current Hard Boundaries
 
@@ -122,6 +123,6 @@ carried into the future proposal, timeline, review, and preview gates.
 
 ## Next Likely Batch
 
-V0-002s should prepare the local batch for a larger release point: review all
-unpushed commits, decide whether to tag, and push only after the current local
-foundation and skill packaging checks are still green.
+Next action should be user-confirmed release handling: either push `main` to
+`origin/main`, or create a release tag and push both commits and tag after
+rerunning the release readiness checks.

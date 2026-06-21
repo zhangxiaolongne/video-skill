@@ -34,6 +34,7 @@ Current local foundation tests cover:
 - skill package policy declaring `artist-portrait-editor` as canonical install
   directory and `video-skill` as an allowed distribution repository
 - canonical install simulation with zero package preflight warnings
+- release readiness documentation for the unpushed local batch
 
 Future segmentation, transcription, analysis, proposal, timeline, preview,
 model, and network fixtures are intentionally not implemented yet.

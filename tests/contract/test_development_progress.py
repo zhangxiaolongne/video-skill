@@ -9,6 +9,7 @@ def test_development_progress_records_versions_and_bgm_constraint():
 
     assert "V0-002a" in content
     assert "V0-002q" in content
+    assert "V0-002s" in content
     assert "BGM must not be treated as a final decorative layer" in content
     assert "BPM" in content
     assert "subtitle entrances/exits" in content
