@@ -455,18 +455,6 @@ def doctor_project_payload(project_path: Path) -> dict:
                 ),
             )
         )
-    elif (
-        sources.get("valid") is True
-        and state.steps.get("map", StepLedgerEntry()).status == StepStatus.pending
-    ):
-        issues.append(
-            workspace_issue(
-                code="map_pending",
-                severity="info",
-                detail="source ledger exists but material map has not been generated",
-                next_action=f"artist-portrait map --project {project_path}",
-            )
-        )
     if (
         sources.get("valid") is True
         and clips_summary(root).get("valid") is False
@@ -588,6 +576,19 @@ def doctor_project_payload(project_path: Path) -> dict:
                 severity="info",
                 detail="clip ledger exists but analysis has not been generated",
                 next_action=f"artist-portrait analyze --project {project_path}",
+            )
+        )
+    elif (
+        sources.get("valid") is True
+        and analysis.get("valid") is True
+        and state.steps.get("map", StepLedgerEntry()).status == StepStatus.pending
+    ):
+        issues.append(
+            workspace_issue(
+                code="map_pending",
+                severity="info",
+                detail="analysis ledger exists but material map has not been generated",
+                next_action=f"artist-portrait map --project {project_path}",
             )
         )
     if (
@@ -2327,18 +2328,35 @@ def map_workspace(project_path: Path) -> tuple[Path, ProjectState, list[str]]:
     sources_path = root / WORKSPACE_DIR / DATA_DIR / "sources.jsonl"
     if not sources_path.exists():
         raise WorkspacePrerequisiteError("map requires scan to complete first")
-
     records = read_sources_jsonl(sources_path)
-    warnings = ["no sources available for material map"] if not records else []
+    analysis_path = root / WORKSPACE_DIR / DATA_DIR / "analysis.jsonl"
+    if not analysis_path.exists():
+        raise WorkspacePrerequisiteError("map requires analyze to complete first")
+    analyze_step = state.steps.get("analyze", StepLedgerEntry())
+    if analyze_step.status in {StepStatus.pending, StepStatus.invalidated}:
+        raise WorkspacePrerequisiteError("map requires analyze to be current first")
+
+    analyses = read_analysis_jsonl(analysis_path)
+    warnings = ["no analysis records available for material map"] if not analyses else []
     run_id = new_run_id()
     output_dir = root / config.paths.output_dir
     output_path = output_dir / "material_map.md"
     atomic_write_text(
         output_path,
-        render_material_map(records=records, sources_ref=sources_path.relative_to(root).as_posix()),
+        render_material_map(
+            records=records,
+            analyses=analyses,
+            sources_ref=sources_path.relative_to(root).as_posix(),
+            analysis_ref=analysis_path.relative_to(root).as_posix(),
+        ),
     )
 
-    input_fingerprint = fingerprint_file(sources_path)
+    input_fingerprint = fingerprint_inputs(
+        [
+            ("sources", sources_path),
+            ("analysis", analysis_path),
+        ]
+    )
     status = StepStatus.completed_with_warnings if warnings else StepStatus.completed
     state.steps["map"] = StepLedgerEntry(
         status=status,
@@ -2361,6 +2379,7 @@ def map_workspace(project_path: Path) -> tuple[Path, ProjectState, list[str]]:
             "step": "map",
             "status": status.value,
             "sources": len(records),
+            "analysis_records": len(analyses),
             "output": output_path.relative_to(root).as_posix(),
         },
     )
@@ -2372,34 +2391,142 @@ def map_workspace(project_path: Path) -> tuple[Path, ProjectState, list[str]]:
     return output_path, state, warnings
 
 
-def render_material_map(*, records: list[SourceRecord], sources_ref: str) -> str:
+def render_material_map(
+    *,
+    records: list[SourceRecord],
+    analyses: list[AnalysisRecord],
+    sources_ref: str,
+    analysis_ref: str,
+) -> str:
     sorted_records = sorted(records, key=lambda record: record.primary_location)
+    sorted_analyses = sorted(analyses, key=lambda item: (item.source_location, item.start_seconds))
     total_duration = sum(record.media_probe.duration for record in sorted_records)
     media_counts = count_by_value(record.media_kind.value for record in sorted_records)
     source_type_counts = count_by_value(
         str(record.source_type.value) for record in sorted_records
     )
     rights_counts = count_by_value(str(record.rights_status.value) for record in sorted_records)
+    analysis_material_counts = count_by_value(
+        str(analysis.material_type.value) for analysis in sorted_analyses
+    )
+    audio_counts = count_by_value(
+        str(analysis.original_audio_usability.value) for analysis in sorted_analyses
+    )
+    risk_counts = count_by_value(
+        flag.value
+        for analysis in sorted_analyses
+        for flag in analysis.risk_flags
+    )
 
     return (
         "# Material Map\n\n"
-        "This deterministic source inventory is rendered from local scan data only. "
-        "No transcription, visual analysis, embeddings, creative proposals, timeline "
-        "generation, preview rendering, network calls, or model calls were performed.\n\n"
+        "This deterministic material map is rendered from local source and analysis "
+        "ledgers. It ranks clips for human review using evidence coverage and risk "
+        "signals only. It does not perform OpenCV/vision-model visual classification, "
+        "embeddings, creative proposals, timeline generation, preview rendering, "
+        "network calls, BGM selection, image generation/editing, or model calls.\n\n"
         "## Summary\n\n"
         f"- Source ledger: `{sources_ref}`\n"
+        f"- Analysis ledger: `{analysis_ref}`\n"
         f"- Source count: `{len(sorted_records)}`\n"
+        f"- Analysis record count: `{len(sorted_analyses)}`\n"
         f"- Total duration seconds: `{total_duration:.3f}`\n\n"
         "## Distribution\n\n"
         "### Media Kind\n\n"
         f"{render_count_lines(media_counts)}\n"
         "### Source Type\n\n"
         f"{render_count_lines(source_type_counts)}\n"
+        "### Analysis Material Type\n\n"
+        f"{render_count_lines(analysis_material_counts)}\n"
+        "### Original Audio Usability\n\n"
+        f"{render_count_lines(audio_counts)}\n"
         "### Rights Status\n\n"
         f"{render_count_lines(rights_counts)}\n"
+        "### Risk Flags\n\n"
+        f"{render_count_lines(risk_counts)}\n"
+        "## Priority Review Queue\n\n"
+        f"{render_priority_review_queue(sorted_analyses)}"
+        "## Pending Confirmation\n\n"
+        f"{render_pending_confirmation(sorted_analyses)}"
+        "## Risk Items\n\n"
+        f"{render_material_map_risks(sorted_analyses)}"
         "## Sources\n\n"
         f"{render_source_sections(sorted_records)}"
     )
+
+
+def analysis_review_score(analysis: AnalysisRecord) -> float:
+    score = analysis.duration_seconds
+    if analysis.keyframe_refs:
+        score += 2.0
+    if analysis.transcript_refs:
+        score += 2.0
+    score -= len(analysis.risk_flags) * 0.5
+    return round(max(score, 0.0), 3)
+
+
+def render_priority_review_queue(analyses: list[AnalysisRecord]) -> str:
+    if not analyses:
+        return "No analysis records are available for review prioritization.\n\n"
+    ranked = sorted(
+        analyses,
+        key=lambda analysis: (
+            -analysis_review_score(analysis),
+            analysis.source_location,
+            analysis.start_seconds,
+        ),
+    )
+    lines = []
+    for index, analysis in enumerate(ranked, start=1):
+        reasons = []
+        if analysis.keyframe_refs:
+            reasons.append("has keyframe evidence")
+        if analysis.transcript_refs:
+            reasons.append("has transcript evidence")
+        if not reasons:
+            reasons.append("needs manual evidence review")
+        risk_count = len(analysis.risk_flags)
+        lines.append(
+            f"{index}. `{analysis.clip_id}` score `{analysis_review_score(analysis):.3f}` - "
+            f"{analysis.source_location} "
+            f"{analysis.start_seconds:.3f}-{analysis.end_seconds:.3f}s; "
+            f"{', '.join(reasons)}; risks `{risk_count}`"
+        )
+    return "\n".join(lines) + "\n\n"
+
+
+def render_pending_confirmation(analyses: list[AnalysisRecord]) -> str:
+    if not analyses:
+        return "- None\n\n"
+    lines = []
+    for analysis in analyses:
+        pending = []
+        if analysis.shot_size.value is None:
+            pending.append("shot_size")
+        if analysis.camera_motion.value is None:
+            pending.append("camera_motion")
+        if analysis.visual_quality.value is None:
+            pending.append("visual_quality")
+        if not analysis.emotion_candidates.value:
+            pending.append("emotion_candidates")
+        if not analysis.action_candidates.value:
+            pending.append("action_candidates")
+        if pending:
+            lines.append(
+                f"- `{analysis.clip_id}` requires confirmation for "
+                f"{', '.join(pending)}"
+            )
+    return ("\n".join(lines) if lines else "- None") + "\n\n"
+
+
+def render_material_map_risks(analyses: list[AnalysisRecord]) -> str:
+    rows = []
+    for analysis in analyses:
+        if not analysis.risk_flags:
+            continue
+        risks = ", ".join(f"`{flag.value}`" for flag in analysis.risk_flags)
+        rows.append(f"- `{analysis.clip_id}`: {risks}")
+    return ("\n".join(rows) if rows else "- None") + "\n\n"
 
 
 def count_by_value(values) -> dict[str, int]:

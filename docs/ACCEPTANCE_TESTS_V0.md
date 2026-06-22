@@ -75,6 +75,10 @@ Current local foundation tests cover:
 - status and doctor visibility for analysis manifests
 - downstream invalidation after source, clip, transcript, keyframe, or analysis
   ledger changes
+- `map` requiring current analysis before rendering
+- `material_map.md` rendered from source and analysis ledgers
+- deterministic priority review queue, pending confirmation, and risk sections
+- material map invalidation after analysis changes
 
 Future visual classification, proposal, timeline, preview, remote model, BGM,
 image generation/editing, and network fixtures are intentionally not

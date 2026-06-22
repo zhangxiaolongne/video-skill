@@ -116,30 +116,30 @@ def check_gate_consistency() -> None:
         "master": ROOT / "artist_portrait_editor_revision5_optimized.md",
         "README.md": ROOT / "README.md",
         "DEVELOPMENT_PROGRESS.md": ROOT / "docs" / "DEVELOPMENT_PROGRESS.md",
-        "V0_008_BASIC_ANALYSIS_GATE.md": ROOT
+        "V0_009_MATERIAL_MAP_GATE.md": ROOT
         / "docs"
-        / "V0_008_BASIC_ANALYSIS_GATE.md",
+        / "V0_009_MATERIAL_MAP_GATE.md",
     }
     content = {name: path.read_text(encoding="utf-8") for name, path in docs.items()}
     if (
-        "Current gate: V0-008 basic evidence analysis gate only."
+        "Current gate: V0-009 analysis-led material map gate only."
         not in content["AGENTS.md"]
     ):
-        raise SystemExit("AGENTS.md current gate is not V0-008 basic analysis gate")
-    if "V0-008 基础证据分析闸门" not in content["master"]:
-        raise SystemExit("master document current gate is not V0-008 basic analysis gate")
-    if "Current V0-008 basic analysis gate work" not in content["README.md"]:
-        raise SystemExit("README current gate is not V0-008 basic analysis gate")
+        raise SystemExit("AGENTS.md current gate is not V0-009 material map gate")
+    if "V0-009 分析驱动素材地图闸门" not in content["master"]:
+        raise SystemExit("master document current gate is not V0-009 material map gate")
+    if "Current V0-009 analysis-led material map gate work" not in content["README.md"]:
+        raise SystemExit("README current gate is not V0-009 material map gate")
     if (
-        "Current local gate: V0-008 basic evidence analysis gate only"
+        "Current local gate: V0-009 analysis-led material map gate only"
         not in content["DEVELOPMENT_PROGRESS.md"]
     ):
         raise SystemExit("development progress current gate is stale")
     if (
-        "V0-008 opens deterministic, evidence-only clip analysis"
-        not in content["V0_008_BASIC_ANALYSIS_GATE.md"]
+        "V0-009 upgrades `map`"
+        not in content["V0_009_MATERIAL_MAP_GATE.md"]
     ):
-        raise SystemExit("V0-008 basic analysis gate doc is missing active gate")
+        raise SystemExit("V0-009 material map gate doc is missing active gate")
 
 
 def write_sine_wav(path: Path, *, seconds: float = 0.25, sample_rate: int = 8000) -> None:
@@ -231,6 +231,11 @@ def check_real_scan_if_available() -> None:
             raise SystemExit("analyze did not write analysis_report.md")
 
         run([str(ARTIST_PORTRAIT), "map", "--project", str(project), "--quiet"])
+        material_map = (tmp_path / "output" / "material_map.md").read_text(
+            encoding="utf-8"
+        )
+        if "Analysis ledger" not in material_map or "Priority Review Queue" not in material_map:
+            raise SystemExit("real scan material_map did not use analysis ledger")
         run(
             [
                 str(ARTIST_PORTRAIT),
@@ -384,11 +389,19 @@ def check_local_foundation_outputs() -> None:
         if transcripts.exists():
             raise SystemExit("transcription: off wrote transcripts.jsonl")
 
+        run([str(ARTIST_PORTRAIT), "analyze", "--project", str(project), "--quiet"])
+        analysis = tmp_path / ".artist-portrait" / "data" / "analysis.jsonl"
+        if not analysis.exists():
+            raise SystemExit("analyze did not write analysis.jsonl")
+
         run([str(ARTIST_PORTRAIT), "map", "--project", str(project), "--quiet"])
         material_map = (tmp_path / "output" / "material_map.md").read_text(
             encoding="utf-8"
         )
-        if "# Material Map" not in material_map or "No transcription" not in material_map:
+        if (
+            "# Material Map" not in material_map
+            or "Priority Review Queue" not in material_map
+        ):
             raise SystemExit("material_map content check failed")
 
         (tmp_path / "output" / "material_map.md").unlink()

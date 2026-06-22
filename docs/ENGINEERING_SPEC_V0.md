@@ -27,7 +27,7 @@ Required Stage A properties:
 - state and run records are auditable.
 - repeated `init` does not cross the Stage A boundary.
 
-Current V0-008 implementation scope additionally allows:
+Current V0-009 implementation scope additionally allows:
 
 - `scan`
 - deterministic `sources.jsonl`
@@ -46,7 +46,8 @@ Current V0-008 implementation scope additionally allows:
 - deterministic evidence-only `analyze`
 - canonical `analysis.jsonl`
 - rebuildable `analysis_report.md`
-- minimal `map`
+- analysis-led `map`
+- `material_map.md` rendered from source and analysis ledgers
 - minimal `review --scope project`
 - read-only `doctor`
 - source, clip, transcript, keyframe, and analysis invalidation diagnostics

@@ -61,6 +61,11 @@ analysis gate opens.
 `output/analysis_report.md` is a rebuildable report rendered from
 `analysis.jsonl`; the JSONL ledger is canonical.
 
+`output/material_map.md` is implemented for the V0-009 analysis-led material map
+gate. It is rendered from `sources.jsonl` and `analysis.jsonl`, includes
+distribution, priority review, pending confirmation, and risk sections, and is
+not canonical data.
+
 Diagnostic issues are plain JSON objects used by `status`, `review`, and
 `doctor`. Current common fields:
 

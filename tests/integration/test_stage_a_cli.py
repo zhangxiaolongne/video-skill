@@ -161,7 +161,7 @@ def test_init_creates_only_stage_a_artifacts(tmp_path):
 def test_init_dry_run_does_not_write_project_files(tmp_path, capsys):
     project_path = tmp_path / "project.yaml"
     project_path.write_text(
-        (FIXTURES / "valid_project.yaml").read_text(encoding="utf-8"),
+        project_fixture_with_scene_detection("off"),
         encoding="utf-8",
     )
 
@@ -178,7 +178,7 @@ def test_init_dry_run_does_not_write_project_files(tmp_path, capsys):
 def test_status_before_init_reports_new(tmp_path, capsys):
     project_path = tmp_path / "project.yaml"
     project_path.write_text(
-        (FIXTURES / "valid_project.yaml").read_text(encoding="utf-8"),
+        project_fixture_with_scene_detection("off"),
         encoding="utf-8",
     )
 
@@ -194,7 +194,7 @@ def test_status_before_init_reports_new(tmp_path, capsys):
 def test_status_after_init_json(tmp_path, capsys):
     project_path = tmp_path / "project.yaml"
     project_path.write_text(
-        (FIXTURES / "valid_project.yaml").read_text(encoding="utf-8"),
+        project_fixture_with_scene_detection("off"),
         encoding="utf-8",
     )
     assert main(["init", "--project", str(project_path), "--quiet"]) in (0, 1)
@@ -433,6 +433,23 @@ def test_map_requires_scan_first(tmp_path, capsys):
 
     assert code == 7
     assert "map requires scan" in captured.err
+
+
+def test_map_requires_analyze_first(tmp_path, capsys):
+    project_path = tmp_path / "project.yaml"
+    project_path.write_text(
+        project_fixture_with_scene_detection("off"),
+        encoding="utf-8",
+    )
+    assert main(["init", "--project", str(project_path), "--quiet"]) in (0, 1)
+    write_clean_source_ledger(tmp_path)
+    assert main(["segment", "--project", str(project_path), "--quiet"]) == 0
+
+    code = main(["map", "--project", str(project_path)])
+    captured = capsys.readouterr()
+
+    assert code == 7
+    assert "map requires analyze" in captured.err
 
 
 def test_segment_requires_scan_first(tmp_path, capsys):
@@ -1292,10 +1309,10 @@ def test_repeated_segment_invalidates_analysis(tmp_path, capsys):
     assert state_payload["steps"]["analyze"]["status"] == "invalidated"
 
 
-def test_map_writes_material_map_from_sources(tmp_path, monkeypatch, capsys):
+def test_map_writes_material_map_from_analysis(tmp_path, monkeypatch, capsys):
     project_path = tmp_path / "project.yaml"
     project_path.write_text(
-        (FIXTURES / "valid_project.yaml").read_text(encoding="utf-8"),
+        project_fixture_with_scene_detection("off"),
         encoding="utf-8",
     )
     media_dir = tmp_path / "media"
@@ -1342,6 +1359,8 @@ def test_map_writes_material_map_from_sources(tmp_path, monkeypatch, capsys):
     monkeypatch.setattr(workspace, "scan_project_sources", scan_with_fake_probe)
 
     assert main(["scan", "--project", str(project_path), "--quiet"]) == 0
+    assert main(["segment", "--project", str(project_path), "--quiet"]) == 0
+    assert main(["analyze", "--project", str(project_path), "--quiet"]) == 0
     code = main(["map", "--project", str(project_path), "--json"])
     captured = capsys.readouterr()
 
@@ -1350,9 +1369,13 @@ def test_map_writes_material_map_from_sources(tmp_path, monkeypatch, capsys):
     assert payload["output"] == "output/material_map.md"
     material_map = (tmp_path / "output" / "material_map.md").read_text(encoding="utf-8")
     assert "# Material Map" in material_map
-    assert "No transcription, visual analysis" in material_map
+    assert "rendered from local source and analysis ledgers" in material_map
     assert "- Source count: `1`" in material_map
+    assert "- Analysis record count: `2`" in material_map
     assert "- Total duration seconds: `12.500`" in material_map
+    assert "## Priority Review Queue" in material_map
+    assert "## Pending Confirmation" in material_map
+    assert "## Risk Items" in material_map
     assert "### 1. `media/a.mp4`" in material_map
     assert "- Source type: `interview`" in material_map
     assert "- Rights status: `owned`" in material_map
@@ -1527,11 +1550,13 @@ def test_review_project_writes_risk_report_from_sources(tmp_path, monkeypatch, c
 def test_status_and_review_report_missing_output_ref(tmp_path, capsys):
     project_path = tmp_path / "project.yaml"
     project_path.write_text(
-        (FIXTURES / "valid_project.yaml").read_text(encoding="utf-8"),
+        project_fixture_with_scene_detection("off"),
         encoding="utf-8",
     )
     assert main(["init", "--project", str(project_path), "--quiet"]) in (0, 1)
     write_clean_source_ledger(tmp_path)
+    assert main(["segment", "--project", str(project_path), "--quiet"]) == 0
+    assert main(["analyze", "--project", str(project_path), "--quiet"]) == 0
     assert main(["map", "--project", str(project_path), "--quiet"]) == 0
     (tmp_path / "output" / "material_map.md").unlink()
 
@@ -1593,7 +1618,7 @@ def test_invalid_sources_jsonl_blocks_scan_map_and_review_but_status_reports_it(
 ):
     project_path = tmp_path / "project.yaml"
     project_path.write_text(
-        (FIXTURES / "valid_project.yaml").read_text(encoding="utf-8"),
+        project_fixture_with_scene_detection("off"),
         encoding="utf-8",
     )
     assert main(["init", "--project", str(project_path), "--quiet"]) in (0, 1)
@@ -1767,7 +1792,7 @@ def test_repeated_cli_scan_invalidates_map_and_project_review(
 ):
     project_path = tmp_path / "project.yaml"
     project_path.write_text(
-        (FIXTURES / "valid_project.yaml").read_text(encoding="utf-8"),
+        project_fixture_with_scene_detection("off"),
         encoding="utf-8",
     )
     media_dir = tmp_path / "media"
@@ -1810,6 +1835,8 @@ def test_repeated_cli_scan_invalidates_map_and_project_review(
     monkeypatch.setattr(workspace, "scan_project_sources", scan_with_fake_probe)
 
     assert main(["scan", "--project", str(project_path), "--quiet"]) == 0
+    assert main(["segment", "--project", str(project_path), "--quiet"]) == 0
+    assert main(["analyze", "--project", str(project_path), "--quiet"]) == 0
     assert main(["map", "--project", str(project_path), "--quiet"]) == 0
     assert main(["review", "--project", str(project_path), "--scope", "project", "--quiet"]) == 1
 
@@ -1819,7 +1846,7 @@ def test_repeated_cli_scan_invalidates_map_and_project_review(
 
     assert code == 0
     payload = json.loads(captured.out)
-    assert payload["invalidated_steps"] == ["map", "review_project"]
+    assert payload["invalidated_steps"] == ["segment", "analyze", "map", "review_project"]
     state_payload = json.loads(
         (tmp_path / ".artist-portrait" / "state.json").read_text(encoding="utf-8")
     )
@@ -1827,6 +1854,7 @@ def test_repeated_cli_scan_invalidates_map_and_project_review(
     assert state_payload["steps"]["review_project"]["status"] == "invalidated"
     scan_report = (tmp_path / "output" / "scan_report.md").read_text(encoding="utf-8")
     assert "## Invalidated Downstream Steps" in scan_report
+    assert "- `analyze`" in scan_report
     assert "- `map`" in scan_report
     assert "- `review_project`" in scan_report
 
@@ -1836,7 +1864,9 @@ def test_repeated_cli_scan_invalidates_map_and_project_review(
 
     assert code == 1
     issue_codes = {issue["code"] for issue in doctor_payload["issues"]}
-    assert {"map_invalidated", "review_project_invalidated"}.issubset(issue_codes)
+    assert {"analyze_invalidated", "map_invalidated", "review_project_invalidated"}.issubset(
+        issue_codes
+    )
 
     code = main(["review", "--project", str(project_path), "--scope", "project", "--json"])
     captured = capsys.readouterr()

@@ -45,6 +45,7 @@ def test_skill_frontmatter_and_boundaries():
     assert "transcript ledger" in frontmatter["description"]
     assert "keyframe ledger" in frontmatter["description"]
     assert "analysis ledger" in frontmatter["description"]
+    assert "analysis-led material map" in frontmatter["description"]
     assert "BGM selection" in frontmatter["description"]
     assert "artist-portrait doctor --project ./project.yaml --json" in content
     assert "image generation or image editing" in content

@@ -3,7 +3,7 @@
 Follow `artist_portrait_editor_revision5_optimized.md` as the governing V0
 engineering-freeze document.
 
-Current gate: V0-008 basic evidence analysis gate only.
+Current gate: V0-009 analysis-led material map gate only.
 
 Allowed:
 
@@ -42,6 +42,9 @@ Allowed:
 - level_0/1/2 evidence-only analysis fields with null visual assertions
 - analysis status, doctor diagnostics, and upstream invalidation
 - `map`
+- `map` requires current `analysis.jsonl`
+- deterministic `output/material_map.md` rendered from source and analysis ledgers
+- priority review queue, pending confirmation, and risk sections without creative recommendations
 - `review --scope project`
 - `review --scope all` only as project review plus skipped future scopes
 - repository skeleton

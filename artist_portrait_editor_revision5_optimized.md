@@ -5,7 +5,7 @@
 > **工作名称**：`artist-portrait-editor`  
 > **中文名称**：人物向剪辑导演 / 艺人肖像剪辑 Skill  
 > **适用范围**：产品愿景、V0 产品规格、V0 工程规格  
-> **当前开发闸门**：V0-008 基础证据分析闸门。阶段 A、V0-003、V0-004、V0-005、V0-006 与 V0-007 已作为工程、媒体扫描、固定窗口切分、PySceneDetect 场景切分、本地转写与关键帧缓存基础验收；当前只允许确定性本地媒体扫描、哈希、ffprobe、`sources.jsonl`、`scan_report.md`、固定窗口 `segment`、受 `features.scene_detection` 控制的 PySceneDetect 视频场景切分、`clips.jsonl`、`clip_report.md`、受 `features.transcription` 控制的本地 faster-whisper 转写、`transcripts.jsonl`、ffmpeg 中点关键帧抽取、`keyframes.jsonl`、可重建关键帧缓存、基于现有账本的 evidence-only `analyze`、`analysis.jsonl`、`analysis_report.md`、素材地图、项目风险报告、状态诊断和下游产物失效标记。不得实现 OpenCV/视觉模型分类、BGM 选择、创作提案、时间线生成或预览渲染。
+> **当前开发闸门**：V0-009 分析驱动素材地图闸门。阶段 A、V0-003、V0-004、V0-005、V0-006、V0-007 与 V0-008 已作为工程、媒体扫描、固定窗口切分、PySceneDetect 场景切分、本地转写、关键帧缓存与基础证据分析验收；当前只允许确定性本地媒体扫描、哈希、ffprobe、`sources.jsonl`、`scan_report.md`、固定窗口 `segment`、受 `features.scene_detection` 控制的 PySceneDetect 视频场景切分、`clips.jsonl`、`clip_report.md`、受 `features.transcription` 控制的本地 faster-whisper 转写、`transcripts.jsonl`、ffmpeg 中点关键帧抽取、`keyframes.jsonl`、可重建关键帧缓存、基于现有账本的 evidence-only `analyze`、`analysis.jsonl`、`analysis_report.md`、基于 `analysis.jsonl` 的 `material_map.md`、项目风险报告、状态诊断和下游产物失效标记。不得实现 OpenCV/视觉模型分类、BGM 选择、创作提案、时间线生成或预览渲染。
 
 ---
 
@@ -51,7 +51,7 @@ docs/DEVELOPMENT_PROGRESS.md
 - 不重复造轮子；优先复用成熟工具，再补本项目特有的数据契约、证据链、审查和降级逻辑。
 - 第三方结果不得直接冒充 canonical truth，必须记录来源、输入、输出、置信度、失败模式和可复验路径。
 - 使用第三方模型或联网能力时，必须由对应 gate、配置开关和 review 规则控制。
-- 当前 V0-008 basic evidence analysis gate 仍保持本地、无远程模型调用、无联网、无 image generation / editing 调用；ffmpeg 只作为本地关键帧抽取工具使用，`analyze` 只聚合现有 source/clip/transcript/keyframe 证据，不代表 OpenCV、视觉模型或创意判断。
+- 当前 V0-009 analysis-led material map gate 仍保持本地、无远程模型调用、无联网、无 image generation / editing 调用；`map` 只从 `sources.jsonl` 与 `analysis.jsonl` 渲染素材地图，不代表 OpenCV、视觉模型、BGM 策略、创作提案或时间线判断。
 
 # 0. 执行摘要
 
@@ -70,7 +70,7 @@ V0 分为两个模式：
 - `core_mode`：不依赖文本生成模型或视觉模型，负责确定性媒体处理、canonical 数据、风险规则和素材结构报告。
 - `creative_mode`：在 `core_mode` 证据基础上，生成三套可回溯创作提案，并在用户选择后生成时间线草案。
 
-阶段 A 已完成基础工程验收，V0-003 已完成媒体扫描基础，V0-004 已完成固定窗口切分基础，V0-005 已完成 PySceneDetect 场景切分闸门，V0-006 已完成本地转写闸门，V0-007 已完成关键帧缓存闸门。当前允许实现 V0-008 基础证据分析闸门：
+阶段 A 已完成基础工程验收，V0-003 已完成媒体扫描基础，V0-004 已完成固定窗口切分基础，V0-005 已完成 PySceneDetect 场景切分闸门，V0-006 已完成本地转写闸门，V0-007 已完成关键帧缓存闸门，V0-008 已完成基础证据分析闸门。当前允许实现 V0-009 分析驱动素材地图闸门：
 
 ```text
 project.yaml
@@ -102,7 +102,7 @@ project.yaml
 → doctor/status 诊断
 ```
 
-当前 V0-008 禁止实现：
+当前 V0-009 禁止实现：
 
 ```text
 OpenCV
@@ -2046,6 +2046,22 @@ output/material_map.md
 - 判断依据
 - 待确认项
 - 风险项
+
+实现边界：
+
+- `map` 必须读取当前 `analysis.jsonl`，不得退回 source-only map。
+- `material_map.md` 是从 `sources.jsonl` 与 `analysis.jsonl` 渲染的 rebuildable 报告，不是 canonical 数据。
+- 优先查看片段只能基于证据覆盖、风险标记、时长和待确认项等确定性规则排序。
+- 待确认项必须明确列出尚未打开 gate 的字段，例如景别、镜头运动、情绪、动作和画质。
+- 风险项必须回指 `clip_id` / `source_id` / evidence，不得生成无证据判断。
+- 仍不得执行 OpenCV、视觉模型、Embedding、模型调用、联网搜索、image generation/editing、BGM 选择、创作提案、时间线或预览。
+
+验收：
+
+- `map` 缺 `analyze` 返回固定前置错误。
+- `map` 从合法 `analysis.jsonl` 生成 `output/material_map.md`。
+- `material_map.md` 包含素材分布、优先查看队列、判断依据、待确认项和风险项。
+- `analysis.jsonl` 变化后旧 map 状态可被 invalidated。
 
 ## 16.10 V0-010：创作提案
 

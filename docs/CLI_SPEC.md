@@ -2,7 +2,7 @@
 
 Authoritative source: `artist_portrait_editor_revision5_optimized.md`.
 
-Implemented V0-008 basic evidence analysis gate commands:
+Implemented V0-009 analysis-led material map gate commands:
 
 ```bash
 artist-portrait validate --project ./project.yaml
@@ -84,11 +84,19 @@ visual quality remain null or empty candidates. No OpenCV, vision model,
 embedding, BGM, proposal, timeline, preview, image, network, or model call is
 performed.
 
+`map --json` requires a current `.artist-portrait/data/analysis.jsonl`. It
+writes `output/material_map.md`, run metadata, and a refreshed
+`output/run_report.md`. The report is rendered from source and analysis ledgers
+and includes material distributions, a deterministic priority review queue,
+pending confirmation fields, and risk sections. It does not generate creative
+proposals, BGM choices, timelines, previews, visual classifications, network
+results, image outputs, or model-backed judgments.
+
 `status --json` includes the state ledger plus local artifact, source, clip,
 transcript, keyframe, analysis, scan report, clip report, and analysis report
-summaries. It also reports `artifact_issues` when completed ledger steps refer
-to outputs that no longer exist. It does not run media operations or mutate
-project files.
+summaries plus material map presence. It also reports `artifact_issues` when
+completed ledger steps refer to outputs that no longer exist. It does not run
+media operations or mutate project files.
 
 `doctor --json` is a read-only diagnostic command. It reports local workspace,
 source ledger, and artifact consistency issues with `next_action` guidance and

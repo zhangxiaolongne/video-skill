@@ -50,16 +50,18 @@ Local V0 media research foundation for the `artist-portrait-editor` skill.
 - [V0-007 Release Readiness](docs/V0_007_RELEASE_READINESS.md)
 - [V0-008 Basic Analysis Gate](docs/V0_008_BASIC_ANALYSIS_GATE.md)
 - [V0-008 Release Readiness](docs/V0_008_RELEASE_READINESS.md)
+- [V0-009 Material Map Gate](docs/V0_009_MATERIAL_MAP_GATE.md)
+- [V0-009 Release Readiness](docs/V0_009_RELEASE_READINESS.md)
 - [Non Goals](docs/NON_GOALS.md)
 
 ## Current Gate
 
-Current V0-008 basic analysis gate work allows deterministic project
+Current V0-009 analysis-led material map gate work allows deterministic project
 setup, local media scanning, fixed-window clip segmentation, optional
 PySceneDetect video scene segmentation, local-only faster-whisper transcription
 when available, ffmpeg midpoint keyframe extraction for video clips,
 source/clip/transcript/keyframe/analysis ledger operations, rebuildable
-keyframe cache, and read-only/reporting outputs:
+keyframe cache, analysis-led material maps, and read-only/reporting outputs:
 
 ```text
 project.yaml
@@ -76,7 +78,7 @@ project.yaml
 -> rebuildable keyframe cache
 -> evidence-only analysis ledger
 -> analysis report
--> minimal material map from sources.jsonl
+-> material map from sources.jsonl and analysis.jsonl
 -> minimal project risk report from sources.jsonl
 -> run report
 -> fixed exit codes

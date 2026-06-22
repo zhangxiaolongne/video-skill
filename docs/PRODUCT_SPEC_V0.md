@@ -10,7 +10,7 @@ V0 has two future modes:
   `core_mode` data exists.
 
 Current repository implementation has entered deterministic core-mode
-foundation work only. The active gate is V0-008 basic evidence analysis gate:
+foundation work only. The active gate is V0-009 analysis-led material map gate:
 
 ```text
 project.yaml
@@ -25,7 +25,7 @@ project.yaml
 -> transcript ledger
 -> keyframe ledger and rebuildable cache
 -> evidence-only analysis ledger and report
--> minimal material map
+-> analysis-led material map
 -> minimal project risk report
 -> run report
 -> fixed exit codes

@@ -2,7 +2,7 @@
 
 Authoritative source: `artist_portrait_editor_revision5_optimized.md`.
 
-The current V0-008 gate uses `.artist-portrait/state.json` as a step ledger,
+The current V0-009 gate uses `.artist-portrait/state.json` as a step ledger,
 not a single linear project state.
 
 Current step statuses:
@@ -28,11 +28,11 @@ degraded
 blocked
 ```
 
-Stage A initialized ledger entries for future V0 steps. V0-008 opens only the
+Stage A initialized ledger entries for future V0 steps. V0-009 opens only the
 media scan, fixed-window/PySceneDetect scene segmentation, local transcription,
-keyframe cache, and evidence-only basic analysis foundation steps and leaves
-visual classification, proposal, timeline, preview, remote model, image,
-network, and BGM capabilities closed.
+keyframe cache, evidence-only basic analysis, and analysis-led material map
+foundation steps and leaves visual classification, proposal, timeline, preview,
+remote model, image, network, and BGM capabilities closed.
 
 `segment` refreshes local capability detection before routing scene detection,
 so installing or removing PySceneDetect after `init` is reflected in the state
@@ -55,6 +55,10 @@ transcript and keyframe ledgers. It writes canonical
 `output/analysis_report.md`. It does not run OpenCV, vision models, embeddings,
 text models, BGM logic, proposals, timelines, previews, image tools, or network
 search.
+
+`map` requires current `.artist-portrait/data/analysis.jsonl` and writes
+rebuildable `output/material_map.md`. It is a deterministic reporting step and
+does not create canonical data.
 
 `status --json` is read-only. It reports the current ledger, local artifact
 presence, source ledger summaries, clip ledger summaries, scan/clip report

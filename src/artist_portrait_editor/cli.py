@@ -486,7 +486,7 @@ def cmd_review(args: argparse.Namespace) -> int:
 
 def blocked_stage_a_command(args: argparse.Namespace) -> int:
     print(
-        f"{args.command} is outside the current V0-008 gate and is not implemented",
+        f"{args.command} is outside the current V0-009 gate and is not implemented",
         file=sys.stderr,
     )
     return int(ExitCode.prerequisite_step_missing)

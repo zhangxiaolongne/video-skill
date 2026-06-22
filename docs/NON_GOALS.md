@@ -14,7 +14,7 @@ V0 does not aim to provide:
 - automatic publishing
 - commercial rights guarantees
 
-The current V0-008 gate allows only evidence aggregation from existing local
-ledgers. It still forbids OpenCV or vision-model visual classification, BGM
-selection, creative proposals, timeline generation, preview rendering, remote
-model calls, model downloads, image generation/editing, and network search.
+The current V0-009 gate allows only an analysis-led deterministic material map.
+It still forbids OpenCV or vision-model visual classification, BGM selection,
+creative proposals, timeline generation, preview rendering, remote model calls,
+model downloads, image generation/editing, and network search.

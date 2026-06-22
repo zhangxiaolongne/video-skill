@@ -34,7 +34,7 @@ When a user requirement changes long-term product behavior, update both files:
 - Canonical skill name: `artist-portrait-editor`
 - Canonical install directory: `artist-portrait-editor`
 - Distribution repository: `video-skill`
-- Current local gate: V0-008 basic evidence analysis gate only
+- Current local gate: V0-009 analysis-led material map gate only
 
 ## Completed Local Versions
 
@@ -85,6 +85,11 @@ When a user requirement changes long-term product behavior, update both files:
 - V0-008c: canonical `.artist-portrait/data/analysis.jsonl`, rebuildable
   `output/analysis_report.md`, status/doctor diagnostics, and invalidation
   from source, clip, transcript, and keyframe ledgers.
+- V0-009a: `map` now requires current `analysis.jsonl`.
+- V0-009b: `material_map.md` renders source and analysis distributions,
+  deterministic priority review queue, pending confirmation fields, and risk
+  sections.
+- V0-009c: tests and `run_checks.py` now cover the analysis-led map chain.
 
 ## Current Hard Boundaries
 
@@ -153,7 +158,8 @@ carried into the future proposal, timeline, review, and preview gates.
 
 ## Next Likely Batch
 
-Next action should plan V0-009 material-map upgrade against the new analysis
-ledger. The big-version direction is richer material prioritization, but the
-next small batch should only make `map` consume `analysis.jsonl` without opening
-proposal, timeline, BGM, preview, model, network, OpenCV, or vision gates.
+Next action should plan V0-010 proposal groundwork. The big-version direction is
+evidence-grounded creative proposals, but the next small batch should only open
+the minimal proposal data contract and validation surface if the master gate is
+explicitly updated; do not open timeline, BGM fitting, preview, model, network,
+OpenCV, or vision gates by accident.
