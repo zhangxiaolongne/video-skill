@@ -5,6 +5,7 @@ from artist_portrait_editor.models.analysis import AnalysisRecord
 from artist_portrait_editor.models.clip import ClipRecord
 from artist_portrait_editor.models.config import ProjectConfig
 from artist_portrait_editor.models.keyframe import KeyframeRecord
+from artist_portrait_editor.models.proposal import ProposalSet
 from artist_portrait_editor.models.source import SourceRecord
 from artist_portrait_editor.models.state import ProjectState
 from artist_portrait_editor.models.transcript import TranscriptRecord
@@ -15,6 +16,7 @@ def test_schema_generation_from_pydantic_models():
     config_schema = ProjectConfig.model_json_schema()
     clip_schema = ClipRecord.model_json_schema()
     keyframe_schema = KeyframeRecord.model_json_schema()
+    proposal_schema = ProposalSet.model_json_schema()
     state_schema = ProjectState.model_json_schema()
     source_schema = SourceRecord.model_json_schema()
     transcript_schema = TranscriptRecord.model_json_schema()
@@ -23,6 +25,7 @@ def test_schema_generation_from_pydantic_models():
     assert config_schema["title"] == "ProjectConfig"
     assert clip_schema["title"] == "ClipRecord"
     assert keyframe_schema["title"] == "KeyframeRecord"
+    assert proposal_schema["title"] == "ProposalSet"
     assert state_schema["title"] == "ProjectState"
     assert source_schema["title"] == "SourceRecord"
     assert transcript_schema["title"] == "TranscriptRecord"
@@ -30,6 +33,7 @@ def test_schema_generation_from_pydantic_models():
     assert "project" in config_schema["properties"]
     assert "clip_id" in clip_schema["properties"]
     assert "keyframe_id" in keyframe_schema["properties"]
+    assert "proposals" in proposal_schema["properties"]
     assert "steps" in state_schema["properties"]
     assert "source_id" in source_schema["properties"]
     assert "transcript_id" in transcript_schema["properties"]
@@ -48,6 +52,9 @@ def test_committed_schemas_match_pydantic_generation():
     )
     committed_keyframe = json.loads(
         (schema_dir / "keyframe_record.schema.json").read_text(encoding="utf-8")
+    )
+    committed_proposal = json.loads(
+        (schema_dir / "proposal_set.schema.json").read_text(encoding="utf-8")
     )
     committed_state = json.loads(
         (schema_dir / "project_state.schema.json").read_text(encoding="utf-8")
@@ -70,6 +77,9 @@ def test_committed_schemas_match_pydantic_generation():
     )
     assert committed_keyframe == json.loads(
         json.dumps(KeyframeRecord.model_json_schema(), sort_keys=True)
+    )
+    assert committed_proposal == json.loads(
+        json.dumps(ProposalSet.model_json_schema(), sort_keys=True)
     )
     assert committed_state == json.loads(
         json.dumps(ProjectState.model_json_schema(), sort_keys=True)

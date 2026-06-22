@@ -52,16 +52,19 @@ Local V0 media research foundation for the `artist-portrait-editor` skill.
 - [V0-008 Release Readiness](docs/V0_008_RELEASE_READINESS.md)
 - [V0-009 Material Map Gate](docs/V0_009_MATERIAL_MAP_GATE.md)
 - [V0-009 Release Readiness](docs/V0_009_RELEASE_READINESS.md)
+- [V0-010a Proposal Readiness Gate](docs/V0_010A_PROPOSAL_READINESS_GATE.md)
+- [V0-010a Release Readiness](docs/V0_010A_RELEASE_READINESS.md)
 - [Non Goals](docs/NON_GOALS.md)
 
 ## Current Gate
 
-Current V0-009 analysis-led material map gate work allows deterministic project
+Current V0-010a proposal readiness gate work allows deterministic project
 setup, local media scanning, fixed-window clip segmentation, optional
 PySceneDetect video scene segmentation, local-only faster-whisper transcription
 when available, ffmpeg midpoint keyframe extraction for video clips,
 source/clip/transcript/keyframe/analysis ledger operations, rebuildable
-keyframe cache, analysis-led material maps, and read-only/reporting outputs:
+keyframe cache, analysis-led material maps, proposal contract validation, and
+read-only/reporting outputs:
 
 ```text
 project.yaml
@@ -79,16 +82,17 @@ project.yaml
 -> evidence-only analysis ledger
 -> analysis report
 -> material map from sources.jsonl and analysis.jsonl
+-> proposal readiness gate without fake proposal generation
 -> minimal project risk report from sources.jsonl
 -> run report
 -> fixed exit codes
 ```
 
 OpenCV/vision analysis, embeddings, visual classification beyond explicit
-evidence placeholders, creative proposal generation, timeline generation,
-preview rendering, BGM selection or beat analysis, model calls, image
-generation/editing, remote ASR/model downloads, and network search remain out
-of scope.
+evidence placeholders, fake/template proposals, full creative proposal
+generation, timeline generation, preview rendering, BGM selection or beat
+analysis, model calls, image generation/editing, remote ASR/model downloads,
+and network search remain out of scope.
 
 ## Local Setup
 
@@ -111,12 +115,14 @@ python3 -m venv .venv
 .venv/bin/artist-portrait keyframes --project ./project.yaml
 .venv/bin/artist-portrait analyze --project ./project.yaml
 .venv/bin/artist-portrait map --project ./project.yaml
+.venv/bin/artist-portrait propose --project ./project.yaml
 .venv/bin/artist-portrait review --project ./project.yaml --scope project
 .venv/bin/artist-portrait review --project ./project.yaml --scope all
 ```
 
-Commands such as `relate`, `propose`, `timeline`, and `run` remain
-intentionally blocked.
+Commands such as `relate`, `timeline`, and `run` remain intentionally blocked.
+`propose` is open only as a readiness gate and returns a dependency error when
+no approved text model gate is available.
 
 ## Tests
 

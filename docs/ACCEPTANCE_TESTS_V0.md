@@ -79,7 +79,14 @@ Current local foundation tests cover:
 - `material_map.md` rendered from source and analysis ledgers
 - deterministic priority review queue, pending confirmation, and risk sections
 - material map invalidation after analysis changes
+- committed proposal set schema
+- `propose` requiring `material_map.md`
+- `propose` blocking without an approved text-model gate
+- `propose` writing no fake `proposals.json` or `proposals.md` when blocked
+- status and doctor visibility for malformed proposal sets
+- proposal readiness invalidation after upstream source, clip, transcript,
+  keyframe, analysis, or map changes
 
-Future visual classification, proposal, timeline, preview, remote model, BGM,
-image generation/editing, and network fixtures are intentionally not
-implemented yet.
+Future visual classification, full proposal generation, timeline, preview,
+remote model, BGM, image generation/editing, and network fixtures are
+intentionally not implemented yet.

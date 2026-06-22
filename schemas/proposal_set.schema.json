@@ -1,0 +1,199 @@
+{
+  "$defs": {
+    "EvidenceRef": {
+      "additionalProperties": false,
+      "properties": {
+        "ref": {
+          "minLength": 1,
+          "title": "Ref",
+          "type": "string"
+        },
+        "type": {
+          "minLength": 1,
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "ref"
+      ],
+      "title": "EvidenceRef",
+      "type": "object"
+    },
+    "ProposalId": {
+      "enum": [
+        "proposal_safe",
+        "proposal_advanced",
+        "proposal_risky"
+      ],
+      "title": "ProposalId",
+      "type": "string"
+    },
+    "ProposalRecord": {
+      "additionalProperties": false,
+      "properties": {
+        "audience": {
+          "minLength": 1,
+          "title": "Audience",
+          "type": "string"
+        },
+        "counter_proposal": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Counter Proposal"
+        },
+        "fact_refs": {
+          "items": {
+            "$ref": "#/$defs/EvidenceRef"
+          },
+          "title": "Fact Refs",
+          "type": "array"
+        },
+        "minimum_viable_timeline": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Minimum Viable Timeline",
+          "type": "array"
+        },
+        "missing_material": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Missing Material",
+          "type": "array"
+        },
+        "proposal_id": {
+          "$ref": "#/$defs/ProposalId"
+        },
+        "required_clip_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Required Clip Ids",
+          "type": "array"
+        },
+        "risks": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Risks",
+          "type": "array"
+        },
+        "sound_structure": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Sound Structure",
+          "type": "array"
+        },
+        "story_structure": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Story Structure",
+          "type": "array"
+        },
+        "theme": {
+          "minLength": 1,
+          "title": "Theme",
+          "type": "string"
+        },
+        "title": {
+          "minLength": 1,
+          "title": "Title",
+          "type": "string"
+        },
+        "visual_motifs": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Visual Motifs",
+          "type": "array"
+        }
+      },
+      "required": [
+        "proposal_id",
+        "title",
+        "theme",
+        "audience"
+      ],
+      "title": "ProposalRecord",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "evidence": {
+      "items": {
+        "$ref": "#/$defs/EvidenceRef"
+      },
+      "title": "Evidence",
+      "type": "array"
+    },
+    "map_fingerprint": {
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "title": "Map Fingerprint",
+      "type": "string"
+    },
+    "method": {
+      "minLength": 1,
+      "title": "Method",
+      "type": "string"
+    },
+    "method_version": {
+      "minLength": 1,
+      "title": "Method Version",
+      "type": "string"
+    },
+    "project_id": {
+      "minLength": 1,
+      "title": "Project Id",
+      "type": "string"
+    },
+    "proposal_set_id": {
+      "minLength": 1,
+      "title": "Proposal Set Id",
+      "type": "string"
+    },
+    "proposals": {
+      "items": {
+        "$ref": "#/$defs/ProposalRecord"
+      },
+      "maxItems": 3,
+      "minItems": 3,
+      "title": "Proposals",
+      "type": "array"
+    },
+    "schema_version": {
+      "default": "0.3",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "warnings": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Warnings",
+      "type": "array"
+    }
+  },
+  "required": [
+    "proposal_set_id",
+    "project_id",
+    "map_fingerprint",
+    "method",
+    "method_version",
+    "proposals"
+  ],
+  "title": "ProposalSet",
+  "type": "object"
+}

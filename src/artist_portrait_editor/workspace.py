@@ -38,6 +38,7 @@ from artist_portrait_editor.models.clip import (
     ClipRiskFlag,
 )
 from artist_portrait_editor.models.keyframe import KeyframeRecord, KeyframeRiskFlag
+from artist_portrait_editor.models.proposal import ProposalSet
 from artist_portrait_editor.models.state import (
     Capabilities,
     OverallStatus,
@@ -252,12 +253,17 @@ def invalidate_downstream_steps_for_sources(
         "keyframes",
         "analyze",
         "map",
+        "propose",
         "review_project",
     ):
         entry = state.steps.get(step_name)
         if entry is None:
             continue
-        if entry.status not in {StepStatus.completed, StepStatus.completed_with_warnings}:
+        if entry.status not in {
+            StepStatus.completed,
+            StepStatus.completed_with_warnings,
+            StepStatus.blocked,
+        }:
             continue
         if entry.input_fingerprint == sources_fingerprint:
             continue
@@ -370,6 +376,13 @@ def render_status_panel(payload: dict) -> str:
     material_map = summaries.get("material_map") or {}
     if material_map.get("exists"):
         lines.append(f"material_map: present ({material_map.get('bytes', 0)} bytes)")
+    proposals = summaries.get("proposals") or {}
+    if proposals.get("exists") and proposals.get("valid", True):
+        lines.append(f"proposals: {proposals.get('count', 0)}")
+    elif proposals.get("exists"):
+        lines.append("proposals: invalid")
+    else:
+        lines.append("proposals: missing")
     artifact_issues = payload.get("artifact_issues") or []
     if artifact_issues:
         lines.append(f"artifact_issues: {len(artifact_issues)}")
@@ -591,6 +604,37 @@ def doctor_project_payload(project_path: Path) -> dict:
                 next_action=f"artist-portrait map --project {project_path}",
             )
         )
+    proposals = proposal_summary(root / WORKSPACE_DIR / DATA_DIR / "proposals.json")
+    if (
+        sources.get("valid") is True
+        and proposals.get("valid") is False
+    ):
+        proposals_path = root / WORKSPACE_DIR / DATA_DIR / "proposals.json"
+        issues.append(
+            workspace_issue(
+                code="proposals_invalid",
+                severity="error",
+                detail=str(proposals.get("error") or "proposals ledger is invalid"),
+                next_action=(
+                    f"fix {proposals_path.relative_to(root).as_posix()} or rerun "
+                    f"artist-portrait propose --project {project_path}"
+                ),
+            )
+        )
+    elif (
+        sources.get("valid") is True
+        and output_summary(root / "output" / "material_map.md").get("exists")
+        and state.steps.get("propose", StepLedgerEntry()).status == StepStatus.pending
+        and not current_capabilities.text_model
+    ):
+        issues.append(
+            workspace_issue(
+                code="propose_text_model_missing",
+                severity="warning",
+                detail="material map exists but proposal generation needs a text model",
+                next_action="enable a text model gate before running artist-portrait propose",
+            )
+        )
     if (
         sources.get("valid") is True
         and clips_summary(root).get("valid") is True
@@ -764,6 +808,7 @@ def status_summaries(root: Path) -> dict:
     analysis_report_path = root / "output" / "analysis_report.md"
     material_map_path = root / "output" / "material_map.md"
     risk_report_path = root / "output" / "risk_report.md"
+    proposals_path = root / WORKSPACE_DIR / DATA_DIR / "proposals.json"
     return {
         "sources": source_summary(sources_path),
         "clips": clip_summary(clips_path),
@@ -774,6 +819,7 @@ def status_summaries(root: Path) -> dict:
         "clip_report": output_summary(clip_report_path),
         "analysis_report": output_summary(analysis_report_path),
         "material_map": output_summary(material_map_path),
+        "proposals": proposal_summary(proposals_path),
         "risk_report": output_summary(risk_report_path),
     }
 
@@ -963,6 +1009,13 @@ def read_analysis_jsonl(path: Path) -> list[AnalysisRecord]:
     return analyses
 
 
+def read_proposals_json(path: Path) -> ProposalSet:
+    try:
+        return ProposalSet.model_validate_json(path.read_text(encoding="utf-8"))
+    except ValueError as exc:
+        raise WorkspacePrerequisiteError(f"invalid ProposalSet JSON: {exc}") from exc
+
+
 def transcript_summary(path: Path) -> dict:
     if not path.exists():
         return {"exists": False}
@@ -1044,6 +1097,26 @@ def analysis_summary(path: Path) -> dict:
         "count": len(analyses),
         "risk_counts": risk_counts,
         "original_audio_usability_counts": audio_counts,
+    }
+
+
+def proposal_summary(path: Path) -> dict:
+    if not path.exists():
+        return {"exists": False}
+    try:
+        proposal_set = read_proposals_json(path)
+    except Exception as exc:
+        return {
+            "exists": True,
+            "valid": False,
+            "error": str(exc),
+        }
+    return {
+        "exists": True,
+        "valid": True,
+        "count": len(proposal_set.proposals),
+        "proposal_ids": [proposal.proposal_id.value for proposal in proposal_set.proposals],
+        "method": proposal_set.method,
     }
 
 
@@ -1549,11 +1622,15 @@ def invalidate_downstream_steps_for_clips(
     clips_fingerprint: str,
 ) -> list[str]:
     invalidated: list[str] = []
-    for step_name in ("keyframes", "analyze", "map", "review_project"):
+    for step_name in ("keyframes", "analyze", "map", "propose", "review_project"):
         entry = state.steps.get(step_name)
         if entry is None:
             continue
-        if entry.status not in {StepStatus.completed, StepStatus.completed_with_warnings}:
+        if entry.status not in {
+            StepStatus.completed,
+            StepStatus.completed_with_warnings,
+            StepStatus.blocked,
+        }:
             continue
         if entry.input_fingerprint == clips_fingerprint:
             continue
@@ -1578,11 +1655,15 @@ def invalidate_downstream_steps_for_analysis_input(
     reason: str,
 ) -> list[str]:
     invalidated: list[str] = []
-    for step_name in ("analyze", "map", "review_project"):
+    for step_name in ("analyze", "map", "propose", "review_project"):
         entry = state.steps.get(step_name)
         if entry is None:
             continue
-        if entry.status not in {StepStatus.completed, StepStatus.completed_with_warnings}:
+        if entry.status not in {
+            StepStatus.completed,
+            StepStatus.completed_with_warnings,
+            StepStatus.blocked,
+        }:
             continue
         if entry.input_fingerprint == input_fingerprint:
             continue
@@ -1606,11 +1687,15 @@ def invalidate_downstream_steps_for_analysis(
     analysis_fingerprint: str,
 ) -> list[str]:
     invalidated: list[str] = []
-    for step_name in ("map", "review_project"):
+    for step_name in ("map", "propose", "review_project"):
         entry = state.steps.get(step_name)
         if entry is None:
             continue
-        if entry.status not in {StepStatus.completed, StepStatus.completed_with_warnings}:
+        if entry.status not in {
+            StepStatus.completed,
+            StepStatus.completed_with_warnings,
+            StepStatus.blocked,
+        }:
             continue
         if entry.input_fingerprint == analysis_fingerprint:
             continue
@@ -1622,6 +1707,38 @@ def invalidate_downstream_steps_for_analysis(
             warnings=[
                 *entry.warnings,
                 "analysis ledger changed; rerun this step before trusting its output",
+            ],
+        )
+        invalidated.append(step_name)
+    return invalidated
+
+
+def invalidate_downstream_steps_for_map(
+    state: ProjectState,
+    *,
+    map_fingerprint: str,
+) -> list[str]:
+    invalidated: list[str] = []
+    for step_name in ("propose",):
+        entry = state.steps.get(step_name)
+        if entry is None:
+            continue
+        if entry.status not in {
+            StepStatus.completed,
+            StepStatus.completed_with_warnings,
+            StepStatus.blocked,
+        }:
+            continue
+        if entry.input_fingerprint == map_fingerprint:
+            continue
+        state.steps[step_name] = StepLedgerEntry(
+            status=StepStatus.invalidated,
+            input_fingerprint=entry.input_fingerprint,
+            output_refs=entry.output_refs,
+            last_run_id=entry.last_run_id,
+            warnings=[
+                *entry.warnings,
+                "material map changed; rerun this step before trusting its output",
             ],
         )
         invalidated.append(step_name)
@@ -2357,6 +2474,10 @@ def map_workspace(project_path: Path) -> tuple[Path, ProjectState, list[str]]:
             ("analysis", analysis_path),
         ]
     )
+    invalidated_steps = invalidate_downstream_steps_for_map(
+        state,
+        map_fingerprint=fingerprint_file(output_path),
+    )
     status = StepStatus.completed_with_warnings if warnings else StepStatus.completed
     state.steps["map"] = StepLedgerEntry(
         status=status,
@@ -2381,6 +2502,7 @@ def map_workspace(project_path: Path) -> tuple[Path, ProjectState, list[str]]:
             "sources": len(records),
             "analysis_records": len(analyses),
             "output": output_path.relative_to(root).as_posix(),
+            "invalidated_steps": invalidated_steps,
         },
     )
     write_json(runs_dir / "warnings.json", warnings)
@@ -2389,6 +2511,63 @@ def map_workspace(project_path: Path) -> tuple[Path, ProjectState, list[str]]:
     save_state(root, state)
     write_run_report(output_dir, state, warnings)
     return output_path, state, warnings
+
+
+def propose_workspace(project_path: Path) -> ProjectState:
+    config = load_project_config(project_path)
+    root = project_root(project_path)
+    state = load_state(root)
+    if state is None:
+        raise WorkspacePrerequisiteError("propose requires init to complete first")
+
+    material_map_path = root / config.paths.output_dir / "material_map.md"
+    if not material_map_path.exists():
+        raise WorkspacePrerequisiteError("propose requires map to complete first")
+
+    capabilities = detect_capabilities()
+    state.capabilities = capabilities
+    run_id = new_run_id()
+    warnings: list[str] = []
+    output_dir = root / config.paths.output_dir
+    if not capabilities.text_model:
+        warnings = [
+            "text_model_missing: proposal generation blocked; fake proposals were not generated"
+        ]
+        state.steps["propose"] = StepLedgerEntry(
+            status=StepStatus.blocked,
+            input_fingerprint=fingerprint_file(material_map_path),
+            output_refs=[],
+            last_run_id=run_id,
+            warnings=warnings,
+        )
+        state.latest_run_id = run_id
+        state.updated_at = utc_now()
+        state.overall_status = OverallStatus.blocked
+        runs_dir = root / WORKSPACE_DIR / RUNS_DIR / run_id
+        runs_dir.mkdir(parents=True, exist_ok=True)
+        write_json(runs_dir / "command.json", {"command": "propose", "project": str(project_path)})
+        write_json(runs_dir / "environment.json", environment_snapshot())
+        write_json(
+            runs_dir / "step_result.json",
+            {
+                "step": "propose",
+                "status": StepStatus.blocked.value,
+                "output_refs": [],
+                "reason": "text_model_missing",
+            },
+        )
+        write_json(runs_dir / "warnings.json", warnings)
+        write_json(runs_dir / "errors.json", ["text_model_missing"])
+        (runs_dir / "log.txt").write_text("propose blocked\n", encoding="utf-8")
+        save_state(root, state)
+        write_run_report(output_dir, state, warnings)
+        raise WorkspaceDependencyError(
+            "propose requires an approved text model; no fake proposals were generated"
+        )
+
+    raise WorkspaceDependencyError(
+        "proposal generation is not implemented until the text-model proposal gate opens"
+    )
 
 
 def render_material_map(
@@ -2799,6 +2978,7 @@ def rebuild_command_for_step(step: str) -> str:
         "keyframes": "artist-portrait keyframes --project <project.yaml>",
         "analyze": "artist-portrait analyze --project <project.yaml>",
         "map": "artist-portrait map --project <project.yaml>",
+        "propose": "artist-portrait propose --project <project.yaml>",
         "review_project": "artist-portrait review --project <project.yaml> --scope project",
     }
     return commands.get(step, "rerun the command that produced this output")

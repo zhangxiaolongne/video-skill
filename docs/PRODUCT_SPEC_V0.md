@@ -10,7 +10,7 @@ V0 has two future modes:
   `core_mode` data exists.
 
 Current repository implementation has entered deterministic core-mode
-foundation work only. The active gate is V0-009 analysis-led material map gate:
+foundation work only. The active gate is V0-010a proposal readiness gate:
 
 ```text
 project.yaml
@@ -26,12 +26,13 @@ project.yaml
 -> keyframe ledger and rebuildable cache
 -> evidence-only analysis ledger and report
 -> analysis-led material map
+-> proposal readiness gate without fake proposal generation
 -> minimal project risk report
 -> run report
 -> fixed exit codes
 ```
 
-Do not implement OpenCV or vision-model visual classification, proposal
-generation, timeline generation, preview rendering, BGM selection, remote model
-calls, model downloads, image generation/editing, or network search until a
-later gate explicitly opens them.
+Do not implement OpenCV or vision-model visual classification, fake/template
+proposal generation, full creative proposal generation, timeline generation,
+preview rendering, BGM selection, remote model calls, model downloads, image
+generation/editing, or network search until a later gate explicitly opens them.

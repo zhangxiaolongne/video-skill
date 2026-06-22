@@ -12,6 +12,7 @@ Current committed schemas:
 - `schemas/keyframe_record.schema.json`
 - `schemas/project_config.schema.json`
 - `schemas/project_state.schema.json`
+- `schemas/proposal_set.schema.json`
 - `schemas/source_record.schema.json`
 - `schemas/transcript_record.schema.json`
 
@@ -66,6 +67,14 @@ gate. It is rendered from `sources.jsonl` and `analysis.jsonl`, includes
 distribution, priority review, pending confirmation, and risk sections, and is
 not canonical data.
 
+`ProposalSet` is implemented for the V0-010a proposal readiness gate and has a
+committed schema at `schemas/proposal_set.schema.json`. A future approved
+proposal generation gate may write `.artist-portrait/data/proposals.json`, but
+the current gate only validates the contract and diagnoses invalid proposal
+artifacts if they already exist. `propose` must not create fake
+`proposals.json` or `output/proposals.md` when no approved text model is
+available.
+
 Diagnostic issues are plain JSON objects used by `status`, `review`, and
 `doctor`. Current common fields:
 
@@ -91,6 +100,8 @@ Current stable diagnostic codes include:
 - `keyframes_invalid`
 - `keyframe_cache_missing`
 - `analysis_invalid`
+- `proposals_invalid`
+- `propose_text_model_missing`
 - `scene_detection_required_missing`
 - `transcription_required_missing`
 - `segment_invalidated`
@@ -101,5 +112,7 @@ Current stable diagnostic codes include:
 - `review_project_invalidated`
 - `review_scope_skipped`
 
-Canonical contracts such as `relations.jsonl` and `proposals.json` are
-specified in the master document but intentionally not implemented yet.
+Canonical contracts such as `relations.jsonl` remain specified in the master
+document but intentionally not implemented yet. `proposals.json` has a schema
+contract, but full generation remains closed until the text-model proposal gate
+opens.

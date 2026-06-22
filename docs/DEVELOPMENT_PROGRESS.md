@@ -34,7 +34,7 @@ When a user requirement changes long-term product behavior, update both files:
 - Canonical skill name: `artist-portrait-editor`
 - Canonical install directory: `artist-portrait-editor`
 - Distribution repository: `video-skill`
-- Current local gate: V0-009 analysis-led material map gate only
+- Current local gate: V0-010a proposal readiness gate only
 
 ## Completed Local Versions
 
@@ -90,6 +90,12 @@ When a user requirement changes long-term product behavior, update both files:
   deterministic priority review queue, pending confirmation fields, and risk
   sections.
 - V0-009c: tests and `run_checks.py` now cover the analysis-led map chain.
+- V0-010a: `ProposalSet` Pydantic model and committed JSON Schema.
+- V0-010b: `propose` readiness command now requires `material_map.md`, blocks
+  without an approved text model, records run metadata, and writes no fake
+  `proposals.json` or `proposals.md`.
+- V0-010c: proposal artifact status, doctor diagnostics, schema drift checks,
+  and upstream invalidation coverage.
 
 ## Current Hard Boundaries
 
@@ -100,7 +106,8 @@ Do not implement these until the relevant gate is explicitly opened and tested:
 - remote ASR, model downloads, or ungrounded text classification
 - visual classification beyond explicit evidence placeholders
 - keyframe interpretation beyond raw evidence references
-- creative proposals
+- fake, template, or model-free creative proposals
+- full creative proposal generation
 - timeline generation
 - preview rendering
 - BGM selection, beat analysis, or music/timeline fitting
@@ -124,7 +131,8 @@ Tactical rule for future batches:
 - use third-party outputs as evidence with provenance, not unreviewed truth
 - keep config gates, failure modes, and review rules around every non-local or
   model-backed capability
-- keep current V0-008 analysis bounded to existing local ledgers; keyframes are
+- keep current V0-010a bounded to existing local ledgers plus proposal
+  readiness checks; keyframes are
   visual evidence references, not visual classification
 
 ### BGM Is Part Of Editing Logic
@@ -158,8 +166,11 @@ carried into the future proposal, timeline, review, and preview gates.
 
 ## Next Likely Batch
 
-Next action should plan V0-010 proposal groundwork. The big-version direction is
-evidence-grounded creative proposals, but the next small batch should only open
-the minimal proposal data contract and validation surface if the master gate is
-explicitly updated; do not open timeline, BGM fitting, preview, model, network,
-OpenCV, or vision gates by accident.
+Next action should plan the real V0-010 proposal generation gate without
+confusing it with V0-010a readiness. The big-version direction is
+evidence-grounded creative proposals that account for BGM strategy, target
+output, text, pacing, transitions, and evidence traceability. The next small
+batch should first define the approved text-model gate, prompt/output contract,
+evidence citation validation, and review rules. Do not open timeline, BGM
+fitting, preview, network, OpenCV, vision, image generation/editing, or
+model-free template proposal gates by accident.

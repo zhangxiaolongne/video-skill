@@ -46,11 +46,14 @@ def test_skill_frontmatter_and_boundaries():
     assert "keyframe ledger" in frontmatter["description"]
     assert "analysis ledger" in frontmatter["description"]
     assert "analysis-led material map" in frontmatter["description"]
+    assert "ProposalSet schema" in frontmatter["description"]
+    assert "blocked propose gate" in frontmatter["description"]
     assert "BGM selection" in frontmatter["description"]
     assert "artist-portrait doctor --project ./project.yaml --json" in content
     assert "image generation or image editing" in content
     assert "output/scan_report.md" in content
     assert "output/clip_report.md" in content
+    assert "no fake `.artist-portrait/data/proposals.json`" in content
 
 
 def test_openai_yaml_matches_skill():

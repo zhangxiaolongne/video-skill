@@ -4,7 +4,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 
 
-def test_current_gate_is_material_map_gate_across_primary_docs():
+def test_current_gate_is_proposal_readiness_gate_across_primary_docs():
     agents = (ROOT / "AGENTS.md").read_text(encoding="utf-8")
     master = (ROOT / "artist_portrait_editor_revision5_optimized.md").read_text(
         encoding="utf-8"
@@ -12,16 +12,16 @@ def test_current_gate_is_material_map_gate_across_primary_docs():
     readme = (ROOT / "README.md").read_text(encoding="utf-8")
     vision = (ROOT / "docs" / "VISION.md").read_text(encoding="utf-8")
     progress = (ROOT / "docs" / "DEVELOPMENT_PROGRESS.md").read_text(encoding="utf-8")
-    v009 = (ROOT / "docs" / "V0_009_MATERIAL_MAP_GATE.md").read_text(
+    v010a = (ROOT / "docs" / "V0_010A_PROPOSAL_READINESS_GATE.md").read_text(
         encoding="utf-8"
     )
 
-    assert "Current gate: V0-009 analysis-led material map gate only." in agents
-    assert "V0-009 分析驱动素材地图闸门" in master
-    assert "Current V0-009 analysis-led material map gate work" in readme
-    assert "Current implementation gate: V0-009 analysis-led material map gate only." in vision
-    assert "Current local gate: V0-009 analysis-led material map gate only" in progress
-    assert "V0-009 upgrades `map`" in v009
+    assert "Current gate: V0-010a proposal readiness gate only." in agents
+    assert "V0-010a 提案就绪闸门" in master
+    assert "Current V0-010a proposal readiness gate work" in readme
+    assert "Current implementation gate: V0-010a proposal readiness gate only." in vision
+    assert "Current local gate: V0-010a proposal readiness gate only" in progress
+    assert "V0-010a opens only the proposal readiness surface" in v010a
 
 
 def test_current_gate_forbids_future_media_and_creative_surfaces():
@@ -29,7 +29,7 @@ def test_current_gate_forbids_future_media_and_creative_surfaces():
         [
             (ROOT / "AGENTS.md").read_text(encoding="utf-8"),
             (ROOT / "SKILL.md").read_text(encoding="utf-8"),
-            (ROOT / "docs" / "V0_009_MATERIAL_MAP_GATE.md").read_text(
+            (ROOT / "docs" / "V0_010A_PROPOSAL_READINESS_GATE.md").read_text(
                 encoding="utf-8"
             ),
         ]
@@ -42,6 +42,8 @@ def test_current_gate_forbids_future_media_and_creative_surfaces():
     assert "model calls" in docs
     assert "network search" in docs
     assert "image generation or image editing" in docs
+    assert "fake proposals" in docs
+    assert "full creative proposal generation" in docs
 
 
 def test_stage_a_acceptance_is_historical_not_active_gate():
@@ -140,5 +142,18 @@ def test_v009_release_readiness_records_scope():
     assert "Status: completed locally, ready to push, not tagged." in content
     assert "`map` now requires current `.artist-portrait/data/analysis.jsonl`" in content
     assert "priority review queue" in content
+    assert "pytest:" in content
+    assert "run_checks.py:" in content
+
+
+def test_v010a_release_readiness_records_scope():
+    content = (ROOT / "docs" / "V0_010A_RELEASE_READINESS.md").read_text(
+        encoding="utf-8"
+    )
+
+    assert "Status: completed locally, ready to push, not tagged." in content
+    assert "`ProposalSet` Pydantic model" in content
+    assert "`propose` readiness command" in content
+    assert "No fake `proposals.json` or `proposals.md` generation" in content
     assert "pytest:" in content
     assert "run_checks.py:" in content

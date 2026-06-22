@@ -1388,6 +1388,85 @@ def test_map_writes_material_map_from_analysis(tmp_path, monkeypatch, capsys):
     assert state_payload["steps"]["map"]["output_refs"] == ["output/material_map.md"]
 
 
+def test_propose_requires_map_first(tmp_path, capsys):
+    project_path = tmp_path / "project.yaml"
+    project_path.write_text(
+        project_fixture_with_scene_detection("off"),
+        encoding="utf-8",
+    )
+    assert main(["init", "--project", str(project_path), "--quiet"]) in (0, 1)
+
+    code = main(["propose", "--project", str(project_path)])
+    captured = capsys.readouterr()
+
+    assert code == 7
+    assert "propose requires map" in captured.err
+
+
+def test_propose_without_text_model_blocks_without_fake_outputs(
+    tmp_path,
+    monkeypatch,
+    capsys,
+):
+    project_path = tmp_path / "project.yaml"
+    project_path.write_text(
+        project_fixture_with_scene_detection("off"),
+        encoding="utf-8",
+    )
+    assert main(["init", "--project", str(project_path), "--quiet"]) in (0, 1)
+    write_clean_source_ledger(tmp_path)
+    assert main(["segment", "--project", str(project_path), "--quiet"]) == 0
+    assert main(["analyze", "--project", str(project_path), "--quiet"]) == 0
+    assert main(["map", "--project", str(project_path), "--quiet"]) == 0
+    monkeypatch.setattr(
+        workspace,
+        "detect_capabilities",
+        lambda: Capabilities(text_model=False),
+    )
+
+    code = main(["propose", "--project", str(project_path), "--json"])
+    captured = capsys.readouterr()
+
+    assert code == 4
+    payload = json.loads(captured.out)
+    assert payload["status"] == "blocked"
+    assert "text_model_missing" in payload["warnings"][0]
+    assert "no fake proposals" in payload["error"]
+    assert not (tmp_path / ".artist-portrait" / "data" / "proposals.json").exists()
+    assert not (tmp_path / "output" / "proposals.md").exists()
+    state_payload = json.loads(
+        (tmp_path / ".artist-portrait" / "state.json").read_text(encoding="utf-8")
+    )
+    assert state_payload["steps"]["propose"]["status"] == "blocked"
+
+
+def test_invalid_proposals_json_status_and_doctor(tmp_path, capsys):
+    project_path = tmp_path / "project.yaml"
+    project_path.write_text(
+        project_fixture_with_scene_detection("off"),
+        encoding="utf-8",
+    )
+    assert main(["init", "--project", str(project_path), "--quiet"]) in (0, 1)
+    write_clean_source_ledger(tmp_path)
+    proposals_path = tmp_path / ".artist-portrait" / "data" / "proposals.json"
+    proposals_path.write_text('{"proposal_set_id": "missing-required-fields"}\n', encoding="utf-8")
+
+    code = main(["status", "--project", str(project_path), "--json"])
+    captured = capsys.readouterr()
+    status_payload = json.loads(captured.out)
+
+    assert code == 0
+    assert status_payload["summaries"]["proposals"]["valid"] is False
+    assert "invalid ProposalSet JSON" in status_payload["summaries"]["proposals"]["error"]
+
+    code = main(["doctor", "--project", str(project_path), "--json"])
+    captured = capsys.readouterr()
+    doctor_payload = json.loads(captured.out)
+
+    assert code == 1
+    assert any(issue["code"] == "proposals_invalid" for issue in doctor_payload["issues"])
+
+
 def test_review_project_requires_scan_first(tmp_path, capsys):
     project_path = tmp_path / "project.yaml"
     project_path.write_text(

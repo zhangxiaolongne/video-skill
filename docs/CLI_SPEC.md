@@ -2,7 +2,7 @@
 
 Authoritative source: `artist_portrait_editor_revision5_optimized.md`.
 
-Implemented V0-009 analysis-led material map gate commands:
+Implemented V0-010a proposal readiness gate commands:
 
 ```bash
 artist-portrait validate --project ./project.yaml
@@ -16,6 +16,7 @@ artist-portrait transcribe --project ./project.yaml
 artist-portrait keyframes --project ./project.yaml
 artist-portrait analyze --project ./project.yaml
 artist-portrait map --project ./project.yaml
+artist-portrait propose --project ./project.yaml
 artist-portrait review --project ./project.yaml --scope project
 artist-portrait review --project ./project.yaml --scope all
 ```
@@ -92,9 +93,18 @@ pending confirmation fields, and risk sections. It does not generate creative
 proposals, BGM choices, timelines, previews, visual classifications, network
 results, image outputs, or model-backed judgments.
 
+`propose --json` is currently a readiness gate only. It requires
+`output/material_map.md`; without it the command returns `7
+prerequisite_step_missing`. When no approved text model gate is available, it
+records the `propose` step as `blocked`, writes run metadata, returns `4
+missing_required_dependency_for_command`, and writes no fake
+`.artist-portrait/data/proposals.json` or `output/proposals.md`. Full creative
+proposal generation remains closed.
+
 `status --json` includes the state ledger plus local artifact, source, clip,
-transcript, keyframe, analysis, scan report, clip report, and analysis report
-summaries plus material map presence. It also reports `artifact_issues` when
+transcript, keyframe, analysis, proposal, scan report, clip report, and
+analysis report summaries plus material map presence. It also reports
+`artifact_issues` when
 completed ledger steps refer to outputs that no longer exist. It does not run
 media operations or mutate project files.
 
@@ -112,6 +122,9 @@ missing. It reports `analysis_invalid` when
 `.artist-portrait/data/analysis.jsonl` cannot be parsed. It reports
 `scene_detection_required_missing` or
 `transcription_required_missing` when the project requires an unavailable
-dependency. It
+dependency. It reports `proposals_invalid` when
+`.artist-portrait/data/proposals.json` cannot be parsed as `ProposalSet`, and
+`propose_text_model_missing` when `material_map.md` exists but no approved text
+model gate is available for proposal generation. It
 returns `1 success_with_warnings` when diagnostics find issues and `0 success`
 when no issues are found.

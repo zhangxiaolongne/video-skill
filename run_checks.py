@@ -59,6 +59,7 @@ def check_schema_drift() -> None:
             "clip_record.schema.json",
             "project_config.schema.json",
             "project_state.schema.json",
+            "proposal_set.schema.json",
             "source_record.schema.json",
             "keyframe_record.schema.json",
             "transcript_record.schema.json",
@@ -116,30 +117,30 @@ def check_gate_consistency() -> None:
         "master": ROOT / "artist_portrait_editor_revision5_optimized.md",
         "README.md": ROOT / "README.md",
         "DEVELOPMENT_PROGRESS.md": ROOT / "docs" / "DEVELOPMENT_PROGRESS.md",
-        "V0_009_MATERIAL_MAP_GATE.md": ROOT
+        "V0_010A_PROPOSAL_READINESS_GATE.md": ROOT
         / "docs"
-        / "V0_009_MATERIAL_MAP_GATE.md",
+        / "V0_010A_PROPOSAL_READINESS_GATE.md",
     }
     content = {name: path.read_text(encoding="utf-8") for name, path in docs.items()}
     if (
-        "Current gate: V0-009 analysis-led material map gate only."
+        "Current gate: V0-010a proposal readiness gate only."
         not in content["AGENTS.md"]
     ):
-        raise SystemExit("AGENTS.md current gate is not V0-009 material map gate")
-    if "V0-009 分析驱动素材地图闸门" not in content["master"]:
-        raise SystemExit("master document current gate is not V0-009 material map gate")
-    if "Current V0-009 analysis-led material map gate work" not in content["README.md"]:
-        raise SystemExit("README current gate is not V0-009 material map gate")
+        raise SystemExit("AGENTS.md current gate is not V0-010a proposal readiness gate")
+    if "V0-010a 提案就绪闸门" not in content["master"]:
+        raise SystemExit("master document current gate is not V0-010a proposal readiness gate")
+    if "Current V0-010a proposal readiness gate work" not in content["README.md"]:
+        raise SystemExit("README current gate is not V0-010a proposal readiness gate")
     if (
-        "Current local gate: V0-009 analysis-led material map gate only"
+        "Current local gate: V0-010a proposal readiness gate only"
         not in content["DEVELOPMENT_PROGRESS.md"]
     ):
         raise SystemExit("development progress current gate is stale")
     if (
-        "V0-009 upgrades `map`"
-        not in content["V0_009_MATERIAL_MAP_GATE.md"]
+        "V0-010a opens only the proposal readiness surface"
+        not in content["V0_010A_PROPOSAL_READINESS_GATE.md"]
     ):
-        raise SystemExit("V0-009 material map gate doc is missing active gate")
+        raise SystemExit("V0-010a proposal readiness gate doc is missing active gate")
 
 
 def write_sine_wav(path: Path, *, seconds: float = 0.25, sample_rate: int = 8000) -> None:
@@ -237,6 +238,14 @@ def check_real_scan_if_available() -> None:
         if "Analysis ledger" not in material_map or "Priority Review Queue" not in material_map:
             raise SystemExit("real scan material_map did not use analysis ledger")
         run(
+            [str(ARTIST_PORTRAIT), "propose", "--project", str(project), "--json"],
+            expect=4,
+        )
+        if (tmp_path / ".artist-portrait" / "data" / "proposals.json").exists():
+            raise SystemExit("blocked propose wrote fake proposals.json")
+        if (tmp_path / "output" / "proposals.md").exists():
+            raise SystemExit("blocked propose wrote fake proposals.md")
+        run(
             [
                 str(ARTIST_PORTRAIT),
                 "review",
@@ -262,6 +271,7 @@ def check_real_scan_if_available() -> None:
             "analyze",
             "keyframes",
             "map",
+            "propose",
             "review_project",
             "segment",
         ]:
@@ -281,6 +291,7 @@ def check_real_scan_if_available() -> None:
             "segment_invalidated",
             "keyframes_invalidated",
             "map_invalidated",
+            "propose_invalidated",
             "review_project_invalidated",
         } - issue_codes:
             raise SystemExit("doctor did not classify invalidated downstream outputs")
@@ -403,6 +414,23 @@ def check_local_foundation_outputs() -> None:
             or "Priority Review Queue" not in material_map
         ):
             raise SystemExit("material_map content check failed")
+        propose = subprocess.run(
+            [str(ARTIST_PORTRAIT), "propose", "--project", str(project), "--json"],
+            cwd=ROOT,
+            capture_output=True,
+            text=True,
+        )
+        if propose.returncode != 4:
+            raise SystemExit(f"propose did not block without text model: {propose.stdout}")
+        propose_payload = json.loads(propose.stdout)
+        if propose_payload.get("status") != "blocked":
+            raise SystemExit("propose did not report blocked status")
+        if "no fake proposals" not in propose_payload.get("error", ""):
+            raise SystemExit("propose did not explain fake proposals were not generated")
+        if (tmp_path / ".artist-portrait" / "data" / "proposals.json").exists():
+            raise SystemExit("blocked propose wrote proposals.json")
+        if (tmp_path / "output" / "proposals.md").exists():
+            raise SystemExit("blocked propose wrote proposals.md")
 
         (tmp_path / "output" / "material_map.md").unlink()
         run(

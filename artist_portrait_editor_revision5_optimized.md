@@ -5,7 +5,7 @@
 > **工作名称**：`artist-portrait-editor`  
 > **中文名称**：人物向剪辑导演 / 艺人肖像剪辑 Skill  
 > **适用范围**：产品愿景、V0 产品规格、V0 工程规格  
-> **当前开发闸门**：V0-009 分析驱动素材地图闸门。阶段 A、V0-003、V0-004、V0-005、V0-006、V0-007 与 V0-008 已作为工程、媒体扫描、固定窗口切分、PySceneDetect 场景切分、本地转写、关键帧缓存与基础证据分析验收；当前只允许确定性本地媒体扫描、哈希、ffprobe、`sources.jsonl`、`scan_report.md`、固定窗口 `segment`、受 `features.scene_detection` 控制的 PySceneDetect 视频场景切分、`clips.jsonl`、`clip_report.md`、受 `features.transcription` 控制的本地 faster-whisper 转写、`transcripts.jsonl`、ffmpeg 中点关键帧抽取、`keyframes.jsonl`、可重建关键帧缓存、基于现有账本的 evidence-only `analyze`、`analysis.jsonl`、`analysis_report.md`、基于 `analysis.jsonl` 的 `material_map.md`、项目风险报告、状态诊断和下游产物失效标记。不得实现 OpenCV/视觉模型分类、BGM 选择、创作提案、时间线生成或预览渲染。
+> **当前开发闸门**：V0-010a 提案就绪闸门。阶段 A、V0-003、V0-004、V0-005、V0-006、V0-007、V0-008 与 V0-009 已作为工程、媒体扫描、固定窗口切分、PySceneDetect 场景切分、本地转写、关键帧缓存、基础证据分析与分析驱动素材地图验收；当前只允许在既有确定性本地链路之后增加 `ProposalSet` 数据契约、`propose` 前置条件检查、proposal 产物状态/doctor 诊断，以及无获批文本模型时的阻塞状态记录。不得实现 OpenCV/视觉模型分类、BGM 选择、完整创作提案生成、时间线生成或预览渲染；不得生成 fake/template/model-free proposals 冒充 creative_mode 成功。
 
 ---
 
@@ -51,7 +51,7 @@ docs/DEVELOPMENT_PROGRESS.md
 - 不重复造轮子；优先复用成熟工具，再补本项目特有的数据契约、证据链、审查和降级逻辑。
 - 第三方结果不得直接冒充 canonical truth，必须记录来源、输入、输出、置信度、失败模式和可复验路径。
 - 使用第三方模型或联网能力时，必须由对应 gate、配置开关和 review 规则控制。
-- 当前 V0-009 analysis-led material map gate 仍保持本地、无远程模型调用、无联网、无 image generation / editing 调用；`map` 只从 `sources.jsonl` 与 `analysis.jsonl` 渲染素材地图，不代表 OpenCV、视觉模型、BGM 策略、创作提案或时间线判断。
+- 当前 V0-010a proposal readiness gate 仍保持本地、无远程模型调用、无联网、无 image generation / editing 调用；`propose` 只验证 `material_map.md` 与文本模型闸门是否就绪，缺少获批文本模型时必须阻塞并记录状态，不得输出假提案。
 
 # 0. 执行摘要
 
@@ -70,7 +70,7 @@ V0 分为两个模式：
 - `core_mode`：不依赖文本生成模型或视觉模型，负责确定性媒体处理、canonical 数据、风险规则和素材结构报告。
 - `creative_mode`：在 `core_mode` 证据基础上，生成三套可回溯创作提案，并在用户选择后生成时间线草案。
 
-阶段 A 已完成基础工程验收，V0-003 已完成媒体扫描基础，V0-004 已完成固定窗口切分基础，V0-005 已完成 PySceneDetect 场景切分闸门，V0-006 已完成本地转写闸门，V0-007 已完成关键帧缓存闸门，V0-008 已完成基础证据分析闸门。当前允许实现 V0-009 分析驱动素材地图闸门：
+阶段 A 已完成基础工程验收，V0-003 已完成媒体扫描基础，V0-004 已完成固定窗口切分基础，V0-005 已完成 PySceneDetect 场景切分闸门，V0-006 已完成本地转写闸门，V0-007 已完成关键帧缓存闸门，V0-008 已完成基础证据分析闸门，V0-009 已完成分析驱动素材地图闸门。当前允许实现 V0-010a 提案就绪闸门：
 
 ```text
 project.yaml
@@ -98,11 +98,13 @@ project.yaml
 → analysis.jsonl
 → analysis_report.md
 → material_map.md
+→ propose readiness gate
+→ ProposalSet schema validation
 → risk_report.md
 → doctor/status 诊断
 ```
 
-当前 V0-009 禁止实现：
+当前 V0-010a 禁止实现：
 
 ```text
 OpenCV
@@ -110,7 +112,8 @@ Embedding
 视觉模型
 视觉分类或关键帧语义解读
 BGM 选择或节拍分析
-创作提案
+fake/template/model-free proposals
+完整创作提案生成
 时间线生成
 预览渲染
 联网搜索
@@ -2073,6 +2076,39 @@ output/proposals.md
 ```
 
 三套方案必须结构不同、证据可回溯且不使用禁用素材。
+
+### 16.10a V0-010a：提案就绪闸门
+
+当前小版本只允许实现提案就绪面，不允许生成完整创作提案。
+
+允许：
+
+- `ProposalSet` Pydantic 模型和 `schemas/proposal_set.schema.json`。
+- `status` / `doctor` 可识别存在但非法的 `.artist-portrait/data/proposals.json`。
+- `propose` 必须要求 `output/material_map.md` 已存在。
+- `propose` 必须检测获批文本模型能力。
+- 无获批文本模型时，`propose` 必须写入 blocked step ledger、run metadata 和 warning，返回固定 dependency 错误。
+- 无获批文本模型时，`propose` 不得写入 `.artist-portrait/data/proposals.json` 或 `output/proposals.md`。
+- 上游 source、clip、transcript、keyframe、analysis 或 material map 变化后，旧 proposal 状态必须可被 invalidated。
+
+禁止：
+
+- fake proposals
+- template proposals
+- model-free creative proposals
+- BGM selection、beat analysis、music recommendation 或 music/timeline fitting
+- timeline draft
+- preview render
+- OpenCV、vision model、embedding、network search、image generation/editing
+- 未经 gate 批准的文本模型调用
+
+验收：
+
+- 缺 `map` 时，`propose` 返回固定前置错误。
+- 缺文本模型时，`propose --json` 返回 blocked 状态和固定 dependency 错误。
+- 缺文本模型时，不存在 `proposals.json` 和 `proposals.md`。
+- 非法 `proposals.json` 可被 `status` / `doctor` 检出。
+- committed JSON Schema 与 live Pydantic schema 一致。
 
 ## 16.11 V0-011：时间线草案
 

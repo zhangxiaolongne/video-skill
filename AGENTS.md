@@ -3,7 +3,7 @@
 Follow `artist_portrait_editor_revision5_optimized.md` as the governing V0
 engineering-freeze document.
 
-Current gate: V0-009 analysis-led material map gate only.
+Current gate: V0-010a proposal readiness gate only.
 
 Allowed:
 
@@ -45,6 +45,10 @@ Allowed:
 - `map` requires current `analysis.jsonl`
 - deterministic `output/material_map.md` rendered from source and analysis ledgers
 - priority review queue, pending confirmation, and risk sections without creative recommendations
+- `propose` readiness gate
+- `ProposalSet` Pydantic model and generated JSON Schema
+- proposal artifact status and doctor diagnostics
+- blocked `propose` behavior when no approved text model is available
 - `review --scope project`
 - `review --scope all` only as project review plus skipped future scopes
 - repository skeleton
@@ -63,7 +67,8 @@ Forbidden before the next gate explicitly opens:
 - embeddings
 - vision models
 - visual classification beyond explicit evidence placeholders
-- creative proposals
+- fake, template, or model-free creative proposals
+- full creative proposal generation
 - timeline generation
 - preview rendering
 - BGM selection, beat analysis, music recommendation, or music/timeline fitting
