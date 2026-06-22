@@ -10,7 +10,7 @@ V0 has two future modes:
   `core_mode` data exists.
 
 Current repository implementation has entered deterministic core-mode
-foundation work only. The active gate is V0-006 local transcription gate:
+foundation work only. The active gate is V0-007 keyframe cache gate:
 
 ```text
 project.yaml
@@ -23,6 +23,7 @@ project.yaml
 -> fixed-window or PySceneDetect clip ledger
 -> clip report
 -> transcript ledger
+-> keyframe ledger and rebuildable cache
 -> minimal material map
 -> minimal project risk report
 -> run report

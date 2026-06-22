@@ -34,7 +34,7 @@ When a user requirement changes long-term product behavior, update both files:
 - Canonical skill name: `artist-portrait-editor`
 - Canonical install directory: `artist-portrait-editor`
 - Distribution repository: `video-skill`
-- Current local gate: V0-006 local transcription gate only
+- Current local gate: V0-007 keyframe cache gate only
 
 ## Completed Local Versions
 
@@ -74,6 +74,11 @@ When a user requirement changes long-term product behavior, update both files:
   `auto`, and `required`.
 - V0-006c: local-only faster-whisper adapter, transcript ledger validation,
   status/doctor diagnostics, and source-ledger invalidation.
+- V0-007a: `KeyframeRecord` schema and committed JSON Schema.
+- V0-007b: `keyframes` CLI with deterministic ffmpeg midpoint extraction for
+  video clips.
+- V0-007c: rebuildable keyframe cache diagnostics, audio-only handling, and
+  source/clip invalidation.
 
 ## Current Hard Boundaries
 
@@ -82,6 +87,7 @@ Do not implement these until the relevant gate is explicitly opened and tested:
 - OpenCV or vision analysis
 - embeddings
 - remote ASR, model downloads, or ungrounded text classification
+- keyframe interpretation beyond raw visual sampling
 - creative proposals
 - timeline generation
 - preview rendering
@@ -106,9 +112,8 @@ Tactical rule for future batches:
 - use third-party outputs as evidence with provenance, not unreviewed truth
 - keep config gates, failure modes, and review rules around every non-local or
   model-backed capability
-- keep current V0-006 transcription local and bounded to faster-whisper with
-  local-only model loading; third-party outputs are evidence, not unreviewed
-  truth
+- keep current V0-007 keyframe extraction local and bounded to ffmpeg
+  midpoint sampling; keyframes are visual evidence, not visual analysis
 
 ### BGM Is Part Of Editing Logic
 
@@ -141,6 +146,6 @@ carried into the future proposal, timeline, review, and preview gates.
 
 ## Next Likely Batch
 
-Next action should finish V0-006 release readiness: run the full local
+Next action should finish V0-007 release readiness: run the full local
 validation set, record the release checkpoint, commit the batch locally, and
 push only after the batch is reviewed.

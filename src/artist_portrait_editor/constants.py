@@ -11,6 +11,7 @@ BUSINESS_ARTIFACTS = {
     ".artist-portrait/data/sources.jsonl",
     ".artist-portrait/data/clips.jsonl",
     ".artist-portrait/data/transcripts.jsonl",
+    ".artist-portrait/data/keyframes.jsonl",
     ".artist-portrait/data/relations.jsonl",
     ".artist-portrait/data/proposals.json",
     "output/scan_report.md",

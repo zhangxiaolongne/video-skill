@@ -58,6 +58,14 @@ Current local foundation tests cover:
 - canonical `transcripts.jsonl`
 - status and doctor visibility for transcript ledgers
 - downstream invalidation after source ledger changes
+- committed keyframe record schema
+- `keyframes` command requiring existing clip ledger
+- ffmpeg dependency failure for video clips
+- canonical `keyframes.jsonl`
+- rebuildable `.artist-portrait/cache/keyframes/`
+- audio-only empty manifest handling
+- status and doctor visibility for keyframe manifests and missing cache files
+- downstream invalidation after source or clip ledger changes
 
 Future analysis, proposal, timeline, preview, remote model, BGM, image
 generation/editing, and network fixtures are intentionally not implemented yet.

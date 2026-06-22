@@ -59,6 +59,7 @@ def check_schema_drift() -> None:
             "project_config.schema.json",
             "project_state.schema.json",
             "source_record.schema.json",
+            "keyframe_record.schema.json",
             "transcript_record.schema.json",
         ):
             committed = ROOT / "schemas" / name
@@ -114,30 +115,30 @@ def check_gate_consistency() -> None:
         "master": ROOT / "artist_portrait_editor_revision5_optimized.md",
         "README.md": ROOT / "README.md",
         "DEVELOPMENT_PROGRESS.md": ROOT / "docs" / "DEVELOPMENT_PROGRESS.md",
-        "V0_006_TRANSCRIPTION_GATE.md": ROOT
+        "V0_007_KEYFRAME_CACHE_GATE.md": ROOT
         / "docs"
-        / "V0_006_TRANSCRIPTION_GATE.md",
+        / "V0_007_KEYFRAME_CACHE_GATE.md",
     }
     content = {name: path.read_text(encoding="utf-8") for name, path in docs.items()}
     if (
-        "Current gate: V0-006 local transcription gate only."
+        "Current gate: V0-007 keyframe cache gate only."
         not in content["AGENTS.md"]
     ):
-        raise SystemExit("AGENTS.md current gate is not V0-006 transcription gate")
-    if "V0-006 本地转写闸门" not in content["master"]:
-        raise SystemExit("master document current gate is not V0-006 transcription gate")
-    if "Current V0-006 local transcription gate work" not in content["README.md"]:
-        raise SystemExit("README current gate is not V0-006 transcription gate")
+        raise SystemExit("AGENTS.md current gate is not V0-007 keyframe cache gate")
+    if "V0-007 关键帧缓存闸门" not in content["master"]:
+        raise SystemExit("master document current gate is not V0-007 keyframe cache gate")
+    if "Current V0-007 keyframe cache gate work" not in content["README.md"]:
+        raise SystemExit("README current gate is not V0-007 keyframe cache gate")
     if (
-        "Current local gate: V0-006 local transcription gate only"
+        "Current local gate: V0-007 keyframe cache gate only"
         not in content["DEVELOPMENT_PROGRESS.md"]
     ):
         raise SystemExit("development progress current gate is stale")
     if (
-        "V0-006 opens a local transcription gate"
-        not in content["V0_006_TRANSCRIPTION_GATE.md"]
+        "V0-007 opens deterministic keyframe extraction"
+        not in content["V0_007_KEYFRAME_CACHE_GATE.md"]
     ):
-        raise SystemExit("V0-006 transcription gate doc is missing active gate")
+        raise SystemExit("V0-007 keyframe cache gate doc is missing active gate")
 
 
 def write_sine_wav(path: Path, *, seconds: float = 0.25, sample_rate: int = 8000) -> None:
@@ -210,6 +211,14 @@ def check_real_scan_if_available() -> None:
         if transcripts.exists():
             raise SystemExit("transcription: off wrote transcripts.jsonl")
 
+        run(
+            [str(ARTIST_PORTRAIT), "keyframes", "--project", str(project), "--quiet"],
+            expect=1,
+        )
+        keyframes = tmp_path / ".artist-portrait" / "data" / "keyframes.jsonl"
+        if not keyframes.exists() or keyframes.read_text(encoding="utf-8") != "":
+            raise SystemExit("audio-only keyframes check did not write an empty manifest")
+
         run([str(ARTIST_PORTRAIT), "map", "--project", str(project), "--quiet"])
         run(
             [
@@ -234,6 +243,7 @@ def check_real_scan_if_available() -> None:
             raise SystemExit(f"real rescan failed: {rescan.stderr}")
         rescan_payload = json.loads(rescan.stdout)
         if sorted(rescan_payload.get("invalidated_steps", [])) != [
+            "keyframes",
             "map",
             "review_project",
             "segment",
@@ -249,7 +259,12 @@ def check_real_scan_if_available() -> None:
             raise SystemExit("doctor did not report invalidated downstream outputs")
         doctor_payload = json.loads(doctor.stdout)
         issue_codes = {issue.get("code") for issue in doctor_payload.get("issues", [])}
-        if {"segment_invalidated", "map_invalidated", "review_project_invalidated"} - issue_codes:
+        if {
+            "segment_invalidated",
+            "keyframes_invalidated",
+            "map_invalidated",
+            "review_project_invalidated",
+        } - issue_codes:
             raise SystemExit("doctor did not classify invalidated downstream outputs")
 
 

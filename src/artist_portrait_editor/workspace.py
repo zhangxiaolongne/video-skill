@@ -7,6 +7,11 @@ from pathlib import Path
 from artist_portrait_editor.capabilities import capability_warnings, detect_capabilities
 from artist_portrait_editor.config_loader import load_project_config
 from artist_portrait_editor.constants import CACHE_DIR, DATA_DIR, RUNS_DIR, WORKSPACE_DIR
+from artist_portrait_editor.media.keyframes import (
+    KeyframeExtractionError,
+    extract_keyframe_image,
+    ffmpeg_version,
+)
 from artist_portrait_editor.media.scene_detection import (
     SceneDetectionError,
     detect_scenes_pyscenedetect,
@@ -31,6 +36,7 @@ from artist_portrait_editor.models.clip import (
     ClipRecord,
     ClipRiskFlag,
 )
+from artist_portrait_editor.models.keyframe import KeyframeRecord, KeyframeRiskFlag
 from artist_portrait_editor.models.state import (
     Capabilities,
     OverallStatus,
@@ -205,13 +211,18 @@ def stable_transcript_id(
     return "trn_" + hashlib.sha256(payload.encode("utf-8")).hexdigest()[:24]
 
 
+def stable_keyframe_id(clip_id: str, frame_index: int, timestamp_seconds: float) -> str:
+    payload = f"{clip_id}:{frame_index}:{timestamp_seconds:.3f}"
+    return "kf_" + hashlib.sha256(payload.encode("utf-8")).hexdigest()[:24]
+
+
 def invalidate_downstream_steps_for_sources(
     state: ProjectState,
     *,
     sources_fingerprint: str,
 ) -> list[str]:
     invalidated: list[str] = []
-    for step_name in ("segment", "transcribe", "map", "review_project"):
+    for step_name in ("segment", "transcribe", "keyframes", "map", "review_project"):
         entry = state.steps.get(step_name)
         if entry is None:
             continue
@@ -295,6 +306,15 @@ def render_status_panel(payload: dict) -> str:
         lines.append("transcripts: invalid")
     else:
         lines.append("transcripts: missing")
+    keyframes = summaries.get("keyframes") or {}
+    if keyframes.get("exists") and keyframes.get("valid", True):
+        lines.append(f"keyframes: {keyframes.get('count', 0)}")
+        if keyframes.get("missing_cache_count"):
+            lines.append(f"keyframe_cache_missing: {keyframes.get('missing_cache_count')}")
+    elif keyframes.get("exists"):
+        lines.append("keyframes: invalid")
+    else:
+        lines.append("keyframes: missing")
     risk = summaries.get("risk_report") or {}
     if risk.get("exists"):
         lines.append(f"risk_report: present ({risk.get('bytes', 0)} bytes)")
@@ -311,7 +331,7 @@ def render_status_panel(payload: dict) -> str:
     if artifact_issues:
         lines.append(f"artifact_issues: {len(artifact_issues)}")
     steps = payload.get("steps") or {}
-    for step in ("scan", "segment", "transcribe", "map", "review_project"):
+    for step in ("scan", "segment", "transcribe", "keyframes", "map", "review_project"):
         if step in steps:
             lines.append(f"{step}: {steps[step].get('status')}")
     return "\n".join(lines) + "\n"
@@ -442,6 +462,41 @@ def doctor_project_payload(project_path: Path) -> dict:
                 next_action=f"artist-portrait transcribe --project {project_path}",
             )
         )
+    keyframes = keyframe_summary(
+        root / WORKSPACE_DIR / DATA_DIR / "keyframes.jsonl",
+        root=root,
+    )
+    if (
+        sources.get("valid") is True
+        and keyframes.get("valid") is False
+    ):
+        keyframes_path = root / WORKSPACE_DIR / DATA_DIR / "keyframes.jsonl"
+        issues.append(
+            workspace_issue(
+                code="keyframes_invalid",
+                severity="error",
+                detail=str(keyframes.get("error") or "keyframes ledger is invalid"),
+                next_action=(
+                    f"fix {keyframes_path.relative_to(root).as_posix()} or rerun "
+                    f"artist-portrait keyframes --project {project_path}"
+                ),
+            )
+        )
+    elif (
+        sources.get("valid") is True
+        and keyframes.get("missing_cache_count", 0) > 0
+    ):
+        issues.append(
+            workspace_issue(
+                code="keyframe_cache_missing",
+                severity="warning",
+                detail=(
+                    f"{keyframes.get('missing_cache_count')} keyframe cache image(s) "
+                    "are missing and can be rebuilt"
+                ),
+                next_action=f"artist-portrait keyframes --project {project_path}",
+            )
+        )
     if (
         sources.get("valid") is True
         and state.steps.get("segment", StepLedgerEntry()).status == StepStatus.pending
@@ -452,6 +507,19 @@ def doctor_project_payload(project_path: Path) -> dict:
                 severity="info",
                 detail="source ledger exists but clips have not been generated",
                 next_action=f"artist-portrait segment --project {project_path}",
+            )
+        )
+    if (
+        sources.get("valid") is True
+        and clips_summary(root).get("valid") is True
+        and state.steps.get("keyframes", StepLedgerEntry()).status == StepStatus.pending
+    ):
+        issues.append(
+            workspace_issue(
+                code="keyframes_pending",
+                severity="info",
+                detail="clip ledger exists but keyframes have not been generated",
+                next_action=f"artist-portrait keyframes --project {project_path}",
             )
         )
     if (
@@ -540,6 +608,7 @@ def artifact_statuses(root: Path) -> dict[str, dict]:
         "sources": root / WORKSPACE_DIR / DATA_DIR / "sources.jsonl",
         "clips": root / WORKSPACE_DIR / DATA_DIR / "clips.jsonl",
         "transcripts": root / WORKSPACE_DIR / DATA_DIR / "transcripts.jsonl",
+        "keyframes": root / WORKSPACE_DIR / DATA_DIR / "keyframes.jsonl",
         "relations": root / WORKSPACE_DIR / DATA_DIR / "relations.jsonl",
         "proposals_json": root / WORKSPACE_DIR / DATA_DIR / "proposals.json",
         "run_report": root / "output" / "run_report.md",
@@ -604,6 +673,7 @@ def status_summaries(root: Path) -> dict:
     sources_path = root / WORKSPACE_DIR / DATA_DIR / "sources.jsonl"
     clips_path = root / WORKSPACE_DIR / DATA_DIR / "clips.jsonl"
     transcripts_path = root / WORKSPACE_DIR / DATA_DIR / "transcripts.jsonl"
+    keyframes_path = root / WORKSPACE_DIR / DATA_DIR / "keyframes.jsonl"
     scan_report_path = root / "output" / "scan_report.md"
     clip_report_path = root / "output" / "clip_report.md"
     material_map_path = root / "output" / "material_map.md"
@@ -612,6 +682,7 @@ def status_summaries(root: Path) -> dict:
         "sources": source_summary(sources_path),
         "clips": clip_summary(clips_path),
         "transcripts": transcript_summary(transcripts_path),
+        "keyframes": keyframe_summary(keyframes_path, root=root),
         "scan_report": output_summary(scan_report_path),
         "clip_report": output_summary(clip_report_path),
         "material_map": output_summary(material_map_path),
@@ -744,6 +815,36 @@ def read_transcripts_jsonl(path: Path) -> list[TranscriptRecord]:
     return transcripts
 
 
+def write_keyframes_jsonl(root: Path, keyframes: list[KeyframeRecord]) -> Path:
+    output = root / WORKSPACE_DIR / DATA_DIR / "keyframes.jsonl"
+    output.parent.mkdir(parents=True, exist_ok=True)
+    tmp = output.with_suffix(".jsonl.tmp")
+    tmp.write_text(
+        "".join(
+            json.dumps(keyframe.model_dump(mode="json"), ensure_ascii=False, sort_keys=True)
+            + "\n"
+            for keyframe in keyframes
+        ),
+        encoding="utf-8",
+    )
+    tmp.replace(output)
+    return output
+
+
+def read_keyframes_jsonl(path: Path) -> list[KeyframeRecord]:
+    keyframes: list[KeyframeRecord] = []
+    for line_number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1):
+        if not line.strip():
+            continue
+        try:
+            keyframes.append(KeyframeRecord.model_validate_json(line))
+        except ValueError as exc:
+            raise WorkspacePrerequisiteError(
+                f"invalid KeyframeRecord JSONL at line {line_number}: {exc}"
+            ) from exc
+    return keyframes
+
+
 def transcript_summary(path: Path) -> dict:
     if not path.exists():
         return {"exists": False}
@@ -770,6 +871,33 @@ def transcript_summary(path: Path) -> dict:
             ),
             3,
         ),
+    }
+
+
+def keyframe_summary(path: Path, *, root: Path) -> dict:
+    if not path.exists():
+        return {"exists": False}
+    try:
+        keyframes = read_keyframes_jsonl(path)
+    except Exception as exc:
+        return {
+            "exists": True,
+            "valid": False,
+            "error": str(exc),
+        }
+    missing_cache = [
+        keyframe.image_path
+        for keyframe in keyframes
+        if not (root / keyframe.image_path).exists()
+    ]
+    method_counts = count_by_value(keyframe.method for keyframe in keyframes)
+    return {
+        "exists": True,
+        "valid": True,
+        "count": len(keyframes),
+        "method_counts": method_counts,
+        "missing_cache_count": len(missing_cache),
+        "missing_cache_refs": missing_cache[:10],
     }
 
 
@@ -854,6 +982,61 @@ def build_transcripts(
             )
         )
     return transcripts
+
+
+def build_keyframes(
+    *,
+    root: Path,
+    clips: list[ClipRecord],
+    clips_fingerprint: str,
+) -> tuple[list[KeyframeRecord], list[str]]:
+    keyframes: list[KeyframeRecord] = []
+    warnings: list[str] = []
+    video_clips = [clip for clip in clips if clip.media_kind == MediaKind.video]
+    if not video_clips:
+        return [], ["no video clips available for keyframe extraction"]
+
+    method_version = ffmpeg_version()
+    cache_dir = root / WORKSPACE_DIR / CACHE_DIR / "keyframes"
+    for frame_index, clip in enumerate(
+        sorted(video_clips, key=lambda item: (item.source_location, item.clip_index))
+    ):
+        timestamp = round(
+            clip.boundary.start_seconds + (clip.boundary.duration_seconds / 2.0),
+            3,
+        )
+        keyframe_id = stable_keyframe_id(clip.clip_id, frame_index, timestamp)
+        output_path = cache_dir / f"{keyframe_id}.jpg"
+        extract_keyframe_image(
+            source_path=root / clip.source_location,
+            output_path=output_path,
+            timestamp_seconds=timestamp,
+        )
+        keyframes.append(
+            KeyframeRecord(
+                keyframe_id=keyframe_id,
+                clip_id=clip.clip_id,
+                source_id=clip.source_id,
+                source_location=clip.source_location,
+                source_content_hash=clip.source_content_hash,
+                clip_fingerprint=clips_fingerprint,
+                frame_index=frame_index,
+                timestamp_seconds=timestamp,
+                image_path=output_path.relative_to(root).as_posix(),
+                method="ffmpeg",
+                method_version=method_version,
+                evidence=[
+                    {"type": "clip", "ref": clip.clip_id},
+                    {"type": "tool", "ref": method_version},
+                ],
+                risk_flags=[],
+                notes=(
+                    "deterministic midpoint frame extraction; this is visual "
+                    "sampling only, not visual analysis"
+                ),
+            )
+        )
+    return keyframes, warnings
 
 
 def build_fixed_window_clips(
@@ -1055,7 +1238,7 @@ def invalidate_downstream_steps_for_clips(
     clips_fingerprint: str,
 ) -> list[str]:
     invalidated: list[str] = []
-    for step_name in ("map", "review_project"):
+    for step_name in ("keyframes", "map", "review_project"):
         entry = state.steps.get(step_name)
         if entry is None:
             continue
@@ -1495,6 +1678,70 @@ def transcribe_workspace(project_path: Path) -> tuple[Path | None, ProjectState,
     return output_path, state, warnings
 
 
+def keyframes_workspace(project_path: Path) -> tuple[Path, ProjectState, list[str]]:
+    config = load_project_config(project_path)
+    root = project_root(project_path)
+    state = load_state(root)
+    if state is None:
+        raise WorkspacePrerequisiteError("keyframes requires init to complete first")
+
+    clips_path = root / WORKSPACE_DIR / DATA_DIR / "clips.jsonl"
+    if not clips_path.exists():
+        raise WorkspacePrerequisiteError("keyframes requires segment to complete first")
+
+    clips = read_clips_jsonl(clips_path)
+    clips_fingerprint = fingerprint_file(clips_path)
+    capabilities = detect_capabilities()
+    state.capabilities = capabilities
+    if any(clip.media_kind == MediaKind.video for clip in clips) and not capabilities.ffmpeg:
+        raise WorkspaceDependencyError("keyframes requires ffmpeg for video clips")
+
+    try:
+        keyframes, warnings = build_keyframes(
+            root=root,
+            clips=clips,
+            clips_fingerprint=clips_fingerprint,
+        )
+    except KeyframeExtractionError as exc:
+        raise WorkspaceDependencyError(f"keyframe extraction failed: {exc}") from exc
+
+    run_id = new_run_id()
+    output_dir = root / config.paths.output_dir
+    output_path = write_keyframes_jsonl(root, keyframes)
+    status = StepStatus.completed_with_warnings if warnings else StepStatus.completed
+    state.steps["keyframes"] = StepLedgerEntry(
+        status=status,
+        input_fingerprint=clips_fingerprint,
+        output_refs=[output_path.relative_to(root).as_posix()],
+        last_run_id=run_id,
+        warnings=warnings,
+    )
+    state.latest_run_id = run_id
+    state.updated_at = utc_now()
+    state.overall_status = OverallStatus.degraded if warnings else OverallStatus.ready
+
+    runs_dir = root / WORKSPACE_DIR / RUNS_DIR / run_id
+    runs_dir.mkdir(parents=True, exist_ok=True)
+    write_json(runs_dir / "command.json", {"command": "keyframes", "project": str(project_path)})
+    write_json(runs_dir / "environment.json", environment_snapshot())
+    write_json(
+        runs_dir / "step_result.json",
+        {
+            "step": "keyframes",
+            "status": status.value,
+            "clips": len(clips),
+            "keyframes": len(keyframes),
+            "output_refs": state.steps["keyframes"].output_refs,
+        },
+    )
+    write_json(runs_dir / "warnings.json", warnings)
+    write_json(runs_dir / "errors.json", [])
+    (runs_dir / "log.txt").write_text("keyframes completed\n", encoding="utf-8")
+    save_state(root, state)
+    write_run_report(output_dir, state, warnings)
+    return output_path, state, warnings
+
+
 def map_workspace(project_path: Path) -> tuple[Path, ProjectState, list[str]]:
     config = load_project_config(project_path)
     root = project_root(project_path)
@@ -1847,6 +2094,7 @@ def rebuild_command_for_step(step: str) -> str:
         "scan": "artist-portrait scan --project <project.yaml>",
         "transcribe": "artist-portrait transcribe --project <project.yaml>",
         "segment": "artist-portrait segment --project <project.yaml>",
+        "keyframes": "artist-portrait keyframes --project <project.yaml>",
         "map": "artist-portrait map --project <project.yaml>",
         "review_project": "artist-portrait review --project <project.yaml> --scope project",
     }

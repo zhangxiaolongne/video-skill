@@ -1,6 +1,6 @@
 ---
 name: artist-portrait-editor
-description: Deterministic local workflow for preparing and auditing artist portrait video-editing projects. Use when Codex needs to validate an artist portrait project config, initialize local workspace state, scan local media into a source ledger and scan report, segment sources into a fixed-window or PySceneDetect-gated clip ledger and clip report, transcribe sources through a local-only faster-whisper gate into a transcript ledger, generate a material map, run project risk review, diagnose workspace issues, or preserve the boundary before visual analysis, BGM selection, proposal generation, timeline generation, preview rendering, model calls, image generation/editing, or network search.
+description: Deterministic local workflow for preparing and auditing artist portrait video-editing projects. Use when Codex needs to validate an artist portrait project config, initialize local workspace state, scan local media into a source ledger and scan report, segment sources into a fixed-window or PySceneDetect-gated clip ledger and clip report, transcribe sources through a local-only faster-whisper gate into a transcript ledger, extract ffmpeg midpoint keyframes into a keyframe ledger and rebuildable cache, generate a material map, run project risk review, diagnose workspace issues, or preserve the boundary before visual analysis, BGM selection, proposal generation, timeline generation, preview rendering, model calls, image generation/editing, or network search.
 ---
 
 # Artist Portrait Editor
@@ -43,6 +43,7 @@ artist portrait project preparation and audit work.
    ```bash
    artist-portrait segment --project ./project.yaml
    artist-portrait transcribe --project ./project.yaml
+   artist-portrait keyframes --project ./project.yaml
    artist-portrait map --project ./project.yaml
    artist-portrait review --project ./project.yaml --scope project
    ```
@@ -60,6 +61,13 @@ artist portrait project preparation and audit work.
    warning when faster-whisper is unavailable or local model loading fails, and
    `required` fails with exit code 4 in those cases. It must not download
    models or invent transcript text.
+
+   `keyframes` reads `.artist-portrait/data/clips.jsonl`, extracts one
+   deterministic midpoint frame for each video clip via ffmpeg, writes
+   `.artist-portrait/data/keyframes.jsonl`, and stores images under
+   `.artist-portrait/cache/keyframes/`. Audio clips do not require keyframes.
+   Cache files may be deleted and rebuilt; the JSONL manifest is the canonical
+   record.
 
 6. Use `review --scope all` only as a shallow aggregate. It runs project review
    and marks proposal/timeline review as skipped; it does not implement those
@@ -88,6 +96,12 @@ artist portrait project preparation and audit work.
   `auto`/`off`.
 - Treat `transcribe_invalidated` as a rebuild signal after a newer scan changes
   the source ledger.
+- Treat `keyframes_invalid` as a stop condition until
+  `.artist-portrait/data/keyframes.jsonl` is fixed or regenerated.
+- Treat `keyframe_cache_missing` as a rebuild signal for
+  `.artist-portrait/cache/keyframes/`.
+- Treat `keyframes_invalidated` as a rebuild signal after a newer scan or
+  segment changes upstream ledgers.
 
 ## Hard Boundaries
 

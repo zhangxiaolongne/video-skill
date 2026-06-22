@@ -13,8 +13,9 @@ Models may organize evidence in later phases, but they must not create facts,
 material IDs, timecodes, dialogue, provenance, identity, rights status, or
 timeline references.
 
-The current V0-006 local transcription gate performs no remote model calls.
-`scan`, `segment`, `transcribe`, `map`, `review`, `status`, and `doctor` must
-remain local. PySceneDetect output is a local tool-derived boundary signal, and
-faster-whisper output is local ASR evidence. Neither is a creative judgment,
-text classification, BGM strategy, or timeline decision.
+The current V0-007 keyframe cache gate performs no remote model calls. `scan`,
+`segment`, `transcribe`, `keyframes`, `map`, `review`, `status`, and `doctor`
+must remain local. PySceneDetect output is a local tool-derived boundary
+signal, faster-whisper output is local ASR evidence, and ffmpeg keyframes are
+visual samples only. None of these are creative judgments, visual analysis, BGM
+strategy, or timeline decisions.

@@ -3,7 +3,7 @@
 Follow `artist_portrait_editor_revision5_optimized.md` as the governing V0
 engineering-freeze document.
 
-Current gate: V0-006 local transcription gate only.
+Current gate: V0-007 keyframe cache gate only.
 
 Allowed:
 
@@ -31,6 +31,11 @@ Allowed:
 - optional local-only faster-whisper transcription when available
 - canonical `transcripts.jsonl`
 - transcript status, doctor diagnostics, and source-ledger invalidation
+- `keyframes`
+- deterministic ffmpeg midpoint keyframe extraction for video clips
+- canonical `keyframes.jsonl`
+- rebuildable `.artist-portrait/cache/keyframes/`
+- keyframe status, doctor diagnostics, and source/clip invalidation
 - `map`
 - `review --scope project`
 - `review --scope all` only as project review plus skipped future scopes

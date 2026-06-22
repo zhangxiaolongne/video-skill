@@ -15,6 +15,7 @@ from artist_portrait_editor.workspace import (
     WorkspacePrerequisiteError,
     doctor_project_payload,
     init_workspace,
+    keyframes_workspace,
     load_state,
     map_workspace,
     project_status_payload,
@@ -63,6 +64,12 @@ def build_parser() -> argparse.ArgumentParser:
     transcribe_sub.add_argument("--json", action="store_true")
     transcribe_sub.add_argument("--quiet", action="store_true")
     transcribe_sub.add_argument("--verbose", action="store_true")
+
+    keyframes_sub = subparsers.add_parser("keyframes")
+    keyframes_sub.add_argument("--project", required=True)
+    keyframes_sub.add_argument("--json", action="store_true")
+    keyframes_sub.add_argument("--quiet", action="store_true")
+    keyframes_sub.add_argument("--verbose", action="store_true")
 
     map_sub = subparsers.add_parser("map")
     map_sub.add_argument("--project", required=True)
@@ -217,7 +224,7 @@ def cmd_scan(args: argparse.Namespace) -> int:
         "output_refs": state.steps["scan"].output_refs,
         "invalidated_steps": [
             name
-            for name in ("segment", "transcribe", "map", "review_project")
+            for name in ("segment", "transcribe", "keyframes", "map", "review_project")
             if state.steps.get(name) and state.steps[name].status.value == "invalidated"
         ],
     }
@@ -262,7 +269,7 @@ def cmd_segment(args: argparse.Namespace) -> int:
         "warnings": warnings,
         "invalidated_steps": [
             name
-            for name in ("map", "review_project")
+            for name in ("keyframes", "map", "review_project")
             if state.steps.get(name) and state.steps[name].status.value == "invalidated"
         ],
     }
@@ -343,6 +350,40 @@ def cmd_transcribe(args: argparse.Namespace) -> int:
     return int(ExitCode.success_with_warnings if warnings else ExitCode.success)
 
 
+def cmd_keyframes(args: argparse.Namespace) -> int:
+    if error := _validate_common_flags(args):
+        return int(error)
+    project_path = Path(args.project)
+    try:
+        load_project_config(project_path)
+    except ConfigLoadError as exc:
+        print(str(exc), file=sys.stderr)
+        return int(ExitCode.invalid_project_config)
+    try:
+        output_path, state, warnings = keyframes_workspace(project_path)
+    except WorkspacePrerequisiteError as exc:
+        print(str(exc), file=sys.stderr)
+        return int(ExitCode.prerequisite_step_missing)
+    except WorkspaceDependencyError as exc:
+        print(str(exc), file=sys.stderr)
+        return int(ExitCode.missing_required_dependency_for_command)
+    root = project_root(project_path)
+    step = state.steps["keyframes"]
+    payload = {
+        "output": output_path.relative_to(root).as_posix(),
+        "output_refs": step.output_refs,
+        "status": step.status.value,
+        "warnings": warnings,
+    }
+    if args.json:
+        print(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True))
+    elif not args.quiet:
+        print(f"wrote {payload['output']}")
+        for warning in warnings:
+            print(f"warning: {warning}", file=sys.stderr)
+    return int(ExitCode.success_with_warnings if warnings else ExitCode.success)
+
+
 def cmd_review(args: argparse.Namespace) -> int:
     if error := _validate_common_flags(args):
         return int(error)
@@ -386,7 +427,7 @@ def cmd_review(args: argparse.Namespace) -> int:
 
 def blocked_stage_a_command(args: argparse.Namespace) -> int:
     print(
-        f"{args.command} is outside the current V0-006 gate and is not implemented",
+        f"{args.command} is outside the current V0-007 gate and is not implemented",
         file=sys.stderr,
     )
     return int(ExitCode.prerequisite_step_missing)
@@ -412,6 +453,7 @@ def main(argv: list[str] | None = None) -> int:
         "scan": cmd_scan,
         "segment": cmd_segment,
         "transcribe": cmd_transcribe,
+        "keyframes": cmd_keyframes,
         "map": cmd_map,
         "review": cmd_review,
     }

@@ -8,6 +8,7 @@ Pydantic, not manually maintained as an independent contract.
 Current committed schemas:
 
 - `schemas/clip_record.schema.json`
+- `schemas/keyframe_record.schema.json`
 - `schemas/project_config.schema.json`
 - `schemas/project_state.schema.json`
 - `schemas/source_record.schema.json`
@@ -40,6 +41,13 @@ timestamps. `text_type` remains `null` unless a later gate or user confirmation
 classifies the transcript as interview, lyrics, role dialogue, captions, or
 another text type.
 
+`KeyframeRecord` is implemented for the keyframe cache gate and is written as
+JSON Lines to `.artist-portrait/data/keyframes.jsonl` by `keyframes`. It records
+clip/source identity, source hash, clip fingerprint, timestamp, cache image
+path, method, method version, and evidence. Cached image files under
+`.artist-portrait/cache/keyframes/` are rebuildable; the JSONL manifest is the
+canonical data.
+
 Diagnostic issues are plain JSON objects used by `status`, `review`, and
 `doctor`. Current common fields:
 
@@ -62,10 +70,13 @@ Current stable diagnostic codes include:
 - `review_project_pending`
 - `clips_invalid`
 - `transcripts_invalid`
+- `keyframes_invalid`
+- `keyframe_cache_missing`
 - `scene_detection_required_missing`
 - `transcription_required_missing`
 - `segment_invalidated`
 - `transcribe_invalidated`
+- `keyframes_invalidated`
 - `map_invalidated`
 - `review_project_invalidated`
 - `review_scope_skipped`

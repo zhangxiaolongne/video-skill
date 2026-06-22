@@ -2,7 +2,7 @@
 
 Authoritative source: `artist_portrait_editor_revision5_optimized.md`.
 
-Implemented V0-006 local transcription gate commands:
+Implemented V0-007 keyframe cache gate commands:
 
 ```bash
 artist-portrait validate --project ./project.yaml
@@ -13,6 +13,7 @@ artist-portrait generate-schema --output-dir schemas
 artist-portrait scan --project ./project.yaml
 artist-portrait segment --project ./project.yaml
 artist-portrait transcribe --project ./project.yaml
+artist-portrait keyframes --project ./project.yaml
 artist-portrait map --project ./project.yaml
 artist-portrait review --project ./project.yaml --scope project
 artist-portrait review --project ./project.yaml --scope all
@@ -65,6 +66,12 @@ Successful transcription writes `.artist-portrait/data/transcripts.jsonl`, run
 metadata, and a refreshed `output/run_report.md`. The faster-whisper adapter
 uses local-only model loading and must not download models.
 
+`keyframes --json` reads `.artist-portrait/data/clips.jsonl`, extracts one
+deterministic midpoint frame per video clip via ffmpeg, writes
+`.artist-portrait/data/keyframes.jsonl`, stores images under
+`.artist-portrait/cache/keyframes/`, records run metadata, and refreshes
+`output/run_report.md`. Audio-only clips write an empty manifest with a warning.
+
 `status --json` includes the state ledger plus local artifact, source, clip,
 scan report, and clip report summaries. It also reports `artifact_issues` when
 completed ledger steps refer to outputs that no longer exist. It does not run
@@ -73,11 +80,14 @@ media operations or mutate project files.
 `doctor --json` is a read-only diagnostic command. It reports local workspace,
 source ledger, and artifact consistency issues with `next_action` guidance and
 `recommended_commands`. It reports `segment_invalidated`,
-`transcribe_invalidated`, `map_invalidated`, and `review_project_invalidated`
-after newer upstream ledgers change. It reports `clips_invalid` when
-`.artist-portrait/data/clips.jsonl` cannot be parsed and `transcripts_invalid`
-when `.artist-portrait/data/transcripts.jsonl` cannot be parsed. It reports
-`scene_detection_required_missing` or `transcription_required_missing` when the
-project requires an unavailable dependency. It
+`transcribe_invalidated`, `keyframes_invalidated`, `map_invalidated`, and
+`review_project_invalidated` after newer upstream ledgers change. It reports
+`clips_invalid` when `.artist-portrait/data/clips.jsonl` cannot be parsed,
+`transcripts_invalid` when `.artist-portrait/data/transcripts.jsonl` cannot be
+parsed, `keyframes_invalid` when `.artist-portrait/data/keyframes.jsonl` cannot
+be parsed, and `keyframe_cache_missing` when rebuildable cached frame images are
+missing. It reports `scene_detection_required_missing` or
+`transcription_required_missing` when the project requires an unavailable
+dependency. It
 returns `1 success_with_warnings` when diagnostics find issues and `0 success`
 when no issues are found.

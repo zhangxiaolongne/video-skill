@@ -58,6 +58,45 @@ def write_clean_source_ledger(root: Path) -> None:
     )
 
 
+def write_audio_source_ledger(root: Path) -> None:
+    source = SourceRecord(
+        source_id="audio-source-1",
+        locations=["media/audio.wav"],
+        primary_location="media/audio.wav",
+        content_hash="sha256:" + "2" * 64,
+        media_kind=MediaKind.audio,
+        media_probe=MediaProbe(
+            duration=2.0,
+            width=None,
+            height=None,
+            frame_rate=None,
+            video_codec=None,
+            audio_present=True,
+            audio_codec="pcm_s16le",
+        ),
+        source_type=Assertion(
+            value="interview",
+            method="test",
+            level=4,
+            confidence=1.0,
+        ),
+        rights_status=Assertion(
+            value=RightsStatus.owned,
+            method="test",
+            level=4,
+            confidence=1.0,
+        ),
+        provenance_confidence=1.0,
+        provenance_method="test",
+    )
+    data_dir = root / ".artist-portrait" / "data"
+    data_dir.mkdir(parents=True, exist_ok=True)
+    (data_dir / "sources.jsonl").write_text(
+        source.model_dump_json() + "\n",
+        encoding="utf-8",
+    )
+
+
 def project_fixture_with_scene_detection(value: str) -> str:
     return (FIXTURES / "valid_project.yaml").read_text(encoding="utf-8").replace(
         "scene_detection: auto",
@@ -918,6 +957,211 @@ def test_repeated_cli_scan_invalidates_transcribe_outputs(
 
     assert code == 1
     assert any(issue["code"] == "transcribe_invalidated" for issue in doctor_payload["issues"])
+
+
+def test_keyframes_requires_segment_first(tmp_path, capsys):
+    project_path = tmp_path / "project.yaml"
+    project_path.write_text(
+        project_fixture_with_scene_detection("off"),
+        encoding="utf-8",
+    )
+    assert main(["init", "--project", str(project_path), "--quiet"]) in (0, 1)
+    write_clean_source_ledger(tmp_path)
+
+    code = main(["keyframes", "--project", str(project_path)])
+    captured = capsys.readouterr()
+
+    assert code == 7
+    assert "keyframes requires segment" in captured.err
+
+
+def test_keyframes_missing_ffmpeg_returns_dependency_code(tmp_path, monkeypatch, capsys):
+    project_path = tmp_path / "project.yaml"
+    project_path.write_text(
+        project_fixture_with_scene_detection("off"),
+        encoding="utf-8",
+    )
+    assert main(["init", "--project", str(project_path), "--quiet"]) in (0, 1)
+    write_clean_source_ledger(tmp_path)
+    assert main(["segment", "--project", str(project_path), "--quiet"]) == 0
+    monkeypatch.setattr(
+        workspace,
+        "detect_capabilities",
+        lambda: Capabilities(ffmpeg=False, ffprobe=True),
+    )
+
+    code = main(["keyframes", "--project", str(project_path)])
+    captured = capsys.readouterr()
+
+    assert code == 4
+    assert "keyframes requires ffmpeg" in captured.err
+
+
+def test_keyframes_writes_manifest_and_cache(tmp_path, monkeypatch, capsys):
+    project_path = tmp_path / "project.yaml"
+    project_path.write_text(
+        project_fixture_with_scene_detection("off"),
+        encoding="utf-8",
+    )
+    assert main(["init", "--project", str(project_path), "--quiet"]) in (0, 1)
+    write_clean_source_ledger(tmp_path)
+    assert main(["segment", "--project", str(project_path), "--quiet"]) == 0
+    monkeypatch.setattr(
+        workspace,
+        "detect_capabilities",
+        lambda: Capabilities(ffmpeg=True, ffprobe=True),
+    )
+    monkeypatch.setattr(workspace, "ffmpeg_version", lambda: "ffmpeg-test")
+
+    def fake_extract_keyframe_image(*, source_path, output_path, timestamp_seconds):
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        output_path.write_bytes(b"fake-jpeg")
+
+    monkeypatch.setattr(workspace, "extract_keyframe_image", fake_extract_keyframe_image)
+
+    code = main(["keyframes", "--project", str(project_path), "--json"])
+    captured = capsys.readouterr()
+
+    assert code == 0
+    payload = json.loads(captured.out)
+    assert payload["output"] == ".artist-portrait/data/keyframes.jsonl"
+    keyframes_path = tmp_path / ".artist-portrait" / "data" / "keyframes.jsonl"
+    records = [
+        json.loads(line)
+        for line in keyframes_path.read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    ]
+    assert len(records) == 1
+    assert records[0]["method"] == "ffmpeg"
+    assert records[0]["method_version"] == "ffmpeg-test"
+    assert records[0]["timestamp_seconds"] == 1.0
+    assert (tmp_path / records[0]["image_path"]).exists()
+
+    code = main(["status", "--project", str(project_path), "--json"])
+    captured = capsys.readouterr()
+    status_payload = json.loads(captured.out)
+    assert code == 0
+    assert status_payload["summaries"]["keyframes"]["count"] == 1
+    assert status_payload["summaries"]["keyframes"]["missing_cache_count"] == 0
+
+
+def test_keyframes_audio_only_writes_empty_manifest_with_warning(tmp_path, capsys):
+    project_path = tmp_path / "project.yaml"
+    project_path.write_text(
+        project_fixture_with_scene_detection("off"),
+        encoding="utf-8",
+    )
+    assert main(["init", "--project", str(project_path), "--quiet"]) in (0, 1)
+    write_audio_source_ledger(tmp_path)
+    assert main(["segment", "--project", str(project_path), "--quiet"]) == 0
+
+    code = main(["keyframes", "--project", str(project_path), "--json"])
+    captured = capsys.readouterr()
+
+    assert code == 1
+    payload = json.loads(captured.out)
+    assert payload["warnings"] == ["no video clips available for keyframe extraction"]
+    keyframes_path = tmp_path / ".artist-portrait" / "data" / "keyframes.jsonl"
+    assert keyframes_path.exists()
+    assert keyframes_path.read_text(encoding="utf-8") == ""
+
+
+def test_invalid_keyframes_jsonl_and_missing_cache_are_reported(
+    tmp_path,
+    monkeypatch,
+    capsys,
+):
+    project_path = tmp_path / "project.yaml"
+    project_path.write_text(
+        project_fixture_with_scene_detection("off"),
+        encoding="utf-8",
+    )
+    assert main(["init", "--project", str(project_path), "--quiet"]) in (0, 1)
+    write_clean_source_ledger(tmp_path)
+    assert main(["segment", "--project", str(project_path), "--quiet"]) == 0
+    keyframes_path = tmp_path / ".artist-portrait" / "data" / "keyframes.jsonl"
+    keyframes_path.write_text('{"keyframe_id": "missing-required-fields"}\n', encoding="utf-8")
+
+    code = main(["status", "--project", str(project_path), "--json"])
+    captured = capsys.readouterr()
+    payload = json.loads(captured.out)
+
+    assert code == 0
+    assert payload["summaries"]["keyframes"]["valid"] is False
+    assert "invalid KeyframeRecord JSONL" in payload["summaries"]["keyframes"]["error"]
+
+    code = main(["doctor", "--project", str(project_path), "--json"])
+    captured = capsys.readouterr()
+    doctor_payload = json.loads(captured.out)
+
+    assert code == 1
+    assert any(issue["code"] == "keyframes_invalid" for issue in doctor_payload["issues"])
+
+    monkeypatch.setattr(
+        workspace,
+        "detect_capabilities",
+        lambda: Capabilities(ffmpeg=True, ffprobe=True),
+    )
+    monkeypatch.setattr(
+        workspace,
+        "extract_keyframe_image",
+        lambda *, source_path, output_path, timestamp_seconds: (
+            output_path.parent.mkdir(parents=True, exist_ok=True),
+            output_path.write_bytes(b"fake-jpeg"),
+        ),
+    )
+    assert main(["keyframes", "--project", str(project_path), "--quiet"]) == 0
+    record = json.loads(keyframes_path.read_text(encoding="utf-8").splitlines()[0])
+    (tmp_path / record["image_path"]).unlink()
+
+    code = main(["doctor", "--project", str(project_path), "--json"])
+    captured = capsys.readouterr()
+    doctor_payload = json.loads(captured.out)
+
+    assert code == 1
+    assert any(issue["code"] == "keyframe_cache_missing" for issue in doctor_payload["issues"])
+
+
+def test_repeated_segment_invalidates_keyframes(tmp_path, monkeypatch, capsys):
+    project_path = tmp_path / "project.yaml"
+    project_path.write_text(
+        project_fixture_with_scene_detection("off"),
+        encoding="utf-8",
+    )
+    assert main(["init", "--project", str(project_path), "--quiet"]) in (0, 1)
+    write_clean_source_ledger(tmp_path)
+    assert main(["segment", "--project", str(project_path), "--quiet"]) == 0
+    monkeypatch.setattr(
+        workspace,
+        "detect_capabilities",
+        lambda: Capabilities(ffmpeg=True, ffprobe=True),
+    )
+    monkeypatch.setattr(
+        workspace,
+        "extract_keyframe_image",
+        lambda *, source_path, output_path, timestamp_seconds: (
+            output_path.parent.mkdir(parents=True, exist_ok=True),
+            output_path.write_bytes(b"fake-jpeg"),
+        ),
+    )
+    assert main(["keyframes", "--project", str(project_path), "--quiet"]) == 0
+
+    write_clean_source_ledger(tmp_path)
+    sources_path = tmp_path / ".artist-portrait" / "data" / "sources.jsonl"
+    record = json.loads(sources_path.read_text(encoding="utf-8"))
+    record["media_probe"]["duration"] = 4.0
+    sources_path.write_text(json.dumps(record, sort_keys=True) + "\n", encoding="utf-8")
+
+    code = main(["segment", "--project", str(project_path), "--json"])
+    captured = capsys.readouterr()
+
+    assert code == 0
+    payload = json.loads(captured.out)
+    assert payload["invalidated_steps"] == ["keyframes"]
+    state_payload = json.loads(
+        (tmp_path / ".artist-portrait" / "state.json").read_text(encoding="utf-8")
+    )
+    assert state_payload["steps"]["keyframes"]["status"] == "invalidated"
 
 
 def test_map_writes_material_map_from_sources(tmp_path, monkeypatch, capsys):

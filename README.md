@@ -46,14 +46,18 @@ Local V0 media research foundation for the `artist-portrait-editor` skill.
 - [V0-005 Release Readiness](docs/V0_005_RELEASE_READINESS.md)
 - [V0-006 Transcription Gate](docs/V0_006_TRANSCRIPTION_GATE.md)
 - [V0-006 Release Readiness](docs/V0_006_RELEASE_READINESS.md)
+- [V0-007 Keyframe Cache Gate](docs/V0_007_KEYFRAME_CACHE_GATE.md)
+- [V0-007 Release Readiness](docs/V0_007_RELEASE_READINESS.md)
 - [Non Goals](docs/NON_GOALS.md)
 
 ## Current Gate
 
-Current V0-006 local transcription gate work allows deterministic project
+Current V0-007 keyframe cache gate work allows deterministic project
 setup, local media scanning, fixed-window clip segmentation, optional
 PySceneDetect video scene segmentation, local-only faster-whisper transcription
-when available, source/clip/transcript ledger operations, and
+when available, ffmpeg midpoint keyframe extraction for video clips,
+source/clip/transcript/keyframe ledger operations, rebuildable keyframe cache,
+and
 read-only/reporting outputs:
 
 ```text
@@ -67,16 +71,18 @@ project.yaml
 -> fixed-window or PySceneDetect clip ledger
 -> clip report from clips.jsonl
 -> transcript ledger
+-> keyframe ledger
+-> rebuildable keyframe cache
 -> minimal material map from sources.jsonl
 -> minimal project risk report from sources.jsonl
 -> run report
 -> fixed exit codes
 ```
 
-Visual analysis, embeddings, creative proposal generation, timeline generation,
-preview rendering, BGM selection or beat analysis, model calls, image
-generation/editing, remote ASR/model downloads, and network search remain out
-of scope.
+OpenCV/vision analysis, embeddings, creative proposal generation, timeline
+generation, preview rendering, BGM selection or beat analysis, model calls,
+image generation/editing, remote ASR/model downloads, and network search remain
+out of scope.
 
 ## Local Setup
 
@@ -96,6 +102,7 @@ python3 -m venv .venv
 .venv/bin/artist-portrait scan --project ./project.yaml
 .venv/bin/artist-portrait segment --project ./project.yaml
 .venv/bin/artist-portrait transcribe --project ./project.yaml
+.venv/bin/artist-portrait keyframes --project ./project.yaml
 .venv/bin/artist-portrait map --project ./project.yaml
 .venv/bin/artist-portrait review --project ./project.yaml --scope project
 .venv/bin/artist-portrait review --project ./project.yaml --scope all
