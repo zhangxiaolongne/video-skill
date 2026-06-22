@@ -56,17 +56,20 @@ Local V0 media research foundation for the `artist-portrait-editor` skill.
 - [V0-010a Release Readiness](docs/V0_010A_RELEASE_READINESS.md)
 - [V0-010b Proposal Context Gate](docs/V0_010B_PROPOSAL_CONTEXT_GATE.md)
 - [V0-010b Release Readiness](docs/V0_010B_RELEASE_READINESS.md)
+- [V0-010c Text Model Gate](docs/V0_010C_TEXT_MODEL_GATE.md)
+- [V0-010c Release Readiness](docs/V0_010C_RELEASE_READINESS.md)
 - [Non Goals](docs/NON_GOALS.md)
 
 ## Current Gate
 
-Current V0-010b proposal context gate work allows deterministic project
+Current V0-010c text model gate contract work allows deterministic project
 setup, local media scanning, fixed-window clip segmentation, optional
 PySceneDetect video scene segmentation, local-only faster-whisper transcription
 when available, ffmpeg midpoint keyframe extraction for video clips,
 source/clip/transcript/keyframe/analysis ledger operations, rebuildable
 keyframe cache, analysis-led material maps, deterministic proposal context
-packets, proposal contract validation, and read-only/reporting outputs:
+packets, text-model gate packets, proposal contract validation, and
+read-only/reporting outputs:
 
 ```text
 project.yaml
@@ -85,6 +88,7 @@ project.yaml
 -> analysis report
 -> material map from sources.jsonl and analysis.jsonl
 -> proposal_context.json from local ledgers
+-> text_model_gate.json from project policy and detected capabilities
 -> proposal readiness gate without fake proposal generation
 -> minimal project risk report from sources.jsonl
 -> run report

@@ -7,6 +7,7 @@ from artist_portrait_editor.models.analysis import AnalysisRecord
 from artist_portrait_editor.models.clip import ClipRecord
 from artist_portrait_editor.models.config import ProjectConfig
 from artist_portrait_editor.models.keyframe import KeyframeRecord
+from artist_portrait_editor.models.model_gate import TextModelGate
 from artist_portrait_editor.models.proposal import ProposalSet
 from artist_portrait_editor.models.proposal_context import ProposalContext
 from artist_portrait_editor.models.source import SourceRecord
@@ -26,6 +27,7 @@ def write_schema_files(output_dir: Path) -> None:
         "clip_record.schema.json": ClipRecord.model_json_schema(),
         "keyframe_record.schema.json": KeyframeRecord.model_json_schema(),
         "transcript_record.schema.json": TranscriptRecord.model_json_schema(),
+        "text_model_gate.schema.json": TextModelGate.model_json_schema(),
     }
     for filename, schema in schemas.items():
         (output_dir / filename).write_text(

@@ -64,6 +64,7 @@ def check_schema_drift() -> None:
             "source_record.schema.json",
             "keyframe_record.schema.json",
             "transcript_record.schema.json",
+            "text_model_gate.schema.json",
         ):
             committed = ROOT / "schemas" / name
             generated = tmp_path / name
@@ -118,30 +119,30 @@ def check_gate_consistency() -> None:
         "master": ROOT / "artist_portrait_editor_revision5_optimized.md",
         "README.md": ROOT / "README.md",
         "DEVELOPMENT_PROGRESS.md": ROOT / "docs" / "DEVELOPMENT_PROGRESS.md",
-        "V0_010B_PROPOSAL_CONTEXT_GATE.md": ROOT
+        "V0_010C_TEXT_MODEL_GATE.md": ROOT
         / "docs"
-        / "V0_010B_PROPOSAL_CONTEXT_GATE.md",
+        / "V0_010C_TEXT_MODEL_GATE.md",
     }
     content = {name: path.read_text(encoding="utf-8") for name, path in docs.items()}
     if (
-        "Current gate: V0-010b proposal context gate only."
+        "Current gate: V0-010c text model gate contract only."
         not in content["AGENTS.md"]
     ):
-        raise SystemExit("AGENTS.md current gate is not V0-010b proposal context gate")
-    if "V0-010b 提案上下文闸门" not in content["master"]:
-        raise SystemExit("master document current gate is not V0-010b proposal context gate")
-    if "Current V0-010b proposal context gate work" not in content["README.md"]:
-        raise SystemExit("README current gate is not V0-010b proposal context gate")
+        raise SystemExit("AGENTS.md current gate is not V0-010c text model gate")
+    if "V0-010c 文本模型闸门契约" not in content["master"]:
+        raise SystemExit("master document current gate is not V0-010c text model gate")
+    if "Current V0-010c text model gate contract work" not in content["README.md"]:
+        raise SystemExit("README current gate is not V0-010c text model gate")
     if (
-        "Current local gate: V0-010b proposal context gate only"
+        "Current local gate: V0-010c text model gate contract only"
         not in content["DEVELOPMENT_PROGRESS.md"]
     ):
         raise SystemExit("development progress current gate is stale")
     if (
-        "V0-010b opens the deterministic proposal context packet"
-        not in content["V0_010B_PROPOSAL_CONTEXT_GATE.md"]
+        "V0-010c opens the deterministic text-model gate contract"
+        not in content["V0_010C_TEXT_MODEL_GATE.md"]
     ):
-        raise SystemExit("V0-010b proposal context gate doc is missing active gate")
+        raise SystemExit("V0-010c text model gate doc is missing active gate")
 
 
 def write_sine_wav(path: Path, *, seconds: float = 0.25, sample_rate: int = 8000) -> None:
@@ -243,8 +244,11 @@ def check_real_scan_if_available() -> None:
             expect=4,
         )
         context = tmp_path / ".artist-portrait" / "data" / "proposal_context.json"
+        gate = tmp_path / ".artist-portrait" / "data" / "text_model_gate.json"
         if not context.exists():
             raise SystemExit("blocked propose did not write proposal_context.json")
+        if not gate.exists():
+            raise SystemExit("blocked propose did not write text_model_gate.json")
         context_payload = json.loads(context.read_text(encoding="utf-8"))
         if context_payload.get("proposal_ids_required") != [
             "proposal_safe",
@@ -436,18 +440,25 @@ def check_local_foundation_outputs() -> None:
         propose_payload = json.loads(propose.stdout)
         if propose_payload.get("status") != "blocked":
             raise SystemExit("propose did not report blocked status")
-        if ".artist-portrait/data/proposal_context.json" not in propose_payload.get(
-            "output_refs", []
-        ):
+        output_refs = propose_payload.get("output_refs", [])
+        if ".artist-portrait/data/proposal_context.json" not in output_refs:
             raise SystemExit("propose did not report proposal_context output ref")
+        if ".artist-portrait/data/text_model_gate.json" not in output_refs:
+            raise SystemExit("propose did not report text_model_gate output ref")
         if "no fake proposals" not in propose_payload.get("error", ""):
             raise SystemExit("propose did not explain fake proposals were not generated")
         context = tmp_path / ".artist-portrait" / "data" / "proposal_context.json"
+        gate = tmp_path / ".artist-portrait" / "data" / "text_model_gate.json"
         if not context.exists():
             raise SystemExit("blocked propose did not write proposal_context.json")
+        if not gate.exists():
+            raise SystemExit("blocked propose did not write text_model_gate.json")
         context_payload = json.loads(context.read_text(encoding="utf-8"))
         if not context_payload.get("bgm_requirements"):
             raise SystemExit("proposal_context did not carry BGM requirements")
+        gate_payload = json.loads(gate.read_text(encoding="utf-8"))
+        if gate_payload.get("status") != "blocked":
+            raise SystemExit("text_model_gate did not record blocked status")
         if (tmp_path / ".artist-portrait" / "data" / "proposals.json").exists():
             raise SystemExit("blocked propose wrote proposals.json")
         if (tmp_path / "output" / "proposals.md").exists():

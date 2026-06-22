@@ -111,6 +111,13 @@ def project_fixture_with_transcription(value: str) -> str:
     )
 
 
+def project_fixture_with_remote_text_model_allowed() -> str:
+    return (FIXTURES / "valid_project.yaml").read_text(encoding="utf-8").replace(
+        "allow_remote_text_model: false",
+        "allow_remote_text_model: true",
+    )
+
+
 def test_validate_valid_project(capsys):
     code = main(["validate", "--project", str(FIXTURES / "valid_project.yaml")])
     captured = capsys.readouterr()
@@ -147,6 +154,7 @@ def test_init_creates_only_stage_a_artifacts(tmp_path):
         ".artist-portrait/data/transcripts.jsonl",
         ".artist-portrait/data/relations.jsonl",
         ".artist-portrait/data/proposal_context.json",
+        ".artist-portrait/data/text_model_gate.json",
         ".artist-portrait/data/proposals.json",
         "output/scan_report.md",
         "output/clip_report.md",
@@ -1431,8 +1439,13 @@ def test_propose_without_text_model_blocks_without_fake_outputs(
     assert code == 4
     payload = json.loads(captured.out)
     assert payload["status"] == "blocked"
-    assert payload["output_refs"] == [".artist-portrait/data/proposal_context.json"]
-    assert "text_model_missing" in payload["warnings"][0]
+    assert payload["output_refs"] == [
+        ".artist-portrait/data/proposal_context.json",
+        ".artist-portrait/data/text_model_gate.json",
+    ]
+    assert "text_model_gate_blocked" in payload["warnings"][0]
+    assert "remote_text_model_not_allowed" in payload["warnings"][0]
+    assert "text_model_capability_missing" in payload["warnings"][0]
     assert "no fake proposals" in payload["error"]
     context_path = tmp_path / ".artist-portrait" / "data" / "proposal_context.json"
     assert context_path.exists()
@@ -1447,6 +1460,16 @@ def test_propose_without_text_model_blocks_without_fake_outputs(
     assert context_payload["clips"][0]["clip_id"] == context_payload["analyses"][0]["clip_id"]
     assert context_payload["bgm_requirements"]
     assert "full_creative_proposal_generation" in context_payload["blocked_capabilities"]
+    gate_path = tmp_path / ".artist-portrait" / "data" / "text_model_gate.json"
+    assert gate_path.exists()
+    gate_payload = json.loads(gate_path.read_text(encoding="utf-8"))
+    assert gate_payload["status"] == "blocked"
+    assert gate_payload["remote_text_model_allowed"] is False
+    assert gate_payload["text_model_capability"] is False
+    assert gate_payload["reasons"] == [
+        "remote_text_model_not_allowed",
+        "text_model_capability_missing",
+    ]
     assert not (tmp_path / ".artist-portrait" / "data" / "proposals.json").exists()
     assert not (tmp_path / "output" / "proposals.md").exists()
     state_payload = json.loads(
@@ -1454,8 +1477,52 @@ def test_propose_without_text_model_blocks_without_fake_outputs(
     )
     assert state_payload["steps"]["propose"]["status"] == "blocked"
     assert state_payload["steps"]["propose"]["output_refs"] == [
-        ".artist-portrait/data/proposal_context.json"
+        ".artist-portrait/data/proposal_context.json",
+        ".artist-portrait/data/text_model_gate.json",
     ]
+
+
+def test_propose_with_ready_text_model_gate_still_does_not_generate(
+    tmp_path,
+    monkeypatch,
+    capsys,
+):
+    project_path = tmp_path / "project.yaml"
+    project_path.write_text(
+        project_fixture_with_remote_text_model_allowed().replace(
+            "scene_detection: auto",
+            "scene_detection: off",
+        ),
+        encoding="utf-8",
+    )
+    assert main(["init", "--project", str(project_path), "--quiet"]) in (0, 1)
+    write_clean_source_ledger(tmp_path)
+    assert main(["segment", "--project", str(project_path), "--quiet"]) == 0
+    assert main(["analyze", "--project", str(project_path), "--quiet"]) == 0
+    assert main(["map", "--project", str(project_path), "--quiet"]) == 0
+    monkeypatch.setattr(
+        workspace,
+        "detect_capabilities",
+        lambda: Capabilities(text_model=True),
+    )
+
+    code = main(["propose", "--project", str(project_path), "--json"])
+    captured = capsys.readouterr()
+
+    assert code == 4
+    payload = json.loads(captured.out)
+    assert payload["status"] == "blocked"
+    assert "proposal_generation_not_implemented" in payload["warnings"][0]
+    assert "generation is not implemented" in payload["error"]
+    gate_payload = json.loads(
+        (tmp_path / ".artist-portrait" / "data" / "text_model_gate.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    assert gate_payload["status"] == "ready"
+    assert gate_payload["reasons"] == []
+    assert not (tmp_path / ".artist-portrait" / "data" / "proposals.json").exists()
+    assert not (tmp_path / "output" / "proposals.md").exists()
 
 
 def test_invalid_proposals_json_status_and_doctor(tmp_path, capsys):
@@ -1514,6 +1581,39 @@ def test_invalid_proposal_context_status_and_doctor(tmp_path, capsys):
     assert code == 1
     assert any(
         issue["code"] == "proposal_context_invalid"
+        for issue in doctor_payload["issues"]
+    )
+
+
+def test_invalid_text_model_gate_status_and_doctor(tmp_path, capsys):
+    project_path = tmp_path / "project.yaml"
+    project_path.write_text(
+        project_fixture_with_scene_detection("off"),
+        encoding="utf-8",
+    )
+    assert main(["init", "--project", str(project_path), "--quiet"]) in (0, 1)
+    write_clean_source_ledger(tmp_path)
+    gate_path = tmp_path / ".artist-portrait" / "data" / "text_model_gate.json"
+    gate_path.write_text('{"gate_id": "missing-required-fields"}\n', encoding="utf-8")
+
+    code = main(["status", "--project", str(project_path), "--json"])
+    captured = capsys.readouterr()
+    status_payload = json.loads(captured.out)
+
+    assert code == 0
+    assert status_payload["summaries"]["text_model_gate"]["valid"] is False
+    assert (
+        "invalid TextModelGate JSON"
+        in status_payload["summaries"]["text_model_gate"]["error"]
+    )
+
+    code = main(["doctor", "--project", str(project_path), "--json"])
+    captured = capsys.readouterr()
+    doctor_payload = json.loads(captured.out)
+
+    assert code == 1
+    assert any(
+        issue["code"] == "text_model_gate_invalid"
         for issue in doctor_payload["issues"]
     )
 

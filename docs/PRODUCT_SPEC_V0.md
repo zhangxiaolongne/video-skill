@@ -10,7 +10,7 @@ V0 has two future modes:
   `core_mode` data exists.
 
 Current repository implementation has entered deterministic core-mode
-foundation work only. The active gate is V0-010b proposal context gate:
+foundation work only. The active gate is V0-010c text model gate contract:
 
 ```text
 project.yaml
@@ -27,6 +27,7 @@ project.yaml
 -> evidence-only analysis ledger and report
 -> analysis-led material map
 -> deterministic proposal context packet
+-> deterministic text-model gate packet
 -> proposal readiness gate without fake proposal generation
 -> minimal project risk report
 -> run report

@@ -38,6 +38,7 @@ from artist_portrait_editor.models.clip import (
     ClipRiskFlag,
 )
 from artist_portrait_editor.models.keyframe import KeyframeRecord, KeyframeRiskFlag
+from artist_portrait_editor.models.model_gate import TextModelGate, TextModelGateStatus
 from artist_portrait_editor.models.proposal import ProposalSet
 from artist_portrait_editor.models.proposal_context import (
     ProposalAnalysisContext,
@@ -389,6 +390,13 @@ def render_status_panel(payload: dict) -> str:
         lines.append("proposal_context: invalid")
     else:
         lines.append("proposal_context: missing")
+    text_model_gate = summaries.get("text_model_gate") or {}
+    if text_model_gate.get("exists") and text_model_gate.get("valid", True):
+        lines.append(f"text_model_gate: {text_model_gate.get('status')}")
+    elif text_model_gate.get("exists"):
+        lines.append("text_model_gate: invalid")
+    else:
+        lines.append("text_model_gate: missing")
     proposals = summaries.get("proposals") or {}
     if proposals.get("exists") and proposals.get("valid", True):
         lines.append(f"proposals: {proposals.get('count', 0)}")
@@ -621,6 +629,9 @@ def doctor_project_payload(project_path: Path) -> dict:
     proposal_context = proposal_context_summary(
         root / WORKSPACE_DIR / DATA_DIR / "proposal_context.json"
     )
+    text_model_gate = text_model_gate_summary(
+        root / WORKSPACE_DIR / DATA_DIR / "text_model_gate.json"
+    )
     if (
         sources.get("valid") is True
         and proposal_context.get("valid") is False
@@ -633,6 +644,22 @@ def doctor_project_payload(project_path: Path) -> dict:
                 detail=str(proposal_context.get("error") or "proposal context is invalid"),
                 next_action=(
                     f"fix {context_path.relative_to(root).as_posix()} or rerun "
+                    f"artist-portrait propose --project {project_path}"
+                ),
+            )
+        )
+    if (
+        sources.get("valid") is True
+        and text_model_gate.get("valid") is False
+    ):
+        gate_path = root / WORKSPACE_DIR / DATA_DIR / "text_model_gate.json"
+        issues.append(
+            workspace_issue(
+                code="text_model_gate_invalid",
+                severity="error",
+                detail=str(text_model_gate.get("error") or "text model gate is invalid"),
+                next_action=(
+                    f"fix {gate_path.relative_to(root).as_posix()} or rerun "
                     f"artist-portrait propose --project {project_path}"
                 ),
             )
@@ -657,14 +684,28 @@ def doctor_project_payload(project_path: Path) -> dict:
         sources.get("valid") is True
         and output_summary(root / "output" / "material_map.md").get("exists")
         and state.steps.get("propose", StepLedgerEntry()).status == StepStatus.pending
-        and not current_capabilities.text_model
+        and (
+            not config.data_policy.allow_remote_text_model
+            or not current_capabilities.text_model
+            or config.data_policy.include_absolute_paths_in_remote_requests
+        )
     ):
+        gate_reasons = []
+        if not config.data_policy.allow_remote_text_model:
+            gate_reasons.append("remote_text_model_not_allowed")
+        if not current_capabilities.text_model:
+            gate_reasons.append("text_model_capability_missing")
+        if config.data_policy.include_absolute_paths_in_remote_requests:
+            gate_reasons.append("absolute_paths_in_remote_requests_enabled")
         issues.append(
             workspace_issue(
                 code="propose_text_model_missing",
                 severity="warning",
-                detail="material map exists but proposal generation needs a text model",
-                next_action="enable a text model gate before running artist-portrait propose",
+                detail=(
+                    "material map exists but proposal text-model gate is blocked: "
+                    + ", ".join(gate_reasons)
+                ),
+                next_action="approve and configure the text-model proposal gate before generation",
             )
         )
     if (
@@ -770,6 +811,7 @@ def artifact_statuses(root: Path) -> dict[str, dict]:
         "analysis": root / WORKSPACE_DIR / DATA_DIR / "analysis.jsonl",
         "relations": root / WORKSPACE_DIR / DATA_DIR / "relations.jsonl",
         "proposal_context": root / WORKSPACE_DIR / DATA_DIR / "proposal_context.json",
+        "text_model_gate": root / WORKSPACE_DIR / DATA_DIR / "text_model_gate.json",
         "proposals_json": root / WORKSPACE_DIR / DATA_DIR / "proposals.json",
         "run_report": root / "output" / "run_report.md",
         "scan_report": root / "output" / "scan_report.md",
@@ -843,6 +885,7 @@ def status_summaries(root: Path) -> dict:
     risk_report_path = root / "output" / "risk_report.md"
     proposals_path = root / WORKSPACE_DIR / DATA_DIR / "proposals.json"
     proposal_context_path = root / WORKSPACE_DIR / DATA_DIR / "proposal_context.json"
+    text_model_gate_path = root / WORKSPACE_DIR / DATA_DIR / "text_model_gate.json"
     return {
         "sources": source_summary(sources_path),
         "clips": clip_summary(clips_path),
@@ -854,6 +897,7 @@ def status_summaries(root: Path) -> dict:
         "analysis_report": output_summary(analysis_report_path),
         "material_map": output_summary(material_map_path),
         "proposal_context": proposal_context_summary(proposal_context_path),
+        "text_model_gate": text_model_gate_summary(text_model_gate_path),
         "proposals": proposal_summary(proposals_path),
         "risk_report": output_summary(risk_report_path),
     }
@@ -1058,6 +1102,13 @@ def read_proposal_context_json(path: Path) -> ProposalContext:
         raise WorkspacePrerequisiteError(f"invalid ProposalContext JSON: {exc}") from exc
 
 
+def read_text_model_gate_json(path: Path) -> TextModelGate:
+    try:
+        return TextModelGate.model_validate_json(path.read_text(encoding="utf-8"))
+    except ValueError as exc:
+        raise WorkspacePrerequisiteError(f"invalid TextModelGate JSON: {exc}") from exc
+
+
 def transcript_summary(path: Path) -> dict:
     if not path.exists():
         return {"exists": False}
@@ -1184,9 +1235,36 @@ def proposal_context_summary(path: Path) -> dict:
     }
 
 
+def text_model_gate_summary(path: Path) -> dict:
+    if not path.exists():
+        return {"exists": False}
+    try:
+        gate = read_text_model_gate_json(path)
+    except Exception as exc:
+        return {
+            "exists": True,
+            "valid": False,
+            "error": str(exc),
+        }
+    return {
+        "exists": True,
+        "valid": True,
+        "gate_id": gate.gate_id,
+        "status": gate.status.value,
+        "reasons": gate.reasons,
+        "remote_text_model_allowed": gate.remote_text_model_allowed,
+        "text_model_capability": gate.text_model_capability,
+    }
+
+
 def stable_context_id(project_id: str, input_fingerprint: str) -> str:
     payload = f"{project_id}:{input_fingerprint}"
     return "ctx_" + hashlib.sha256(payload.encode("utf-8")).hexdigest()[:24]
+
+
+def stable_gate_id(project_id: str, proposal_context_fingerprint: str) -> str:
+    payload = f"{project_id}:{proposal_context_fingerprint}"
+    return "gate_" + hashlib.sha256(payload.encode("utf-8")).hexdigest()[:24]
 
 
 def pending_visual_fields(analysis: AnalysisRecord) -> list[str]:
@@ -1317,6 +1395,54 @@ def write_proposal_context_json(root: Path, context: ProposalContext) -> Path:
     tmp = output.with_suffix(".json.tmp")
     tmp.write_text(
         json.dumps(context.model_dump(mode="json"), ensure_ascii=False, indent=2, sort_keys=True)
+        + "\n",
+        encoding="utf-8",
+    )
+    tmp.replace(output)
+    return output
+
+
+def build_text_model_gate(
+    *,
+    config,
+    capabilities: Capabilities,
+    proposal_context_ref: str,
+    proposal_context_fingerprint: str,
+) -> TextModelGate:
+    reasons: list[str] = []
+    next_steps: list[str] = []
+    if not config.data_policy.allow_remote_text_model:
+        reasons.append("remote_text_model_not_allowed")
+        next_steps.append("set data_policy.allow_remote_text_model only after a proposal model gate is approved")
+    if not capabilities.text_model:
+        reasons.append("text_model_capability_missing")
+        next_steps.append("provide an approved local or remote text model adapter")
+    if config.data_policy.include_absolute_paths_in_remote_requests:
+        reasons.append("absolute_paths_in_remote_requests_enabled")
+        next_steps.append("disable absolute project paths for proposal model requests")
+    status = TextModelGateStatus.ready if not reasons else TextModelGateStatus.blocked
+    return TextModelGate(
+        gate_id=stable_gate_id(config.project.id, proposal_context_fingerprint),
+        project_id=config.project.id,
+        proposal_context_ref=proposal_context_ref,
+        proposal_context_fingerprint=proposal_context_fingerprint,
+        status=status,
+        remote_text_model_allowed=config.data_policy.allow_remote_text_model,
+        text_model_capability=capabilities.text_model,
+        include_absolute_paths_in_remote_requests=(
+            config.data_policy.include_absolute_paths_in_remote_requests
+        ),
+        reasons=reasons,
+        required_next_steps=next_steps,
+    )
+
+
+def write_text_model_gate_json(root: Path, gate: TextModelGate) -> Path:
+    output = root / WORKSPACE_DIR / DATA_DIR / "text_model_gate.json"
+    output.parent.mkdir(parents=True, exist_ok=True)
+    tmp = output.with_suffix(".json.tmp")
+    tmp.write_text(
+        json.dumps(gate.model_dump(mode="json"), ensure_ascii=False, indent=2, sort_keys=True)
         + "\n",
         encoding="utf-8",
     )
@@ -2768,17 +2894,29 @@ def propose_workspace(project_path: Path) -> ProjectState:
 
     capabilities = detect_capabilities()
     state.capabilities = capabilities
+    text_model_gate = build_text_model_gate(
+        config=config,
+        capabilities=capabilities,
+        proposal_context_ref=context_ref,
+        proposal_context_fingerprint=fingerprint_file(context_path),
+    )
+    gate_path = write_text_model_gate_json(root, text_model_gate)
+    gate_ref = gate_path.relative_to(root).as_posix()
     run_id = new_run_id()
     warnings: list[str] = []
     output_dir = root / config.paths.output_dir
-    if not capabilities.text_model:
+    if text_model_gate.status == TextModelGateStatus.blocked:
         warnings = [
-            "text_model_missing: proposal generation blocked; fake proposals were not generated"
+            (
+                "text_model_gate_blocked: "
+                + ", ".join(text_model_gate.reasons)
+                + "; fake proposals were not generated"
+            )
         ]
         state.steps["propose"] = StepLedgerEntry(
             status=StepStatus.blocked,
             input_fingerprint=input_fingerprint,
-            output_refs=[context_ref],
+            output_refs=[context_ref, gate_ref],
             last_run_id=run_id,
             warnings=warnings,
         )
@@ -2794,20 +2932,55 @@ def propose_workspace(project_path: Path) -> ProjectState:
             {
                 "step": "propose",
                 "status": StepStatus.blocked.value,
-                "output_refs": [context_ref],
+                "output_refs": [context_ref, gate_ref],
                 "proposal_context": context_ref,
-                "reason": "text_model_missing",
+                "text_model_gate": gate_ref,
+                "reasons": text_model_gate.reasons,
+                "reason": "text_model_gate_blocked",
             },
         )
         write_json(runs_dir / "warnings.json", warnings)
-        write_json(runs_dir / "errors.json", ["text_model_missing"])
+        write_json(runs_dir / "errors.json", text_model_gate.reasons)
         (runs_dir / "log.txt").write_text("propose blocked\n", encoding="utf-8")
         save_state(root, state)
         write_run_report(output_dir, state, warnings)
         raise WorkspaceDependencyError(
-            "propose requires an approved text model; no fake proposals were generated"
+            "propose requires an approved text model gate; no fake proposals were generated"
         )
 
+    warnings = [
+        "proposal_generation_not_implemented: text model gate is ready but generation remains closed"
+    ]
+    state.steps["propose"] = StepLedgerEntry(
+        status=StepStatus.blocked,
+        input_fingerprint=input_fingerprint,
+        output_refs=[context_ref, gate_ref],
+        last_run_id=run_id,
+        warnings=warnings,
+    )
+    state.latest_run_id = run_id
+    state.updated_at = utc_now()
+    state.overall_status = OverallStatus.blocked
+    runs_dir = root / WORKSPACE_DIR / RUNS_DIR / run_id
+    runs_dir.mkdir(parents=True, exist_ok=True)
+    write_json(runs_dir / "command.json", {"command": "propose", "project": str(project_path)})
+    write_json(runs_dir / "environment.json", environment_snapshot())
+    write_json(
+        runs_dir / "step_result.json",
+        {
+            "step": "propose",
+            "status": StepStatus.blocked.value,
+            "output_refs": [context_ref, gate_ref],
+            "proposal_context": context_ref,
+            "text_model_gate": gate_ref,
+            "reason": "proposal_generation_not_implemented",
+        },
+    )
+    write_json(runs_dir / "warnings.json", warnings)
+    write_json(runs_dir / "errors.json", ["proposal_generation_not_implemented"])
+    (runs_dir / "log.txt").write_text("propose blocked\n", encoding="utf-8")
+    save_state(root, state)
+    write_run_report(output_dir, state, warnings)
     raise WorkspaceDependencyError(
         "proposal context was prepared, but generation is not implemented until the text-model proposal gate opens"
     )

@@ -15,6 +15,7 @@ Current committed schemas:
 - `schemas/proposal_context.schema.json`
 - `schemas/proposal_set.schema.json`
 - `schemas/source_record.schema.json`
+- `schemas/text_model_gate.schema.json`
 - `schemas/transcript_record.schema.json`
 
 Current contract tests assert that committed schemas match live Pydantic schema
@@ -75,6 +76,13 @@ generation is attempted. It contains deterministic project brief, content
 policy, source/clip/analysis summaries, evidence refs, required proposal IDs,
 BGM requirements, and blocked capabilities. It is not a creative proposal.
 
+`TextModelGate` is implemented for the V0-010c text model gate contract and has
+a committed schema at `schemas/text_model_gate.schema.json`. It is written to
+`.artist-portrait/data/text_model_gate.json` by `propose` after
+`proposal_context.json`. It records project text-model policy, detected
+text-model capability, absolute-path policy, status, blocking reasons, and
+required next steps. It does not execute or authorize a model call by itself.
+
 `ProposalSet` is implemented for the V0-010a proposal readiness gate and has a
 committed schema at `schemas/proposal_set.schema.json`. A future approved
 proposal generation gate may write `.artist-portrait/data/proposals.json`, but
@@ -109,6 +117,7 @@ Current stable diagnostic codes include:
 - `keyframe_cache_missing`
 - `analysis_invalid`
 - `proposal_context_invalid`
+- `text_model_gate_invalid`
 - `proposals_invalid`
 - `propose_text_model_missing`
 - `scene_detection_required_missing`

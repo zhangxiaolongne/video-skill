@@ -5,6 +5,7 @@ from artist_portrait_editor.models.analysis import AnalysisRecord
 from artist_portrait_editor.models.clip import ClipRecord
 from artist_portrait_editor.models.config import ProjectConfig
 from artist_portrait_editor.models.keyframe import KeyframeRecord
+from artist_portrait_editor.models.model_gate import TextModelGate
 from artist_portrait_editor.models.proposal import ProposalSet
 from artist_portrait_editor.models.proposal_context import ProposalContext
 from artist_portrait_editor.models.source import SourceRecord
@@ -19,6 +20,7 @@ def test_schema_generation_from_pydantic_models():
     keyframe_schema = KeyframeRecord.model_json_schema()
     proposal_schema = ProposalSet.model_json_schema()
     proposal_context_schema = ProposalContext.model_json_schema()
+    text_model_gate_schema = TextModelGate.model_json_schema()
     state_schema = ProjectState.model_json_schema()
     source_schema = SourceRecord.model_json_schema()
     transcript_schema = TranscriptRecord.model_json_schema()
@@ -29,6 +31,7 @@ def test_schema_generation_from_pydantic_models():
     assert keyframe_schema["title"] == "KeyframeRecord"
     assert proposal_schema["title"] == "ProposalSet"
     assert proposal_context_schema["title"] == "ProposalContext"
+    assert text_model_gate_schema["title"] == "TextModelGate"
     assert state_schema["title"] == "ProjectState"
     assert source_schema["title"] == "SourceRecord"
     assert transcript_schema["title"] == "TranscriptRecord"
@@ -38,6 +41,7 @@ def test_schema_generation_from_pydantic_models():
     assert "keyframe_id" in keyframe_schema["properties"]
     assert "proposals" in proposal_schema["properties"]
     assert "bgm_requirements" in proposal_context_schema["properties"]
+    assert "reasons" in text_model_gate_schema["properties"]
     assert "steps" in state_schema["properties"]
     assert "source_id" in source_schema["properties"]
     assert "transcript_id" in transcript_schema["properties"]
@@ -72,6 +76,9 @@ def test_committed_schemas_match_pydantic_generation():
     committed_transcript = json.loads(
         (schema_dir / "transcript_record.schema.json").read_text(encoding="utf-8")
     )
+    committed_text_model_gate = json.loads(
+        (schema_dir / "text_model_gate.schema.json").read_text(encoding="utf-8")
+    )
 
     assert committed_analysis == json.loads(
         json.dumps(AnalysisRecord.model_json_schema(), sort_keys=True)
@@ -99,4 +106,7 @@ def test_committed_schemas_match_pydantic_generation():
     )
     assert committed_transcript == json.loads(
         json.dumps(TranscriptRecord.model_json_schema(), sort_keys=True)
+    )
+    assert committed_text_model_gate == json.loads(
+        json.dumps(TextModelGate.model_json_schema(), sort_keys=True)
     )

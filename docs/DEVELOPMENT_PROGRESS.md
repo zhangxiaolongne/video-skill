@@ -34,7 +34,7 @@ When a user requirement changes long-term product behavior, update both files:
 - Canonical skill name: `artist-portrait-editor`
 - Canonical install directory: `artist-portrait-editor`
 - Distribution repository: `video-skill`
-- Current local gate: V0-010b proposal context gate only
+- Current local gate: V0-010c text model gate contract only
 
 ## Completed Local Versions
 
@@ -103,6 +103,11 @@ When a user requirement changes long-term product behavior, update both files:
   dependency error.
 - V0-010f: proposal context status, doctor diagnostics, BGM requirements, and
   `run_checks.py` coverage.
+- V0-010g: `TextModelGate` schema and committed JSON Schema.
+- V0-010h: blocked `propose` now writes deterministic
+  `.artist-portrait/data/text_model_gate.json` with policy/capability reasons.
+- V0-010i: even a ready text-model gate remains blocked until ProposalSet
+  generation is explicitly opened and tested.
 
 ## Current Hard Boundaries
 
@@ -138,7 +143,7 @@ Tactical rule for future batches:
 - use third-party outputs as evidence with provenance, not unreviewed truth
 - keep config gates, failure modes, and review rules around every non-local or
   model-backed capability
-- keep current V0-010b bounded to existing local ledgers plus proposal
+- keep current V0-010c bounded to existing local ledgers plus proposal
   readiness checks; keyframes are
   visual evidence references, not visual classification
 
@@ -174,10 +179,10 @@ carried into the future proposal, timeline, review, and preview gates.
 ## Next Likely Batch
 
 Next action should plan the real V0-010 proposal generation gate without
-confusing it with V0-010b context preparation. The big-version direction is
+confusing it with V0-010c text-model gate contract. The big-version direction is
 evidence-grounded creative proposals that account for BGM strategy, target
 output, text, pacing, transitions, and evidence traceability. The next small
-batch should first define the approved text-model execution gate, generated
-`ProposalSet` validation, evidence citation validation, and review rules. Do
-not open timeline, BGM fitting, preview, network, OpenCV, vision, image
-generation/editing, or model-free template proposal gates by accident.
+batch should define generated `ProposalSet` validation, evidence citation
+validation, and review rules before any model call. Do not open timeline, BGM
+fitting, preview, network, OpenCV, vision, image generation/editing, API-key
+setup, or model-free template proposal gates by accident.

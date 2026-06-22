@@ -3,7 +3,7 @@
 Follow `artist_portrait_editor_revision5_optimized.md` as the governing V0
 engineering-freeze document.
 
-Current gate: V0-010b proposal context gate only.
+Current gate: V0-010c text model gate contract only.
 
 Allowed:
 
@@ -48,9 +48,13 @@ Allowed:
 - `propose` readiness gate
 - canonical `.artist-portrait/data/proposal_context.json`
 - `ProposalContext` Pydantic model and generated JSON Schema
+- canonical `.artist-portrait/data/text_model_gate.json`
+- `TextModelGate` Pydantic model and generated JSON Schema
 - `ProposalSet` Pydantic model and generated JSON Schema
 - proposal artifact status and doctor diagnostics
+- text-model gate status and doctor diagnostics
 - blocked `propose` behavior that writes proposal context but no proposals
+- blocked `propose` behavior that writes text-model gate reasons but no model call
 - blocked `propose` behavior when no approved text model is available
 - `review --scope project`
 - `review --scope all` only as project review plus skipped future scopes

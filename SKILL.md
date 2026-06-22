@@ -1,6 +1,6 @@
 ---
 name: artist-portrait-editor
-description: Deterministic local workflow for preparing and auditing artist portrait video-editing projects. Use when Codex needs to validate an artist portrait project config, initialize local workspace state, scan local media into a source ledger and scan report, segment sources into a fixed-window or PySceneDetect-gated clip ledger and clip report, transcribe sources through a local-only faster-whisper gate into a transcript ledger, extract ffmpeg midpoint keyframes into a keyframe ledger and rebuildable cache, run evidence-only basic analysis into an analysis ledger and report, generate an analysis-led material map, prepare deterministic proposal context through a ProposalContext schema, check proposal readiness through a ProposalSet schema and blocked propose gate, run project risk review, diagnose workspace issues, or preserve the boundary before visual classification, BGM selection, full proposal generation, timeline generation, preview rendering, model calls, image generation/editing, or network search.
+description: Deterministic local workflow for artist portrait video-editing projects. Use when Codex needs to validate config, initialize state, scan media into a source ledger and scan report, segment into a fixed-window or PySceneDetect-gated clip ledger, transcribe through a local faster-whisper transcript ledger, extract keyframe ledger/cache, run evidence-only analysis ledger/report, generate an analysis-led material map, prepare proposal context with a ProposalContext schema, check text-model readiness with a TextModelGate schema, validate ProposalSet schema through a blocked propose gate, run project review/doctor, or preserve boundaries before BGM selection, full proposal generation, timeline generation, preview rendering, model calls, image generation/editing, or network search.
 ---
 
 # Artist Portrait Editor
@@ -89,10 +89,11 @@ artist portrait project preparation and audit work.
    ```
 
    It requires `output/material_map.md`, writes deterministic
-   `.artist-portrait/data/proposal_context.json`, and then requires an approved
-   text-model gate. When no approved text model is available, it records
-   `propose` as blocked, returns exit code 4, and writes no fake
-   `.artist-portrait/data/proposals.json` or `output/proposals.md`.
+   `.artist-portrait/data/proposal_context.json`, writes
+   `.artist-portrait/data/text_model_gate.json`, and then requires an approved
+   text-model gate. Current generation remains closed even when the gate is
+   ready. It records `propose` as blocked, returns exit code 4, and writes no
+   fake `.artist-portrait/data/proposals.json` or `output/proposals.md`.
 
 6. Use `review --scope all` only as a shallow aggregate. It runs project review
    and marks proposal/timeline review as skipped; it does not implement those
@@ -142,6 +143,8 @@ artist portrait project preparation and audit work.
   approved proposal generation gate.
 - Treat `proposal_context_invalid` as a stop condition until
   `.artist-portrait/data/proposal_context.json` is fixed or regenerated.
+- Treat `text_model_gate_invalid` as a stop condition until
+  `.artist-portrait/data/text_model_gate.json` is fixed or regenerated.
 - Treat `propose_text_model_missing` as a dependency stop condition. Do not
   produce fake proposals; open the approved text-model proposal gate first.
 

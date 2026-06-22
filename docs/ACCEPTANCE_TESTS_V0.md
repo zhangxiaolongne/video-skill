@@ -83,9 +83,14 @@ Current local foundation tests cover:
 - `propose` requiring `material_map.md`
 - committed proposal context schema
 - `propose` writing deterministic `proposal_context.json`
+- committed text-model gate schema
+- `propose` writing deterministic `text_model_gate.json`
 - `propose` blocking without an approved text-model gate
+- `propose` blocking even when the text-model gate is ready because generation
+  remains closed
 - `propose` writing no fake `proposals.json` or `proposals.md` when blocked
 - status and doctor visibility for malformed proposal context packets
+- status and doctor visibility for malformed text-model gate packets
 - status and doctor visibility for malformed proposal sets
 - proposal readiness invalidation after upstream source, clip, transcript,
   keyframe, analysis, or map changes
