@@ -34,7 +34,7 @@ When a user requirement changes long-term product behavior, update both files:
 - Canonical skill name: `artist-portrait-editor`
 - Canonical install directory: `artist-portrait-editor`
 - Distribution repository: `video-skill`
-- Current local gate: V0-007 keyframe cache gate only
+- Current local gate: V0-008 basic evidence analysis gate only
 
 ## Completed Local Versions
 
@@ -79,6 +79,12 @@ When a user requirement changes long-term product behavior, update both files:
   video clips.
 - V0-007c: rebuildable keyframe cache diagnostics, audio-only handling, and
   source/clip invalidation.
+- V0-008a: `AnalysisRecord` schema and committed JSON Schema.
+- V0-008b: `analyze` CLI with evidence-only source/clip/transcript/keyframe
+  aggregation.
+- V0-008c: canonical `.artist-portrait/data/analysis.jsonl`, rebuildable
+  `output/analysis_report.md`, status/doctor diagnostics, and invalidation
+  from source, clip, transcript, and keyframe ledgers.
 
 ## Current Hard Boundaries
 
@@ -87,7 +93,8 @@ Do not implement these until the relevant gate is explicitly opened and tested:
 - OpenCV or vision analysis
 - embeddings
 - remote ASR, model downloads, or ungrounded text classification
-- keyframe interpretation beyond raw visual sampling
+- visual classification beyond explicit evidence placeholders
+- keyframe interpretation beyond raw evidence references
 - creative proposals
 - timeline generation
 - preview rendering
@@ -112,8 +119,8 @@ Tactical rule for future batches:
 - use third-party outputs as evidence with provenance, not unreviewed truth
 - keep config gates, failure modes, and review rules around every non-local or
   model-backed capability
-- keep current V0-007 keyframe extraction local and bounded to ffmpeg
-  midpoint sampling; keyframes are visual evidence, not visual analysis
+- keep current V0-008 analysis bounded to existing local ledgers; keyframes are
+  visual evidence references, not visual classification
 
 ### BGM Is Part Of Editing Logic
 
@@ -146,6 +153,7 @@ carried into the future proposal, timeline, review, and preview gates.
 
 ## Next Likely Batch
 
-Next action should finish V0-007 release readiness: run the full local
-validation set, record the release checkpoint, commit the batch locally, and
-push only after the batch is reviewed.
+Next action should plan V0-009 material-map upgrade against the new analysis
+ledger. The big-version direction is richer material prioritization, but the
+next small batch should only make `map` consume `analysis.jsonl` without opening
+proposal, timeline, BGM, preview, model, network, OpenCV, or vision gates.

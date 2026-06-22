@@ -7,6 +7,7 @@ Pydantic, not manually maintained as an independent contract.
 
 Current committed schemas:
 
+- `schemas/analysis_record.schema.json`
 - `schemas/clip_record.schema.json`
 - `schemas/keyframe_record.schema.json`
 - `schemas/project_config.schema.json`
@@ -48,6 +49,18 @@ path, method, method version, and evidence. Cached image files under
 `.artist-portrait/cache/keyframes/` are rebuildable; the JSONL manifest is the
 canonical data.
 
+`AnalysisRecord` is implemented for the V0-008 basic evidence analysis gate and
+is written as JSON Lines to `.artist-portrait/data/analysis.jsonl` by
+`analyze`. It records clip/source identity, clip and analysis fingerprints,
+material type, original audio usability, transcript refs, keyframe refs, and
+risk flags. Shot size, camera motion, emotion candidates, action candidates,
+and visual quality use the common assertion structure but remain `null` or
+empty candidates with `method: not_run_current_gate` until a later visual
+analysis gate opens.
+
+`output/analysis_report.md` is a rebuildable report rendered from
+`analysis.jsonl`; the JSONL ledger is canonical.
+
 Diagnostic issues are plain JSON objects used by `status`, `review`, and
 `doctor`. Current common fields:
 
@@ -72,11 +85,13 @@ Current stable diagnostic codes include:
 - `transcripts_invalid`
 - `keyframes_invalid`
 - `keyframe_cache_missing`
+- `analysis_invalid`
 - `scene_detection_required_missing`
 - `transcription_required_missing`
 - `segment_invalidated`
 - `transcribe_invalidated`
 - `keyframes_invalidated`
+- `analyze_invalidated`
 - `map_invalidated`
 - `review_project_invalidated`
 - `review_scope_skipped`

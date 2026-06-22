@@ -3,7 +3,7 @@
 Follow `artist_portrait_editor_revision5_optimized.md` as the governing V0
 engineering-freeze document.
 
-Current gate: V0-007 keyframe cache gate only.
+Current gate: V0-008 basic evidence analysis gate only.
 
 Allowed:
 
@@ -36,6 +36,11 @@ Allowed:
 - canonical `keyframes.jsonl`
 - rebuildable `.artist-portrait/cache/keyframes/`
 - keyframe status, doctor diagnostics, and source/clip invalidation
+- `analyze`
+- deterministic `.artist-portrait/data/analysis.jsonl`
+- deterministic `output/analysis_report.md`
+- level_0/1/2 evidence-only analysis fields with null visual assertions
+- analysis status, doctor diagnostics, and upstream invalidation
 - `map`
 - `review --scope project`
 - `review --scope all` only as project review plus skipped future scopes
@@ -54,6 +59,7 @@ Forbidden before the next gate explicitly opens:
 - OpenCV analysis
 - embeddings
 - vision models
+- visual classification beyond explicit evidence placeholders
 - creative proposals
 - timeline generation
 - preview rendering

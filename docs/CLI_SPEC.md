@@ -2,7 +2,7 @@
 
 Authoritative source: `artist_portrait_editor_revision5_optimized.md`.
 
-Implemented V0-007 keyframe cache gate commands:
+Implemented V0-008 basic evidence analysis gate commands:
 
 ```bash
 artist-portrait validate --project ./project.yaml
@@ -14,6 +14,7 @@ artist-portrait scan --project ./project.yaml
 artist-portrait segment --project ./project.yaml
 artist-portrait transcribe --project ./project.yaml
 artist-portrait keyframes --project ./project.yaml
+artist-portrait analyze --project ./project.yaml
 artist-portrait map --project ./project.yaml
 artist-portrait review --project ./project.yaml --scope project
 artist-portrait review --project ./project.yaml --scope all
@@ -72,21 +73,36 @@ deterministic midpoint frame per video clip via ffmpeg, writes
 `.artist-portrait/cache/keyframes/`, records run metadata, and refreshes
 `output/run_report.md`. Audio-only clips write an empty manifest with a warning.
 
+`analyze --json` reads `.artist-portrait/data/clips.jsonl` and optionally uses
+existing `.artist-portrait/data/transcripts.jsonl` and
+`.artist-portrait/data/keyframes.jsonl` as evidence. It writes
+`.artist-portrait/data/analysis.jsonl`, `output/analysis_report.md`, run
+metadata, and a refreshed `output/run_report.md`. Current V0-008 analysis is
+evidence-only: media/material type and original audio usability are recorded
+from existing ledgers, while shot size, camera motion, emotion, action, and
+visual quality remain null or empty candidates. No OpenCV, vision model,
+embedding, BGM, proposal, timeline, preview, image, network, or model call is
+performed.
+
 `status --json` includes the state ledger plus local artifact, source, clip,
-scan report, and clip report summaries. It also reports `artifact_issues` when
-completed ledger steps refer to outputs that no longer exist. It does not run
-media operations or mutate project files.
+transcript, keyframe, analysis, scan report, clip report, and analysis report
+summaries. It also reports `artifact_issues` when completed ledger steps refer
+to outputs that no longer exist. It does not run media operations or mutate
+project files.
 
 `doctor --json` is a read-only diagnostic command. It reports local workspace,
 source ledger, and artifact consistency issues with `next_action` guidance and
 `recommended_commands`. It reports `segment_invalidated`,
-`transcribe_invalidated`, `keyframes_invalidated`, `map_invalidated`, and
-`review_project_invalidated` after newer upstream ledgers change. It reports
+`transcribe_invalidated`, `keyframes_invalidated`, `analyze_invalidated`,
+`map_invalidated`, and `review_project_invalidated` after newer upstream
+ledgers change. It reports
 `clips_invalid` when `.artist-portrait/data/clips.jsonl` cannot be parsed,
 `transcripts_invalid` when `.artist-portrait/data/transcripts.jsonl` cannot be
 parsed, `keyframes_invalid` when `.artist-portrait/data/keyframes.jsonl` cannot
 be parsed, and `keyframe_cache_missing` when rebuildable cached frame images are
-missing. It reports `scene_detection_required_missing` or
+missing. It reports `analysis_invalid` when
+`.artist-portrait/data/analysis.jsonl` cannot be parsed. It reports
+`scene_detection_required_missing` or
 `transcription_required_missing` when the project requires an unavailable
 dependency. It
 returns `1 success_with_warnings` when diagnostics find issues and `0 success`

@@ -48,17 +48,18 @@ Local V0 media research foundation for the `artist-portrait-editor` skill.
 - [V0-006 Release Readiness](docs/V0_006_RELEASE_READINESS.md)
 - [V0-007 Keyframe Cache Gate](docs/V0_007_KEYFRAME_CACHE_GATE.md)
 - [V0-007 Release Readiness](docs/V0_007_RELEASE_READINESS.md)
+- [V0-008 Basic Analysis Gate](docs/V0_008_BASIC_ANALYSIS_GATE.md)
+- [V0-008 Release Readiness](docs/V0_008_RELEASE_READINESS.md)
 - [Non Goals](docs/NON_GOALS.md)
 
 ## Current Gate
 
-Current V0-007 keyframe cache gate work allows deterministic project
+Current V0-008 basic analysis gate work allows deterministic project
 setup, local media scanning, fixed-window clip segmentation, optional
 PySceneDetect video scene segmentation, local-only faster-whisper transcription
 when available, ffmpeg midpoint keyframe extraction for video clips,
-source/clip/transcript/keyframe ledger operations, rebuildable keyframe cache,
-and
-read-only/reporting outputs:
+source/clip/transcript/keyframe/analysis ledger operations, rebuildable
+keyframe cache, and read-only/reporting outputs:
 
 ```text
 project.yaml
@@ -73,16 +74,19 @@ project.yaml
 -> transcript ledger
 -> keyframe ledger
 -> rebuildable keyframe cache
+-> evidence-only analysis ledger
+-> analysis report
 -> minimal material map from sources.jsonl
 -> minimal project risk report from sources.jsonl
 -> run report
 -> fixed exit codes
 ```
 
-OpenCV/vision analysis, embeddings, creative proposal generation, timeline
-generation, preview rendering, BGM selection or beat analysis, model calls,
-image generation/editing, remote ASR/model downloads, and network search remain
-out of scope.
+OpenCV/vision analysis, embeddings, visual classification beyond explicit
+evidence placeholders, creative proposal generation, timeline generation,
+preview rendering, BGM selection or beat analysis, model calls, image
+generation/editing, remote ASR/model downloads, and network search remain out
+of scope.
 
 ## Local Setup
 
@@ -103,12 +107,13 @@ python3 -m venv .venv
 .venv/bin/artist-portrait segment --project ./project.yaml
 .venv/bin/artist-portrait transcribe --project ./project.yaml
 .venv/bin/artist-portrait keyframes --project ./project.yaml
+.venv/bin/artist-portrait analyze --project ./project.yaml
 .venv/bin/artist-portrait map --project ./project.yaml
 .venv/bin/artist-portrait review --project ./project.yaml --scope project
 .venv/bin/artist-portrait review --project ./project.yaml --scope all
 ```
 
-Commands such as `analyze`, `relate`, `propose`, `timeline`, and `run` remain
+Commands such as `relate`, `propose`, `timeline`, and `run` remain
 intentionally blocked.
 
 ## Tests

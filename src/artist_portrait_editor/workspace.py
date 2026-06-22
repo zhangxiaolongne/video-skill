@@ -30,6 +30,7 @@ from artist_portrait_editor.media.scanner import (
     write_sources_jsonl,
 )
 from artist_portrait_editor.models.config import FeatureSwitch
+from artist_portrait_editor.models.analysis import AnalysisRecord, AnalysisRiskFlag
 from artist_portrait_editor.models.clip import (
     ClipBoundary,
     ClipMethod,
@@ -45,7 +46,12 @@ from artist_portrait_editor.models.state import (
     StepStatus,
     initial_steps,
 )
-from artist_portrait_editor.models.source import MediaKind, RightsStatus, SourceRecord
+from artist_portrait_editor.models.source import (
+    Assertion,
+    MediaKind,
+    RightsStatus,
+    SourceRecord,
+)
 from artist_portrait_editor.models.transcript import (
     TranscriptRecord,
     TranscriptRiskFlag,
@@ -73,6 +79,19 @@ def project_root(project_path: Path) -> Path:
 
 def fingerprint_file(path: Path) -> str:
     return "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def fingerprint_inputs(paths: list[tuple[str, Path]]) -> str:
+    digest = hashlib.sha256()
+    for label, path in sorted(paths, key=lambda item: item[0]):
+        digest.update(label.encode("utf-8"))
+        digest.update(b"\0")
+        if path.exists():
+            digest.update(fingerprint_file(path).encode("utf-8"))
+        else:
+            digest.update(b"missing")
+        digest.update(b"\0")
+    return "sha256:" + digest.hexdigest()
 
 
 def atomic_write_text(path: Path, content: str) -> Path:
@@ -216,13 +235,25 @@ def stable_keyframe_id(clip_id: str, frame_index: int, timestamp_seconds: float)
     return "kf_" + hashlib.sha256(payload.encode("utf-8")).hexdigest()[:24]
 
 
+def stable_analysis_id(clip_id: str, analysis_fingerprint: str) -> str:
+    payload = f"{clip_id}:{analysis_fingerprint}"
+    return "ana_" + hashlib.sha256(payload.encode("utf-8")).hexdigest()[:24]
+
+
 def invalidate_downstream_steps_for_sources(
     state: ProjectState,
     *,
     sources_fingerprint: str,
 ) -> list[str]:
     invalidated: list[str] = []
-    for step_name in ("segment", "transcribe", "keyframes", "map", "review_project"):
+    for step_name in (
+        "segment",
+        "transcribe",
+        "keyframes",
+        "analyze",
+        "map",
+        "review_project",
+    ):
         entry = state.steps.get(step_name)
         if entry is None:
             continue
@@ -315,6 +346,13 @@ def render_status_panel(payload: dict) -> str:
         lines.append("keyframes: invalid")
     else:
         lines.append("keyframes: missing")
+    analysis = summaries.get("analysis") or {}
+    if analysis.get("exists") and analysis.get("valid", True):
+        lines.append(f"analysis: {analysis.get('count', 0)}")
+    elif analysis.get("exists"):
+        lines.append("analysis: invalid")
+    else:
+        lines.append("analysis: missing")
     risk = summaries.get("risk_report") or {}
     if risk.get("exists"):
         lines.append(f"risk_report: present ({risk.get('bytes', 0)} bytes)")
@@ -324,6 +362,11 @@ def render_status_panel(payload: dict) -> str:
     clip_report = summaries.get("clip_report") or {}
     if clip_report.get("exists"):
         lines.append(f"clip_report: present ({clip_report.get('bytes', 0)} bytes)")
+    analysis_report = summaries.get("analysis_report") or {}
+    if analysis_report.get("exists"):
+        lines.append(
+            f"analysis_report: present ({analysis_report.get('bytes', 0)} bytes)"
+        )
     material_map = summaries.get("material_map") or {}
     if material_map.get("exists"):
         lines.append(f"material_map: present ({material_map.get('bytes', 0)} bytes)")
@@ -331,7 +374,15 @@ def render_status_panel(payload: dict) -> str:
     if artifact_issues:
         lines.append(f"artifact_issues: {len(artifact_issues)}")
     steps = payload.get("steps") or {}
-    for step in ("scan", "segment", "transcribe", "keyframes", "map", "review_project"):
+    for step in (
+        "scan",
+        "segment",
+        "transcribe",
+        "keyframes",
+        "analyze",
+        "map",
+        "review_project",
+    ):
         if step in steps:
             lines.append(f"{step}: {steps[step].get('status')}")
     return "\n".join(lines) + "\n"
@@ -497,6 +548,23 @@ def doctor_project_payload(project_path: Path) -> dict:
                 next_action=f"artist-portrait keyframes --project {project_path}",
             )
         )
+    analysis = analysis_summary(root / WORKSPACE_DIR / DATA_DIR / "analysis.jsonl")
+    if (
+        sources.get("valid") is True
+        and analysis.get("valid") is False
+    ):
+        analysis_path = root / WORKSPACE_DIR / DATA_DIR / "analysis.jsonl"
+        issues.append(
+            workspace_issue(
+                code="analysis_invalid",
+                severity="error",
+                detail=str(analysis.get("error") or "analysis ledger is invalid"),
+                next_action=(
+                    f"fix {analysis_path.relative_to(root).as_posix()} or rerun "
+                    f"artist-portrait analyze --project {project_path}"
+                ),
+            )
+        )
     if (
         sources.get("valid") is True
         and state.steps.get("segment", StepLedgerEntry()).status == StepStatus.pending
@@ -507,6 +575,19 @@ def doctor_project_payload(project_path: Path) -> dict:
                 severity="info",
                 detail="source ledger exists but clips have not been generated",
                 next_action=f"artist-portrait segment --project {project_path}",
+            )
+        )
+    if (
+        sources.get("valid") is True
+        and clips_summary(root).get("valid") is True
+        and state.steps.get("analyze", StepLedgerEntry()).status == StepStatus.pending
+    ):
+        issues.append(
+            workspace_issue(
+                code="analysis_pending",
+                severity="info",
+                detail="clip ledger exists but analysis has not been generated",
+                next_action=f"artist-portrait analyze --project {project_path}",
             )
         )
     if (
@@ -609,11 +690,13 @@ def artifact_statuses(root: Path) -> dict[str, dict]:
         "clips": root / WORKSPACE_DIR / DATA_DIR / "clips.jsonl",
         "transcripts": root / WORKSPACE_DIR / DATA_DIR / "transcripts.jsonl",
         "keyframes": root / WORKSPACE_DIR / DATA_DIR / "keyframes.jsonl",
+        "analysis": root / WORKSPACE_DIR / DATA_DIR / "analysis.jsonl",
         "relations": root / WORKSPACE_DIR / DATA_DIR / "relations.jsonl",
         "proposals_json": root / WORKSPACE_DIR / DATA_DIR / "proposals.json",
         "run_report": root / "output" / "run_report.md",
         "scan_report": root / "output" / "scan_report.md",
         "clip_report": root / "output" / "clip_report.md",
+        "analysis_report": root / "output" / "analysis_report.md",
         "material_map": root / "output" / "material_map.md",
         "proposals_md": root / "output" / "proposals.md",
         "timeline_draft": root / "output" / "timeline_draft.json",
@@ -674,8 +757,10 @@ def status_summaries(root: Path) -> dict:
     clips_path = root / WORKSPACE_DIR / DATA_DIR / "clips.jsonl"
     transcripts_path = root / WORKSPACE_DIR / DATA_DIR / "transcripts.jsonl"
     keyframes_path = root / WORKSPACE_DIR / DATA_DIR / "keyframes.jsonl"
+    analysis_path = root / WORKSPACE_DIR / DATA_DIR / "analysis.jsonl"
     scan_report_path = root / "output" / "scan_report.md"
     clip_report_path = root / "output" / "clip_report.md"
+    analysis_report_path = root / "output" / "analysis_report.md"
     material_map_path = root / "output" / "material_map.md"
     risk_report_path = root / "output" / "risk_report.md"
     return {
@@ -683,8 +768,10 @@ def status_summaries(root: Path) -> dict:
         "clips": clip_summary(clips_path),
         "transcripts": transcript_summary(transcripts_path),
         "keyframes": keyframe_summary(keyframes_path, root=root),
+        "analysis": analysis_summary(analysis_path),
         "scan_report": output_summary(scan_report_path),
         "clip_report": output_summary(clip_report_path),
+        "analysis_report": output_summary(analysis_report_path),
         "material_map": output_summary(material_map_path),
         "risk_report": output_summary(risk_report_path),
     }
@@ -845,6 +932,36 @@ def read_keyframes_jsonl(path: Path) -> list[KeyframeRecord]:
     return keyframes
 
 
+def write_analysis_jsonl(root: Path, analyses: list[AnalysisRecord]) -> Path:
+    output = root / WORKSPACE_DIR / DATA_DIR / "analysis.jsonl"
+    output.parent.mkdir(parents=True, exist_ok=True)
+    tmp = output.with_suffix(".jsonl.tmp")
+    tmp.write_text(
+        "".join(
+            json.dumps(analysis.model_dump(mode="json"), ensure_ascii=False, sort_keys=True)
+            + "\n"
+            for analysis in analyses
+        ),
+        encoding="utf-8",
+    )
+    tmp.replace(output)
+    return output
+
+
+def read_analysis_jsonl(path: Path) -> list[AnalysisRecord]:
+    analyses: list[AnalysisRecord] = []
+    for line_number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1):
+        if not line.strip():
+            continue
+        try:
+            analyses.append(AnalysisRecord.model_validate_json(line))
+        except ValueError as exc:
+            raise WorkspacePrerequisiteError(
+                f"invalid AnalysisRecord JSONL at line {line_number}: {exc}"
+            ) from exc
+    return analyses
+
+
 def transcript_summary(path: Path) -> dict:
     if not path.exists():
         return {"exists": False}
@@ -898,6 +1015,34 @@ def keyframe_summary(path: Path, *, root: Path) -> dict:
         "method_counts": method_counts,
         "missing_cache_count": len(missing_cache),
         "missing_cache_refs": missing_cache[:10],
+    }
+
+
+def analysis_summary(path: Path) -> dict:
+    if not path.exists():
+        return {"exists": False}
+    try:
+        analyses = read_analysis_jsonl(path)
+    except Exception as exc:
+        return {
+            "exists": True,
+            "valid": False,
+            "error": str(exc),
+        }
+    risk_counts = count_by_value(
+        flag.value
+        for analysis in analyses
+        for flag in analysis.risk_flags
+    )
+    audio_counts = count_by_value(
+        str(analysis.original_audio_usability.value) for analysis in analyses
+    )
+    return {
+        "exists": True,
+        "valid": True,
+        "count": len(analyses),
+        "risk_counts": risk_counts,
+        "original_audio_usability_counts": audio_counts,
     }
 
 
@@ -1037,6 +1182,171 @@ def build_keyframes(
             )
         )
     return keyframes, warnings
+
+
+def not_run_assertion(*, evidence: list[dict[str, str]]) -> Assertion:
+    return Assertion(
+        value=None,
+        method="not_run_current_gate",
+        level=0,
+        confidence=0.0,
+        evidence=evidence,
+        user_confirmed=False,
+    )
+
+
+def copied_assertion(assertion: Assertion, *, fallback_evidence: list[dict[str, str]]) -> Assertion:
+    return Assertion(
+        value=assertion.value,
+        method=assertion.method,
+        level=assertion.level,
+        confidence=assertion.confidence,
+        evidence=assertion.evidence or fallback_evidence,
+        user_confirmed=assertion.user_confirmed,
+    )
+
+
+def original_audio_assertion(
+    *,
+    source: SourceRecord,
+    transcript_refs: list[str],
+) -> Assertion:
+    evidence = [{"type": "source", "ref": source.source_id}]
+    evidence.extend({"type": "transcript", "ref": ref} for ref in transcript_refs)
+    if not source.media_probe.audio_present:
+        value = "not_present"
+        confidence = 1.0
+    elif transcript_refs:
+        value = "present_transcript_available"
+        confidence = 0.9
+    else:
+        value = "present_untranscribed"
+        confidence = 0.75
+    return Assertion(
+        value=value,
+        method="ffprobe_transcript_presence",
+        level=0,
+        confidence=confidence,
+        evidence=evidence,
+        user_confirmed=False,
+    )
+
+
+def transcript_refs_for_clip(
+    clip: ClipRecord,
+    transcripts: list[TranscriptRecord],
+) -> list[str]:
+    refs: list[str] = []
+    for transcript in transcripts:
+        if transcript.source_id != clip.source_id:
+            continue
+        if transcript.end_seconds <= clip.boundary.start_seconds:
+            continue
+        if transcript.start_seconds >= clip.boundary.end_seconds:
+            continue
+        refs.append(transcript.transcript_id)
+    return sorted(refs)
+
+
+def build_analysis(
+    *,
+    clips: list[ClipRecord],
+    sources: list[SourceRecord],
+    transcripts: list[TranscriptRecord],
+    keyframes: list[KeyframeRecord],
+    clip_fingerprint: str,
+    analysis_fingerprint: str,
+) -> tuple[list[AnalysisRecord], list[str]]:
+    source_by_id = {source.source_id: source for source in sources}
+    keyframes_by_clip: dict[str, list[str]] = {}
+    for keyframe in keyframes:
+        keyframes_by_clip.setdefault(keyframe.clip_id, []).append(keyframe.keyframe_id)
+
+    analyses: list[AnalysisRecord] = []
+    warnings: list[str] = []
+    for clip in sorted(clips, key=lambda item: (item.source_location, item.clip_index)):
+        source = source_by_id.get(clip.source_id)
+        if source is None:
+            warnings.append(f"missing source for clip {clip.clip_id}; skipped analysis")
+            continue
+
+        transcript_refs = transcript_refs_for_clip(clip, transcripts)
+        keyframe_refs = sorted(keyframes_by_clip.get(clip.clip_id, []))
+        evidence = [
+            {"type": "source", "ref": source.source_id},
+            {"type": "clip", "ref": clip.clip_id},
+        ]
+        evidence.extend({"type": "transcript", "ref": ref} for ref in transcript_refs)
+        evidence.extend({"type": "keyframe", "ref": ref} for ref in keyframe_refs)
+
+        risk_flags: list[AnalysisRiskFlag] = [AnalysisRiskFlag.visual_analysis_not_run]
+        if source.risk_flags:
+            risk_flags.append(AnalysisRiskFlag.inherited_source_risk)
+        if clip.media_kind == MediaKind.video and not keyframe_refs:
+            risk_flags.append(AnalysisRiskFlag.keyframe_missing)
+        if source.media_probe.audio_present and not transcript_refs:
+            risk_flags.append(AnalysisRiskFlag.transcript_missing)
+        if not source.media_probe.audio_present:
+            risk_flags.append(AnalysisRiskFlag.audio_missing)
+        if clip.media_kind == MediaKind.audio:
+            risk_flags.append(AnalysisRiskFlag.audio_only_clip)
+        if clip.boundary.duration_seconds < 3:
+            risk_flags.append(AnalysisRiskFlag.short_clip)
+
+        analyses.append(
+            AnalysisRecord(
+                analysis_id=stable_analysis_id(clip.clip_id, analysis_fingerprint),
+                clip_id=clip.clip_id,
+                source_id=clip.source_id,
+                source_location=clip.source_location,
+                source_content_hash=clip.source_content_hash,
+                clip_fingerprint=clip_fingerprint,
+                analysis_fingerprint=analysis_fingerprint,
+                media_kind=clip.media_kind,
+                start_seconds=clip.boundary.start_seconds,
+                end_seconds=clip.boundary.end_seconds,
+                duration_seconds=clip.boundary.duration_seconds,
+                material_type=copied_assertion(
+                    source.source_type,
+                    fallback_evidence=[{"type": "source", "ref": source.source_id}],
+                ),
+                shot_size=not_run_assertion(evidence=evidence),
+                camera_motion=not_run_assertion(evidence=evidence),
+                emotion_candidates=Assertion(
+                    value=[],
+                    method="not_run_current_gate",
+                    level=0,
+                    confidence=0.0,
+                    evidence=evidence,
+                    user_confirmed=False,
+                ),
+                action_candidates=Assertion(
+                    value=[],
+                    method="not_run_current_gate",
+                    level=0,
+                    confidence=0.0,
+                    evidence=evidence,
+                    user_confirmed=False,
+                ),
+                visual_quality=not_run_assertion(evidence=evidence),
+                original_audio_usability=original_audio_assertion(
+                    source=source,
+                    transcript_refs=transcript_refs,
+                ),
+                transcript_refs=transcript_refs,
+                keyframe_refs=keyframe_refs,
+                evidence=evidence,
+                risk_flags=sorted(set(risk_flags), key=lambda flag: flag.value),
+                notes=(
+                    "V0-008 records deterministic and context-derived analysis only; "
+                    "shot size, motion, emotion, action, and visual quality remain "
+                    "unclassified until a later visual-analysis gate opens"
+                ),
+            )
+        )
+    if not analyses:
+        warnings.append("no analysis records generated")
+    return analyses, warnings
 
 
 def build_fixed_window_clips(
@@ -1238,7 +1548,7 @@ def invalidate_downstream_steps_for_clips(
     clips_fingerprint: str,
 ) -> list[str]:
     invalidated: list[str] = []
-    for step_name in ("keyframes", "map", "review_project"):
+    for step_name in ("keyframes", "analyze", "map", "review_project"):
         entry = state.steps.get(step_name)
         if entry is None:
             continue
@@ -1254,6 +1564,63 @@ def invalidate_downstream_steps_for_clips(
             warnings=[
                 *entry.warnings,
                 "clips ledger changed; rerun this step before trusting its output",
+            ],
+        )
+        invalidated.append(step_name)
+    return invalidated
+
+
+def invalidate_downstream_steps_for_analysis_input(
+    state: ProjectState,
+    *,
+    input_fingerprint: str,
+    reason: str,
+) -> list[str]:
+    invalidated: list[str] = []
+    for step_name in ("analyze", "map", "review_project"):
+        entry = state.steps.get(step_name)
+        if entry is None:
+            continue
+        if entry.status not in {StepStatus.completed, StepStatus.completed_with_warnings}:
+            continue
+        if entry.input_fingerprint == input_fingerprint:
+            continue
+        state.steps[step_name] = StepLedgerEntry(
+            status=StepStatus.invalidated,
+            input_fingerprint=entry.input_fingerprint,
+            output_refs=entry.output_refs,
+            last_run_id=entry.last_run_id,
+            warnings=[
+                *entry.warnings,
+                f"{reason}; rerun this step before trusting its output",
+            ],
+        )
+        invalidated.append(step_name)
+    return invalidated
+
+
+def invalidate_downstream_steps_for_analysis(
+    state: ProjectState,
+    *,
+    analysis_fingerprint: str,
+) -> list[str]:
+    invalidated: list[str] = []
+    for step_name in ("map", "review_project"):
+        entry = state.steps.get(step_name)
+        if entry is None:
+            continue
+        if entry.status not in {StepStatus.completed, StepStatus.completed_with_warnings}:
+            continue
+        if entry.input_fingerprint == analysis_fingerprint:
+            continue
+        state.steps[step_name] = StepLedgerEntry(
+            status=StepStatus.invalidated,
+            input_fingerprint=entry.input_fingerprint,
+            output_refs=entry.output_refs,
+            last_run_id=entry.last_run_id,
+            warnings=[
+                *entry.warnings,
+                "analysis ledger changed; rerun this step before trusting its output",
             ],
         )
         invalidated.append(step_name)
@@ -1638,6 +2005,22 @@ def transcribe_workspace(project_path: Path) -> tuple[Path | None, ProjectState,
             warnings = ["no transcript segments generated"] if not transcripts else []
             status = StepStatus.completed_with_warnings if warnings else StepStatus.completed
 
+    analysis_invalidated_steps: list[str] = []
+    clips_path = root / WORKSPACE_DIR / DATA_DIR / "clips.jsonl"
+    if output_path and clips_path.exists():
+        analysis_input_fingerprint = fingerprint_inputs(
+            [
+                ("clips", clips_path),
+                ("transcripts", output_path),
+                ("keyframes", root / WORKSPACE_DIR / DATA_DIR / "keyframes.jsonl"),
+            ]
+        )
+        analysis_invalidated_steps = invalidate_downstream_steps_for_analysis_input(
+            state,
+            input_fingerprint=analysis_input_fingerprint,
+            reason="transcript ledger changed",
+        )
+
     state.steps["transcribe"] = StepLedgerEntry(
         status=status,
         input_fingerprint=source_fingerprint,
@@ -1668,6 +2051,7 @@ def transcribe_workspace(project_path: Path) -> tuple[Path | None, ProjectState,
             else 0,
             "transcription": config.features.transcription.value,
             "output_refs": output_refs,
+            "invalidated_steps": analysis_invalidated_steps,
         },
     )
     write_json(runs_dir / "warnings.json", warnings)
@@ -1708,6 +2092,18 @@ def keyframes_workspace(project_path: Path) -> tuple[Path, ProjectState, list[st
     run_id = new_run_id()
     output_dir = root / config.paths.output_dir
     output_path = write_keyframes_jsonl(root, keyframes)
+    analysis_input_fingerprint = fingerprint_inputs(
+        [
+            ("clips", clips_path),
+            ("transcripts", root / WORKSPACE_DIR / DATA_DIR / "transcripts.jsonl"),
+            ("keyframes", output_path),
+        ]
+    )
+    invalidated_steps = invalidate_downstream_steps_for_analysis_input(
+        state,
+        input_fingerprint=analysis_input_fingerprint,
+        reason="keyframe ledger changed",
+    )
     status = StepStatus.completed_with_warnings if warnings else StepStatus.completed
     state.steps["keyframes"] = StepLedgerEntry(
         status=status,
@@ -1732,6 +2128,7 @@ def keyframes_workspace(project_path: Path) -> tuple[Path, ProjectState, list[st
             "clips": len(clips),
             "keyframes": len(keyframes),
             "output_refs": state.steps["keyframes"].output_refs,
+            "invalidated_steps": invalidated_steps,
         },
     )
     write_json(runs_dir / "warnings.json", warnings)
@@ -1740,6 +2137,184 @@ def keyframes_workspace(project_path: Path) -> tuple[Path, ProjectState, list[st
     save_state(root, state)
     write_run_report(output_dir, state, warnings)
     return output_path, state, warnings
+
+
+def analyze_workspace(project_path: Path) -> tuple[Path, Path, ProjectState, list[str]]:
+    config = load_project_config(project_path)
+    root = project_root(project_path)
+    state = load_state(root)
+    if state is None:
+        raise WorkspacePrerequisiteError("analyze requires init to complete first")
+
+    sources_path = root / WORKSPACE_DIR / DATA_DIR / "sources.jsonl"
+    clips_path = root / WORKSPACE_DIR / DATA_DIR / "clips.jsonl"
+    if not sources_path.exists():
+        raise WorkspacePrerequisiteError("analyze requires scan to complete first")
+    if not clips_path.exists():
+        raise WorkspacePrerequisiteError("analyze requires segment to complete first")
+
+    sources = read_sources_jsonl(sources_path)
+    clips = read_clips_jsonl(clips_path)
+    transcripts_path = root / WORKSPACE_DIR / DATA_DIR / "transcripts.jsonl"
+    keyframes_path = root / WORKSPACE_DIR / DATA_DIR / "keyframes.jsonl"
+    transcripts = read_transcripts_jsonl(transcripts_path) if transcripts_path.exists() else []
+    keyframes = read_keyframes_jsonl(keyframes_path) if keyframes_path.exists() else []
+    clip_fingerprint = fingerprint_file(clips_path)
+    analysis_fingerprint = fingerprint_inputs(
+        [
+            ("clips", clips_path),
+            ("transcripts", transcripts_path),
+            ("keyframes", keyframes_path),
+        ]
+    )
+    analyses, warnings = build_analysis(
+        clips=clips,
+        sources=sources,
+        transcripts=transcripts,
+        keyframes=keyframes,
+        clip_fingerprint=clip_fingerprint,
+        analysis_fingerprint=analysis_fingerprint,
+    )
+    run_id = new_run_id()
+    output_dir = root / config.paths.output_dir
+    output_path = write_analysis_jsonl(root, analyses)
+    report_path = output_dir / "analysis_report.md"
+    atomic_write_text(
+        report_path,
+        render_analysis_report(
+            analyses=analyses,
+            analysis_ref=output_path.relative_to(root).as_posix(),
+            clips_ref=clips_path.relative_to(root).as_posix(),
+            transcripts_ref=transcripts_path.relative_to(root).as_posix()
+            if transcripts_path.exists()
+            else None,
+            keyframes_ref=keyframes_path.relative_to(root).as_posix()
+            if keyframes_path.exists()
+            else None,
+            warnings=warnings,
+        ),
+    )
+    invalidated_steps = invalidate_downstream_steps_for_analysis(
+        state,
+        analysis_fingerprint=fingerprint_file(output_path),
+    )
+
+    status = StepStatus.completed_with_warnings if warnings else StepStatus.completed
+    state.steps["analyze"] = StepLedgerEntry(
+        status=status,
+        input_fingerprint=analysis_fingerprint,
+        output_refs=[
+            output_path.relative_to(root).as_posix(),
+            report_path.relative_to(root).as_posix(),
+        ],
+        last_run_id=run_id,
+        warnings=warnings,
+    )
+    state.latest_run_id = run_id
+    state.updated_at = utc_now()
+    state.overall_status = OverallStatus.degraded if warnings else OverallStatus.ready
+
+    runs_dir = root / WORKSPACE_DIR / RUNS_DIR / run_id
+    runs_dir.mkdir(parents=True, exist_ok=True)
+    write_json(runs_dir / "command.json", {"command": "analyze", "project": str(project_path)})
+    write_json(runs_dir / "environment.json", environment_snapshot())
+    write_json(
+        runs_dir / "step_result.json",
+        {
+            "step": "analyze",
+            "status": status.value,
+            "clips": len(clips),
+            "analysis_records": len(analyses),
+            "transcripts": len(transcripts),
+            "keyframes": len(keyframes),
+            "output_refs": state.steps["analyze"].output_refs,
+            "invalidated_steps": invalidated_steps,
+        },
+    )
+    write_json(runs_dir / "warnings.json", warnings)
+    write_json(runs_dir / "errors.json", [])
+    (runs_dir / "log.txt").write_text("analyze completed\n", encoding="utf-8")
+    save_state(root, state)
+    write_run_report(output_dir, state, warnings)
+    return output_path, report_path, state, warnings
+
+
+def render_analysis_report(
+    *,
+    analyses: list[AnalysisRecord],
+    analysis_ref: str,
+    clips_ref: str,
+    transcripts_ref: str | None,
+    keyframes_ref: str | None,
+    warnings: list[str],
+) -> str:
+    media_counts = count_by_value(analysis.media_kind.value for analysis in analyses)
+    risk_counts = count_by_value(
+        flag.value
+        for analysis in analyses
+        for flag in analysis.risk_flags
+    )
+    audio_counts = count_by_value(
+        str(analysis.original_audio_usability.value) for analysis in analyses
+    )
+    warning_lines = "\n".join(f"- {warning}" for warning in warnings) or "- None"
+    return (
+        "# Analysis Report\n\n"
+        "This V0-008 report is rendered from local source, clip, transcript, and "
+        "keyframe ledgers. It records deterministic and context-derived evidence "
+        "only. Shot size, camera motion, emotion, action, and visual quality remain "
+        "`null` or empty candidates until a later visual-analysis gate opens. No "
+        "OpenCV analysis, embeddings, creative proposals, timeline generation, "
+        "preview rendering, network calls, BGM selection, image generation/editing, "
+        "or model calls were performed.\n\n"
+        "## Inputs\n\n"
+        f"- Analysis ledger: `{analysis_ref}`\n"
+        f"- Clip ledger: `{clips_ref}`\n"
+        f"- Transcript ledger: `{transcripts_ref or 'missing'}`\n"
+        f"- Keyframe ledger: `{keyframes_ref or 'missing'}`\n\n"
+        "## Summary\n\n"
+        f"- Analysis record count: `{len(analyses)}`\n\n"
+        "### Media Kind\n\n"
+        f"{render_count_lines(media_counts)}"
+        "### Original Audio Usability\n\n"
+        f"{render_count_lines(audio_counts)}"
+        "### Risk Flags\n\n"
+        f"{render_count_lines(risk_counts)}"
+        "## Warnings\n\n"
+        f"{warning_lines}\n\n"
+        "## Records\n\n"
+        f"{render_analysis_sections(analyses)}"
+    )
+
+
+def render_analysis_sections(analyses: list[AnalysisRecord]) -> str:
+    if not analyses:
+        return "No analysis records were generated.\n"
+    sections = []
+    for index, analysis in enumerate(
+        sorted(analyses, key=lambda item: (item.source_location, item.start_seconds)),
+        start=1,
+    ):
+        risks = ", ".join(f"`{flag.value}`" for flag in analysis.risk_flags) or "None"
+        transcript_refs = ", ".join(f"`{ref}`" for ref in analysis.transcript_refs) or "None"
+        keyframe_refs = ", ".join(f"`{ref}`" for ref in analysis.keyframe_refs) or "None"
+        sections.append(
+            f"### {index}. `{analysis.analysis_id}`\n\n"
+            f"- Clip ID: `{analysis.clip_id}`\n"
+            f"- Source location: `{analysis.source_location}`\n"
+            f"- Start seconds: `{analysis.start_seconds:.3f}`\n"
+            f"- End seconds: `{analysis.end_seconds:.3f}`\n"
+            f"- Media kind: `{analysis.media_kind.value}`\n"
+            f"- Material type: `{analysis.material_type.value}` "
+            f"(method `{analysis.material_type.method}`, "
+            f"confidence `{analysis.material_type.confidence:.3f}`)\n"
+            f"- Original audio usability: `{analysis.original_audio_usability.value}` "
+            f"(confidence `{analysis.original_audio_usability.confidence:.3f}`)\n"
+            f"- Transcript refs: {transcript_refs}\n"
+            f"- Keyframe refs: {keyframe_refs}\n"
+            f"- Risk flags: {risks}\n"
+        )
+    return "\n".join(sections)
 
 
 def map_workspace(project_path: Path) -> tuple[Path, ProjectState, list[str]]:
@@ -2095,6 +2670,7 @@ def rebuild_command_for_step(step: str) -> str:
         "transcribe": "artist-portrait transcribe --project <project.yaml>",
         "segment": "artist-portrait segment --project <project.yaml>",
         "keyframes": "artist-portrait keyframes --project <project.yaml>",
+        "analyze": "artist-portrait analyze --project <project.yaml>",
         "map": "artist-portrait map --project <project.yaml>",
         "review_project": "artist-portrait review --project <project.yaml> --scope project",
     }

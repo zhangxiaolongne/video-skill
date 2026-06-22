@@ -66,6 +66,16 @@ Current local foundation tests cover:
 - audio-only empty manifest handling
 - status and doctor visibility for keyframe manifests and missing cache files
 - downstream invalidation after source or clip ledger changes
+- committed analysis record schema
+- `analyze` command requiring existing clip ledger
+- canonical `analysis.jsonl`
+- rebuildable `analysis_report.md`
+- evidence-only assertions that do not classify shot size, camera motion,
+  emotion, action, or visual quality
+- status and doctor visibility for analysis manifests
+- downstream invalidation after source, clip, transcript, keyframe, or analysis
+  ledger changes
 
-Future analysis, proposal, timeline, preview, remote model, BGM, image
-generation/editing, and network fixtures are intentionally not implemented yet.
+Future visual classification, proposal, timeline, preview, remote model, BGM,
+image generation/editing, and network fixtures are intentionally not
+implemented yet.

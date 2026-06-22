@@ -10,7 +10,7 @@ V0 has two future modes:
   `core_mode` data exists.
 
 Current repository implementation has entered deterministic core-mode
-foundation work only. The active gate is V0-007 keyframe cache gate:
+foundation work only. The active gate is V0-008 basic evidence analysis gate:
 
 ```text
 project.yaml
@@ -24,12 +24,14 @@ project.yaml
 -> clip report
 -> transcript ledger
 -> keyframe ledger and rebuildable cache
+-> evidence-only analysis ledger and report
 -> minimal material map
 -> minimal project risk report
 -> run report
 -> fixed exit codes
 ```
 
-Do not implement visual analysis, proposal generation, timeline generation,
-preview rendering, BGM selection, remote model calls, model downloads, image
-generation/editing, or network search until a later gate explicitly opens them.
+Do not implement OpenCV or vision-model visual classification, proposal
+generation, timeline generation, preview rendering, BGM selection, remote model
+calls, model downloads, image generation/editing, or network search until a
+later gate explicitly opens them.

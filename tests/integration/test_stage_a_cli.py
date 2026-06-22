@@ -1164,6 +1164,134 @@ def test_repeated_segment_invalidates_keyframes(tmp_path, monkeypatch, capsys):
     assert state_payload["steps"]["keyframes"]["status"] == "invalidated"
 
 
+def test_analyze_requires_segment_first(tmp_path, capsys):
+    project_path = tmp_path / "project.yaml"
+    project_path.write_text(
+        project_fixture_with_scene_detection("off"),
+        encoding="utf-8",
+    )
+    assert main(["init", "--project", str(project_path), "--quiet"]) in (0, 1)
+    write_clean_source_ledger(tmp_path)
+
+    code = main(["analyze", "--project", str(project_path)])
+    captured = capsys.readouterr()
+
+    assert code == 7
+    assert "analyze requires segment" in captured.err
+
+
+def test_analyze_writes_evidence_ledger_and_report(tmp_path, monkeypatch, capsys):
+    project_path = tmp_path / "project.yaml"
+    project_path.write_text(
+        project_fixture_with_scene_detection("off"),
+        encoding="utf-8",
+    )
+    assert main(["init", "--project", str(project_path), "--quiet"]) in (0, 1)
+    write_clean_source_ledger(tmp_path)
+    assert main(["segment", "--project", str(project_path), "--quiet"]) == 0
+    monkeypatch.setattr(
+        workspace,
+        "detect_capabilities",
+        lambda: Capabilities(ffmpeg=True, ffprobe=True),
+    )
+    monkeypatch.setattr(
+        workspace,
+        "extract_keyframe_image",
+        lambda *, source_path, output_path, timestamp_seconds: (
+            output_path.parent.mkdir(parents=True, exist_ok=True),
+            output_path.write_bytes(b"fake-jpeg"),
+        ),
+    )
+    assert main(["keyframes", "--project", str(project_path), "--quiet"]) == 0
+
+    code = main(["analyze", "--project", str(project_path), "--json"])
+    captured = capsys.readouterr()
+
+    assert code == 0
+    payload = json.loads(captured.out)
+    assert payload["output"] == ".artist-portrait/data/analysis.jsonl"
+    assert payload["report"] == "output/analysis_report.md"
+    analysis_path = tmp_path / ".artist-portrait" / "data" / "analysis.jsonl"
+    records = [
+        json.loads(line)
+        for line in analysis_path.read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    ]
+    assert len(records) == 1
+    assert records[0]["clip_id"]
+    assert records[0]["material_type"]["value"] == "interview"
+    assert records[0]["shot_size"]["value"] is None
+    assert records[0]["shot_size"]["method"] == "not_run_current_gate"
+    assert records[0]["emotion_candidates"]["value"] == []
+    assert records[0]["keyframe_refs"]
+    assert "visual_analysis_not_run" in records[0]["risk_flags"]
+    report = (tmp_path / "output" / "analysis_report.md").read_text(encoding="utf-8")
+    assert "Shot size, camera motion, emotion, action, and visual quality remain" in report
+
+    code = main(["status", "--project", str(project_path), "--json"])
+    captured = capsys.readouterr()
+    status_payload = json.loads(captured.out)
+    assert code == 0
+    assert status_payload["summaries"]["analysis"]["count"] == 1
+
+
+def test_invalid_analysis_jsonl_status_and_doctor(tmp_path, capsys):
+    project_path = tmp_path / "project.yaml"
+    project_path.write_text(
+        project_fixture_with_scene_detection("off"),
+        encoding="utf-8",
+    )
+    assert main(["init", "--project", str(project_path), "--quiet"]) in (0, 1)
+    write_clean_source_ledger(tmp_path)
+    assert main(["segment", "--project", str(project_path), "--quiet"]) == 0
+    analysis_path = tmp_path / ".artist-portrait" / "data" / "analysis.jsonl"
+    analysis_path.write_text('{"analysis_id": "missing-required-fields"}\n', encoding="utf-8")
+
+    code = main(["status", "--project", str(project_path), "--json"])
+    captured = capsys.readouterr()
+    payload = json.loads(captured.out)
+
+    assert code == 0
+    assert payload["summaries"]["analysis"]["valid"] is False
+    assert "invalid AnalysisRecord JSONL" in payload["summaries"]["analysis"]["error"]
+
+    code = main(["doctor", "--project", str(project_path), "--json"])
+    captured = capsys.readouterr()
+    doctor_payload = json.loads(captured.out)
+
+    assert code == 1
+    assert any(issue["code"] == "analysis_invalid" for issue in doctor_payload["issues"])
+
+
+def test_repeated_segment_invalidates_analysis(tmp_path, capsys):
+    project_path = tmp_path / "project.yaml"
+    project_path.write_text(
+        project_fixture_with_scene_detection("off"),
+        encoding="utf-8",
+    )
+    assert main(["init", "--project", str(project_path), "--quiet"]) in (0, 1)
+    write_clean_source_ledger(tmp_path)
+    assert main(["segment", "--project", str(project_path), "--quiet"]) == 0
+    assert main(["analyze", "--project", str(project_path), "--quiet"]) == 0
+
+    write_clean_source_ledger(tmp_path)
+    sources_path = tmp_path / ".artist-portrait" / "data" / "sources.jsonl"
+    record = json.loads(sources_path.read_text(encoding="utf-8"))
+    record["media_probe"]["duration"] = 4.0
+    sources_path.write_text(json.dumps(record, sort_keys=True) + "\n", encoding="utf-8")
+
+    code = main(["segment", "--project", str(project_path), "--json"])
+    captured = capsys.readouterr()
+
+    assert code == 0
+    payload = json.loads(captured.out)
+    assert payload["invalidated_steps"] == ["analyze"]
+    state_payload = json.loads(
+        (tmp_path / ".artist-portrait" / "state.json").read_text(encoding="utf-8")
+    )
+    assert state_payload["steps"]["analyze"]["status"] == "invalidated"
+
+
 def test_map_writes_material_map_from_sources(tmp_path, monkeypatch, capsys):
     project_path = tmp_path / "project.yaml"
     project_path.write_text(

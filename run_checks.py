@@ -55,6 +55,7 @@ def check_schema_drift() -> None:
         tmp_path = Path(tmp)
         run([str(ARTIST_PORTRAIT), "generate-schema", "--output-dir", str(tmp_path)])
         for name in (
+            "analysis_record.schema.json",
             "clip_record.schema.json",
             "project_config.schema.json",
             "project_state.schema.json",
@@ -115,30 +116,30 @@ def check_gate_consistency() -> None:
         "master": ROOT / "artist_portrait_editor_revision5_optimized.md",
         "README.md": ROOT / "README.md",
         "DEVELOPMENT_PROGRESS.md": ROOT / "docs" / "DEVELOPMENT_PROGRESS.md",
-        "V0_007_KEYFRAME_CACHE_GATE.md": ROOT
+        "V0_008_BASIC_ANALYSIS_GATE.md": ROOT
         / "docs"
-        / "V0_007_KEYFRAME_CACHE_GATE.md",
+        / "V0_008_BASIC_ANALYSIS_GATE.md",
     }
     content = {name: path.read_text(encoding="utf-8") for name, path in docs.items()}
     if (
-        "Current gate: V0-007 keyframe cache gate only."
+        "Current gate: V0-008 basic evidence analysis gate only."
         not in content["AGENTS.md"]
     ):
-        raise SystemExit("AGENTS.md current gate is not V0-007 keyframe cache gate")
-    if "V0-007 关键帧缓存闸门" not in content["master"]:
-        raise SystemExit("master document current gate is not V0-007 keyframe cache gate")
-    if "Current V0-007 keyframe cache gate work" not in content["README.md"]:
-        raise SystemExit("README current gate is not V0-007 keyframe cache gate")
+        raise SystemExit("AGENTS.md current gate is not V0-008 basic analysis gate")
+    if "V0-008 基础证据分析闸门" not in content["master"]:
+        raise SystemExit("master document current gate is not V0-008 basic analysis gate")
+    if "Current V0-008 basic analysis gate work" not in content["README.md"]:
+        raise SystemExit("README current gate is not V0-008 basic analysis gate")
     if (
-        "Current local gate: V0-007 keyframe cache gate only"
+        "Current local gate: V0-008 basic evidence analysis gate only"
         not in content["DEVELOPMENT_PROGRESS.md"]
     ):
         raise SystemExit("development progress current gate is stale")
     if (
-        "V0-007 opens deterministic keyframe extraction"
-        not in content["V0_007_KEYFRAME_CACHE_GATE.md"]
+        "V0-008 opens deterministic, evidence-only clip analysis"
+        not in content["V0_008_BASIC_ANALYSIS_GATE.md"]
     ):
-        raise SystemExit("V0-007 keyframe cache gate doc is missing active gate")
+        raise SystemExit("V0-008 basic analysis gate doc is missing active gate")
 
 
 def write_sine_wav(path: Path, *, seconds: float = 0.25, sample_rate: int = 8000) -> None:
@@ -219,6 +220,16 @@ def check_real_scan_if_available() -> None:
         if not keyframes.exists() or keyframes.read_text(encoding="utf-8") != "":
             raise SystemExit("audio-only keyframes check did not write an empty manifest")
 
+        run([str(ARTIST_PORTRAIT), "analyze", "--project", str(project), "--quiet"])
+        analysis = tmp_path / ".artist-portrait" / "data" / "analysis.jsonl"
+        analysis_report = tmp_path / "output" / "analysis_report.md"
+        if not analysis.exists() or "original_audio_usability" not in analysis.read_text(
+            encoding="utf-8"
+        ):
+            raise SystemExit("analyze did not write analysis.jsonl")
+        if "# Analysis Report" not in analysis_report.read_text(encoding="utf-8"):
+            raise SystemExit("analyze did not write analysis_report.md")
+
         run([str(ARTIST_PORTRAIT), "map", "--project", str(project), "--quiet"])
         run(
             [
@@ -243,6 +254,7 @@ def check_real_scan_if_available() -> None:
             raise SystemExit(f"real rescan failed: {rescan.stderr}")
         rescan_payload = json.loads(rescan.stdout)
         if sorted(rescan_payload.get("invalidated_steps", [])) != [
+            "analyze",
             "keyframes",
             "map",
             "review_project",
@@ -260,6 +272,7 @@ def check_real_scan_if_available() -> None:
         doctor_payload = json.loads(doctor.stdout)
         issue_codes = {issue.get("code") for issue in doctor_payload.get("issues", [])}
         if {
+            "analyze_invalidated",
             "segment_invalidated",
             "keyframes_invalidated",
             "map_invalidated",

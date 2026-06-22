@@ -4,7 +4,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 
 
-def test_current_gate_is_keyframe_cache_gate_across_primary_docs():
+def test_current_gate_is_basic_analysis_gate_across_primary_docs():
     agents = (ROOT / "AGENTS.md").read_text(encoding="utf-8")
     master = (ROOT / "artist_portrait_editor_revision5_optimized.md").read_text(
         encoding="utf-8"
@@ -12,16 +12,16 @@ def test_current_gate_is_keyframe_cache_gate_across_primary_docs():
     readme = (ROOT / "README.md").read_text(encoding="utf-8")
     vision = (ROOT / "docs" / "VISION.md").read_text(encoding="utf-8")
     progress = (ROOT / "docs" / "DEVELOPMENT_PROGRESS.md").read_text(encoding="utf-8")
-    v007 = (ROOT / "docs" / "V0_007_KEYFRAME_CACHE_GATE.md").read_text(
+    v008 = (ROOT / "docs" / "V0_008_BASIC_ANALYSIS_GATE.md").read_text(
         encoding="utf-8"
     )
 
-    assert "Current gate: V0-007 keyframe cache gate only." in agents
-    assert "V0-007 关键帧缓存闸门" in master
-    assert "Current V0-007 keyframe cache gate work" in readme
-    assert "Current implementation gate: V0-007 keyframe cache gate only." in vision
-    assert "Current local gate: V0-007 keyframe cache gate only" in progress
-    assert "V0-007 opens deterministic keyframe extraction" in v007
+    assert "Current gate: V0-008 basic evidence analysis gate only." in agents
+    assert "V0-008 基础证据分析闸门" in master
+    assert "Current V0-008 basic analysis gate work" in readme
+    assert "Current implementation gate: V0-008 basic evidence analysis gate only." in vision
+    assert "Current local gate: V0-008 basic evidence analysis gate only" in progress
+    assert "V0-008 opens deterministic, evidence-only clip analysis" in v008
 
 
 def test_current_gate_forbids_future_media_and_creative_surfaces():
@@ -29,7 +29,7 @@ def test_current_gate_forbids_future_media_and_creative_surfaces():
         [
             (ROOT / "AGENTS.md").read_text(encoding="utf-8"),
             (ROOT / "SKILL.md").read_text(encoding="utf-8"),
-            (ROOT / "docs" / "V0_007_KEYFRAME_CACHE_GATE.md").read_text(
+            (ROOT / "docs" / "V0_008_BASIC_ANALYSIS_GATE.md").read_text(
                 encoding="utf-8"
             ),
         ]
@@ -115,5 +115,18 @@ def test_v007_release_readiness_records_scope():
     assert "`KeyframeRecord` Pydantic model" in content
     assert "`artist-portrait keyframes --project`" in content
     assert "rebuildable `.artist-portrait/cache/keyframes/`" in content
+    assert "pytest:" in content
+    assert "run_checks.py:" in content
+
+
+def test_v008_release_readiness_records_scope():
+    content = (ROOT / "docs" / "V0_008_RELEASE_READINESS.md").read_text(
+        encoding="utf-8"
+    )
+
+    assert "Status: completed locally, ready to push, not tagged." in content
+    assert "`AnalysisRecord` Pydantic model" in content
+    assert "`artist-portrait analyze --project`" in content
+    assert "Evidence-only aggregation" in content
     assert "pytest:" in content
     assert "run_checks.py:" in content
