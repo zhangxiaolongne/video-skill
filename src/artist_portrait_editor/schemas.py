@@ -8,6 +8,7 @@ from artist_portrait_editor.models.clip import ClipRecord
 from artist_portrait_editor.models.config import ProjectConfig
 from artist_portrait_editor.models.keyframe import KeyframeRecord
 from artist_portrait_editor.models.proposal import ProposalSet
+from artist_portrait_editor.models.proposal_context import ProposalContext
 from artist_portrait_editor.models.source import SourceRecord
 from artist_portrait_editor.models.state import ProjectState
 from artist_portrait_editor.models.transcript import TranscriptRecord
@@ -20,6 +21,7 @@ def write_schema_files(output_dir: Path) -> None:
         "project_config.schema.json": ProjectConfig.model_json_schema(),
         "project_state.schema.json": ProjectState.model_json_schema(),
         "proposal_set.schema.json": ProposalSet.model_json_schema(),
+        "proposal_context.schema.json": ProposalContext.model_json_schema(),
         "source_record.schema.json": SourceRecord.model_json_schema(),
         "clip_record.schema.json": ClipRecord.model_json_schema(),
         "keyframe_record.schema.json": KeyframeRecord.model_json_schema(),

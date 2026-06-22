@@ -3,7 +3,7 @@
 Follow `artist_portrait_editor_revision5_optimized.md` as the governing V0
 engineering-freeze document.
 
-Current gate: V0-010a proposal readiness gate only.
+Current gate: V0-010b proposal context gate only.
 
 Allowed:
 
@@ -46,8 +46,11 @@ Allowed:
 - deterministic `output/material_map.md` rendered from source and analysis ledgers
 - priority review queue, pending confirmation, and risk sections without creative recommendations
 - `propose` readiness gate
+- canonical `.artist-portrait/data/proposal_context.json`
+- `ProposalContext` Pydantic model and generated JSON Schema
 - `ProposalSet` Pydantic model and generated JSON Schema
 - proposal artifact status and doctor diagnostics
+- blocked `propose` behavior that writes proposal context but no proposals
 - blocked `propose` behavior when no approved text model is available
 - `review --scope project`
 - `review --scope all` only as project review plus skipped future scopes

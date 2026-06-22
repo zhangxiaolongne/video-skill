@@ -39,6 +39,12 @@ from artist_portrait_editor.models.clip import (
 )
 from artist_portrait_editor.models.keyframe import KeyframeRecord, KeyframeRiskFlag
 from artist_portrait_editor.models.proposal import ProposalSet
+from artist_portrait_editor.models.proposal_context import (
+    ProposalAnalysisContext,
+    ProposalClipContext,
+    ProposalContext,
+    ProposalSourceContext,
+)
 from artist_portrait_editor.models.state import (
     Capabilities,
     OverallStatus,
@@ -376,6 +382,13 @@ def render_status_panel(payload: dict) -> str:
     material_map = summaries.get("material_map") or {}
     if material_map.get("exists"):
         lines.append(f"material_map: present ({material_map.get('bytes', 0)} bytes)")
+    proposal_context = summaries.get("proposal_context") or {}
+    if proposal_context.get("exists") and proposal_context.get("valid", True):
+        lines.append(f"proposal_context: {proposal_context.get('analysis_count', 0)} analyses")
+    elif proposal_context.get("exists"):
+        lines.append("proposal_context: invalid")
+    else:
+        lines.append("proposal_context: missing")
     proposals = summaries.get("proposals") or {}
     if proposals.get("exists") and proposals.get("valid", True):
         lines.append(f"proposals: {proposals.get('count', 0)}")
@@ -605,6 +618,25 @@ def doctor_project_payload(project_path: Path) -> dict:
             )
         )
     proposals = proposal_summary(root / WORKSPACE_DIR / DATA_DIR / "proposals.json")
+    proposal_context = proposal_context_summary(
+        root / WORKSPACE_DIR / DATA_DIR / "proposal_context.json"
+    )
+    if (
+        sources.get("valid") is True
+        and proposal_context.get("valid") is False
+    ):
+        context_path = root / WORKSPACE_DIR / DATA_DIR / "proposal_context.json"
+        issues.append(
+            workspace_issue(
+                code="proposal_context_invalid",
+                severity="error",
+                detail=str(proposal_context.get("error") or "proposal context is invalid"),
+                next_action=(
+                    f"fix {context_path.relative_to(root).as_posix()} or rerun "
+                    f"artist-portrait propose --project {project_path}"
+                ),
+            )
+        )
     if (
         sources.get("valid") is True
         and proposals.get("valid") is False
@@ -737,6 +769,7 @@ def artifact_statuses(root: Path) -> dict[str, dict]:
         "keyframes": root / WORKSPACE_DIR / DATA_DIR / "keyframes.jsonl",
         "analysis": root / WORKSPACE_DIR / DATA_DIR / "analysis.jsonl",
         "relations": root / WORKSPACE_DIR / DATA_DIR / "relations.jsonl",
+        "proposal_context": root / WORKSPACE_DIR / DATA_DIR / "proposal_context.json",
         "proposals_json": root / WORKSPACE_DIR / DATA_DIR / "proposals.json",
         "run_report": root / "output" / "run_report.md",
         "scan_report": root / "output" / "scan_report.md",
@@ -809,6 +842,7 @@ def status_summaries(root: Path) -> dict:
     material_map_path = root / "output" / "material_map.md"
     risk_report_path = root / "output" / "risk_report.md"
     proposals_path = root / WORKSPACE_DIR / DATA_DIR / "proposals.json"
+    proposal_context_path = root / WORKSPACE_DIR / DATA_DIR / "proposal_context.json"
     return {
         "sources": source_summary(sources_path),
         "clips": clip_summary(clips_path),
@@ -819,6 +853,7 @@ def status_summaries(root: Path) -> dict:
         "clip_report": output_summary(clip_report_path),
         "analysis_report": output_summary(analysis_report_path),
         "material_map": output_summary(material_map_path),
+        "proposal_context": proposal_context_summary(proposal_context_path),
         "proposals": proposal_summary(proposals_path),
         "risk_report": output_summary(risk_report_path),
     }
@@ -1016,6 +1051,13 @@ def read_proposals_json(path: Path) -> ProposalSet:
         raise WorkspacePrerequisiteError(f"invalid ProposalSet JSON: {exc}") from exc
 
 
+def read_proposal_context_json(path: Path) -> ProposalContext:
+    try:
+        return ProposalContext.model_validate_json(path.read_text(encoding="utf-8"))
+    except ValueError as exc:
+        raise WorkspacePrerequisiteError(f"invalid ProposalContext JSON: {exc}") from exc
+
+
 def transcript_summary(path: Path) -> dict:
     if not path.exists():
         return {"exists": False}
@@ -1118,6 +1160,168 @@ def proposal_summary(path: Path) -> dict:
         "proposal_ids": [proposal.proposal_id.value for proposal in proposal_set.proposals],
         "method": proposal_set.method,
     }
+
+
+def proposal_context_summary(path: Path) -> dict:
+    if not path.exists():
+        return {"exists": False}
+    try:
+        context = read_proposal_context_json(path)
+    except Exception as exc:
+        return {
+            "exists": True,
+            "valid": False,
+            "error": str(exc),
+        }
+    return {
+        "exists": True,
+        "valid": True,
+        "context_id": context.context_id,
+        "source_count": len(context.sources),
+        "clip_count": len(context.clips),
+        "analysis_count": len(context.analyses),
+        "material_map_fingerprint": context.material_map_fingerprint,
+    }
+
+
+def stable_context_id(project_id: str, input_fingerprint: str) -> str:
+    payload = f"{project_id}:{input_fingerprint}"
+    return "ctx_" + hashlib.sha256(payload.encode("utf-8")).hexdigest()[:24]
+
+
+def pending_visual_fields(analysis: AnalysisRecord) -> list[str]:
+    pending = []
+    if analysis.shot_size.value is None:
+        pending.append("shot_size")
+    if analysis.camera_motion.value is None:
+        pending.append("camera_motion")
+    if analysis.visual_quality.value is None:
+        pending.append("visual_quality")
+    if not analysis.emotion_candidates.value:
+        pending.append("emotion_candidates")
+    if not analysis.action_candidates.value:
+        pending.append("action_candidates")
+    return pending
+
+
+def build_proposal_context(
+    *,
+    config,
+    sources: list[SourceRecord],
+    clips: list[ClipRecord],
+    analyses: list[AnalysisRecord],
+    sources_ref: str,
+    clips_ref: str,
+    analysis_ref: str,
+    material_map_ref: str,
+    material_map_fingerprint: str,
+    input_fingerprint: str,
+) -> ProposalContext:
+    sorted_sources = sorted(sources, key=lambda item: item.primary_location)
+    sorted_clips = sorted(clips, key=lambda item: (item.source_location, item.clip_index))
+    sorted_analyses = sorted(
+        analyses,
+        key=lambda item: (item.source_location, item.start_seconds, item.clip_id),
+    )
+    return ProposalContext(
+        context_id=stable_context_id(config.project.id, input_fingerprint),
+        project_id=config.project.id,
+        material_map_ref=material_map_ref,
+        material_map_fingerprint=material_map_fingerprint,
+        sources_ref=sources_ref,
+        clips_ref=clips_ref,
+        analysis_ref=analysis_ref,
+        input_fingerprint=input_fingerprint,
+        creative_brief=config.creative_brief,
+        content_policy=config.content_policy,
+        proposal_ids_required=[
+            "proposal_safe",
+            "proposal_advanced",
+            "proposal_risky",
+        ],
+        sources=[
+            ProposalSourceContext(
+                source_id=source.source_id,
+                primary_location=source.primary_location,
+                media_kind=source.media_kind,
+                source_type=str(source.source_type.value),
+                rights_status=str(source.rights_status.value),
+                duration_seconds=source.media_probe.duration,
+                forbidden_by_user=source.forbidden_by_user,
+                risk_flags=[flag.value for flag in source.risk_flags],
+            )
+            for source in sorted_sources
+        ],
+        clips=[
+            ProposalClipContext(
+                clip_id=clip.clip_id,
+                source_id=clip.source_id,
+                source_location=clip.source_location,
+                media_kind=clip.media_kind,
+                start_seconds=clip.boundary.start_seconds,
+                end_seconds=clip.boundary.end_seconds,
+                duration_seconds=clip.boundary.duration_seconds,
+                method=clip.method.value,
+                risk_flags=[flag.value for flag in clip.risk_flags],
+            )
+            for clip in sorted_clips
+        ],
+        analyses=[
+            ProposalAnalysisContext(
+                analysis_id=analysis.analysis_id,
+                clip_id=analysis.clip_id,
+                source_id=analysis.source_id,
+                material_type=str(analysis.material_type.value),
+                original_audio_usability=str(analysis.original_audio_usability.value),
+                transcript_refs=analysis.transcript_refs,
+                keyframe_refs=analysis.keyframe_refs,
+                pending_visual_fields=pending_visual_fields(analysis),
+                risk_flags=[flag.value for flag in analysis.risk_flags],
+                review_score=analysis_review_score(analysis),
+            )
+            for analysis in sorted_analyses
+        ],
+        evidence=[
+            {"type": "source_ledger", "ref": sources_ref},
+            {"type": "clip_ledger", "ref": clips_ref},
+            {"type": "analysis_ledger", "ref": analysis_ref},
+            {"type": "material_map", "ref": material_map_ref},
+        ],
+        constraints=[
+            "Generate exactly proposal_safe, proposal_advanced, and proposal_risky.",
+            "Every factual claim must cite source, clip, analysis, or material_map evidence.",
+            "Do not use forbidden_by_user sources.",
+            "Do not infer visual semantics from keyframes in the current gate.",
+            "Do not fabricate missing material, identity, dates, rights, dialogue, or timecodes.",
+        ],
+        bgm_requirements=[
+            "Future proposals must describe BGM strategy without selecting tracks in this gate.",
+            "Future BGM strategy must account for mood, BPM, section structure, pacing, transitions, original audio, speech ducking, and rights status.",
+        ],
+        blocked_capabilities=[
+            "full_creative_proposal_generation",
+            "timeline_generation",
+            "bgm_selection",
+            "beat_analysis",
+            "preview_rendering",
+            "vision_analysis",
+            "network_search",
+            "image_generation_or_editing",
+        ],
+    )
+
+
+def write_proposal_context_json(root: Path, context: ProposalContext) -> Path:
+    output = root / WORKSPACE_DIR / DATA_DIR / "proposal_context.json"
+    output.parent.mkdir(parents=True, exist_ok=True)
+    tmp = output.with_suffix(".json.tmp")
+    tmp.write_text(
+        json.dumps(context.model_dump(mode="json"), ensure_ascii=False, indent=2, sort_keys=True)
+        + "\n",
+        encoding="utf-8",
+    )
+    tmp.replace(output)
+    return output
 
 
 def build_transcript_records_for_source(
@@ -2523,6 +2727,44 @@ def propose_workspace(project_path: Path) -> ProjectState:
     material_map_path = root / config.paths.output_dir / "material_map.md"
     if not material_map_path.exists():
         raise WorkspacePrerequisiteError("propose requires map to complete first")
+    sources_path = root / WORKSPACE_DIR / DATA_DIR / "sources.jsonl"
+    clips_path = root / WORKSPACE_DIR / DATA_DIR / "clips.jsonl"
+    analysis_path = root / WORKSPACE_DIR / DATA_DIR / "analysis.jsonl"
+    if not sources_path.exists():
+        raise WorkspacePrerequisiteError("propose requires scan to complete first")
+    if not clips_path.exists():
+        raise WorkspacePrerequisiteError("propose requires segment to complete first")
+    if not analysis_path.exists():
+        raise WorkspacePrerequisiteError("propose requires analyze to complete first")
+    map_step = state.steps.get("map", StepLedgerEntry())
+    if map_step.status in {StepStatus.pending, StepStatus.invalidated}:
+        raise WorkspacePrerequisiteError("propose requires map to be current first")
+
+    sources = read_sources_jsonl(sources_path)
+    clips = read_clips_jsonl(clips_path)
+    analyses = read_analysis_jsonl(analysis_path)
+    input_fingerprint = fingerprint_inputs(
+        [
+            ("sources", sources_path),
+            ("clips", clips_path),
+            ("analysis", analysis_path),
+            ("material_map", material_map_path),
+        ]
+    )
+    proposal_context = build_proposal_context(
+        config=config,
+        sources=sources,
+        clips=clips,
+        analyses=analyses,
+        sources_ref=sources_path.relative_to(root).as_posix(),
+        clips_ref=clips_path.relative_to(root).as_posix(),
+        analysis_ref=analysis_path.relative_to(root).as_posix(),
+        material_map_ref=material_map_path.relative_to(root).as_posix(),
+        material_map_fingerprint=fingerprint_file(material_map_path),
+        input_fingerprint=input_fingerprint,
+    )
+    context_path = write_proposal_context_json(root, proposal_context)
+    context_ref = context_path.relative_to(root).as_posix()
 
     capabilities = detect_capabilities()
     state.capabilities = capabilities
@@ -2535,8 +2777,8 @@ def propose_workspace(project_path: Path) -> ProjectState:
         ]
         state.steps["propose"] = StepLedgerEntry(
             status=StepStatus.blocked,
-            input_fingerprint=fingerprint_file(material_map_path),
-            output_refs=[],
+            input_fingerprint=input_fingerprint,
+            output_refs=[context_ref],
             last_run_id=run_id,
             warnings=warnings,
         )
@@ -2552,7 +2794,8 @@ def propose_workspace(project_path: Path) -> ProjectState:
             {
                 "step": "propose",
                 "status": StepStatus.blocked.value,
-                "output_refs": [],
+                "output_refs": [context_ref],
+                "proposal_context": context_ref,
                 "reason": "text_model_missing",
             },
         )
@@ -2566,7 +2809,7 @@ def propose_workspace(project_path: Path) -> ProjectState:
         )
 
     raise WorkspaceDependencyError(
-        "proposal generation is not implemented until the text-model proposal gate opens"
+        "proposal context was prepared, but generation is not implemented until the text-model proposal gate opens"
     )
 
 

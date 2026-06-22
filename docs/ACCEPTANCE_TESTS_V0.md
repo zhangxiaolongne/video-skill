@@ -81,8 +81,11 @@ Current local foundation tests cover:
 - material map invalidation after analysis changes
 - committed proposal set schema
 - `propose` requiring `material_map.md`
+- committed proposal context schema
+- `propose` writing deterministic `proposal_context.json`
 - `propose` blocking without an approved text-model gate
 - `propose` writing no fake `proposals.json` or `proposals.md` when blocked
+- status and doctor visibility for malformed proposal context packets
 - status and doctor visibility for malformed proposal sets
 - proposal readiness invalidation after upstream source, clip, transcript,
   keyframe, analysis, or map changes

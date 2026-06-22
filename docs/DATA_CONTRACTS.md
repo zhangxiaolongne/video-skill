@@ -12,6 +12,7 @@ Current committed schemas:
 - `schemas/keyframe_record.schema.json`
 - `schemas/project_config.schema.json`
 - `schemas/project_state.schema.json`
+- `schemas/proposal_context.schema.json`
 - `schemas/proposal_set.schema.json`
 - `schemas/source_record.schema.json`
 - `schemas/transcript_record.schema.json`
@@ -67,6 +68,13 @@ gate. It is rendered from `sources.jsonl` and `analysis.jsonl`, includes
 distribution, priority review, pending confirmation, and risk sections, and is
 not canonical data.
 
+`ProposalContext` is implemented for the V0-010b proposal context gate and has
+a committed schema at `schemas/proposal_context.schema.json`. It is written to
+`.artist-portrait/data/proposal_context.json` by `propose` before text-model
+generation is attempted. It contains deterministic project brief, content
+policy, source/clip/analysis summaries, evidence refs, required proposal IDs,
+BGM requirements, and blocked capabilities. It is not a creative proposal.
+
 `ProposalSet` is implemented for the V0-010a proposal readiness gate and has a
 committed schema at `schemas/proposal_set.schema.json`. A future approved
 proposal generation gate may write `.artist-portrait/data/proposals.json`, but
@@ -100,6 +108,7 @@ Current stable diagnostic codes include:
 - `keyframes_invalid`
 - `keyframe_cache_missing`
 - `analysis_invalid`
+- `proposal_context_invalid`
 - `proposals_invalid`
 - `propose_text_model_missing`
 - `scene_detection_required_missing`

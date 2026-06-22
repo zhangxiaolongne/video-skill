@@ -4,7 +4,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 
 
-def test_current_gate_is_proposal_readiness_gate_across_primary_docs():
+def test_current_gate_is_proposal_context_gate_across_primary_docs():
     agents = (ROOT / "AGENTS.md").read_text(encoding="utf-8")
     master = (ROOT / "artist_portrait_editor_revision5_optimized.md").read_text(
         encoding="utf-8"
@@ -12,16 +12,16 @@ def test_current_gate_is_proposal_readiness_gate_across_primary_docs():
     readme = (ROOT / "README.md").read_text(encoding="utf-8")
     vision = (ROOT / "docs" / "VISION.md").read_text(encoding="utf-8")
     progress = (ROOT / "docs" / "DEVELOPMENT_PROGRESS.md").read_text(encoding="utf-8")
-    v010a = (ROOT / "docs" / "V0_010A_PROPOSAL_READINESS_GATE.md").read_text(
+    v010b = (ROOT / "docs" / "V0_010B_PROPOSAL_CONTEXT_GATE.md").read_text(
         encoding="utf-8"
     )
 
-    assert "Current gate: V0-010a proposal readiness gate only." in agents
-    assert "V0-010a 提案就绪闸门" in master
-    assert "Current V0-010a proposal readiness gate work" in readme
-    assert "Current implementation gate: V0-010a proposal readiness gate only." in vision
-    assert "Current local gate: V0-010a proposal readiness gate only" in progress
-    assert "V0-010a opens only the proposal readiness surface" in v010a
+    assert "Current gate: V0-010b proposal context gate only." in agents
+    assert "V0-010b 提案上下文闸门" in master
+    assert "Current V0-010b proposal context gate work" in readme
+    assert "Current implementation gate: V0-010b proposal context gate only." in vision
+    assert "Current local gate: V0-010b proposal context gate only" in progress
+    assert "V0-010b opens the deterministic proposal context packet" in v010b
 
 
 def test_current_gate_forbids_future_media_and_creative_surfaces():
@@ -30,6 +30,9 @@ def test_current_gate_forbids_future_media_and_creative_surfaces():
             (ROOT / "AGENTS.md").read_text(encoding="utf-8"),
             (ROOT / "SKILL.md").read_text(encoding="utf-8"),
             (ROOT / "docs" / "V0_010A_PROPOSAL_READINESS_GATE.md").read_text(
+                encoding="utf-8"
+            ),
+            (ROOT / "docs" / "V0_010B_PROPOSAL_CONTEXT_GATE.md").read_text(
                 encoding="utf-8"
             ),
         ]
@@ -154,6 +157,19 @@ def test_v010a_release_readiness_records_scope():
     assert "Status: completed locally, ready to push, not tagged." in content
     assert "`ProposalSet` Pydantic model" in content
     assert "`propose` readiness command" in content
+    assert "No fake `proposals.json` or `proposals.md` generation" in content
+    assert "pytest:" in content
+    assert "run_checks.py:" in content
+
+
+def test_v010b_release_readiness_records_scope():
+    content = (ROOT / "docs" / "V0_010B_RELEASE_READINESS.md").read_text(
+        encoding="utf-8"
+    )
+
+    assert "Status: completed locally, ready to push, not tagged." in content
+    assert "`ProposalContext` Pydantic model" in content
+    assert "Deterministic `.artist-portrait/data/proposal_context.json`" in content
     assert "No fake `proposals.json` or `proposals.md` generation" in content
     assert "pytest:" in content
     assert "run_checks.py:" in content

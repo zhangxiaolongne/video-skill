@@ -146,6 +146,7 @@ def test_init_creates_only_stage_a_artifacts(tmp_path):
         ".artist-portrait/data/clips.jsonl",
         ".artist-portrait/data/transcripts.jsonl",
         ".artist-portrait/data/relations.jsonl",
+        ".artist-portrait/data/proposal_context.json",
         ".artist-portrait/data/proposals.json",
         "output/scan_report.md",
         "output/clip_report.md",
@@ -1430,14 +1431,31 @@ def test_propose_without_text_model_blocks_without_fake_outputs(
     assert code == 4
     payload = json.loads(captured.out)
     assert payload["status"] == "blocked"
+    assert payload["output_refs"] == [".artist-portrait/data/proposal_context.json"]
     assert "text_model_missing" in payload["warnings"][0]
     assert "no fake proposals" in payload["error"]
+    context_path = tmp_path / ".artist-portrait" / "data" / "proposal_context.json"
+    assert context_path.exists()
+    context_payload = json.loads(context_path.read_text(encoding="utf-8"))
+    assert context_payload["project_id"] == "chen_haoyu_portrait_001"
+    assert context_payload["proposal_ids_required"] == [
+        "proposal_safe",
+        "proposal_advanced",
+        "proposal_risky",
+    ]
+    assert context_payload["sources"][0]["source_id"] == "clean-source-1"
+    assert context_payload["clips"][0]["clip_id"] == context_payload["analyses"][0]["clip_id"]
+    assert context_payload["bgm_requirements"]
+    assert "full_creative_proposal_generation" in context_payload["blocked_capabilities"]
     assert not (tmp_path / ".artist-portrait" / "data" / "proposals.json").exists()
     assert not (tmp_path / "output" / "proposals.md").exists()
     state_payload = json.loads(
         (tmp_path / ".artist-portrait" / "state.json").read_text(encoding="utf-8")
     )
     assert state_payload["steps"]["propose"]["status"] == "blocked"
+    assert state_payload["steps"]["propose"]["output_refs"] == [
+        ".artist-portrait/data/proposal_context.json"
+    ]
 
 
 def test_invalid_proposals_json_status_and_doctor(tmp_path, capsys):
@@ -1465,6 +1483,39 @@ def test_invalid_proposals_json_status_and_doctor(tmp_path, capsys):
 
     assert code == 1
     assert any(issue["code"] == "proposals_invalid" for issue in doctor_payload["issues"])
+
+
+def test_invalid_proposal_context_status_and_doctor(tmp_path, capsys):
+    project_path = tmp_path / "project.yaml"
+    project_path.write_text(
+        project_fixture_with_scene_detection("off"),
+        encoding="utf-8",
+    )
+    assert main(["init", "--project", str(project_path), "--quiet"]) in (0, 1)
+    write_clean_source_ledger(tmp_path)
+    context_path = tmp_path / ".artist-portrait" / "data" / "proposal_context.json"
+    context_path.write_text('{"context_id": "missing-required-fields"}\n', encoding="utf-8")
+
+    code = main(["status", "--project", str(project_path), "--json"])
+    captured = capsys.readouterr()
+    status_payload = json.loads(captured.out)
+
+    assert code == 0
+    assert status_payload["summaries"]["proposal_context"]["valid"] is False
+    assert (
+        "invalid ProposalContext JSON"
+        in status_payload["summaries"]["proposal_context"]["error"]
+    )
+
+    code = main(["doctor", "--project", str(project_path), "--json"])
+    captured = capsys.readouterr()
+    doctor_payload = json.loads(captured.out)
+
+    assert code == 1
+    assert any(
+        issue["code"] == "proposal_context_invalid"
+        for issue in doctor_payload["issues"]
+    )
 
 
 def test_review_project_requires_scan_first(tmp_path, capsys):

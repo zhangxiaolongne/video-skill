@@ -5,7 +5,7 @@
 > **工作名称**：`artist-portrait-editor`  
 > **中文名称**：人物向剪辑导演 / 艺人肖像剪辑 Skill  
 > **适用范围**：产品愿景、V0 产品规格、V0 工程规格  
-> **当前开发闸门**：V0-010a 提案就绪闸门。阶段 A、V0-003、V0-004、V0-005、V0-006、V0-007、V0-008 与 V0-009 已作为工程、媒体扫描、固定窗口切分、PySceneDetect 场景切分、本地转写、关键帧缓存、基础证据分析与分析驱动素材地图验收；当前只允许在既有确定性本地链路之后增加 `ProposalSet` 数据契约、`propose` 前置条件检查、proposal 产物状态/doctor 诊断，以及无获批文本模型时的阻塞状态记录。不得实现 OpenCV/视觉模型分类、BGM 选择、完整创作提案生成、时间线生成或预览渲染；不得生成 fake/template/model-free proposals 冒充 creative_mode 成功。
+> **当前开发闸门**：V0-010b 提案上下文闸门。阶段 A、V0-003、V0-004、V0-005、V0-006、V0-007、V0-008、V0-009 与 V0-010a 已作为工程、媒体扫描、固定窗口切分、PySceneDetect 场景切分、本地转写、关键帧缓存、基础证据分析、分析驱动素材地图与提案就绪验收；当前只允许在既有确定性本地链路之后增加 `ProposalContext` 数据契约、`.artist-portrait/data/proposal_context.json`、proposal context 状态/doctor 诊断，以及无获批文本模型时先写 context 再阻塞。不得实现 OpenCV/视觉模型分类、BGM 选择、完整创作提案生成、时间线生成或预览渲染；不得生成 fake/template/model-free proposals 冒充 creative_mode 成功。
 
 ---
 
@@ -51,7 +51,7 @@ docs/DEVELOPMENT_PROGRESS.md
 - 不重复造轮子；优先复用成熟工具，再补本项目特有的数据契约、证据链、审查和降级逻辑。
 - 第三方结果不得直接冒充 canonical truth，必须记录来源、输入、输出、置信度、失败模式和可复验路径。
 - 使用第三方模型或联网能力时，必须由对应 gate、配置开关和 review 规则控制。
-- 当前 V0-010a proposal readiness gate 仍保持本地、无远程模型调用、无联网、无 image generation / editing 调用；`propose` 只验证 `material_map.md` 与文本模型闸门是否就绪，缺少获批文本模型时必须阻塞并记录状态，不得输出假提案。
+- 当前 V0-010b proposal context gate 仍保持本地、无远程模型调用、无联网、无 image generation / editing 调用；`propose` 只从本地 ledger 生成 `proposal_context.json` 并验证文本模型闸门是否就绪，缺少获批文本模型时必须阻塞并记录状态，不得输出假提案。
 
 # 0. 执行摘要
 
@@ -70,7 +70,7 @@ V0 分为两个模式：
 - `core_mode`：不依赖文本生成模型或视觉模型，负责确定性媒体处理、canonical 数据、风险规则和素材结构报告。
 - `creative_mode`：在 `core_mode` 证据基础上，生成三套可回溯创作提案，并在用户选择后生成时间线草案。
 
-阶段 A 已完成基础工程验收，V0-003 已完成媒体扫描基础，V0-004 已完成固定窗口切分基础，V0-005 已完成 PySceneDetect 场景切分闸门，V0-006 已完成本地转写闸门，V0-007 已完成关键帧缓存闸门，V0-008 已完成基础证据分析闸门，V0-009 已完成分析驱动素材地图闸门。当前允许实现 V0-010a 提案就绪闸门：
+阶段 A 已完成基础工程验收，V0-003 已完成媒体扫描基础，V0-004 已完成固定窗口切分基础，V0-005 已完成 PySceneDetect 场景切分闸门，V0-006 已完成本地转写闸门，V0-007 已完成关键帧缓存闸门，V0-008 已完成基础证据分析闸门，V0-009 已完成分析驱动素材地图闸门，V0-010a 已完成提案就绪闸门。当前允许实现 V0-010b 提案上下文闸门：
 
 ```text
 project.yaml
@@ -98,13 +98,14 @@ project.yaml
 → analysis.jsonl
 → analysis_report.md
 → material_map.md
+→ proposal_context.json
 → propose readiness gate
 → ProposalSet schema validation
 → risk_report.md
 → doctor/status 诊断
 ```
 
-当前 V0-010a 禁止实现：
+当前 V0-010b 禁止实现：
 
 ```text
 OpenCV
@@ -2109,6 +2110,41 @@ output/proposals.md
 - 缺文本模型时，不存在 `proposals.json` 和 `proposals.md`。
 - 非法 `proposals.json` 可被 `status` / `doctor` 检出。
 - committed JSON Schema 与 live Pydantic schema 一致。
+
+### 16.10b V0-010b：提案上下文闸门
+
+当前小版本只允许生成未来提案模型调用的确定性输入包，不允许调用模型或生成提案。
+
+生成：
+
+```text
+.artist-portrait/data/proposal_context.json
+```
+
+允许：
+
+- `ProposalContext` Pydantic 模型和 `schemas/proposal_context.schema.json`。
+- `propose` 在阻塞前写入合法 `proposal_context.json`。
+- context 必须包含 project brief、content policy、三套固定 proposal id、source/clip/analysis 摘要、material map 指纹、证据 refs、约束、BGM 需求和 blocked capabilities。
+- BGM 只作为未来 proposal/timeline 必须考虑的约束写入，不得做曲目选择、节拍分析或时间线 fitting。
+- `status` / `doctor` 可识别存在但非法的 `proposal_context.json`。
+
+禁止：
+
+- 文本模型调用
+- fake/template/model-free proposals
+- 完整创作提案生成
+- BGM selection、beat analysis、music recommendation 或 music/timeline fitting
+- timeline draft
+- preview render
+
+验收：
+
+- `propose --json` 缺文本模型时仍返回 blocked 和固定 dependency 错误。
+- blocked `propose` 写入合法 `proposal_context.json`。
+- blocked `propose` 仍不得写入 `proposals.json` 或 `proposals.md`。
+- context 中必须携带 BGM requirements，但不得携带具体曲目选择。
+- 非法 `proposal_context.json` 可被 `status` / `doctor` 检出。
 
 ## 16.11 V0-011：时间线草案
 
