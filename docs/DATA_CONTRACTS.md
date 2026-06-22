@@ -13,6 +13,7 @@ Current committed schemas:
 - `schemas/project_config.schema.json`
 - `schemas/project_state.schema.json`
 - `schemas/proposal_context.schema.json`
+- `schemas/proposal_validation_report.schema.json`
 - `schemas/proposal_set.schema.json`
 - `schemas/source_record.schema.json`
 - `schemas/text_model_gate.schema.json`
@@ -91,6 +92,14 @@ artifacts if they already exist. `propose` must not create fake
 `proposals.json` or `output/proposals.md` when no approved text model is
 available.
 
+`ProposalValidationReport` is implemented for the V0-010d proposal validation
+gate and has a committed schema at
+`schemas/proposal_validation_report.schema.json`. It is written to
+`.artist-portrait/data/proposal_validation.json` by
+`review --scope proposal`, alongside rebuildable `output/proposal_review.md`.
+It records deterministic validation issues for existing proposal sets and does
+not generate, repair, rank, or creatively improve proposals.
+
 Diagnostic issues are plain JSON objects used by `status`, `review`, and
 `doctor`. Current common fields:
 
@@ -119,6 +128,9 @@ Current stable diagnostic codes include:
 - `proposal_context_invalid`
 - `text_model_gate_invalid`
 - `proposals_invalid`
+- `proposal_unknown_clip_id`
+- `proposal_unknown_fact_ref`
+- `proposal_missing_bgm_strategy`
 - `propose_text_model_missing`
 - `scene_detection_required_missing`
 - `transcription_required_missing`

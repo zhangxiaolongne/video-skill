@@ -46,6 +46,10 @@ from artist_portrait_editor.models.proposal_context import (
     ProposalContext,
     ProposalSourceContext,
 )
+from artist_portrait_editor.models.proposal_validation import (
+    ProposalValidationIssue,
+    ProposalValidationReport,
+)
 from artist_portrait_editor.models.state import (
     Capabilities,
     OverallStatus,
@@ -369,6 +373,15 @@ def render_status_panel(payload: dict) -> str:
     risk = summaries.get("risk_report") or {}
     if risk.get("exists"):
         lines.append(f"risk_report: present ({risk.get('bytes', 0)} bytes)")
+    proposal_validation = summaries.get("proposal_validation") or {}
+    if proposal_validation.get("exists") and proposal_validation.get("valid", True):
+        lines.append(
+            "proposal_validation: "
+            f"{proposal_validation.get('error_count', 0)} errors, "
+            f"{proposal_validation.get('warning_count', 0)} warnings"
+        )
+    elif proposal_validation.get("exists"):
+        lines.append("proposal_validation: invalid")
     scan_report = summaries.get("scan_report") or {}
     if scan_report.get("exists"):
         lines.append(f"scan_report: present ({scan_report.get('bytes', 0)} bytes)")
@@ -813,12 +826,14 @@ def artifact_statuses(root: Path) -> dict[str, dict]:
         "proposal_context": root / WORKSPACE_DIR / DATA_DIR / "proposal_context.json",
         "text_model_gate": root / WORKSPACE_DIR / DATA_DIR / "text_model_gate.json",
         "proposals_json": root / WORKSPACE_DIR / DATA_DIR / "proposals.json",
+        "proposal_validation": root / WORKSPACE_DIR / DATA_DIR / "proposal_validation.json",
         "run_report": root / "output" / "run_report.md",
         "scan_report": root / "output" / "scan_report.md",
         "clip_report": root / "output" / "clip_report.md",
         "analysis_report": root / "output" / "analysis_report.md",
         "material_map": root / "output" / "material_map.md",
         "proposals_md": root / "output" / "proposals.md",
+        "proposal_review": root / "output" / "proposal_review.md",
         "timeline_draft": root / "output" / "timeline_draft.json",
         "risk_report": root / "output" / "risk_report.md",
     }
@@ -886,6 +901,7 @@ def status_summaries(root: Path) -> dict:
     proposals_path = root / WORKSPACE_DIR / DATA_DIR / "proposals.json"
     proposal_context_path = root / WORKSPACE_DIR / DATA_DIR / "proposal_context.json"
     text_model_gate_path = root / WORKSPACE_DIR / DATA_DIR / "text_model_gate.json"
+    proposal_validation_path = root / WORKSPACE_DIR / DATA_DIR / "proposal_validation.json"
     return {
         "sources": source_summary(sources_path),
         "clips": clip_summary(clips_path),
@@ -899,6 +915,7 @@ def status_summaries(root: Path) -> dict:
         "proposal_context": proposal_context_summary(proposal_context_path),
         "text_model_gate": text_model_gate_summary(text_model_gate_path),
         "proposals": proposal_summary(proposals_path),
+        "proposal_validation": proposal_validation_summary(proposal_validation_path),
         "risk_report": output_summary(risk_report_path),
     }
 
@@ -1109,6 +1126,15 @@ def read_text_model_gate_json(path: Path) -> TextModelGate:
         raise WorkspacePrerequisiteError(f"invalid TextModelGate JSON: {exc}") from exc
 
 
+def read_proposal_validation_json(path: Path) -> ProposalValidationReport:
+    try:
+        return ProposalValidationReport.model_validate_json(path.read_text(encoding="utf-8"))
+    except ValueError as exc:
+        raise WorkspacePrerequisiteError(
+            f"invalid ProposalValidationReport JSON: {exc}"
+        ) from exc
+
+
 def transcript_summary(path: Path) -> dict:
     if not path.exists():
         return {"exists": False}
@@ -1257,6 +1283,29 @@ def text_model_gate_summary(path: Path) -> dict:
     }
 
 
+def proposal_validation_summary(path: Path) -> dict:
+    if not path.exists():
+        return {"exists": False}
+    try:
+        report = read_proposal_validation_json(path)
+    except Exception as exc:
+        return {
+            "exists": True,
+            "valid": False,
+            "error": str(exc),
+        }
+    return {
+        "exists": True,
+        "valid": True,
+        "report_id": report.report_id,
+        "proposal_set_id": report.proposal_set_id,
+        "proposal_count": report.proposal_count,
+        "issue_count": report.issue_count,
+        "error_count": report.error_count,
+        "warning_count": report.warning_count,
+    }
+
+
 def stable_context_id(project_id: str, input_fingerprint: str) -> str:
     payload = f"{project_id}:{input_fingerprint}"
     return "ctx_" + hashlib.sha256(payload.encode("utf-8")).hexdigest()[:24]
@@ -1265,6 +1314,14 @@ def stable_context_id(project_id: str, input_fingerprint: str) -> str:
 def stable_gate_id(project_id: str, proposal_context_fingerprint: str) -> str:
     payload = f"{project_id}:{proposal_context_fingerprint}"
     return "gate_" + hashlib.sha256(payload.encode("utf-8")).hexdigest()[:24]
+
+
+def stable_proposal_validation_report_id(
+    project_id: str,
+    input_fingerprint: str,
+) -> str:
+    payload = f"{project_id}:{input_fingerprint}"
+    return "pvr_" + hashlib.sha256(payload.encode("utf-8")).hexdigest()[:24]
 
 
 def pending_visual_fields(analysis: AnalysisRecord) -> list[str]:
@@ -1448,6 +1505,202 @@ def write_text_model_gate_json(root: Path, gate: TextModelGate) -> Path:
     )
     tmp.replace(output)
     return output
+
+
+def write_proposal_validation_json(root: Path, report: ProposalValidationReport) -> Path:
+    output = root / WORKSPACE_DIR / DATA_DIR / "proposal_validation.json"
+    output.parent.mkdir(parents=True, exist_ok=True)
+    tmp = output.with_suffix(".json.tmp")
+    tmp.write_text(
+        json.dumps(report.model_dump(mode="json"), ensure_ascii=False, indent=2, sort_keys=True)
+        + "\n",
+        encoding="utf-8",
+    )
+    tmp.replace(output)
+    return output
+
+
+def proposal_validation_issue(
+    *,
+    code: str,
+    severity: str,
+    detail: str,
+    proposal_id: str | None = None,
+    ref: str | None = None,
+) -> ProposalValidationIssue:
+    return ProposalValidationIssue(
+        code=code,
+        severity=severity,
+        detail=detail,
+        proposal_id=proposal_id,
+        ref=ref,
+    )
+
+
+def valid_proposal_ref_index(context: ProposalContext) -> set[tuple[str, str]]:
+    refs: set[tuple[str, str]] = {
+        ("proposal_context", context.context_id),
+        ("material_map", context.material_map_ref),
+        ("source_ledger", context.sources_ref),
+        ("clip_ledger", context.clips_ref),
+        ("analysis_ledger", context.analysis_ref),
+    }
+    refs.update(("source", source.source_id) for source in context.sources)
+    refs.update(("clip", clip.clip_id) for clip in context.clips)
+    refs.update(("analysis", analysis.analysis_id) for analysis in context.analyses)
+    return refs
+
+
+def proposal_mentions_bgm(sound_structure: list[str]) -> bool:
+    text = " ".join(sound_structure).lower()
+    return any(token in text for token in ("bgm", "music", "score", "配乐", "音乐"))
+
+
+def validate_proposal_set_against_context(
+    *,
+    proposal_set: ProposalSet,
+    context: ProposalContext,
+) -> list[ProposalValidationIssue]:
+    issues: list[ProposalValidationIssue] = []
+    valid_clip_ids = {clip.clip_id for clip in context.clips}
+    clip_by_id = {clip.clip_id: clip for clip in context.clips}
+    source_by_id = {source.source_id: source for source in context.sources}
+    valid_refs = valid_proposal_ref_index(context)
+
+    if proposal_set.project_id != context.project_id:
+        issues.append(
+            proposal_validation_issue(
+                code="proposal_project_mismatch",
+                severity="error",
+                detail=(
+                    f"proposal project_id `{proposal_set.project_id}` does not match "
+                    f"context project_id `{context.project_id}`"
+                ),
+                ref=proposal_set.project_id,
+            )
+        )
+    if proposal_set.map_fingerprint != context.material_map_fingerprint:
+        issues.append(
+            proposal_validation_issue(
+                code="proposal_map_fingerprint_mismatch",
+                severity="error",
+                detail="proposal set map_fingerprint does not match proposal context material map",
+                ref=proposal_set.map_fingerprint,
+            )
+        )
+
+    for proposal in proposal_set.proposals:
+        proposal_id = proposal.proposal_id.value
+        if not proposal.required_clip_ids:
+            issues.append(
+                proposal_validation_issue(
+                    code="proposal_missing_required_clips",
+                    severity="error",
+                    detail="proposal must cite at least one required clip",
+                    proposal_id=proposal_id,
+                )
+            )
+        for clip_id in proposal.required_clip_ids:
+            if clip_id not in valid_clip_ids:
+                issues.append(
+                    proposal_validation_issue(
+                        code="proposal_unknown_clip_id",
+                        severity="error",
+                        detail=f"required clip `{clip_id}` is not present in proposal context",
+                        proposal_id=proposal_id,
+                        ref=clip_id,
+                    )
+                )
+                continue
+            clip = clip_by_id[clip_id]
+            source = source_by_id.get(clip.source_id)
+            if source and source.forbidden_by_user:
+                issues.append(
+                    proposal_validation_issue(
+                        code="proposal_uses_forbidden_source",
+                        severity="error",
+                        detail=(
+                            f"required clip `{clip_id}` belongs to forbidden source "
+                            f"`{clip.source_id}`"
+                        ),
+                        proposal_id=proposal_id,
+                        ref=clip_id,
+                    )
+                )
+
+        if not proposal.fact_refs:
+            issues.append(
+                proposal_validation_issue(
+                    code="proposal_missing_fact_refs",
+                    severity="error",
+                    detail="proposal must include fact_refs for traceability",
+                    proposal_id=proposal_id,
+                )
+            )
+        for fact_ref in proposal.fact_refs:
+            ref_key = (fact_ref.type, fact_ref.ref)
+            if ref_key not in valid_refs:
+                issues.append(
+                    proposal_validation_issue(
+                        code="proposal_unknown_fact_ref",
+                        severity="error",
+                        detail=f"fact ref `{fact_ref.type}:{fact_ref.ref}` is not valid",
+                        proposal_id=proposal_id,
+                        ref=f"{fact_ref.type}:{fact_ref.ref}",
+                    )
+                )
+
+        if not proposal.sound_structure:
+            issues.append(
+                proposal_validation_issue(
+                    code="proposal_missing_sound_structure",
+                    severity="error",
+                    detail="proposal must include sound_structure",
+                    proposal_id=proposal_id,
+                )
+            )
+        elif not proposal_mentions_bgm(proposal.sound_structure):
+            issues.append(
+                proposal_validation_issue(
+                    code="proposal_missing_bgm_strategy",
+                    severity="warning",
+                    detail="sound_structure should explicitly describe BGM/music strategy",
+                    proposal_id=proposal_id,
+                )
+            )
+    return issues
+
+
+def build_proposal_validation_report(
+    *,
+    proposal_set: ProposalSet,
+    context: ProposalContext,
+    proposal_context_ref: str,
+    proposals_ref: str,
+    input_fingerprint: str,
+) -> ProposalValidationReport:
+    issues = validate_proposal_set_against_context(
+        proposal_set=proposal_set,
+        context=context,
+    )
+    error_count = sum(1 for issue in issues if issue.severity == "error")
+    warning_count = sum(1 for issue in issues if issue.severity == "warning")
+    return ProposalValidationReport(
+        report_id=stable_proposal_validation_report_id(
+            context.project_id,
+            input_fingerprint,
+        ),
+        project_id=context.project_id,
+        proposal_set_id=proposal_set.proposal_set_id,
+        proposal_context_ref=proposal_context_ref,
+        proposals_ref=proposals_ref,
+        input_fingerprint=input_fingerprint,
+        proposal_count=len(proposal_set.proposals),
+        issue_count=len(issues),
+        error_count=error_count,
+        warning_count=warning_count,
+        issues=issues,
+    )
 
 
 def build_transcript_records_for_source(
@@ -3259,12 +3512,105 @@ def review_project_workspace(
     return output_path, state, warnings, issues
 
 
+def review_proposal_workspace(
+    project_path: Path,
+) -> tuple[Path, Path, ProjectState, list[str], list[dict[str, str]]]:
+    config = load_project_config(project_path)
+    root = project_root(project_path)
+    state = load_state(root)
+    if state is None:
+        raise WorkspacePrerequisiteError("review --scope proposal requires init to complete first")
+
+    context_path = root / WORKSPACE_DIR / DATA_DIR / "proposal_context.json"
+    proposals_path = root / WORKSPACE_DIR / DATA_DIR / "proposals.json"
+    if not context_path.exists():
+        raise WorkspacePrerequisiteError(
+            "review --scope proposal requires propose to prepare proposal context first"
+        )
+    if not proposals_path.exists():
+        raise WorkspacePrerequisiteError(
+            "review --scope proposal requires proposals.json to exist first"
+        )
+
+    context = read_proposal_context_json(context_path)
+    proposal_set = read_proposals_json(proposals_path)
+    input_fingerprint = fingerprint_inputs(
+        [
+            ("proposal_context", context_path),
+            ("proposals", proposals_path),
+        ]
+    )
+    validation = build_proposal_validation_report(
+        proposal_set=proposal_set,
+        context=context,
+        proposal_context_ref=context_path.relative_to(root).as_posix(),
+        proposals_ref=proposals_path.relative_to(root).as_posix(),
+        input_fingerprint=input_fingerprint,
+    )
+    validation_path = write_proposal_validation_json(root, validation)
+    output_dir = root / config.paths.output_dir
+    report_path = output_dir / "proposal_review.md"
+    atomic_write_text(report_path, render_proposal_review_report(validation))
+
+    warnings = (
+        [f"{validation.issue_count} proposal validation issue(s) found"]
+        if validation.issue_count
+        else []
+    )
+    run_id = new_run_id()
+    status = StepStatus.completed_with_warnings if warnings else StepStatus.completed
+    state.steps["review_proposal"] = StepLedgerEntry(
+        status=status,
+        input_fingerprint=input_fingerprint,
+        output_refs=[
+            validation_path.relative_to(root).as_posix(),
+            report_path.relative_to(root).as_posix(),
+        ],
+        last_run_id=run_id,
+        warnings=warnings,
+    )
+    state.latest_run_id = run_id
+    state.updated_at = utc_now()
+    state.overall_status = OverallStatus.degraded if warnings else OverallStatus.ready
+
+    runs_dir = root / WORKSPACE_DIR / RUNS_DIR / run_id
+    runs_dir.mkdir(parents=True, exist_ok=True)
+    write_json(
+        runs_dir / "command.json",
+        {"command": "review", "scope": "proposal", "project": str(project_path)},
+    )
+    write_json(runs_dir / "environment.json", environment_snapshot())
+    write_json(
+        runs_dir / "step_result.json",
+        {
+            "step": "review_proposal",
+            "status": status.value,
+            "proposal_count": validation.proposal_count,
+            "issues": validation.issue_count,
+            "errors": validation.error_count,
+            "warnings": validation.warning_count,
+            "output_refs": state.steps["review_proposal"].output_refs,
+        },
+    )
+    write_json(runs_dir / "warnings.json", warnings)
+    write_json(
+        runs_dir / "errors.json",
+        [issue.code for issue in validation.issues if issue.severity == "error"],
+    )
+    (runs_dir / "log.txt").write_text("review proposal completed\n", encoding="utf-8")
+    save_state(root, state)
+    write_run_report(output_dir, state, warnings)
+    return (
+        validation_path,
+        report_path,
+        state,
+        warnings,
+        [issue.model_dump(mode="json") for issue in validation.issues],
+    )
+
+
 def review_all_scope_issues() -> list[dict[str, str]]:
     return [
-        review_scope_issue(
-            scope="proposal",
-            detail="proposal review is not implemented in the current local foundation gate",
-        ),
         review_scope_issue(
             scope="timeline",
             detail="timeline review is not implemented in the current local foundation gate",
@@ -3450,5 +3796,50 @@ def render_issue_sections(issues: list[dict[str, str]]) -> str:
             f"- Scope: `{issue.get('scope', 'source')}`\n"
             f"{optional_lines}"
             f"- Detail: {issue['detail']}\n"
+        )
+    return "\n".join(sections)
+
+
+def render_proposal_review_report(report: ProposalValidationReport) -> str:
+    severity_counts = count_by_value(issue.severity for issue in report.issues)
+    code_counts = count_by_value(issue.code for issue in report.issues)
+    return (
+        "# Proposal Review\n\n"
+        "This deterministic proposal review validates an existing proposals.json "
+        "against the local proposal context. It does not generate proposals, call "
+        "models, choose BGM, create timelines, or render previews.\n\n"
+        "## Summary\n\n"
+        f"- Proposal context: `{report.proposal_context_ref}`\n"
+        f"- Proposals: `{report.proposals_ref}`\n"
+        f"- Proposal count: `{report.proposal_count}`\n"
+        f"- Issue count: `{report.issue_count}`\n"
+        f"- Error count: `{report.error_count}`\n"
+        f"- Warning count: `{report.warning_count}`\n\n"
+        "## Severity Counts\n\n"
+        f"{render_count_lines(severity_counts)}"
+        "## Issue Counts\n\n"
+        f"{render_count_lines(code_counts)}"
+        "## Issues\n\n"
+        f"{render_proposal_validation_issue_sections(report.issues)}"
+    )
+
+
+def render_proposal_validation_issue_sections(
+    issues: list[ProposalValidationIssue],
+) -> str:
+    if not issues:
+        return "No proposal validation issues were found.\n"
+    sections = []
+    for index, issue in enumerate(issues, start=1):
+        optional_lines = ""
+        if issue.proposal_id:
+            optional_lines += f"- Proposal ID: `{issue.proposal_id}`\n"
+        if issue.ref:
+            optional_lines += f"- Ref: `{issue.ref}`\n"
+        sections.append(
+            f"### {index}. `{issue.code}`\n\n"
+            f"- Severity: `{issue.severity}`\n"
+            f"{optional_lines}"
+            f"- Detail: {issue.detail}\n"
         )
     return "\n".join(sections)

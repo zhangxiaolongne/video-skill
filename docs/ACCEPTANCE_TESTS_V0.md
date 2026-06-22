@@ -24,8 +24,8 @@ Current local foundation tests cover:
 - invalid `sources.jsonl` handling for `scan`, `status`, `map`, and `review`
 - atomic writes for rebuildable report outputs
 - ledger output reference consistency in `status` and `review`
-- minimal `review --scope all` that runs project review and marks proposal and
-  timeline review as skipped
+- minimal `review --scope all` that runs project review and marks timeline
+  review as skipped
 - read-only `doctor` diagnostics for uninitialized workspaces, missing output
   refs, invalid source ledgers, and recommended next commands
 - root `SKILL.md` and `agents/openai.yaml` metadata validation
@@ -94,6 +94,13 @@ Current local foundation tests cover:
 - status and doctor visibility for malformed proposal sets
 - proposal readiness invalidation after upstream source, clip, transcript,
   keyframe, analysis, or map changes
+- committed proposal validation report schema
+- `review --scope proposal` requiring `proposal_context.json` and
+  `proposals.json`
+- `review --scope proposal` writing deterministic `proposal_validation.json`
+  and rebuildable `proposal_review.md`
+- proposal validation for unknown clip refs, unknown fact refs, forbidden
+  source usage, material-map fingerprint drift, and missing BGM strategy fields
 
 Future visual classification, full proposal generation, timeline, preview,
 remote model, BGM, image generation/editing, and network fixtures are

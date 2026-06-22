@@ -2,7 +2,7 @@
 
 Authoritative source: `artist_portrait_editor_revision5_optimized.md`.
 
-Implemented V0-010c text model gate contract commands:
+Implemented V0-010d proposal validation gate commands:
 
 ```bash
 artist-portrait validate --project ./project.yaml
@@ -18,6 +18,7 @@ artist-portrait analyze --project ./project.yaml
 artist-portrait map --project ./project.yaml
 artist-portrait propose --project ./project.yaml
 artist-portrait review --project ./project.yaml --scope project
+artist-portrait review --project ./project.yaml --scope proposal
 artist-portrait review --project ./project.yaml --scope all
 ```
 
@@ -31,9 +32,17 @@ Common current-gate flags:
 --dry-run   # init only
 ```
 
-`review --scope all` runs the implemented project review, then records proposal
-and timeline review as skipped warnings. `review --scope proposal` and
-`review --scope timeline` still return `7 prerequisite_step_missing`.
+`review --scope proposal` reads `.artist-portrait/data/proposal_context.json`
+and `.artist-portrait/data/proposals.json`, writes
+`.artist-portrait/data/proposal_validation.json` and
+`output/proposal_review.md`, and validates proposal IDs, required clips,
+forbidden-source usage, fact references, material-map fingerprints, and BGM
+strategy fields. It does not generate proposals, call models, select music, or
+build timelines.
+
+`review --scope all` runs the implemented project review, then records timeline
+review as a skipped warning. `review --scope timeline` still returns `7
+prerequisite_step_missing`.
 
 Commands outside the current gate currently return `7 prerequisite_step_missing`.
 

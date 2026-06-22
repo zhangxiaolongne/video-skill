@@ -2,7 +2,7 @@
 
 Authoritative source: `artist_portrait_editor_revision5_optimized.md`.
 
-The current V0-010c gate uses `.artist-portrait/state.json` as a step ledger,
+The current V0-010d gate uses `.artist-portrait/state.json` as a step ledger,
 not a single linear project state.
 
 Current step statuses:
@@ -28,10 +28,11 @@ degraded
 blocked
 ```
 
-Stage A initialized ledger entries for future V0 steps. V0-010c opens only the
+Stage A initialized ledger entries for future V0 steps. V0-010d opens only the
 media scan, fixed-window/PySceneDetect scene segmentation, local transcription,
 keyframe cache, evidence-only basic analysis, and analysis-led material map
-foundation steps plus proposal readiness checks. It leaves visual
+foundation steps plus proposal readiness checks and deterministic validation of
+existing proposal sets. It leaves visual
 classification, full proposal generation, timeline, preview, remote model,
 image, network, and BGM capabilities closed.
 
@@ -86,6 +87,14 @@ are marked `invalidated`. When `analysis.jsonl` changes, completed `map`,
 `propose`, and `review_project` steps are marked `invalidated`. When
 `material_map.md` changes, old completed or blocked `propose` state is marked
 `invalidated`.
+
+`review --scope proposal` requires current `proposal_context.json` and
+`proposals.json`, writes canonical
+`.artist-portrait/data/proposal_validation.json`, writes rebuildable
+`output/proposal_review.md`, and records `review_proposal` as completed or
+completed with warnings. It validates references and BGM strategy fields only;
+it does not call models, select music, or create proposal content.
+
 `doctor --json` reports those states as `segment_invalidated`,
 `transcribe_invalidated`, `keyframes_invalidated`, `analyze_invalidated`,
 `map_invalidated`, and `review_project_invalidated`.

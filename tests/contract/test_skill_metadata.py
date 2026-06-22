@@ -48,6 +48,7 @@ def test_skill_frontmatter_and_boundaries():
     assert "analysis-led material map" in frontmatter["description"]
     assert "ProposalContext schema" in frontmatter["description"]
     assert "TextModelGate schema" in frontmatter["description"]
+    assert "ProposalValidationReport schema" in frontmatter["description"]
     assert "ProposalSet schema" in frontmatter["description"]
     assert "blocked propose gate" in frontmatter["description"]
     assert "BGM selection" in frontmatter["description"]
@@ -57,6 +58,8 @@ def test_skill_frontmatter_and_boundaries():
     assert "output/clip_report.md" in content
     assert ".artist-portrait/data/proposal_context.json" in content
     assert ".artist-portrait/data/text_model_gate.json" in content
+    assert ".artist-portrait/data/proposal_validation.json" in content
+    assert "output/proposal_review.md" in content
     assert "fake" in content
     assert ".artist-portrait/data/proposals.json" in content
 

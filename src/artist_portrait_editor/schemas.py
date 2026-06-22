@@ -10,6 +10,7 @@ from artist_portrait_editor.models.keyframe import KeyframeRecord
 from artist_portrait_editor.models.model_gate import TextModelGate
 from artist_portrait_editor.models.proposal import ProposalSet
 from artist_portrait_editor.models.proposal_context import ProposalContext
+from artist_portrait_editor.models.proposal_validation import ProposalValidationReport
 from artist_portrait_editor.models.source import SourceRecord
 from artist_portrait_editor.models.state import ProjectState
 from artist_portrait_editor.models.transcript import TranscriptRecord
@@ -23,6 +24,7 @@ def write_schema_files(output_dir: Path) -> None:
         "project_state.schema.json": ProjectState.model_json_schema(),
         "proposal_set.schema.json": ProposalSet.model_json_schema(),
         "proposal_context.schema.json": ProposalContext.model_json_schema(),
+        "proposal_validation_report.schema.json": ProposalValidationReport.model_json_schema(),
         "source_record.schema.json": SourceRecord.model_json_schema(),
         "clip_record.schema.json": ClipRecord.model_json_schema(),
         "keyframe_record.schema.json": KeyframeRecord.model_json_schema(),

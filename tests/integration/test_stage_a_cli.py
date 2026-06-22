@@ -118,6 +118,57 @@ def project_fixture_with_remote_text_model_allowed() -> str:
     )
 
 
+def write_proposals_from_context(root: Path, *, unknown_clip: bool = False, bgm: bool = True) -> None:
+    context = json.loads(
+        (root / ".artist-portrait" / "data" / "proposal_context.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    clip_id = context["clips"][0]["clip_id"]
+    analysis_id = context["analyses"][0]["analysis_id"]
+    required_clip = "clip_missing" if unknown_clip else clip_id
+    sound_structure = ["BGM strategy: low-interference music under speech"] if bgm else [
+        "voice-first sound plan"
+    ]
+    proposals = []
+    for proposal_id in ("proposal_safe", "proposal_advanced", "proposal_risky"):
+        proposals.append(
+            {
+                "proposal_id": proposal_id,
+                "title": proposal_id.replace("_", " ").title(),
+                "theme": context["creative_brief"]["theme"],
+                "audience": context["creative_brief"]["audience"],
+                "required_clip_ids": [required_clip],
+                "fact_refs": [
+                    {"type": "clip", "ref": clip_id},
+                    {"type": "analysis", "ref": analysis_id},
+                    {"type": "material_map", "ref": context["material_map_ref"]},
+                ],
+                "story_structure": ["open with established evidence", "develop contrast"],
+                "sound_structure": sound_structure,
+                "visual_motifs": ["manual confirmation required"],
+                "risks": ["visual semantics not inferred"],
+                "minimum_viable_timeline": ["timeline generation not open"],
+                "missing_material": [],
+                "counter_proposal": None,
+            }
+        )
+    payload = {
+        "proposal_set_id": "proposal_set_test",
+        "project_id": context["project_id"],
+        "map_fingerprint": context["material_map_fingerprint"],
+        "method": "test_fixture",
+        "method_version": "test",
+        "proposals": proposals,
+        "evidence": [{"type": "proposal_context", "ref": context["context_id"]}],
+        "warnings": [],
+    }
+    (root / ".artist-portrait" / "data" / "proposals.json").write_text(
+        json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+
+
 def test_validate_valid_project(capsys):
     code = main(["validate", "--project", str(FIXTURES / "valid_project.yaml")])
     captured = capsys.readouterr()
@@ -1633,18 +1684,112 @@ def test_review_project_requires_scan_first(tmp_path, capsys):
     assert "review --scope project requires scan" in captured.err
 
 
-def test_review_non_project_scope_remains_blocked(tmp_path, capsys):
+def test_review_proposal_requires_context_and_proposals(tmp_path, capsys):
+    project_path = tmp_path / "project.yaml"
+    project_path.write_text(
+        (FIXTURES / "valid_project.yaml").read_text(encoding="utf-8"),
+        encoding="utf-8",
+    )
+    assert main(["init", "--project", str(project_path), "--quiet"]) in (0, 1)
+
+    code = main(["review", "--project", str(project_path), "--scope", "proposal"])
+    captured = capsys.readouterr()
+
+    assert code == 7
+    assert "requires propose to prepare proposal context" in captured.err
+
+
+def test_review_timeline_scope_remains_blocked(tmp_path, capsys):
     project_path = tmp_path / "project.yaml"
     project_path.write_text(
         (FIXTURES / "valid_project.yaml").read_text(encoding="utf-8"),
         encoding="utf-8",
     )
 
-    code = main(["review", "--project", str(project_path), "--scope", "proposal"])
+    code = main(["review", "--project", str(project_path), "--scope", "timeline"])
     captured = capsys.readouterr()
 
     assert code == 7
-    assert "review --scope proposal" in captured.err
+    assert "review --scope timeline" in captured.err
+
+
+def test_review_proposal_validates_existing_proposals(tmp_path, monkeypatch, capsys):
+    project_path = tmp_path / "project.yaml"
+    project_path.write_text(
+        project_fixture_with_scene_detection("off"),
+        encoding="utf-8",
+    )
+    assert main(["init", "--project", str(project_path), "--quiet"]) in (0, 1)
+    write_clean_source_ledger(tmp_path)
+    assert main(["segment", "--project", str(project_path), "--quiet"]) == 0
+    assert main(["analyze", "--project", str(project_path), "--quiet"]) == 0
+    assert main(["map", "--project", str(project_path), "--quiet"]) == 0
+    monkeypatch.setattr(
+        workspace,
+        "detect_capabilities",
+        lambda: Capabilities(text_model=False),
+    )
+    assert main(["propose", "--project", str(project_path), "--quiet"]) == 4
+    write_proposals_from_context(tmp_path)
+
+    code = main(["review", "--project", str(project_path), "--scope", "proposal", "--json"])
+    captured = capsys.readouterr()
+    payload = json.loads(captured.out)
+
+    assert code == 0
+    assert payload["output"] == "output/proposal_review.md"
+    assert payload["validation"] == ".artist-portrait/data/proposal_validation.json"
+    assert payload["issues"] == []
+    validation = json.loads(
+        (tmp_path / ".artist-portrait" / "data" / "proposal_validation.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    assert validation["error_count"] == 0
+    assert validation["warning_count"] == 0
+    report = (tmp_path / "output" / "proposal_review.md").read_text(encoding="utf-8")
+    assert "# Proposal Review" in report
+    assert "No proposal validation issues" in report
+
+
+def test_review_proposal_reports_unknown_clip_and_missing_bgm(
+    tmp_path,
+    monkeypatch,
+    capsys,
+):
+    project_path = tmp_path / "project.yaml"
+    project_path.write_text(
+        project_fixture_with_scene_detection("off"),
+        encoding="utf-8",
+    )
+    assert main(["init", "--project", str(project_path), "--quiet"]) in (0, 1)
+    write_clean_source_ledger(tmp_path)
+    assert main(["segment", "--project", str(project_path), "--quiet"]) == 0
+    assert main(["analyze", "--project", str(project_path), "--quiet"]) == 0
+    assert main(["map", "--project", str(project_path), "--quiet"]) == 0
+    monkeypatch.setattr(
+        workspace,
+        "detect_capabilities",
+        lambda: Capabilities(text_model=False),
+    )
+    assert main(["propose", "--project", str(project_path), "--quiet"]) == 4
+    write_proposals_from_context(tmp_path, unknown_clip=True, bgm=False)
+
+    code = main(["review", "--project", str(project_path), "--scope", "proposal", "--json"])
+    captured = capsys.readouterr()
+    payload = json.loads(captured.out)
+
+    assert code == 1
+    issue_codes = {issue["code"] for issue in payload["issues"]}
+    assert "proposal_unknown_clip_id" in issue_codes
+    assert "proposal_missing_bgm_strategy" in issue_codes
+    validation = json.loads(
+        (tmp_path / ".artist-portrait" / "data" / "proposal_validation.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    assert validation["error_count"] == 3
+    assert validation["warning_count"] == 3
 
 
 def test_review_all_runs_project_review_and_marks_unimplemented_scopes(
@@ -1667,14 +1812,9 @@ def test_review_all_runs_project_review_and_marks_unimplemented_scopes(
     assert payload["output"] == "output/risk_report.md"
     assert [issue["code"] for issue in payload["issues"]] == [
         "review_scope_skipped",
-        "review_scope_skipped",
     ]
-    assert {issue["review_scope"] for issue in payload["issues"]} == {
-        "proposal",
-        "timeline",
-    }
+    assert {issue["review_scope"] for issue in payload["issues"]} == {"timeline"}
     risk_report = (tmp_path / "output" / "risk_report.md").read_text(encoding="utf-8")
-    assert "Review scope: `proposal`" in risk_report
     assert "Review scope: `timeline`" in risk_report
 
     code = main(["status", "--project", str(project_path), "--json"])

@@ -8,6 +8,7 @@ from artist_portrait_editor.models.keyframe import KeyframeRecord
 from artist_portrait_editor.models.model_gate import TextModelGate
 from artist_portrait_editor.models.proposal import ProposalSet
 from artist_portrait_editor.models.proposal_context import ProposalContext
+from artist_portrait_editor.models.proposal_validation import ProposalValidationReport
 from artist_portrait_editor.models.source import SourceRecord
 from artist_portrait_editor.models.state import ProjectState
 from artist_portrait_editor.models.transcript import TranscriptRecord
@@ -20,6 +21,7 @@ def test_schema_generation_from_pydantic_models():
     keyframe_schema = KeyframeRecord.model_json_schema()
     proposal_schema = ProposalSet.model_json_schema()
     proposal_context_schema = ProposalContext.model_json_schema()
+    proposal_validation_schema = ProposalValidationReport.model_json_schema()
     text_model_gate_schema = TextModelGate.model_json_schema()
     state_schema = ProjectState.model_json_schema()
     source_schema = SourceRecord.model_json_schema()
@@ -31,6 +33,7 @@ def test_schema_generation_from_pydantic_models():
     assert keyframe_schema["title"] == "KeyframeRecord"
     assert proposal_schema["title"] == "ProposalSet"
     assert proposal_context_schema["title"] == "ProposalContext"
+    assert proposal_validation_schema["title"] == "ProposalValidationReport"
     assert text_model_gate_schema["title"] == "TextModelGate"
     assert state_schema["title"] == "ProjectState"
     assert source_schema["title"] == "SourceRecord"
@@ -41,6 +44,7 @@ def test_schema_generation_from_pydantic_models():
     assert "keyframe_id" in keyframe_schema["properties"]
     assert "proposals" in proposal_schema["properties"]
     assert "bgm_requirements" in proposal_context_schema["properties"]
+    assert "issues" in proposal_validation_schema["properties"]
     assert "reasons" in text_model_gate_schema["properties"]
     assert "steps" in state_schema["properties"]
     assert "source_id" in source_schema["properties"]
@@ -66,6 +70,11 @@ def test_committed_schemas_match_pydantic_generation():
     )
     committed_proposal_context = json.loads(
         (schema_dir / "proposal_context.schema.json").read_text(encoding="utf-8")
+    )
+    committed_proposal_validation = json.loads(
+        (schema_dir / "proposal_validation_report.schema.json").read_text(
+            encoding="utf-8"
+        )
     )
     committed_state = json.loads(
         (schema_dir / "project_state.schema.json").read_text(encoding="utf-8")
@@ -97,6 +106,9 @@ def test_committed_schemas_match_pydantic_generation():
     )
     assert committed_proposal_context == json.loads(
         json.dumps(ProposalContext.model_json_schema(), sort_keys=True)
+    )
+    assert committed_proposal_validation == json.loads(
+        json.dumps(ProposalValidationReport.model_json_schema(), sort_keys=True)
     )
     assert committed_state == json.loads(
         json.dumps(ProjectState.model_json_schema(), sort_keys=True)

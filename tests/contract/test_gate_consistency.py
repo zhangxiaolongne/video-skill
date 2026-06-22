@@ -4,7 +4,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 
 
-def test_current_gate_is_text_model_gate_across_primary_docs():
+def test_current_gate_is_proposal_validation_gate_across_primary_docs():
     agents = (ROOT / "AGENTS.md").read_text(encoding="utf-8")
     master = (ROOT / "artist_portrait_editor_revision5_optimized.md").read_text(
         encoding="utf-8"
@@ -12,16 +12,16 @@ def test_current_gate_is_text_model_gate_across_primary_docs():
     readme = (ROOT / "README.md").read_text(encoding="utf-8")
     vision = (ROOT / "docs" / "VISION.md").read_text(encoding="utf-8")
     progress = (ROOT / "docs" / "DEVELOPMENT_PROGRESS.md").read_text(encoding="utf-8")
-    v010c = (ROOT / "docs" / "V0_010C_TEXT_MODEL_GATE.md").read_text(
+    v010d = (ROOT / "docs" / "V0_010D_PROPOSAL_VALIDATION_GATE.md").read_text(
         encoding="utf-8"
     )
 
-    assert "Current gate: V0-010c text model gate contract only." in agents
-    assert "V0-010c 文本模型闸门契约" in master
-    assert "Current V0-010c text model gate contract work" in readme
-    assert "Current implementation gate: V0-010c text model gate contract only." in vision
-    assert "Current local gate: V0-010c text model gate contract only" in progress
-    assert "V0-010c opens the deterministic text-model gate contract" in v010c
+    assert "Current gate: V0-010d proposal validation gate only." in agents
+    assert "V0-010d 提案验证闸门" in master
+    assert "Current V0-010d proposal validation gate work" in readme
+    assert "Current implementation gate: V0-010d proposal validation gate only." in vision
+    assert "Current local gate: V0-010d proposal validation gate only" in progress
+    assert "V0-010d opens deterministic validation of existing proposal sets" in v010d
 
 
 def test_current_gate_forbids_future_media_and_creative_surfaces():
@@ -36,6 +36,9 @@ def test_current_gate_forbids_future_media_and_creative_surfaces():
                 encoding="utf-8"
             ),
             (ROOT / "docs" / "V0_010C_TEXT_MODEL_GATE.md").read_text(
+                encoding="utf-8"
+            ),
+            (ROOT / "docs" / "V0_010D_PROPOSAL_VALIDATION_GATE.md").read_text(
                 encoding="utf-8"
             ),
         ]
@@ -187,5 +190,19 @@ def test_v010c_release_readiness_records_scope():
     assert "`TextModelGate` Pydantic model" in content
     assert "Deterministic `.artist-portrait/data/text_model_gate.json`" in content
     assert "No fake `proposals.json` or `proposals.md` generation" in content
+    assert "pytest:" in content
+    assert "run_checks.py:" in content
+
+
+def test_v010d_release_readiness_records_scope():
+    content = (ROOT / "docs" / "V0_010D_RELEASE_READINESS.md").read_text(
+        encoding="utf-8"
+    )
+
+    assert "Status: completed locally, ready to push, not tagged." in content
+    assert "`ProposalValidationReport` Pydantic model" in content
+    assert "Canonical `.artist-portrait/data/proposal_validation.json`" in content
+    assert "Rebuildable `output/proposal_review.md`" in content
+    assert "BGM strategy fields" in content
     assert "pytest:" in content
     assert "run_checks.py:" in content

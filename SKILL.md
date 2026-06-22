@@ -1,6 +1,6 @@
 ---
 name: artist-portrait-editor
-description: Deterministic local workflow for artist portrait video-editing projects. Use when Codex needs to validate config, initialize state, scan media into a source ledger and scan report, segment into a fixed-window or PySceneDetect-gated clip ledger, transcribe through a local faster-whisper transcript ledger, extract keyframe ledger/cache, run evidence-only analysis ledger/report, generate an analysis-led material map, prepare proposal context with a ProposalContext schema, check text-model readiness with a TextModelGate schema, validate ProposalSet schema through a blocked propose gate, run project review/doctor, or preserve boundaries before BGM selection, full proposal generation, timeline generation, preview rendering, model calls, image generation/editing, or network search.
+description: Deterministic local workflow for artist portrait video-editing projects. Use when Codex needs to validate config, initialize state, scan media into a source ledger and scan report, segment into a fixed-window or PySceneDetect-gated clip ledger, transcribe through a local faster-whisper transcript ledger, extract keyframe ledger/cache, run evidence-only analysis ledger/report, generate an analysis-led material map, prepare proposal context with a ProposalContext schema, run the blocked propose gate with a TextModelGate schema, validate existing ProposalSet schema outputs with a ProposalValidationReport schema, run project/proposal review/doctor, or preserve boundaries before BGM selection, full proposal generation, timeline generation, preview rendering, model calls, image generation/editing, or network search.
 ---
 
 # Artist Portrait Editor
@@ -95,9 +95,21 @@ artist portrait project preparation and audit work.
    ready. It records `propose` as blocked, returns exit code 4, and writes no
    fake `.artist-portrait/data/proposals.json` or `output/proposals.md`.
 
+   Existing proposals can be validated deterministically:
+
+   ```bash
+   artist-portrait review --project ./project.yaml --scope proposal
+   ```
+
+   This reads `.artist-portrait/data/proposal_context.json` and
+   `.artist-portrait/data/proposals.json`, writes
+   `.artist-portrait/data/proposal_validation.json` and
+   `output/proposal_review.md`, and checks proposal IDs, clip refs, fact refs,
+   forbidden sources, and BGM strategy fields. It does not generate proposals.
+
 6. Use `review --scope all` only as a shallow aggregate. It runs project review
-   and marks proposal/timeline review as skipped; it does not implement those
-   review surfaces.
+   and marks timeline review as skipped; proposal review is available only as a
+   deterministic validation pass over existing proposal artifacts.
 
 ## Diagnostics
 

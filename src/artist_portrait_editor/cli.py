@@ -24,6 +24,7 @@ from artist_portrait_editor.workspace import (
     project_root,
     render_doctor_panel,
     render_status_panel,
+    review_proposal_workspace,
     review_project_workspace,
     scan_workspace,
     segment_workspace,
@@ -454,7 +455,7 @@ def cmd_analyze(args: argparse.Namespace) -> int:
 def cmd_review(args: argparse.Namespace) -> int:
     if error := _validate_common_flags(args):
         return int(error)
-    if args.scope in {"proposal", "timeline"}:
+    if args.scope == "timeline":
         print(
             f"review --scope {args.scope} is outside the current gate and is not implemented",
             file=sys.stderr,
@@ -467,22 +468,34 @@ def cmd_review(args: argparse.Namespace) -> int:
         print(str(exc), file=sys.stderr)
         return int(ExitCode.invalid_project_config)
     try:
-        output_path, _state, warnings, issues = review_project_workspace(
-            project_path,
-            scope=args.scope,
-        )
+        if args.scope == "proposal":
+            validation_path, report_path, _state, warnings, issues = review_proposal_workspace(
+                project_path
+            )
+            root = project_root(project_path)
+            payload = {
+                "output": report_path.relative_to(root).as_posix(),
+                "validation": validation_path.relative_to(root).as_posix(),
+                "warnings": warnings,
+                "issues": issues,
+            }
+        else:
+            output_path, _state, warnings, issues = review_project_workspace(
+                project_path,
+                scope=args.scope,
+            )
+            root = project_root(project_path)
+            payload = {
+                "output": output_path.relative_to(root).as_posix(),
+                "warnings": warnings,
+                "issues": issues,
+            }
     except WorkspacePrerequisiteError as exc:
         print(str(exc), file=sys.stderr)
         return int(ExitCode.prerequisite_step_missing)
     except SourceLedgerError as exc:
         print(str(exc), file=sys.stderr)
         return int(ExitCode.output_or_reference_validation_failed)
-    root = project_root(project_path)
-    payload = {
-        "output": output_path.relative_to(root).as_posix(),
-        "warnings": warnings,
-        "issues": issues,
-    }
     if args.json:
         print(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True))
     elif not args.quiet:

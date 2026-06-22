@@ -60,6 +60,7 @@ def check_schema_drift() -> None:
             "project_config.schema.json",
             "project_state.schema.json",
             "proposal_context.schema.json",
+            "proposal_validation_report.schema.json",
             "proposal_set.schema.json",
             "source_record.schema.json",
             "keyframe_record.schema.json",
@@ -119,30 +120,30 @@ def check_gate_consistency() -> None:
         "master": ROOT / "artist_portrait_editor_revision5_optimized.md",
         "README.md": ROOT / "README.md",
         "DEVELOPMENT_PROGRESS.md": ROOT / "docs" / "DEVELOPMENT_PROGRESS.md",
-        "V0_010C_TEXT_MODEL_GATE.md": ROOT
+        "V0_010D_PROPOSAL_VALIDATION_GATE.md": ROOT
         / "docs"
-        / "V0_010C_TEXT_MODEL_GATE.md",
+        / "V0_010D_PROPOSAL_VALIDATION_GATE.md",
     }
     content = {name: path.read_text(encoding="utf-8") for name, path in docs.items()}
     if (
-        "Current gate: V0-010c text model gate contract only."
+        "Current gate: V0-010d proposal validation gate only."
         not in content["AGENTS.md"]
     ):
-        raise SystemExit("AGENTS.md current gate is not V0-010c text model gate")
-    if "V0-010c 文本模型闸门契约" not in content["master"]:
-        raise SystemExit("master document current gate is not V0-010c text model gate")
-    if "Current V0-010c text model gate contract work" not in content["README.md"]:
-        raise SystemExit("README current gate is not V0-010c text model gate")
+        raise SystemExit("AGENTS.md current gate is not V0-010d proposal validation")
+    if "V0-010d 提案验证闸门" not in content["master"]:
+        raise SystemExit("master document current gate is not V0-010d proposal validation")
+    if "Current V0-010d proposal validation gate work" not in content["README.md"]:
+        raise SystemExit("README current gate is not V0-010d proposal validation")
     if (
-        "Current local gate: V0-010c text model gate contract only"
+        "Current local gate: V0-010d proposal validation gate only"
         not in content["DEVELOPMENT_PROGRESS.md"]
     ):
         raise SystemExit("development progress current gate is stale")
     if (
-        "V0-010c opens the deterministic text-model gate contract"
-        not in content["V0_010C_TEXT_MODEL_GATE.md"]
+        "V0-010d opens deterministic validation of existing proposal sets"
+        not in content["V0_010D_PROPOSAL_VALIDATION_GATE.md"]
     ):
-        raise SystemExit("V0-010c text model gate doc is missing active gate")
+        raise SystemExit("V0-010d proposal validation gate doc is missing active gate")
 
 
 def write_sine_wav(path: Path, *, seconds: float = 0.25, sample_rate: int = 8000) -> None:
@@ -367,6 +368,53 @@ def minimal_source_record() -> dict:
     }
 
 
+def write_valid_proposals_from_context(root: Path) -> None:
+    context = json.loads(
+        (root / ".artist-portrait" / "data" / "proposal_context.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    clip_id = context["clips"][0]["clip_id"]
+    analysis_id = context["analyses"][0]["analysis_id"]
+    proposals = []
+    for proposal_id in ("proposal_safe", "proposal_advanced", "proposal_risky"):
+        proposals.append(
+            {
+                "proposal_id": proposal_id,
+                "title": proposal_id.replace("_", " ").title(),
+                "theme": context["creative_brief"]["theme"],
+                "audience": context["creative_brief"]["audience"],
+                "required_clip_ids": [clip_id],
+                "fact_refs": [
+                    {"type": "clip", "ref": clip_id},
+                    {"type": "analysis", "ref": analysis_id},
+                    {"type": "material_map", "ref": context["material_map_ref"]},
+                ],
+                "story_structure": ["open with verified evidence"],
+                "sound_structure": ["BGM strategy: low-interference music under speech"],
+                "visual_motifs": ["manual confirmation required"],
+                "risks": ["visual semantics not inferred"],
+                "minimum_viable_timeline": ["timeline generation is not open"],
+                "missing_material": [],
+                "counter_proposal": None,
+            }
+        )
+    payload = {
+        "proposal_set_id": "proposal_set_run_checks",
+        "project_id": context["project_id"],
+        "map_fingerprint": context["material_map_fingerprint"],
+        "method": "run_checks_fixture",
+        "method_version": "v0-010d",
+        "proposals": proposals,
+        "evidence": [{"type": "proposal_context", "ref": context["context_id"]}],
+        "warnings": [],
+    }
+    (root / ".artist-portrait" / "data" / "proposals.json").write_text(
+        json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+
+
 def check_local_foundation_outputs() -> None:
     with tempfile.TemporaryDirectory(prefix="artist-portrait-foundation-") as tmp:
         tmp_path = Path(tmp)
@@ -463,6 +511,44 @@ def check_local_foundation_outputs() -> None:
             raise SystemExit("blocked propose wrote proposals.json")
         if (tmp_path / "output" / "proposals.md").exists():
             raise SystemExit("blocked propose wrote proposals.md")
+
+        write_valid_proposals_from_context(tmp_path)
+        review_proposal = subprocess.run(
+            [
+                str(ARTIST_PORTRAIT),
+                "review",
+                "--project",
+                str(project),
+                "--scope",
+                "proposal",
+                "--json",
+            ],
+            cwd=ROOT,
+            capture_output=True,
+            text=True,
+        )
+        if review_proposal.returncode != 0:
+            raise SystemExit(
+                f"proposal review validation failed: {review_proposal.stdout}"
+            )
+        review_proposal_payload = json.loads(review_proposal.stdout)
+        if review_proposal_payload.get("issues") != []:
+            raise SystemExit("proposal review reported issues for valid proposals")
+        proposal_validation = (
+            tmp_path / ".artist-portrait" / "data" / "proposal_validation.json"
+        )
+        proposal_review = tmp_path / "output" / "proposal_review.md"
+        if not proposal_validation.exists():
+            raise SystemExit("review --scope proposal did not write validation JSON")
+        if not proposal_review.exists():
+            raise SystemExit("review --scope proposal did not write Markdown report")
+        validation_payload = json.loads(proposal_validation.read_text(encoding="utf-8"))
+        if validation_payload.get("error_count") != 0:
+            raise SystemExit("valid proposal fixture produced validation errors")
+        if "No proposal validation issues" not in proposal_review.read_text(
+            encoding="utf-8"
+        ):
+            raise SystemExit("proposal review report did not record clean validation")
 
         (tmp_path / "output" / "material_map.md").unlink()
         run(
