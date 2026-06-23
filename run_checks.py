@@ -60,6 +60,7 @@ def check_schema_drift() -> None:
             "project_config.schema.json",
             "project_state.schema.json",
             "proposal_adapter_check.schema.json",
+            "proposal_execution_approval_request.schema.json",
             "proposal_execution_authorization.schema.json",
             "proposal_mock_adapter_handshake.schema.json",
             "proposal_context.schema.json",
@@ -127,30 +128,30 @@ def check_gate_consistency() -> None:
         "master": ROOT / "artist_portrait_editor_revision5_optimized.md",
         "README.md": ROOT / "README.md",
         "DEVELOPMENT_PROGRESS.md": ROOT / "docs" / "DEVELOPMENT_PROGRESS.md",
-        "V0_010J_PROPOSAL_PROVIDER_OUTPUT_QUARANTINE_GATE.md": ROOT
+        "V0_010K_PROPOSAL_EXECUTION_APPROVAL_REQUEST_GATE.md": ROOT
         / "docs"
-        / "V0_010J_PROPOSAL_PROVIDER_OUTPUT_QUARANTINE_GATE.md",
+        / "V0_010K_PROPOSAL_EXECUTION_APPROVAL_REQUEST_GATE.md",
     }
     content = {name: path.read_text(encoding="utf-8") for name, path in docs.items()}
     if (
-        "Current gate: V0-010j proposal provider output quarantine gate only."
+        "Current gate: V0-010k proposal execution approval request gate only."
         not in content["AGENTS.md"]
     ):
-        raise SystemExit("AGENTS.md current gate is not V0-010j output quarantine")
-    if "V0-010j 提案 provider output quarantine 闸门" not in content["master"]:
-        raise SystemExit("master document current gate is not V0-010j output quarantine")
-    if "Current V0-010j proposal provider output quarantine gate work" not in content["README.md"]:
-        raise SystemExit("README current gate is not V0-010j output quarantine")
+        raise SystemExit("AGENTS.md current gate is not V0-010k approval request")
+    if "V0-010k 提案 execution approval request 闸门" not in content["master"]:
+        raise SystemExit("master document current gate is not V0-010k approval request")
+    if "Current V0-010k proposal execution approval request gate work" not in content["README.md"]:
+        raise SystemExit("README current gate is not V0-010k approval request")
     if (
-        "Current local gate: V0-010j proposal provider output quarantine gate only"
+        "Current local gate: V0-010k proposal execution approval request gate only"
         not in content["DEVELOPMENT_PROGRESS.md"]
     ):
         raise SystemExit("development progress current gate is stale")
     if (
-        "V0-010j opens deterministic provider output quarantine packets"
-        not in content["V0_010J_PROPOSAL_PROVIDER_OUTPUT_QUARANTINE_GATE.md"]
+        "V0-010k opens deterministic provider execution approval request packets"
+        not in content["V0_010K_PROPOSAL_EXECUTION_APPROVAL_REQUEST_GATE.md"]
     ):
-        raise SystemExit("V0-010j output quarantine gate doc is missing active gate")
+        raise SystemExit("V0-010k approval request gate doc is missing active gate")
 
 
 def write_sine_wav(path: Path, *, seconds: float = 0.25, sample_rate: int = 8000) -> None:
@@ -508,6 +509,8 @@ def check_local_foundation_outputs() -> None:
             raise SystemExit("propose did not report proposal_provider_registry output ref")
         if ".artist-portrait/data/proposal_mock_adapter_handshake.json" not in output_refs:
             raise SystemExit("propose did not report proposal_mock_adapter_handshake output ref")
+        if ".artist-portrait/data/proposal_execution_approval_request.json" not in output_refs:
+            raise SystemExit("propose did not report proposal_execution_approval_request output ref")
         if ".artist-portrait/data/proposal_execution_authorization.json" not in output_refs:
             raise SystemExit("propose did not report proposal_execution_authorization output ref")
         if ".artist-portrait/data/proposal_provider_output_quarantine.json" not in output_refs:
@@ -527,6 +530,12 @@ def check_local_foundation_outputs() -> None:
         )
         handshake = (
             tmp_path / ".artist-portrait" / "data" / "proposal_mock_adapter_handshake.json"
+        )
+        approval = (
+            tmp_path
+            / ".artist-portrait"
+            / "data"
+            / "proposal_execution_approval_request.json"
         )
         authorization = (
             tmp_path / ".artist-portrait" / "data" / "proposal_execution_authorization.json"
@@ -552,6 +561,8 @@ def check_local_foundation_outputs() -> None:
             raise SystemExit("blocked propose did not write proposal_provider_registry.json")
         if not handshake.exists():
             raise SystemExit("blocked propose did not write proposal_mock_adapter_handshake.json")
+        if not approval.exists():
+            raise SystemExit("blocked propose did not write proposal_execution_approval_request.json")
         if not authorization.exists():
             raise SystemExit("blocked propose did not write proposal_execution_authorization.json")
         if not quarantine.exists():
@@ -580,6 +591,15 @@ def check_local_foundation_outputs() -> None:
         handshake_payload = json.loads(handshake.read_text(encoding="utf-8"))
         if handshake_payload.get("proposal_content_generated") is not False:
             raise SystemExit("proposal_mock_adapter_handshake generated proposal content")
+        approval_payload = json.loads(approval.read_text(encoding="utf-8"))
+        if approval_payload.get("approval_recorded") is not False:
+            raise SystemExit("proposal_execution_approval_request recorded approval unexpectedly")
+        if approval_payload.get("selected_secret_source") is not None:
+            raise SystemExit("proposal_execution_approval_request selected a secret source")
+        if approval_payload.get("credential_value_read") is not False:
+            raise SystemExit("proposal_execution_approval_request read credential material")
+        if approval_payload.get("execution_performed") is not False:
+            raise SystemExit("proposal_execution_approval_request performed execution unexpectedly")
         authorization_payload = json.loads(authorization.read_text(encoding="utf-8"))
         if authorization_payload.get("approved_execution_gate") is not False:
             raise SystemExit("proposal_execution_authorization opened execution gate")

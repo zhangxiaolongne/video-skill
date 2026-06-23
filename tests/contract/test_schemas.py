@@ -8,6 +8,7 @@ from artist_portrait_editor.models.keyframe import KeyframeRecord
 from artist_portrait_editor.models.model_gate import TextModelGate
 from artist_portrait_editor.models.proposal import ProposalSet
 from artist_portrait_editor.models.proposal_adapter import ProposalAdapterCheck
+from artist_portrait_editor.models.proposal_adapter import ProposalExecutionApprovalRequest
 from artist_portrait_editor.models.proposal_adapter import ProposalExecutionAuthorization
 from artist_portrait_editor.models.proposal_adapter import ProposalMockAdapterHandshake
 from artist_portrait_editor.models.proposal_adapter import ProposalProviderOutputQuarantine
@@ -33,6 +34,7 @@ def test_schema_generation_from_pydantic_models():
     text_model_gate_schema = TextModelGate.model_json_schema()
     state_schema = ProjectState.model_json_schema()
     proposal_adapter_schema = ProposalAdapterCheck.model_json_schema()
+    execution_approval_schema = ProposalExecutionApprovalRequest.model_json_schema()
     execution_authorization_schema = ProposalExecutionAuthorization.model_json_schema()
     provider_registry_schema = ProposalProviderRegistry.model_json_schema()
     output_quarantine_schema = ProposalProviderOutputQuarantine.model_json_schema()
@@ -52,6 +54,7 @@ def test_schema_generation_from_pydantic_models():
     assert text_model_gate_schema["title"] == "TextModelGate"
     assert state_schema["title"] == "ProjectState"
     assert proposal_adapter_schema["title"] == "ProposalAdapterCheck"
+    assert execution_approval_schema["title"] == "ProposalExecutionApprovalRequest"
     assert execution_authorization_schema["title"] == "ProposalExecutionAuthorization"
     assert provider_registry_schema["title"] == "ProposalProviderRegistry"
     assert output_quarantine_schema["title"] == "ProposalProviderOutputQuarantine"
@@ -70,6 +73,7 @@ def test_schema_generation_from_pydantic_models():
     assert "reasons" in text_model_gate_schema["properties"]
     assert "steps" in state_schema["properties"]
     assert "model_call_performed" in proposal_adapter_schema["properties"]
+    assert "approval_recorded" in execution_approval_schema["properties"]
     assert "approved_execution_gate" in execution_authorization_schema["properties"]
     assert "providers" in provider_registry_schema["properties"]
     assert "raw_output_captured" in output_quarantine_schema["properties"]
@@ -114,6 +118,11 @@ def test_committed_schemas_match_pydantic_generation():
     )
     committed_proposal_adapter = json.loads(
         (schema_dir / "proposal_adapter_check.schema.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    committed_execution_approval = json.loads(
+        (schema_dir / "proposal_execution_approval_request.schema.json").read_text(
             encoding="utf-8"
         )
     )
@@ -181,6 +190,9 @@ def test_committed_schemas_match_pydantic_generation():
     )
     assert committed_proposal_adapter == json.loads(
         json.dumps(ProposalAdapterCheck.model_json_schema(), sort_keys=True)
+    )
+    assert committed_execution_approval == json.loads(
+        json.dumps(ProposalExecutionApprovalRequest.model_json_schema(), sort_keys=True)
     )
     assert committed_execution_authorization == json.loads(
         json.dumps(ProposalExecutionAuthorization.model_json_schema(), sort_keys=True)

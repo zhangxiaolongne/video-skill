@@ -27,7 +27,7 @@ Required Stage A properties:
 - state and run records are auditable.
 - repeated `init` does not cross the Stage A boundary.
 
-Current V0-010j implementation scope additionally allows:
+Current V0-010k implementation scope additionally allows:
 
 - `scan`
 - deterministic `sources.jsonl`
@@ -64,6 +64,11 @@ Current V0-010j implementation scope additionally allows:
 - deterministic `.artist-portrait/data/proposal_provider_registry.json`
 - deterministic `.artist-portrait/data/proposal_mock_adapter_handshake.json`
 - local mock adapter handshake without model calls or proposal content
+- `ProposalExecutionApprovalRequest` Pydantic model and generated JSON Schema
+- deterministic `.artist-portrait/data/proposal_execution_approval_request.json`
+- execution approval request packet without recorded approval, selected secret
+  source, credential reading, model calls, network access, execution, or
+  proposal content
 - `ProposalExecutionAuthorization` Pydantic model and generated JSON Schema
 - deterministic `.artist-portrait/data/proposal_execution_authorization.json`
 - execution authorization packet without credentials, user approval, model

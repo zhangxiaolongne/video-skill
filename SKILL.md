@@ -1,6 +1,6 @@
 ---
 name: artist-portrait-editor
-description: Deterministic local workflow for artist portrait video-editing projects. Use when Codex needs to validate config, initialize state, scan media into a source ledger and scan report, segment into a fixed-window or PySceneDetect-gated clip ledger, transcribe through a local transcript ledger, extract keyframe ledger/cache, run evidence-only analysis ledger/report, generate an analysis-led material map, prepare ProposalContext schema, run the blocked propose gate with TextModelGate schema, ProposalRequestPacket schemas, ProposalAdapterCheck schema, ProposalProviderRegistry schema, ProposalMockAdapterHandshake schema, ProposalExecutionAuthorization schema, ProposalProviderOutputQuarantine schema, and ProposalProviderResultEnvelope schema, validate existing ProposalSet schema outputs with ProposalValidationReport schema, run project/proposal review/doctor, or preserve boundaries before BGM selection, full proposal generation, timeline generation, preview rendering, model calls, image tools, or network search.
+description: Local workflow for artist portrait video projects. Use when Codex needs to validate config, init state, scan media into source ledger and scan report, segment into a fixed-window or PySceneDetect-gated clip ledger, transcribe through a local transcript ledger, extract keyframe ledger/cache, run evidence-only analysis ledger/report, generate an analysis-led material map, prepare ProposalContext schema, run the blocked propose gate with TextModelGate schema, ProposalRequestPacket schemas, ProposalAdapterCheck schema, ProposalProviderRegistry schema, ProposalMockAdapterHandshake schema, ProposalExecutionApprovalRequest schema, ProposalExecutionAuthorization schema, ProposalProviderOutputQuarantine schema, and ProposalProviderResultEnvelope schema, validate existing ProposalSet schema outputs with ProposalValidationReport schema, run review/doctor, or preserve boundaries before BGM selection, full proposal generation, timeline generation, preview rendering, model calls, image tools, or network search.
 ---
 
 # Artist Portrait Editor
@@ -95,6 +95,7 @@ artist portrait project preparation and audit work.
    `.artist-portrait/data/proposal_adapter_check.json`, writes
    `.artist-portrait/data/proposal_provider_registry.json`, writes
    `.artist-portrait/data/proposal_mock_adapter_handshake.json`, writes
+   `.artist-portrait/data/proposal_execution_approval_request.json`, writes
    `.artist-portrait/data/proposal_execution_authorization.json`, writes
    `.artist-portrait/data/proposal_provider_output_quarantine.json`, writes
    `.artist-portrait/data/proposal_provider_result.json`, and then requires an
@@ -172,6 +173,9 @@ artist portrait project preparation and audit work.
   regenerated.
 - Treat `proposal_mock_adapter_handshake_invalid` as a stop condition until
   `.artist-portrait/data/proposal_mock_adapter_handshake.json` is fixed or
+  regenerated.
+- Treat `proposal_execution_approval_request_invalid` as a stop condition until
+  `.artist-portrait/data/proposal_execution_approval_request.json` is fixed or
   regenerated.
 - Treat `proposal_provider_result_invalid` as a stop condition until
   `.artist-portrait/data/proposal_provider_result.json` is fixed or

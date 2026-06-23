@@ -101,6 +101,11 @@ Current local foundation tests cover:
 - `propose` writing deterministic `proposal_mock_adapter_handshake.json`
 - mock adapter handshake validates the future response contract without model
   calls, network access, or generated proposal content
+- committed proposal execution approval request schema
+- `propose` writing deterministic `proposal_execution_approval_request.json`
+- execution approval request records no approval, no selected secret source, no
+  credential reads, no model calls, no network access, no execution, and no
+  proposal content
 - committed proposal execution authorization schema
 - `propose` writing deterministic `proposal_execution_authorization.json`
 - execution authorization records no approved execution gate, no user approval,
@@ -119,6 +124,7 @@ Current local foundation tests cover:
 - status and doctor visibility for malformed proposal adapter check packets
 - status and doctor visibility for malformed proposal provider registries
 - status and doctor visibility for malformed proposal mock adapter handshakes
+- status and doctor visibility for malformed proposal execution approval requests
 - status and doctor visibility for malformed proposal execution authorizations
 - status and doctor visibility for malformed proposal provider output quarantines
 - status and doctor visibility for malformed proposal provider result envelopes

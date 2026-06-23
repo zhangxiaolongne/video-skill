@@ -3,7 +3,7 @@
 Follow `artist_portrait_editor_revision5_optimized.md` as the governing V0
 engineering-freeze document.
 
-Current gate: V0-010j proposal provider output quarantine gate only.
+Current gate: V0-010k proposal execution approval request gate only.
 
 Allowed:
 
@@ -69,6 +69,9 @@ Allowed:
 - canonical `.artist-portrait/data/proposal_provider_output_quarantine.json`
 - `ProposalProviderOutputQuarantine` Pydantic model and generated JSON Schema
 - deterministic provider output quarantine packet without raw output capture, parsing, validation, promotion, model calls, network access, or proposal content
+- canonical `.artist-portrait/data/proposal_execution_approval_request.json`
+- `ProposalExecutionApprovalRequest` Pydantic model and generated JSON Schema
+- deterministic provider execution approval request packet without recorded approval, secret selection, credential reading, model calls, network access, execution, or proposal content
 - `ProposalSet` Pydantic model and generated JSON Schema
 - canonical `.artist-portrait/data/proposal_validation.json`
 - deterministic `output/proposal_review.md`

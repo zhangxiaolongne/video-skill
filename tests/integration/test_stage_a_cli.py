@@ -1497,6 +1497,7 @@ def test_propose_without_text_model_blocks_without_fake_outputs(
         ".artist-portrait/data/proposal_adapter_check.json",
         ".artist-portrait/data/proposal_provider_registry.json",
         ".artist-portrait/data/proposal_mock_adapter_handshake.json",
+        ".artist-portrait/data/proposal_execution_approval_request.json",
         ".artist-portrait/data/proposal_execution_authorization.json",
         ".artist-portrait/data/proposal_provider_output_quarantine.json",
         ".artist-portrait/data/proposal_provider_result.json",
@@ -1574,6 +1575,32 @@ def test_propose_without_text_model_blocks_without_fake_outputs(
     assert handshake_payload["model_call_performed"] is False
     assert handshake_payload["network_performed"] is False
     assert handshake_payload["proposal_content_generated"] is False
+    approval_path = (
+        tmp_path / ".artist-portrait" / "data" / "proposal_execution_approval_request.json"
+    )
+    assert approval_path.exists()
+    approval_payload = json.loads(approval_path.read_text(encoding="utf-8"))
+    assert approval_payload["status"] == "blocked"
+    assert approval_payload["provider_id"] == "local_mock"
+    assert approval_payload["approval_required"] is True
+    assert approval_payload["approval_recorded"] is False
+    assert approval_payload["approval_record_ref"] is None
+    assert approval_payload["secret_source_selection_required"] is True
+    assert approval_payload["allowed_secret_sources"] == [
+        "environment_variable_name_only",
+        "os_keychain_reference",
+        "encrypted_secret_reference",
+    ]
+    assert approval_payload["selected_secret_source"] is None
+    assert approval_payload["credential_value_read"] is False
+    assert approval_payload["credential_value_ref"] is None
+    assert approval_payload["network_allowed"] is False
+    assert approval_payload["model_call_allowed"] is False
+    assert approval_payload["execution_performed"] is False
+    assert approval_payload["model_call_performed"] is False
+    assert approval_payload["network_performed"] is False
+    assert approval_payload["proposal_content_generated"] is False
+    assert approval_payload["quarantine_required"] is True
     authorization_path = (
         tmp_path / ".artist-portrait" / "data" / "proposal_execution_authorization.json"
     )
@@ -1641,6 +1668,7 @@ def test_propose_without_text_model_blocks_without_fake_outputs(
         ".artist-portrait/data/proposal_adapter_check.json",
         ".artist-portrait/data/proposal_provider_registry.json",
         ".artist-portrait/data/proposal_mock_adapter_handshake.json",
+        ".artist-portrait/data/proposal_execution_approval_request.json",
         ".artist-portrait/data/proposal_execution_authorization.json",
         ".artist-portrait/data/proposal_provider_output_quarantine.json",
         ".artist-portrait/data/proposal_provider_result.json",
@@ -1718,6 +1746,21 @@ def test_propose_with_ready_text_model_gate_still_does_not_generate(
     assert handshake_payload["model_call_performed"] is False
     assert handshake_payload["network_performed"] is False
     assert handshake_payload["proposal_content_generated"] is False
+    approval_payload = json.loads(
+        (
+            tmp_path
+            / ".artist-portrait"
+            / "data"
+            / "proposal_execution_approval_request.json"
+        ).read_text(encoding="utf-8")
+    )
+    assert approval_payload["status"] == "blocked"
+    assert approval_payload["approval_recorded"] is False
+    assert approval_payload["selected_secret_source"] is None
+    assert approval_payload["credential_value_read"] is False
+    assert approval_payload["network_allowed"] is False
+    assert approval_payload["model_call_allowed"] is False
+    assert approval_payload["execution_performed"] is False
     authorization_payload = json.loads(
         (
             tmp_path
@@ -2023,6 +2066,47 @@ def test_invalid_proposal_execution_authorization_status_and_doctor(tmp_path, ca
     assert code == 1
     assert any(
         issue["code"] == "proposal_execution_authorization_invalid"
+        for issue in doctor_payload["issues"]
+    )
+
+
+def test_invalid_proposal_execution_approval_request_status_and_doctor(tmp_path, capsys):
+    project_path = tmp_path / "project.yaml"
+    project_path.write_text(
+        project_fixture_with_scene_detection("off"),
+        encoding="utf-8",
+    )
+    assert main(["init", "--project", str(project_path), "--quiet"]) in (0, 1)
+    write_clean_source_ledger(tmp_path)
+    approval_path = (
+        tmp_path / ".artist-portrait" / "data" / "proposal_execution_approval_request.json"
+    )
+    approval_path.write_text(
+        '{"approval_request_id": "missing-required-fields"}\n',
+        encoding="utf-8",
+    )
+
+    code = main(["status", "--project", str(project_path), "--json"])
+    captured = capsys.readouterr()
+    status_payload = json.loads(captured.out)
+
+    assert code == 0
+    assert (
+        status_payload["summaries"]["proposal_execution_approval_request"]["valid"]
+        is False
+    )
+    assert (
+        "invalid ProposalExecutionApprovalRequest JSON"
+        in status_payload["summaries"]["proposal_execution_approval_request"]["error"]
+    )
+
+    code = main(["doctor", "--project", str(project_path), "--json"])
+    captured = capsys.readouterr()
+    doctor_payload = json.loads(captured.out)
+
+    assert code == 1
+    assert any(
+        issue["code"] == "proposal_execution_approval_request_invalid"
         for issue in doctor_payload["issues"]
     )
 
