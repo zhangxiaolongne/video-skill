@@ -39,12 +39,12 @@
       "title": "ProposalAdapterCheckIssue",
       "type": "object"
     },
-    "ProposalExecutionAuthorizationStatus": {
+    "ProposalExecutionApprovalRecordStatus": {
       "enum": [
         "blocked",
-        "ready_for_future_execution"
+        "ready_for_future_execution_authorization"
       ],
-      "title": "ProposalExecutionAuthorizationStatus",
+      "title": "ProposalExecutionApprovalRecordStatus",
       "type": "string"
     }
   },
@@ -62,35 +62,76 @@
       "title": "Allowed Secret Sources",
       "type": "array"
     },
-    "approval_record_ref": {
-      "minLength": 1,
-      "title": "Approval Record Ref",
+    "approval_actor": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Approval Actor"
+    },
+    "approval_granted": {
+      "default": false,
+      "title": "Approval Granted",
+      "type": "boolean"
+    },
+    "approval_record_fingerprint": {
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "title": "Approval Record Fingerprint",
       "type": "string"
+    },
+    "approval_record_id": {
+      "minLength": 1,
+      "title": "Approval Record Id",
+      "type": "string"
+    },
+    "approval_recorded_at": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Approval Recorded At"
     },
     "approval_request_ref": {
       "minLength": 1,
       "title": "Approval Request Ref",
       "type": "string"
     },
-    "approved_execution_gate": {
+    "approval_scope": {
+      "minLength": 1,
+      "title": "Approval Scope",
+      "type": "string"
+    },
+    "credential_value_read": {
       "default": false,
-      "title": "Approved Execution Gate",
+      "title": "Credential Value Read",
       "type": "boolean"
     },
-    "authorization_fingerprint": {
-      "pattern": "^sha256:[0-9a-f]{64}$",
-      "title": "Authorization Fingerprint",
-      "type": "string"
+    "credential_value_ref": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Credential Value Ref"
     },
-    "authorization_id": {
-      "minLength": 1,
-      "title": "Authorization Id",
-      "type": "string"
-    },
-    "credential_policy": {
-      "minLength": 1,
-      "title": "Credential Policy",
-      "type": "string"
+    "execution_allowed": {
+      "default": false,
+      "title": "Execution Allowed",
+      "type": "boolean"
     },
     "execution_performed": {
       "default": false,
@@ -127,11 +168,6 @@
     "network_performed": {
       "default": false,
       "title": "Network Performed",
-      "type": "boolean"
-    },
-    "network_required": {
-      "default": false,
-      "title": "Network Required",
       "type": "boolean"
     },
     "project_id": {
@@ -182,33 +218,22 @@
       "title": "Selected Secret Source"
     },
     "status": {
-      "$ref": "#/$defs/ProposalExecutionAuthorizationStatus"
-    },
-    "user_approval_present": {
-      "default": false,
-      "title": "User Approval Present",
-      "type": "boolean"
-    },
-    "user_approval_required": {
-      "default": true,
-      "title": "User Approval Required",
-      "type": "boolean"
+      "$ref": "#/$defs/ProposalExecutionApprovalRecordStatus"
     }
   },
   "required": [
-    "authorization_id",
+    "approval_record_id",
     "project_id",
     "status",
     "provider_id",
+    "approval_request_ref",
     "request_ref",
     "registry_ref",
     "handshake_ref",
-    "approval_request_ref",
-    "approval_record_ref",
     "adapter_check_ref",
-    "authorization_fingerprint",
-    "credential_policy"
+    "approval_record_fingerprint",
+    "approval_scope"
   ],
-  "title": "ProposalExecutionAuthorization",
+  "title": "ProposalExecutionApprovalRecord",
   "type": "object"
 }

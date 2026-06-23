@@ -106,6 +106,11 @@ Current local foundation tests cover:
 - execution approval request records no approval, no selected secret source, no
   credential reads, no model calls, no network access, no execution, and no
   proposal content
+- committed proposal execution approval record schema
+- `propose` writing deterministic `proposal_execution_approval_record.json`
+- execution approval record records no granted approval, no selected secret
+  source, no credential reads, no model calls, no network access, no execution
+  allowance, no execution, and no proposal content
 - committed proposal execution authorization schema
 - `propose` writing deterministic `proposal_execution_authorization.json`
 - execution authorization records no approved execution gate, no user approval,
@@ -125,6 +130,7 @@ Current local foundation tests cover:
 - status and doctor visibility for malformed proposal provider registries
 - status and doctor visibility for malformed proposal mock adapter handshakes
 - status and doctor visibility for malformed proposal execution approval requests
+- status and doctor visibility for malformed proposal execution approval records
 - status and doctor visibility for malformed proposal execution authorizations
 - status and doctor visibility for malformed proposal provider output quarantines
 - status and doctor visibility for malformed proposal provider result envelopes

@@ -2,7 +2,7 @@
 
 Authoritative source: `artist_portrait_editor_revision5_optimized.md`.
 
-The current V0-010k gate uses `.artist-portrait/state.json` as a step ledger,
+The current V0-010l gate uses `.artist-portrait/state.json` as a step ledger,
 not a single linear project state.
 
 Current step statuses:
@@ -28,12 +28,12 @@ degraded
 blocked
 ```
 
-Stage A initialized ledger entries for future V0 steps. V0-010k opens only the
+Stage A initialized ledger entries for future V0 steps. V0-010l opens only the
 media scan, fixed-window/PySceneDetect scene segmentation, local transcription,
 keyframe cache, evidence-only basic analysis, and analysis-led material map
 foundation steps plus proposal readiness checks, deterministic proposal request
 packet construction, deterministic proposal adapter preflight, and deterministic
-provider registry/mock handshake, no-approval execution request, no-call execution authorization, provider
+provider registry/mock handshake, no-approval execution request, no-grant approval record, no-call execution authorization, provider
 output quarantine, dry-run provider result envelope, and deterministic
 validation of existing proposal sets. It leaves visual
 classification, full proposal generation, timeline, preview, remote model,
@@ -73,6 +73,8 @@ does not create canonical data.
 `.artist-portrait/data/proposal_provider_registry.json`, writes deterministic
 `.artist-portrait/data/proposal_mock_adapter_handshake.json`, writes
 deterministic `.artist-portrait/data/proposal_execution_approval_request.json`,
+writes
+deterministic `.artist-portrait/data/proposal_execution_approval_record.json`,
 writes
 deterministic `.artist-portrait/data/proposal_execution_authorization.json`,
 writes
@@ -128,6 +130,7 @@ It reports `proposal_context_invalid` for malformed proposal context packets,
 `proposal_provider_registry_invalid` for malformed provider registry packets,
 `proposal_mock_adapter_handshake_invalid` for malformed mock handshake packets,
 `proposal_execution_approval_request_invalid` for malformed execution approval request packets,
+`proposal_execution_approval_record_invalid` for malformed execution approval record packets,
 `proposal_execution_authorization_invalid` for malformed execution authorization packets,
 `proposal_provider_output_quarantine_invalid` for malformed provider output quarantine packets,
 `proposal_provider_result_invalid` for malformed provider result envelopes,

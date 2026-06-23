@@ -3,7 +3,7 @@
 Follow `artist_portrait_editor_revision5_optimized.md` as the governing V0
 engineering-freeze document.
 
-Current gate: V0-010k proposal execution approval request gate only.
+Current gate: V0-010l proposal execution approval record gate only.
 
 Allowed:
 
@@ -72,6 +72,9 @@ Allowed:
 - canonical `.artist-portrait/data/proposal_execution_approval_request.json`
 - `ProposalExecutionApprovalRequest` Pydantic model and generated JSON Schema
 - deterministic provider execution approval request packet without recorded approval, secret selection, credential reading, model calls, network access, execution, or proposal content
+- canonical `.artist-portrait/data/proposal_execution_approval_record.json`
+- `ProposalExecutionApprovalRecord` Pydantic model and generated JSON Schema
+- deterministic provider execution approval record packet without granted approval, secret selection, credential reading, model calls, network access, execution, or proposal content
 - `ProposalSet` Pydantic model and generated JSON Schema
 - canonical `.artist-portrait/data/proposal_validation.json`
 - deterministic `output/proposal_review.md`

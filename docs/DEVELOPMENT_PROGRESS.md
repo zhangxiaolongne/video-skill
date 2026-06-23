@@ -34,7 +34,7 @@ When a user requirement changes long-term product behavior, update both files:
 - Canonical skill name: `artist-portrait-editor`
 - Canonical install directory: `artist-portrait-editor`
 - Distribution repository: `video-skill`
-- Current local gate: V0-010k proposal execution approval request gate only
+- Current local gate: V0-010l proposal execution approval record gate only
 
 ## Completed Local Versions
 
@@ -160,6 +160,12 @@ When a user requirement changes long-term product behavior, update both files:
   `.artist-portrait/data/proposal_execution_approval_request.json`, recording
   no approval, no selected secret source, no credential reads, no model calls,
   no network access, no execution, and no generated proposal content.
+- V0-010ae: `ProposalExecutionApprovalRecord` schema and committed JSON Schema.
+- V0-010af: blocked `propose` now writes deterministic
+  `.artist-portrait/data/proposal_execution_approval_record.json`, recording no
+  granted approval, no selected secret source, no credential reads, no model
+  calls, no network access, no execution allowance, no execution, and no
+  generated proposal content.
 
 ## Current Hard Boundaries
 
@@ -195,9 +201,9 @@ Tactical rule for future batches:
 - use third-party outputs as evidence with provenance, not unreviewed truth
 - keep config gates, failure modes, and review rules around every non-local or
   model-backed capability
-- keep current V0-010k bounded to existing local ledgers plus proposal
+- keep current V0-010l bounded to existing local ledgers plus proposal
   readiness, proposal request, adapter preflight, provider registry, mock
-  adapter handshake, execution approval request, execution authorization, provider output quarantine,
+  adapter handshake, execution approval request, approval record, execution authorization, provider output quarantine,
   provider result envelope, and proposal validation checks; keyframes are
   visual evidence references, not visual classification
 

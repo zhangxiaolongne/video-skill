@@ -10,7 +10,7 @@ V0 has two future modes:
   `core_mode` data exists.
 
 Current repository implementation has entered deterministic core-mode
-foundation work only. The active gate is V0-010k proposal execution approval request:
+foundation work only. The active gate is V0-010l proposal execution approval record:
 
 ```text
 project.yaml
@@ -32,6 +32,7 @@ project.yaml
 -> deterministic proposal adapter preflight packet
 -> deterministic proposal provider registry and mock adapter handshake packets
 -> deterministic proposal execution approval request packet
+-> deterministic proposal execution approval record packet
 -> deterministic proposal execution authorization packet
 -> deterministic proposal provider output quarantine packet
 -> deterministic proposal provider result envelope packet

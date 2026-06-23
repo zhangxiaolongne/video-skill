@@ -11,6 +11,7 @@ from artist_portrait_editor.models.model_gate import TextModelGate
 from artist_portrait_editor.models.proposal import ProposalSet
 from artist_portrait_editor.models.proposal_adapter import (
     ProposalAdapterCheck,
+    ProposalExecutionApprovalRecord,
     ProposalExecutionApprovalRequest,
     ProposalExecutionAuthorization,
     ProposalMockAdapterHandshake,
@@ -33,6 +34,9 @@ def write_schema_files(output_dir: Path) -> None:
         "project_config.schema.json": ProjectConfig.model_json_schema(),
         "project_state.schema.json": ProjectState.model_json_schema(),
         "proposal_adapter_check.schema.json": ProposalAdapterCheck.model_json_schema(),
+        "proposal_execution_approval_record.schema.json": (
+            ProposalExecutionApprovalRecord.model_json_schema()
+        ),
         "proposal_execution_approval_request.schema.json": (
             ProposalExecutionApprovalRequest.model_json_schema()
         ),

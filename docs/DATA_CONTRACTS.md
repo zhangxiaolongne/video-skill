@@ -13,6 +13,7 @@ Current committed schemas:
 - `schemas/project_config.schema.json`
 - `schemas/project_state.schema.json`
 - `schemas/proposal_adapter_check.schema.json`
+- `schemas/proposal_execution_approval_record.schema.json`
 - `schemas/proposal_execution_approval_request.schema.json`
 - `schemas/proposal_context.schema.json`
 - `schemas/proposal_execution_authorization.schema.json`
@@ -133,11 +134,21 @@ approval was recorded, no secret source was selected, no credential value was
 read, no model call occurred, no network access occurred, no provider execution
 occurred, and no proposal content was generated.
 
+`ProposalExecutionApprovalRecord` is implemented for the V0-010l execution
+approval record gate and has a committed schema at
+`schemas/proposal_execution_approval_record.schema.json`. It is written to
+`.artist-portrait/data/proposal_execution_approval_record.json` by `propose`
+after the approval request and before execution authorization. It records the
+future approval-record shape while proving that approval was not granted, no
+actor or timestamp was recorded, no secret source was selected, no credential
+value was read, no model call occurred, no network access occurred, no provider
+execution was allowed or performed, and no proposal content was generated.
+
 `ProposalExecutionAuthorization` is implemented for the V0-010i execution
 authorization gate and has a committed schema at
 `schemas/proposal_execution_authorization.schema.json`. It is written to
 `.artist-portrait/data/proposal_execution_authorization.json` by `propose`
-after the execution approval request and before provider output quarantine. It
+after the execution approval record and before provider output quarantine. It
 records that the execution gate is not approved, user approval is missing,
 credentials are not allowed, model calls and network access are not allowed,
 execution was not performed, and any future provider output must remain
@@ -208,6 +219,7 @@ Current stable diagnostic codes include:
 - `text_model_gate_invalid`
 - `proposal_request_invalid`
 - `proposal_adapter_check_invalid`
+- `proposal_execution_approval_record_invalid`
 - `proposal_execution_approval_request_invalid`
 - `proposal_execution_authorization_invalid`
 - `proposal_provider_registry_invalid`
