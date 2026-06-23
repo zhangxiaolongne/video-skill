@@ -2,7 +2,7 @@
 
 Authoritative source: `artist_portrait_editor_revision5_optimized.md`.
 
-Implemented V0-010i proposal execution authorization gate commands:
+Implemented V0-010j proposal provider output quarantine gate commands:
 
 ```bash
 artist-portrait validate --project ./project.yaml
@@ -117,6 +117,8 @@ for provider/secret/model-call preflight, then writes deterministic
 adapter handshake, then writes deterministic
 `.artist-portrait/data/proposal_execution_authorization.json` for no-call
 execution authorization, then writes deterministic
+`.artist-portrait/data/proposal_provider_output_quarantine.json` for no-output
+quarantine, then writes deterministic
 `.artist-portrait/data/proposal_provider_result.json` for a dry-run provider
 result envelope.
 When the text-model gate is blocked, it records the `propose` step as `blocked`,
@@ -129,7 +131,8 @@ dependency code with `proposal_generation_not_implemented`.
 `status --json` includes the state ledger plus local artifact, source, clip,
 transcript, keyframe, analysis, proposal context, text-model gate, proposal
 request, proposal adapter check, provider registry, mock adapter handshake,
-execution authorization, provider result envelope, proposal, scan report, clip report, and analysis
+execution authorization, provider output quarantine, provider result envelope,
+proposal, scan report, clip report, and analysis
 report summaries plus material map presence. It also reports `artifact_issues` when
 completed ledger steps refer to outputs that no longer exist. It does not run
 media operations or mutate project files.

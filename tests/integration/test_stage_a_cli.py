@@ -1498,6 +1498,7 @@ def test_propose_without_text_model_blocks_without_fake_outputs(
         ".artist-portrait/data/proposal_provider_registry.json",
         ".artist-portrait/data/proposal_mock_adapter_handshake.json",
         ".artist-portrait/data/proposal_execution_authorization.json",
+        ".artist-portrait/data/proposal_provider_output_quarantine.json",
         ".artist-portrait/data/proposal_provider_result.json",
     ]
     assert "text_model_gate_blocked" in payload["warnings"][0]
@@ -1593,6 +1594,28 @@ def test_propose_without_text_model_blocks_without_fake_outputs(
     assert authorization_payload["network_performed"] is False
     assert authorization_payload["proposal_content_generated"] is False
     assert authorization_payload["quarantine_required"] is True
+    quarantine_path = (
+        tmp_path
+        / ".artist-portrait"
+        / "data"
+        / "proposal_provider_output_quarantine.json"
+    )
+    assert quarantine_path.exists()
+    quarantine_payload = json.loads(quarantine_path.read_text(encoding="utf-8"))
+    assert quarantine_payload["status"] == "blocked"
+    assert quarantine_payload["provider_id"] == "local_mock"
+    assert quarantine_payload["raw_output_captured"] is False
+    assert quarantine_payload["raw_output_ref"] is None
+    assert quarantine_payload["raw_output_sha256"] is None
+    assert quarantine_payload["raw_output_bytes"] == 0
+    assert quarantine_payload["parsed_payload_generated"] is False
+    assert quarantine_payload["parsed_payload_ref"] is None
+    assert quarantine_payload["promoted_to_proposals"] is False
+    assert quarantine_payload["validation_performed"] is False
+    assert quarantine_payload["model_call_performed"] is False
+    assert quarantine_payload["network_performed"] is False
+    assert quarantine_payload["proposal_content_generated"] is False
+    assert quarantine_payload["quarantine_required"] is True
     result_path = tmp_path / ".artist-portrait" / "data" / "proposal_provider_result.json"
     assert result_path.exists()
     result_payload = json.loads(result_path.read_text(encoding="utf-8"))
@@ -1619,6 +1642,7 @@ def test_propose_without_text_model_blocks_without_fake_outputs(
         ".artist-portrait/data/proposal_provider_registry.json",
         ".artist-portrait/data/proposal_mock_adapter_handshake.json",
         ".artist-portrait/data/proposal_execution_authorization.json",
+        ".artist-portrait/data/proposal_provider_output_quarantine.json",
         ".artist-portrait/data/proposal_provider_result.json",
     ]
 
@@ -1708,6 +1732,18 @@ def test_propose_with_ready_text_model_gate_still_does_not_generate(
     assert authorization_payload["network_allowed"] is False
     assert authorization_payload["model_call_allowed"] is False
     assert authorization_payload["execution_performed"] is False
+    quarantine_payload = json.loads(
+        (
+            tmp_path
+            / ".artist-portrait"
+            / "data"
+            / "proposal_provider_output_quarantine.json"
+        ).read_text(encoding="utf-8")
+    )
+    assert quarantine_payload["status"] == "blocked"
+    assert quarantine_payload["raw_output_captured"] is False
+    assert quarantine_payload["promoted_to_proposals"] is False
+    assert quarantine_payload["validation_performed"] is False
     result_payload = json.loads(
         (
             tmp_path / ".artist-portrait" / "data" / "proposal_provider_result.json"
@@ -1987,6 +2023,47 @@ def test_invalid_proposal_execution_authorization_status_and_doctor(tmp_path, ca
     assert code == 1
     assert any(
         issue["code"] == "proposal_execution_authorization_invalid"
+        for issue in doctor_payload["issues"]
+    )
+
+
+def test_invalid_proposal_provider_output_quarantine_status_and_doctor(tmp_path, capsys):
+    project_path = tmp_path / "project.yaml"
+    project_path.write_text(
+        project_fixture_with_scene_detection("off"),
+        encoding="utf-8",
+    )
+    assert main(["init", "--project", str(project_path), "--quiet"]) in (0, 1)
+    write_clean_source_ledger(tmp_path)
+    quarantine_path = (
+        tmp_path / ".artist-portrait" / "data" / "proposal_provider_output_quarantine.json"
+    )
+    quarantine_path.write_text(
+        '{"quarantine_id": "missing-required-fields"}\n',
+        encoding="utf-8",
+    )
+
+    code = main(["status", "--project", str(project_path), "--json"])
+    captured = capsys.readouterr()
+    status_payload = json.loads(captured.out)
+
+    assert code == 0
+    assert (
+        status_payload["summaries"]["proposal_provider_output_quarantine"]["valid"]
+        is False
+    )
+    assert (
+        "invalid ProposalProviderOutputQuarantine JSON"
+        in status_payload["summaries"]["proposal_provider_output_quarantine"]["error"]
+    )
+
+    code = main(["doctor", "--project", str(project_path), "--json"])
+    captured = capsys.readouterr()
+    doctor_payload = json.loads(captured.out)
+
+    assert code == 1
+    assert any(
+        issue["code"] == "proposal_provider_output_quarantine_invalid"
         for issue in doctor_payload["issues"]
     )
 

@@ -13,6 +13,7 @@ from artist_portrait_editor.models.proposal_adapter import (
     ProposalAdapterCheck,
     ProposalExecutionAuthorization,
     ProposalMockAdapterHandshake,
+    ProposalProviderOutputQuarantine,
     ProposalProviderResultEnvelope,
     ProposalProviderRegistry,
 )
@@ -38,6 +39,9 @@ def write_schema_files(output_dir: Path) -> None:
             ProposalMockAdapterHandshake.model_json_schema()
         ),
         "proposal_provider_registry.schema.json": ProposalProviderRegistry.model_json_schema(),
+        "proposal_provider_output_quarantine.schema.json": (
+            ProposalProviderOutputQuarantine.model_json_schema()
+        ),
         "proposal_provider_result_envelope.schema.json": (
             ProposalProviderResultEnvelope.model_json_schema()
         ),

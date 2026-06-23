@@ -16,6 +16,7 @@ Current committed schemas:
 - `schemas/proposal_context.schema.json`
 - `schemas/proposal_execution_authorization.schema.json`
 - `schemas/proposal_mock_adapter_handshake.schema.json`
+- `schemas/proposal_provider_output_quarantine.schema.json`
 - `schemas/proposal_provider_registry.schema.json`
 - `schemas/proposal_provider_result_envelope.schema.json`
 - `schemas/proposal_request_packet.schema.json`
@@ -125,18 +126,29 @@ calling a model, touching the network, or generating proposal content.
 authorization gate and has a committed schema at
 `schemas/proposal_execution_authorization.schema.json`. It is written to
 `.artist-portrait/data/proposal_execution_authorization.json` by `propose`
-after the mock adapter handshake and before the provider result envelope. It
+after the mock adapter handshake and before provider output quarantine. It
 records that the execution gate is not approved, user approval is missing,
 credentials are not allowed, model calls and network access are not allowed,
 execution was not performed, and any future provider output must remain
 quarantined before it can become `proposals.json`.
 
+`ProposalProviderOutputQuarantine` is implemented for the V0-010j provider
+output quarantine gate and has a committed schema at
+`schemas/proposal_provider_output_quarantine.schema.json`. It is written to
+`.artist-portrait/data/proposal_provider_output_quarantine.json` by `propose`
+after execution authorization and before the provider result envelope. It
+records provider/request/registry/handshake/authorization refs while proving
+that no raw provider output was captured, no parsed payload was generated, no
+payload was promoted to `proposals.json`, no validation was performed, no model
+call occurred, no network access occurred, and no proposal content was
+generated.
+
 `ProposalProviderResultEnvelope` is implemented for the V0-010h provider result
 envelope gate and has a committed schema at
 `schemas/proposal_provider_result_envelope.schema.json`. It is written to
 `.artist-portrait/data/proposal_provider_result.json` by `propose` after the
-mock adapter handshake. It declares the expected future `ProposalSet` output
-kind while recording that no payload was generated, no validation was
+provider output quarantine packet. It declares the expected future
+`ProposalSet` output kind while recording that no payload was generated, no validation was
 performed, no model call occurred, no network access occurred, and no proposal
 content was generated.
 
@@ -188,6 +200,7 @@ Current stable diagnostic codes include:
 - `proposal_execution_authorization_invalid`
 - `proposal_provider_registry_invalid`
 - `proposal_mock_adapter_handshake_invalid`
+- `proposal_provider_output_quarantine_invalid`
 - `proposal_provider_result_invalid`
 - `proposals_invalid`
 - `proposal_unknown_clip_id`

@@ -5,7 +5,7 @@
 > **工作名称**：`artist-portrait-editor`  
 > **中文名称**：人物向剪辑导演 / 艺人肖像剪辑 Skill  
 > **适用范围**：产品愿景、V0 产品规格、V0 工程规格  
-> **当前开发闸门**：V0-010i 提案 execution authorization 闸门。阶段 A、V0-003、V0-004、V0-005、V0-006、V0-007、V0-008、V0-009、V0-010a、V0-010b、V0-010c、V0-010d、V0-010e、V0-010f、V0-010g 与 V0-010h 已作为工程、媒体扫描、固定窗口切分、PySceneDetect 场景切分、本地转写、关键帧缓存、基础证据分析、分析驱动素材地图、提案就绪、提案上下文、文本模型闸门契约、提案验证、提案请求契约、提案适配器预检、本地 mock adapter handshake 与 provider result envelope 验收；当前只允许生成 deterministic `proposal_execution_authorization.json`，用于记录未来 provider 执行授权边界，不得读取凭证、不得标记用户已授权、不得联网、不得执行模型调用、不得生成 proposal content。不得实现 OpenCV/视觉模型分类、BGM 选择、完整创作提案生成、时间线生成或预览渲染；不得执行模型调用、联网或生成 fake/template/model-free proposals 冒充 creative_mode 成功。
+> **当前开发闸门**：V0-010j 提案 provider output quarantine 闸门。阶段 A、V0-003、V0-004、V0-005、V0-006、V0-007、V0-008、V0-009、V0-010a、V0-010b、V0-010c、V0-010d、V0-010e、V0-010f、V0-010g、V0-010h 与 V0-010i 已作为工程、媒体扫描、固定窗口切分、PySceneDetect 场景切分、本地转写、关键帧缓存、基础证据分析、分析驱动素材地图、提案就绪、提案上下文、文本模型闸门契约、提案验证、提案请求契约、提案适配器预检、本地 mock adapter handshake、provider result envelope 与 execution authorization 验收；当前只允许生成 deterministic `proposal_provider_output_quarantine.json`，用于记录未来 provider 输出隔离边界，不得捕获真实输出、不得解析 payload、不得 promotion 到 `proposals.json`、不得执行 validation、不得联网、不得执行模型调用、不得生成 proposal content。不得实现 OpenCV/视觉模型分类、BGM 选择、完整创作提案生成、时间线生成或预览渲染；不得执行模型调用、联网或生成 fake/template/model-free proposals 冒充 creative_mode 成功。
 
 ---
 
@@ -51,7 +51,7 @@ docs/DEVELOPMENT_PROGRESS.md
 - 不重复造轮子；优先复用成熟工具，再补本项目特有的数据契约、证据链、审查和降级逻辑。
 - 第三方结果不得直接冒充 canonical truth，必须记录来源、输入、输出、置信度、失败模式和可复验路径。
 - 使用第三方模型或联网能力时，必须由对应 gate、配置开关和 review 规则控制。
-- 当前 V0-010i proposal execution authorization gate 仍保持本地、无远程模型调用、无联网、无 image generation / editing 调用；`propose` 只准备 `proposal_context.json`、`text_model_gate.json`、`proposal_request.json`、`proposal_adapter_check.json`、`proposal_provider_registry.json`、`proposal_mock_adapter_handshake.json`、`proposal_execution_authorization.json` 与 `proposal_provider_result.json`，`review --scope proposal` 只验证已有 `proposals.json`，不得生成提案、调用模型、选择 BGM 或生成时间线。
+- 当前 V0-010j proposal provider output quarantine gate 仍保持本地、无远程模型调用、无联网、无 image generation / editing 调用；`propose` 只准备 `proposal_context.json`、`text_model_gate.json`、`proposal_request.json`、`proposal_adapter_check.json`、`proposal_provider_registry.json`、`proposal_mock_adapter_handshake.json`、`proposal_execution_authorization.json`、`proposal_provider_output_quarantine.json` 与 `proposal_provider_result.json`，`review --scope proposal` 只验证已有 `proposals.json`，不得生成提案、调用模型、选择 BGM 或生成时间线。
 
 # 0. 执行摘要
 
@@ -70,7 +70,7 @@ V0 分为两个模式：
 - `core_mode`：不依赖文本生成模型或视觉模型，负责确定性媒体处理、canonical 数据、风险规则和素材结构报告。
 - `creative_mode`：在 `core_mode` 证据基础上，生成三套可回溯创作提案，并在用户选择后生成时间线草案。
 
-阶段 A 已完成基础工程验收，V0-003 已完成媒体扫描基础，V0-004 已完成固定窗口切分基础，V0-005 已完成 PySceneDetect 场景切分闸门，V0-006 已完成本地转写闸门，V0-007 已完成关键帧缓存闸门，V0-008 已完成基础证据分析闸门，V0-009 已完成分析驱动素材地图闸门，V0-010a 已完成提案就绪闸门，V0-010b 已完成提案上下文闸门，V0-010c 已完成文本模型闸门契约，V0-010d 已完成提案验证闸门，V0-010e 已完成提案请求闸门，V0-010f 已完成提案适配器预检闸门，V0-010g 已完成提案 provider registry / mock adapter handshake 闸门，V0-010h 已完成提案 provider result envelope 闸门。当前允许实现 V0-010i 提案 execution authorization 闸门：
+阶段 A 已完成基础工程验收，V0-003 已完成媒体扫描基础，V0-004 已完成固定窗口切分基础，V0-005 已完成 PySceneDetect 场景切分闸门，V0-006 已完成本地转写闸门，V0-007 已完成关键帧缓存闸门，V0-008 已完成基础证据分析闸门，V0-009 已完成分析驱动素材地图闸门，V0-010a 已完成提案就绪闸门，V0-010b 已完成提案上下文闸门，V0-010c 已完成文本模型闸门契约，V0-010d 已完成提案验证闸门，V0-010e 已完成提案请求闸门，V0-010f 已完成提案适配器预检闸门，V0-010g 已完成提案 provider registry / mock adapter handshake 闸门，V0-010h 已完成提案 provider result envelope 闸门，V0-010i 已完成提案 execution authorization 闸门。当前允许实现 V0-010j 提案 provider output quarantine 闸门：
 
 ```text
 project.yaml
@@ -105,6 +105,7 @@ project.yaml
 → proposal_provider_registry.json
 → proposal_mock_adapter_handshake.json
 → proposal_execution_authorization.json
+→ proposal_provider_output_quarantine.json
 → proposal_provider_result.json
 → proposal_validation.json
 → proposal_review.md
@@ -114,7 +115,7 @@ project.yaml
 → doctor/status 诊断
 ```
 
-当前 V0-010i 禁止实现：
+当前 V0-010j 禁止实现：
 
 ```text
 OpenCV
@@ -2447,6 +2448,58 @@ output/proposal_review.md
 - execution authorization 必须证明未执行 provider。
 - execution authorization 必须证明未生成 proposal content。
 - 非法 execution authorization 可被 `status` / `doctor` 检出。
+
+### 16.10j V0-010j：提案 provider output quarantine 闸门
+
+当前小版本只允许生成未来 provider 输出进入系统前的 deterministic quarantine packet。它不捕获真实 provider 输出，不解析 payload，不执行 validation，不把任何内容提升为 `proposals.json`。
+
+生成：
+
+```text
+.artist-portrait/data/proposal_provider_output_quarantine.json
+```
+
+允许：
+
+- `ProposalProviderOutputQuarantine` Pydantic 模型和 `schemas/proposal_provider_output_quarantine.schema.json`。
+- `propose` 在写入 `proposal_execution_authorization.json` 后、写入 `proposal_provider_result.json` 前写入 `proposal_provider_output_quarantine.json`。
+- output quarantine 必须记录 provider、request、registry、handshake、execution authorization、adapter check refs。
+- output quarantine 必须记录 `raw_output_captured: false`、`raw_output_ref: null`、`raw_output_sha256: null` 与 `raw_output_bytes: 0`。
+- output quarantine 必须记录 `parsed_payload_generated: false` 与 `parsed_payload_ref: null`。
+- output quarantine 必须记录 `promoted_to_proposals: false`。
+- output quarantine 必须记录 `validation_performed: false`。
+- output quarantine 必须记录 `model_call_performed: false`、`network_performed: false` 和 `proposal_content_generated: false`。
+- output quarantine 必须记录 `quarantine_required: true`。
+- execution authorization blocked 时，output quarantine status 必须为 `blocked`。
+- `status` / `doctor` 可识别存在但非法的 `proposal_provider_output_quarantine.json`。
+
+禁止：
+
+- 读取、创建或发送真实 API key
+- 标记用户已经授权
+- 打开 provider execution
+- 捕获真实 provider raw output
+- 写入 raw output 文件
+- 解析 provider payload
+- 执行 generated proposal validation
+- promotion 到 `.artist-portrait/data/proposals.json`
+- fake/template/model-free proposals
+- 发送 request packet 到模型
+- 访问网络
+- BGM selection、beat analysis、music recommendation 或 music/timeline fitting
+- timeline draft
+- preview render
+
+验收：
+
+- blocked `propose --json` output refs 包含 `proposal_provider_output_quarantine.json`。
+- output quarantine 必须证明未捕获 raw output。
+- output quarantine 必须证明未生成 parsed payload。
+- output quarantine 必须证明未 promotion 到 proposals。
+- output quarantine 必须证明未执行 validation。
+- output quarantine 必须证明未执行模型调用和网络访问。
+- output quarantine 必须证明未生成 proposal content。
+- 非法 output quarantine 可被 `status` / `doctor` 检出。
 
 ## 16.11 V0-011：时间线草案
 

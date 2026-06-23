@@ -34,7 +34,7 @@ When a user requirement changes long-term product behavior, update both files:
 - Canonical skill name: `artist-portrait-editor`
 - Canonical install directory: `artist-portrait-editor`
 - Distribution repository: `video-skill`
-- Current local gate: V0-010i proposal execution authorization gate only
+- Current local gate: V0-010j proposal provider output quarantine gate only
 
 ## Completed Local Versions
 
@@ -147,6 +147,13 @@ When a user requirement changes long-term product behavior, update both files:
   approved execution gate, no user approval, no credentials, no model calls, no
   network access, no execution, no generated proposal content, and quarantine
   required for any future provider output.
+- V0-010aa: `ProposalProviderOutputQuarantine` schema and committed JSON
+  Schema.
+- V0-010ab: blocked `propose` now writes deterministic
+  `.artist-portrait/data/proposal_provider_output_quarantine.json`, recording
+  no raw output capture, no parsed payload, no promotion to proposals, no
+  validation, no model calls, no network access, and no generated proposal
+  content.
 
 ## Current Hard Boundaries
 
@@ -182,11 +189,11 @@ Tactical rule for future batches:
 - use third-party outputs as evidence with provenance, not unreviewed truth
 - keep config gates, failure modes, and review rules around every non-local or
   model-backed capability
-- keep current V0-010i bounded to existing local ledgers plus proposal
+- keep current V0-010j bounded to existing local ledgers plus proposal
   readiness, proposal request, adapter preflight, provider registry, mock
-  adapter handshake, execution authorization, provider result envelope, and
-  proposal validation checks; keyframes are visual evidence references, not
-  visual classification
+  adapter handshake, execution authorization, provider output quarantine,
+  provider result envelope, and proposal validation checks; keyframes are
+  visual evidence references, not visual classification
 
 ### BGM Is Part Of Editing Logic
 
@@ -223,9 +230,8 @@ Next action should plan the controlled provider execution gate without
 confusing it with full proposal generation. The big-version direction is
 evidence-grounded creative proposals that account for BGM strategy, target
 output, text, pacing, transitions, and evidence traceability. The next small
-batch should define how an approved provider execution may be authorized,
-where credentials may come from, how model output is captured, and how failed
-or malformed provider responses remain quarantined before becoming
-`proposals.json`. Do not open timeline, BGM fitting, preview, network, OpenCV,
-vision, image generation/editing, API-key setup, or model-free template
-proposal gates by accident.
+batch should define explicit execution approval and local secret-source
+selection while keeping model output captured into quarantine before any
+parsing, validation, or promotion to `proposals.json`. Do not open timeline,
+BGM fitting, preview, OpenCV, vision, image generation/editing, API-key setup,
+or model-free template proposal gates by accident.

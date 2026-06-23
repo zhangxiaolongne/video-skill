@@ -106,6 +106,11 @@ Current local foundation tests cover:
 - execution authorization records no approved execution gate, no user approval,
   no credentials, no model calls, no network access, no execution, and no
   proposal content
+- committed proposal provider output quarantine schema
+- `propose` writing deterministic `proposal_provider_output_quarantine.json`
+- provider output quarantine records no raw output capture, no parsed payload,
+  no promotion to proposals, no validation, no model calls, no network access,
+  and no proposal content
 - committed proposal provider result envelope schema
 - `propose` writing deterministic `proposal_provider_result.json`
 - provider result envelope records no payload generation, no validation, no
@@ -115,6 +120,7 @@ Current local foundation tests cover:
 - status and doctor visibility for malformed proposal provider registries
 - status and doctor visibility for malformed proposal mock adapter handshakes
 - status and doctor visibility for malformed proposal execution authorizations
+- status and doctor visibility for malformed proposal provider output quarantines
 - status and doctor visibility for malformed proposal provider result envelopes
 - `propose` blocking without an approved text-model gate
 - `propose` blocking even when the text-model gate is ready because generation

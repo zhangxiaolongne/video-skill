@@ -2,7 +2,7 @@
 
 Authoritative source: `artist_portrait_editor_revision5_optimized.md`.
 
-The current V0-010i gate uses `.artist-portrait/state.json` as a step ledger,
+The current V0-010j gate uses `.artist-portrait/state.json` as a step ledger,
 not a single linear project state.
 
 Current step statuses:
@@ -28,13 +28,14 @@ degraded
 blocked
 ```
 
-Stage A initialized ledger entries for future V0 steps. V0-010i opens only the
+Stage A initialized ledger entries for future V0 steps. V0-010j opens only the
 media scan, fixed-window/PySceneDetect scene segmentation, local transcription,
 keyframe cache, evidence-only basic analysis, and analysis-led material map
 foundation steps plus proposal readiness checks, deterministic proposal request
 packet construction, deterministic proposal adapter preflight, and deterministic
-provider registry/mock handshake, no-call execution authorization, dry-run provider result envelope, and
-deterministic validation of existing proposal sets. It leaves visual
+provider registry/mock handshake, no-call execution authorization, provider
+output quarantine, dry-run provider result envelope, and deterministic
+validation of existing proposal sets. It leaves visual
 classification, full proposal generation, timeline, preview, remote model,
 image, network, and BGM capabilities closed.
 
@@ -72,6 +73,8 @@ does not create canonical data.
 `.artist-portrait/data/proposal_provider_registry.json`, writes deterministic
 `.artist-portrait/data/proposal_mock_adapter_handshake.json`, writes
 deterministic `.artist-portrait/data/proposal_execution_authorization.json`,
+writes
+deterministic `.artist-portrait/data/proposal_provider_output_quarantine.json`,
 writes
 deterministic `.artist-portrait/data/proposal_provider_result.json`, and then
 requires an explicitly opened generation gate. Without that gate it marks the `propose` step
@@ -123,6 +126,7 @@ It reports `proposal_context_invalid` for malformed proposal context packets,
 `proposal_provider_registry_invalid` for malformed provider registry packets,
 `proposal_mock_adapter_handshake_invalid` for malformed mock handshake packets,
 `proposal_execution_authorization_invalid` for malformed execution authorization packets,
+`proposal_provider_output_quarantine_invalid` for malformed provider output quarantine packets,
 `proposal_provider_result_invalid` for malformed provider result envelopes,
 `proposals_invalid` for malformed proposal sets, and
 `propose_text_model_missing` when a material map exists but the text-model

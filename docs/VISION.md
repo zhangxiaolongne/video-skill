@@ -19,4 +19,4 @@ research materials
 V0 success is not one-click finished video. V0 should first become a reliable
 material researcher and explainable editing planner.
 
-Current implementation gate: V0-010i proposal execution authorization gate only.
+Current implementation gate: V0-010j proposal provider output quarantine gate only.

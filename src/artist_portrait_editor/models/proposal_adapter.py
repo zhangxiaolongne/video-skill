@@ -22,6 +22,11 @@ class ProposalProviderResultStatus(str, Enum):
     ready_for_future_result_validation = "ready_for_future_result_validation"
 
 
+class ProposalProviderOutputQuarantineStatus(str, Enum):
+    blocked = "blocked"
+    ready_for_future_ingest = "ready_for_future_ingest"
+
+
 class ProposalExecutionAuthorizationStatus(str, Enum):
     blocked = "blocked"
     ready_for_future_execution = "ready_for_future_execution"
@@ -118,6 +123,7 @@ class ProposalProviderResultEnvelope(BaseModel):
     registry_ref: str = Field(min_length=1)
     handshake_ref: str = Field(min_length=1)
     execution_authorization_ref: str = Field(min_length=1)
+    output_quarantine_ref: str = Field(min_length=1)
     adapter_check_ref: str = Field(min_length=1)
     result_fingerprint: str = Field(pattern=r"^sha256:[0-9a-f]{64}$")
     expected_output_kind: str = Field(min_length=1)
@@ -128,6 +134,35 @@ class ProposalProviderResultEnvelope(BaseModel):
     model_call_performed: bool = False
     network_performed: bool = False
     proposal_content_generated: bool = False
+    issues: list[ProposalAdapterCheckIssue] = Field(default_factory=list)
+
+
+class ProposalProviderOutputQuarantine(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    schema_version: str = SCHEMA_VERSION
+    quarantine_id: str = Field(min_length=1)
+    project_id: str = Field(min_length=1)
+    status: ProposalProviderOutputQuarantineStatus
+    provider_id: str = Field(min_length=1)
+    request_ref: str = Field(min_length=1)
+    registry_ref: str = Field(min_length=1)
+    handshake_ref: str = Field(min_length=1)
+    execution_authorization_ref: str = Field(min_length=1)
+    adapter_check_ref: str = Field(min_length=1)
+    quarantine_fingerprint: str = Field(pattern=r"^sha256:[0-9a-f]{64}$")
+    raw_output_captured: bool = False
+    raw_output_ref: str | None = None
+    raw_output_sha256: str | None = None
+    raw_output_bytes: int = Field(default=0, ge=0)
+    parsed_payload_generated: bool = False
+    parsed_payload_ref: str | None = None
+    promoted_to_proposals: bool = False
+    validation_performed: bool = False
+    model_call_performed: bool = False
+    network_performed: bool = False
+    proposal_content_generated: bool = False
+    quarantine_required: bool = True
     issues: list[ProposalAdapterCheckIssue] = Field(default_factory=list)
 
 
