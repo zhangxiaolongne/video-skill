@@ -22,6 +22,11 @@ class ProposalProviderResultStatus(str, Enum):
     ready_for_future_result_validation = "ready_for_future_result_validation"
 
 
+class ProposalExecutionAuthorizationStatus(str, Enum):
+    blocked = "blocked"
+    ready_for_future_execution = "ready_for_future_execution"
+
+
 class ProposalAdapterCheckIssue(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -112,6 +117,7 @@ class ProposalProviderResultEnvelope(BaseModel):
     request_ref: str = Field(min_length=1)
     registry_ref: str = Field(min_length=1)
     handshake_ref: str = Field(min_length=1)
+    execution_authorization_ref: str = Field(min_length=1)
     adapter_check_ref: str = Field(min_length=1)
     result_fingerprint: str = Field(pattern=r"^sha256:[0-9a-f]{64}$")
     expected_output_kind: str = Field(min_length=1)
@@ -122,4 +128,34 @@ class ProposalProviderResultEnvelope(BaseModel):
     model_call_performed: bool = False
     network_performed: bool = False
     proposal_content_generated: bool = False
+    issues: list[ProposalAdapterCheckIssue] = Field(default_factory=list)
+
+
+class ProposalExecutionAuthorization(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    schema_version: str = SCHEMA_VERSION
+    authorization_id: str = Field(min_length=1)
+    project_id: str = Field(min_length=1)
+    status: ProposalExecutionAuthorizationStatus
+    provider_id: str = Field(min_length=1)
+    request_ref: str = Field(min_length=1)
+    registry_ref: str = Field(min_length=1)
+    handshake_ref: str = Field(min_length=1)
+    adapter_check_ref: str = Field(min_length=1)
+    authorization_fingerprint: str = Field(pattern=r"^sha256:[0-9a-f]{64}$")
+    approved_execution_gate: bool = False
+    user_approval_required: bool = True
+    user_approval_present: bool = False
+    credential_policy: str = Field(min_length=1)
+    allowed_secret_sources: list[str] = Field(default_factory=list)
+    selected_secret_source: str | None = None
+    network_required: bool = False
+    network_allowed: bool = False
+    model_call_allowed: bool = False
+    execution_performed: bool = False
+    model_call_performed: bool = False
+    network_performed: bool = False
+    proposal_content_generated: bool = False
+    quarantine_required: bool = True
     issues: list[ProposalAdapterCheckIssue] = Field(default_factory=list)

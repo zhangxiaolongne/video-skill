@@ -14,6 +14,7 @@ Current committed schemas:
 - `schemas/project_state.schema.json`
 - `schemas/proposal_adapter_check.schema.json`
 - `schemas/proposal_context.schema.json`
+- `schemas/proposal_execution_authorization.schema.json`
 - `schemas/proposal_mock_adapter_handshake.schema.json`
 - `schemas/proposal_provider_registry.schema.json`
 - `schemas/proposal_provider_result_envelope.schema.json`
@@ -120,6 +121,16 @@ handshake gate and has a committed schema at
 after the provider registry. It validates the future response contract without
 calling a model, touching the network, or generating proposal content.
 
+`ProposalExecutionAuthorization` is implemented for the V0-010i execution
+authorization gate and has a committed schema at
+`schemas/proposal_execution_authorization.schema.json`. It is written to
+`.artist-portrait/data/proposal_execution_authorization.json` by `propose`
+after the mock adapter handshake and before the provider result envelope. It
+records that the execution gate is not approved, user approval is missing,
+credentials are not allowed, model calls and network access are not allowed,
+execution was not performed, and any future provider output must remain
+quarantined before it can become `proposals.json`.
+
 `ProposalProviderResultEnvelope` is implemented for the V0-010h provider result
 envelope gate and has a committed schema at
 `schemas/proposal_provider_result_envelope.schema.json`. It is written to
@@ -174,6 +185,7 @@ Current stable diagnostic codes include:
 - `text_model_gate_invalid`
 - `proposal_request_invalid`
 - `proposal_adapter_check_invalid`
+- `proposal_execution_authorization_invalid`
 - `proposal_provider_registry_invalid`
 - `proposal_mock_adapter_handshake_invalid`
 - `proposal_provider_result_invalid`

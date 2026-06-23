@@ -34,7 +34,7 @@ When a user requirement changes long-term product behavior, update both files:
 - Canonical skill name: `artist-portrait-editor`
 - Canonical install directory: `artist-portrait-editor`
 - Distribution repository: `video-skill`
-- Current local gate: V0-010h proposal provider result envelope gate only
+- Current local gate: V0-010i proposal execution authorization gate only
 
 ## Completed Local Versions
 
@@ -141,6 +141,12 @@ When a user requirement changes long-term product behavior, update both files:
   `.artist-portrait/data/proposal_provider_result.json` as a dry-run provider
   result envelope, recording no payload generation, no validation, no model
   call, no network access, and no generated proposal content.
+- V0-010y: `ProposalExecutionAuthorization` schema and committed JSON Schema.
+- V0-010z: blocked `propose` now writes deterministic
+  `.artist-portrait/data/proposal_execution_authorization.json`, recording no
+  approved execution gate, no user approval, no credentials, no model calls, no
+  network access, no execution, no generated proposal content, and quarantine
+  required for any future provider output.
 
 ## Current Hard Boundaries
 
@@ -176,10 +182,11 @@ Tactical rule for future batches:
 - use third-party outputs as evidence with provenance, not unreviewed truth
 - keep config gates, failure modes, and review rules around every non-local or
   model-backed capability
-- keep current V0-010h bounded to existing local ledgers plus proposal
+- keep current V0-010i bounded to existing local ledgers plus proposal
   readiness, proposal request, adapter preflight, provider registry, mock
-  adapter handshake, provider result envelope, and proposal validation checks;
-  keyframes are visual evidence references, not visual classification
+  adapter handshake, execution authorization, provider result envelope, and
+  proposal validation checks; keyframes are visual evidence references, not
+  visual classification
 
 ### BGM Is Part Of Editing Logic
 

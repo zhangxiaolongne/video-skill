@@ -60,6 +60,7 @@ def check_schema_drift() -> None:
             "project_config.schema.json",
             "project_state.schema.json",
             "proposal_adapter_check.schema.json",
+            "proposal_execution_authorization.schema.json",
             "proposal_mock_adapter_handshake.schema.json",
             "proposal_context.schema.json",
             "proposal_provider_registry.schema.json",
@@ -125,30 +126,30 @@ def check_gate_consistency() -> None:
         "master": ROOT / "artist_portrait_editor_revision5_optimized.md",
         "README.md": ROOT / "README.md",
         "DEVELOPMENT_PROGRESS.md": ROOT / "docs" / "DEVELOPMENT_PROGRESS.md",
-        "V0_010H_PROPOSAL_PROVIDER_RESULT_ENVELOPE_GATE.md": ROOT
+        "V0_010I_PROPOSAL_EXECUTION_AUTHORIZATION_GATE.md": ROOT
         / "docs"
-        / "V0_010H_PROPOSAL_PROVIDER_RESULT_ENVELOPE_GATE.md",
+        / "V0_010I_PROPOSAL_EXECUTION_AUTHORIZATION_GATE.md",
     }
     content = {name: path.read_text(encoding="utf-8") for name, path in docs.items()}
     if (
-        "Current gate: V0-010h proposal provider result envelope gate only."
+        "Current gate: V0-010i proposal execution authorization gate only."
         not in content["AGENTS.md"]
     ):
-        raise SystemExit("AGENTS.md current gate is not V0-010h provider result envelope")
-    if "V0-010h 提案 provider result envelope 闸门" not in content["master"]:
-        raise SystemExit("master document current gate is not V0-010h provider result envelope")
-    if "Current V0-010h proposal provider result envelope gate work" not in content["README.md"]:
-        raise SystemExit("README current gate is not V0-010h provider result envelope")
+        raise SystemExit("AGENTS.md current gate is not V0-010i execution authorization")
+    if "V0-010i 提案 execution authorization 闸门" not in content["master"]:
+        raise SystemExit("master document current gate is not V0-010i execution authorization")
+    if "Current V0-010i proposal execution authorization gate work" not in content["README.md"]:
+        raise SystemExit("README current gate is not V0-010i execution authorization")
     if (
-        "Current local gate: V0-010h proposal provider result envelope gate only"
+        "Current local gate: V0-010i proposal execution authorization gate only"
         not in content["DEVELOPMENT_PROGRESS.md"]
     ):
         raise SystemExit("development progress current gate is stale")
     if (
-        "V0-010h opens a deterministic provider result envelope"
-        not in content["V0_010H_PROPOSAL_PROVIDER_RESULT_ENVELOPE_GATE.md"]
+        "V0-010i opens deterministic provider execution authorization packets"
+        not in content["V0_010I_PROPOSAL_EXECUTION_AUTHORIZATION_GATE.md"]
     ):
-        raise SystemExit("V0-010h provider result envelope gate doc is missing active gate")
+        raise SystemExit("V0-010i execution authorization gate doc is missing active gate")
 
 
 def write_sine_wav(path: Path, *, seconds: float = 0.25, sample_rate: int = 8000) -> None:
@@ -506,6 +507,8 @@ def check_local_foundation_outputs() -> None:
             raise SystemExit("propose did not report proposal_provider_registry output ref")
         if ".artist-portrait/data/proposal_mock_adapter_handshake.json" not in output_refs:
             raise SystemExit("propose did not report proposal_mock_adapter_handshake output ref")
+        if ".artist-portrait/data/proposal_execution_authorization.json" not in output_refs:
+            raise SystemExit("propose did not report proposal_execution_authorization output ref")
         if ".artist-portrait/data/proposal_provider_result.json" not in output_refs:
             raise SystemExit("propose did not report proposal_provider_result output ref")
         if "no fake proposals" not in propose_payload.get("error", ""):
@@ -522,6 +525,9 @@ def check_local_foundation_outputs() -> None:
         handshake = (
             tmp_path / ".artist-portrait" / "data" / "proposal_mock_adapter_handshake.json"
         )
+        authorization = (
+            tmp_path / ".artist-portrait" / "data" / "proposal_execution_authorization.json"
+        )
         result = (
             tmp_path / ".artist-portrait" / "data" / "proposal_provider_result.json"
         )
@@ -537,6 +543,8 @@ def check_local_foundation_outputs() -> None:
             raise SystemExit("blocked propose did not write proposal_provider_registry.json")
         if not handshake.exists():
             raise SystemExit("blocked propose did not write proposal_mock_adapter_handshake.json")
+        if not authorization.exists():
+            raise SystemExit("blocked propose did not write proposal_execution_authorization.json")
         if not result.exists():
             raise SystemExit("blocked propose did not write proposal_provider_result.json")
         context_payload = json.loads(context.read_text(encoding="utf-8"))
@@ -561,6 +569,15 @@ def check_local_foundation_outputs() -> None:
         handshake_payload = json.loads(handshake.read_text(encoding="utf-8"))
         if handshake_payload.get("proposal_content_generated") is not False:
             raise SystemExit("proposal_mock_adapter_handshake generated proposal content")
+        authorization_payload = json.loads(authorization.read_text(encoding="utf-8"))
+        if authorization_payload.get("approved_execution_gate") is not False:
+            raise SystemExit("proposal_execution_authorization opened execution gate")
+        if authorization_payload.get("user_approval_present") is not False:
+            raise SystemExit("proposal_execution_authorization recorded user approval unexpectedly")
+        if authorization_payload.get("model_call_allowed") is not False:
+            raise SystemExit("proposal_execution_authorization allowed model calls unexpectedly")
+        if authorization_payload.get("execution_performed") is not False:
+            raise SystemExit("proposal_execution_authorization performed execution unexpectedly")
         result_payload = json.loads(result.read_text(encoding="utf-8"))
         if result_payload.get("payload_generated") is not False:
             raise SystemExit("proposal_provider_result generated a payload")

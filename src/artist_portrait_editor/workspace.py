@@ -44,6 +44,8 @@ from artist_portrait_editor.models.proposal_adapter import (
     ProposalAdapterCheck,
     ProposalAdapterCheckIssue,
     ProposalAdapterCheckStatus,
+    ProposalExecutionAuthorization,
+    ProposalExecutionAuthorizationStatus,
     ProposalMockAdapterHandshake,
     ProposalMockAdapterHandshakeStatus,
     ProposalProviderResultEnvelope,
@@ -455,6 +457,15 @@ def render_status_panel(payload: dict) -> str:
         lines.append("proposal_mock_adapter_handshake: invalid")
     else:
         lines.append("proposal_mock_adapter_handshake: missing")
+    execution_authorization = summaries.get("proposal_execution_authorization") or {}
+    if execution_authorization.get("exists") and execution_authorization.get("valid", True):
+        lines.append(
+            f"proposal_execution_authorization: {execution_authorization.get('status')}"
+        )
+    elif execution_authorization.get("exists"):
+        lines.append("proposal_execution_authorization: invalid")
+    else:
+        lines.append("proposal_execution_authorization: missing")
     provider_result = summaries.get("proposal_provider_result") or {}
     if provider_result.get("exists") and provider_result.get("valid", True):
         lines.append(f"proposal_provider_result: {provider_result.get('status')}")
@@ -709,6 +720,9 @@ def doctor_project_payload(project_path: Path) -> dict:
     mock_handshake = proposal_mock_adapter_handshake_summary(
         root / WORKSPACE_DIR / DATA_DIR / "proposal_mock_adapter_handshake.json"
     )
+    execution_authorization = proposal_execution_authorization_summary(
+        root / WORKSPACE_DIR / DATA_DIR / "proposal_execution_authorization.json"
+    )
     provider_result = proposal_provider_result_summary(
         root / WORKSPACE_DIR / DATA_DIR / "proposal_provider_result.json"
     )
@@ -813,6 +827,27 @@ def doctor_project_payload(project_path: Path) -> dict:
                 ),
                 next_action=(
                     f"fix {handshake_path.relative_to(root).as_posix()} or rerun "
+                    f"artist-portrait propose --project {project_path}"
+                ),
+            )
+        )
+    if (
+        sources.get("valid") is True
+        and execution_authorization.get("valid") is False
+    ):
+        authorization_path = (
+            root / WORKSPACE_DIR / DATA_DIR / "proposal_execution_authorization.json"
+        )
+        issues.append(
+            workspace_issue(
+                code="proposal_execution_authorization_invalid",
+                severity="error",
+                detail=str(
+                    execution_authorization.get("error")
+                    or "proposal execution authorization is invalid"
+                ),
+                next_action=(
+                    f"fix {authorization_path.relative_to(root).as_posix()} or rerun "
                     f"artist-portrait propose --project {project_path}"
                 ),
             )
@@ -997,6 +1032,10 @@ def artifact_statuses(root: Path) -> dict[str, dict]:
         / WORKSPACE_DIR
         / DATA_DIR
         / "proposal_mock_adapter_handshake.json",
+        "proposal_execution_authorization": root
+        / WORKSPACE_DIR
+        / DATA_DIR
+        / "proposal_execution_authorization.json",
         "proposal_provider_result": root
         / WORKSPACE_DIR
         / DATA_DIR
@@ -1087,6 +1126,9 @@ def status_summaries(root: Path) -> dict:
     proposal_mock_adapter_handshake_path = (
         root / WORKSPACE_DIR / DATA_DIR / "proposal_mock_adapter_handshake.json"
     )
+    proposal_execution_authorization_path = (
+        root / WORKSPACE_DIR / DATA_DIR / "proposal_execution_authorization.json"
+    )
     proposal_provider_result_path = (
         root / WORKSPACE_DIR / DATA_DIR / "proposal_provider_result.json"
     )
@@ -1112,6 +1154,9 @@ def status_summaries(root: Path) -> dict:
         ),
         "proposal_mock_adapter_handshake": proposal_mock_adapter_handshake_summary(
             proposal_mock_adapter_handshake_path
+        ),
+        "proposal_execution_authorization": proposal_execution_authorization_summary(
+            proposal_execution_authorization_path
         ),
         "proposal_provider_result": proposal_provider_result_summary(
             proposal_provider_result_path
@@ -1363,6 +1408,17 @@ def read_proposal_mock_adapter_handshake_json(path: Path) -> ProposalMockAdapter
     except ValueError as exc:
         raise WorkspacePrerequisiteError(
             f"invalid ProposalMockAdapterHandshake JSON: {exc}"
+        ) from exc
+
+
+def read_proposal_execution_authorization_json(path: Path) -> ProposalExecutionAuthorization:
+    try:
+        return ProposalExecutionAuthorization.model_validate_json(
+            path.read_text(encoding="utf-8")
+        )
+    except ValueError as exc:
+        raise WorkspacePrerequisiteError(
+            f"invalid ProposalExecutionAuthorization JSON: {exc}"
         ) from exc
 
 
@@ -1627,6 +1683,35 @@ def proposal_mock_adapter_handshake_summary(path: Path) -> dict:
     }
 
 
+def proposal_execution_authorization_summary(path: Path) -> dict:
+    if not path.exists():
+        return {"exists": False}
+    try:
+        authorization = read_proposal_execution_authorization_json(path)
+    except Exception as exc:
+        return {
+            "exists": True,
+            "valid": False,
+            "error": str(exc),
+        }
+    return {
+        "exists": True,
+        "valid": True,
+        "authorization_id": authorization.authorization_id,
+        "status": authorization.status.value,
+        "provider_id": authorization.provider_id,
+        "approved_execution_gate": authorization.approved_execution_gate,
+        "user_approval_present": authorization.user_approval_present,
+        "network_allowed": authorization.network_allowed,
+        "model_call_allowed": authorization.model_call_allowed,
+        "execution_performed": authorization.execution_performed,
+        "model_call_performed": authorization.model_call_performed,
+        "network_performed": authorization.network_performed,
+        "proposal_content_generated": authorization.proposal_content_generated,
+        "issue_count": len(authorization.issues),
+    }
+
+
 def proposal_provider_result_summary(path: Path) -> dict:
     if not path.exists():
         return {"exists": False}
@@ -1704,6 +1789,14 @@ def stable_provider_registry_id(project_id: str, registry_fingerprint: str) -> s
 def stable_mock_handshake_id(project_id: str, handshake_fingerprint: str) -> str:
     payload = f"{project_id}:{handshake_fingerprint}"
     return "pmock_" + hashlib.sha256(payload.encode("utf-8")).hexdigest()[:24]
+
+
+def stable_execution_authorization_id(
+    project_id: str,
+    authorization_fingerprint: str,
+) -> str:
+    payload = f"{project_id}:{authorization_fingerprint}"
+    return "pexec_" + hashlib.sha256(payload.encode("utf-8")).hexdigest()[:24]
 
 
 def stable_provider_result_id(project_id: str, result_fingerprint: str) -> str:
@@ -2228,6 +2321,124 @@ def write_proposal_mock_adapter_handshake_json(
     return output
 
 
+def build_proposal_execution_authorization(
+    *,
+    project_id: str,
+    request: ProposalRequestPacket,
+    request_ref: str,
+    adapter_check: ProposalAdapterCheck,
+    adapter_check_ref: str,
+    registry: ProposalProviderRegistry,
+    registry_ref: str,
+    handshake: ProposalMockAdapterHandshake,
+    handshake_ref: str,
+    authorization_fingerprint: str,
+) -> ProposalExecutionAuthorization:
+    issues: list[ProposalAdapterCheckIssue] = [
+        proposal_adapter_issue(
+            code="execution_gate_closed_current_gate",
+            severity="error",
+            detail="provider execution is not open in the current gate",
+        ),
+        proposal_adapter_issue(
+            code="user_execution_approval_missing",
+            severity="error",
+            detail="explicit user approval is required before any provider execution",
+        ),
+    ]
+    if request.status == ProposalRequestStatus.blocked:
+        issues.append(
+            proposal_adapter_issue(
+                code="proposal_request_blocked",
+                severity="error",
+                detail="provider execution cannot be authorized because proposal request is blocked",
+                ref=request_ref,
+            )
+        )
+    if adapter_check.status == ProposalAdapterCheckStatus.blocked:
+        issues.append(
+            proposal_adapter_issue(
+                code="adapter_preflight_blocked",
+                severity="error",
+                detail="provider execution cannot be authorized because adapter preflight is blocked",
+                ref=adapter_check_ref,
+            )
+        )
+    if handshake.status == ProposalMockAdapterHandshakeStatus.blocked:
+        issues.append(
+            proposal_adapter_issue(
+                code="mock_adapter_handshake_blocked",
+                severity="error",
+                detail="provider execution cannot be authorized because mock adapter handshake is blocked",
+                ref=handshake_ref,
+            )
+        )
+    if registry.generation_open:
+        issues.append(
+            proposal_adapter_issue(
+                code="generation_unexpectedly_open",
+                severity="error",
+                detail="provider execution authorization requires generation_open to remain false",
+                ref=registry_ref,
+            )
+        )
+    status = (
+        ProposalExecutionAuthorizationStatus.ready_for_future_execution
+        if not any(issue.severity == "error" for issue in issues)
+        else ProposalExecutionAuthorizationStatus.blocked
+    )
+    return ProposalExecutionAuthorization(
+        authorization_id=stable_execution_authorization_id(
+            project_id,
+            authorization_fingerprint,
+        ),
+        project_id=project_id,
+        status=status,
+        provider_id=registry.selected_provider_id,
+        request_ref=request_ref,
+        registry_ref=registry_ref,
+        handshake_ref=handshake_ref,
+        adapter_check_ref=adapter_check_ref,
+        authorization_fingerprint=authorization_fingerprint,
+        approved_execution_gate=False,
+        user_approval_required=True,
+        user_approval_present=False,
+        credential_policy="no_credentials_allowed_current_gate",
+        allowed_secret_sources=[],
+        selected_secret_source=None,
+        network_required=False,
+        network_allowed=False,
+        model_call_allowed=False,
+        execution_performed=False,
+        model_call_performed=False,
+        network_performed=False,
+        proposal_content_generated=False,
+        quarantine_required=True,
+        issues=issues,
+    )
+
+
+def write_proposal_execution_authorization_json(
+    root: Path,
+    authorization: ProposalExecutionAuthorization,
+) -> Path:
+    output = root / WORKSPACE_DIR / DATA_DIR / "proposal_execution_authorization.json"
+    output.parent.mkdir(parents=True, exist_ok=True)
+    tmp = output.with_suffix(".json.tmp")
+    tmp.write_text(
+        json.dumps(
+            authorization.model_dump(mode="json"),
+            ensure_ascii=False,
+            indent=2,
+            sort_keys=True,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    tmp.replace(output)
+    return output
+
+
 def build_proposal_provider_result_envelope(
     *,
     project_id: str,
@@ -2238,6 +2449,8 @@ def build_proposal_provider_result_envelope(
     registry_ref: str,
     handshake: ProposalMockAdapterHandshake,
     handshake_ref: str,
+    authorization: ProposalExecutionAuthorization,
+    authorization_ref: str,
     result_fingerprint: str,
 ) -> ProposalProviderResultEnvelope:
     issues: list[ProposalAdapterCheckIssue] = [
@@ -2254,6 +2467,15 @@ def build_proposal_provider_result_envelope(
                 severity="error",
                 detail="provider result envelope cannot proceed because mock adapter handshake is blocked",
                 ref=handshake_ref,
+            )
+        )
+    if authorization.status == ProposalExecutionAuthorizationStatus.blocked:
+        issues.append(
+            proposal_adapter_issue(
+                code="execution_authorization_blocked",
+                severity="error",
+                detail="provider result envelope cannot proceed because execution authorization is blocked",
+                ref=authorization_ref,
             )
         )
     if registry.generation_open:
@@ -2278,6 +2500,7 @@ def build_proposal_provider_result_envelope(
         request_ref=request_ref,
         registry_ref=registry_ref,
         handshake_ref=handshake_ref,
+        execution_authorization_ref=authorization_ref,
         adapter_check_ref=adapter_check_ref,
         result_fingerprint=result_fingerprint,
         expected_output_kind="ProposalSet",
@@ -4021,12 +4244,38 @@ def propose_workspace(project_path: Path) -> ProjectState:
     )
     handshake_path = write_proposal_mock_adapter_handshake_json(root, mock_handshake)
     handshake_ref = handshake_path.relative_to(root).as_posix()
+    authorization_fingerprint = fingerprint_inputs(
+        [
+            ("proposal_request", request_path),
+            ("proposal_adapter_check", adapter_check_path),
+            ("proposal_provider_registry", registry_path),
+            ("proposal_mock_adapter_handshake", handshake_path),
+        ]
+    )
+    execution_authorization = build_proposal_execution_authorization(
+        project_id=config.project.id,
+        request=proposal_request,
+        request_ref=request_ref,
+        adapter_check=adapter_check,
+        adapter_check_ref=adapter_check_ref,
+        registry=provider_registry,
+        registry_ref=registry_ref,
+        handshake=mock_handshake,
+        handshake_ref=handshake_ref,
+        authorization_fingerprint=authorization_fingerprint,
+    )
+    authorization_path = write_proposal_execution_authorization_json(
+        root,
+        execution_authorization,
+    )
+    authorization_ref = authorization_path.relative_to(root).as_posix()
     result_fingerprint = fingerprint_inputs(
         [
             ("proposal_request", request_path),
             ("proposal_adapter_check", adapter_check_path),
             ("proposal_provider_registry", registry_path),
             ("proposal_mock_adapter_handshake", handshake_path),
+            ("proposal_execution_authorization", authorization_path),
         ]
     )
     provider_result = build_proposal_provider_result_envelope(
@@ -4038,6 +4287,8 @@ def propose_workspace(project_path: Path) -> ProjectState:
         registry_ref=registry_ref,
         handshake=mock_handshake,
         handshake_ref=handshake_ref,
+        authorization=execution_authorization,
+        authorization_ref=authorization_ref,
         result_fingerprint=result_fingerprint,
     )
     result_path = write_proposal_provider_result_json(root, provider_result)
@@ -4049,6 +4300,7 @@ def propose_workspace(project_path: Path) -> ProjectState:
         adapter_check_ref,
         registry_ref,
         handshake_ref,
+        authorization_ref,
         result_ref,
     ]
     run_id = new_run_id()
@@ -4088,6 +4340,7 @@ def propose_workspace(project_path: Path) -> ProjectState:
                 "proposal_adapter_check": adapter_check_ref,
                 "proposal_provider_registry": registry_ref,
                 "proposal_mock_adapter_handshake": handshake_ref,
+                "proposal_execution_authorization": authorization_ref,
                 "proposal_provider_result": result_ref,
                 "reasons": text_model_gate.reasons,
                 "reason": "text_model_gate_blocked",
@@ -4131,6 +4384,7 @@ def propose_workspace(project_path: Path) -> ProjectState:
             "proposal_adapter_check": adapter_check_ref,
             "proposal_provider_registry": registry_ref,
             "proposal_mock_adapter_handshake": handshake_ref,
+            "proposal_execution_authorization": authorization_ref,
             "proposal_provider_result": result_ref,
             "reason": "proposal_generation_not_implemented",
         },

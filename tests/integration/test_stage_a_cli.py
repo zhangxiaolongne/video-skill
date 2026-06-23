@@ -1497,6 +1497,7 @@ def test_propose_without_text_model_blocks_without_fake_outputs(
         ".artist-portrait/data/proposal_adapter_check.json",
         ".artist-portrait/data/proposal_provider_registry.json",
         ".artist-portrait/data/proposal_mock_adapter_handshake.json",
+        ".artist-portrait/data/proposal_execution_authorization.json",
         ".artist-portrait/data/proposal_provider_result.json",
     ]
     assert "text_model_gate_blocked" in payload["warnings"][0]
@@ -1572,6 +1573,26 @@ def test_propose_without_text_model_blocks_without_fake_outputs(
     assert handshake_payload["model_call_performed"] is False
     assert handshake_payload["network_performed"] is False
     assert handshake_payload["proposal_content_generated"] is False
+    authorization_path = (
+        tmp_path / ".artist-portrait" / "data" / "proposal_execution_authorization.json"
+    )
+    assert authorization_path.exists()
+    authorization_payload = json.loads(authorization_path.read_text(encoding="utf-8"))
+    assert authorization_payload["status"] == "blocked"
+    assert authorization_payload["provider_id"] == "local_mock"
+    assert authorization_payload["approved_execution_gate"] is False
+    assert authorization_payload["user_approval_required"] is True
+    assert authorization_payload["user_approval_present"] is False
+    assert authorization_payload["credential_policy"] == "no_credentials_allowed_current_gate"
+    assert authorization_payload["allowed_secret_sources"] == []
+    assert authorization_payload["selected_secret_source"] is None
+    assert authorization_payload["network_allowed"] is False
+    assert authorization_payload["model_call_allowed"] is False
+    assert authorization_payload["execution_performed"] is False
+    assert authorization_payload["model_call_performed"] is False
+    assert authorization_payload["network_performed"] is False
+    assert authorization_payload["proposal_content_generated"] is False
+    assert authorization_payload["quarantine_required"] is True
     result_path = tmp_path / ".artist-portrait" / "data" / "proposal_provider_result.json"
     assert result_path.exists()
     result_payload = json.loads(result_path.read_text(encoding="utf-8"))
@@ -1597,6 +1618,7 @@ def test_propose_without_text_model_blocks_without_fake_outputs(
         ".artist-portrait/data/proposal_adapter_check.json",
         ".artist-portrait/data/proposal_provider_registry.json",
         ".artist-portrait/data/proposal_mock_adapter_handshake.json",
+        ".artist-portrait/data/proposal_execution_authorization.json",
         ".artist-portrait/data/proposal_provider_result.json",
     ]
 
@@ -1672,12 +1694,26 @@ def test_propose_with_ready_text_model_gate_still_does_not_generate(
     assert handshake_payload["model_call_performed"] is False
     assert handshake_payload["network_performed"] is False
     assert handshake_payload["proposal_content_generated"] is False
+    authorization_payload = json.loads(
+        (
+            tmp_path
+            / ".artist-portrait"
+            / "data"
+            / "proposal_execution_authorization.json"
+        ).read_text(encoding="utf-8")
+    )
+    assert authorization_payload["status"] == "blocked"
+    assert authorization_payload["approved_execution_gate"] is False
+    assert authorization_payload["user_approval_present"] is False
+    assert authorization_payload["network_allowed"] is False
+    assert authorization_payload["model_call_allowed"] is False
+    assert authorization_payload["execution_performed"] is False
     result_payload = json.loads(
         (
             tmp_path / ".artist-portrait" / "data" / "proposal_provider_result.json"
         ).read_text(encoding="utf-8")
     )
-    assert result_payload["status"] == "ready_for_future_result_validation"
+    assert result_payload["status"] == "blocked"
     assert result_payload["payload_generated"] is False
     assert result_payload["validation_performed"] is False
     assert result_payload["model_call_performed"] is False
@@ -1910,6 +1946,47 @@ def test_invalid_proposal_mock_adapter_handshake_status_and_doctor(tmp_path, cap
     assert code == 1
     assert any(
         issue["code"] == "proposal_mock_adapter_handshake_invalid"
+        for issue in doctor_payload["issues"]
+    )
+
+
+def test_invalid_proposal_execution_authorization_status_and_doctor(tmp_path, capsys):
+    project_path = tmp_path / "project.yaml"
+    project_path.write_text(
+        project_fixture_with_scene_detection("off"),
+        encoding="utf-8",
+    )
+    assert main(["init", "--project", str(project_path), "--quiet"]) in (0, 1)
+    write_clean_source_ledger(tmp_path)
+    authorization_path = (
+        tmp_path / ".artist-portrait" / "data" / "proposal_execution_authorization.json"
+    )
+    authorization_path.write_text(
+        '{"authorization_id": "missing-required-fields"}\n',
+        encoding="utf-8",
+    )
+
+    code = main(["status", "--project", str(project_path), "--json"])
+    captured = capsys.readouterr()
+    status_payload = json.loads(captured.out)
+
+    assert code == 0
+    assert (
+        status_payload["summaries"]["proposal_execution_authorization"]["valid"]
+        is False
+    )
+    assert (
+        "invalid ProposalExecutionAuthorization JSON"
+        in status_payload["summaries"]["proposal_execution_authorization"]["error"]
+    )
+
+    code = main(["doctor", "--project", str(project_path), "--json"])
+    captured = capsys.readouterr()
+    doctor_payload = json.loads(captured.out)
+
+    assert code == 1
+    assert any(
+        issue["code"] == "proposal_execution_authorization_invalid"
         for issue in doctor_payload["issues"]
     )
 

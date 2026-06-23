@@ -3,7 +3,7 @@
 Follow `artist_portrait_editor_revision5_optimized.md` as the governing V0
 engineering-freeze document.
 
-Current gate: V0-010h proposal provider result envelope gate only.
+Current gate: V0-010i proposal execution authorization gate only.
 
 Allowed:
 
@@ -63,6 +63,9 @@ Allowed:
 - canonical `.artist-portrait/data/proposal_provider_result.json`
 - `ProposalProviderResultEnvelope` Pydantic model and generated JSON Schema
 - deterministic provider result envelope without payload generation, validation, model calls, network access, or proposal content
+- canonical `.artist-portrait/data/proposal_execution_authorization.json`
+- `ProposalExecutionAuthorization` Pydantic model and generated JSON Schema
+- deterministic provider execution authorization packet without credentials, user approval, model calls, network access, execution, or proposal content
 - `ProposalSet` Pydantic model and generated JSON Schema
 - canonical `.artist-portrait/data/proposal_validation.json`
 - deterministic `output/proposal_review.md`
