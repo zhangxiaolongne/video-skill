@@ -13,6 +13,7 @@ Current committed schemas:
 - `schemas/project_config.schema.json`
 - `schemas/project_state.schema.json`
 - `schemas/proposal_context.schema.json`
+- `schemas/proposal_request_packet.schema.json`
 - `schemas/proposal_validation_report.schema.json`
 - `schemas/proposal_set.schema.json`
 - `schemas/source_record.schema.json`
@@ -84,6 +85,14 @@ a committed schema at `schemas/text_model_gate.schema.json`. It is written to
 text-model capability, absolute-path policy, status, blocking reasons, and
 required next steps. It does not execute or authorize a model call by itself.
 
+`ProposalRequestPacket` is implemented for the V0-010e proposal request gate
+and has a committed schema at `schemas/proposal_request_packet.schema.json`.
+It is written to `.artist-portrait/data/proposal_request.json` by `propose`
+after `proposal_context.json` and `text_model_gate.json`. It defines the
+future model adapter request contract, prompt strings, required proposal IDs,
+BGM requirements, validation requirements, blocking reasons, and target
+`ProposalSet` schema reference. It is not sent to a model in the current gate.
+
 `ProposalSet` is implemented for the V0-010a proposal readiness gate and has a
 committed schema at `schemas/proposal_set.schema.json`. A future approved
 proposal generation gate may write `.artist-portrait/data/proposals.json`, but
@@ -127,6 +136,7 @@ Current stable diagnostic codes include:
 - `analysis_invalid`
 - `proposal_context_invalid`
 - `text_model_gate_invalid`
+- `proposal_request_invalid`
 - `proposals_invalid`
 - `proposal_unknown_clip_id`
 - `proposal_unknown_fact_ref`

@@ -34,7 +34,7 @@ When a user requirement changes long-term product behavior, update both files:
 - Canonical skill name: `artist-portrait-editor`
 - Canonical install directory: `artist-portrait-editor`
 - Distribution repository: `video-skill`
-- Current local gate: V0-010d proposal validation gate only
+- Current local gate: V0-010e proposal request gate only
 
 ## Completed Local Versions
 
@@ -116,6 +116,12 @@ When a user requirement changes long-term product behavior, update both files:
   `.artist-portrait/data/proposal_validation.json` and
   `output/proposal_review.md`, checking required clips, forbidden sources,
   fact references, material-map fingerprints, and BGM strategy fields.
+- V0-010m: `ProposalRequestPacket` schema and committed JSON Schema.
+- V0-010n: blocked `propose` now writes deterministic
+  `.artist-portrait/data/proposal_request.json` after proposal context and
+  text-model gate packets.
+- V0-010o: proposal request status/doctor diagnostics and `run_checks.py`
+  coverage without model calls or proposal generation.
 
 ## Current Hard Boundaries
 
@@ -151,8 +157,8 @@ Tactical rule for future batches:
 - use third-party outputs as evidence with provenance, not unreviewed truth
 - keep config gates, failure modes, and review rules around every non-local or
   model-backed capability
-- keep current V0-010d bounded to existing local ledgers plus proposal
-  readiness and proposal validation checks; keyframes are
+- keep current V0-010e bounded to existing local ledgers plus proposal
+  readiness, proposal request, and proposal validation checks; keyframes are
   visual evidence references, not visual classification
 
 ### BGM Is Part Of Editing Logic
@@ -186,11 +192,11 @@ carried into the future proposal, timeline, review, and preview gates.
 
 ## Next Likely Batch
 
-Next action should plan the real V0-011 proposal generation gate without
-confusing it with V0-010d proposal validation. The big-version direction is
-evidence-grounded creative proposals that account for BGM strategy, target
-output, text, pacing, transitions, and evidence traceability. The next small
-batch should add a controlled model-adapter contract and provider/secret
-handling only after validation artifacts are stable. Do not open timeline, BGM
-fitting, preview, network, OpenCV, vision, image generation/editing, API-key
-setup, or model-free template proposal gates by accident.
+Next action should plan the actual model-adapter execution gate without
+confusing it with V0-010e proposal request preparation. The big-version
+direction is evidence-grounded creative proposals that account for BGM
+strategy, target output, text, pacing, transitions, and evidence traceability.
+The next small batch should add provider/secret handling and a dry-run adapter
+contract before any real model call. Do not open timeline, BGM fitting,
+preview, network, OpenCV, vision, image generation/editing, API-key setup, or
+model-free template proposal gates by accident.

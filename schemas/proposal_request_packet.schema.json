@@ -1,0 +1,167 @@
+{
+  "$defs": {
+    "EvidenceRef": {
+      "additionalProperties": false,
+      "properties": {
+        "ref": {
+          "minLength": 1,
+          "title": "Ref",
+          "type": "string"
+        },
+        "type": {
+          "minLength": 1,
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "ref"
+      ],
+      "title": "EvidenceRef",
+      "type": "object"
+    },
+    "ProposalRequestStatus": {
+      "enum": [
+        "blocked",
+        "ready"
+      ],
+      "title": "ProposalRequestStatus",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "bgm_requirements": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Bgm Requirements",
+      "type": "array"
+    },
+    "blocked_capabilities": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Blocked Capabilities",
+      "type": "array"
+    },
+    "blocking_reasons": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Blocking Reasons",
+      "type": "array"
+    },
+    "developer_prompt": {
+      "minLength": 1,
+      "title": "Developer Prompt",
+      "type": "string"
+    },
+    "evidence": {
+      "items": {
+        "$ref": "#/$defs/EvidenceRef"
+      },
+      "title": "Evidence",
+      "type": "array"
+    },
+    "project_id": {
+      "minLength": 1,
+      "title": "Project Id",
+      "type": "string"
+    },
+    "proposal_context_fingerprint": {
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "title": "Proposal Context Fingerprint",
+      "type": "string"
+    },
+    "proposal_context_ref": {
+      "minLength": 1,
+      "title": "Proposal Context Ref",
+      "type": "string"
+    },
+    "refusal_requirements": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Refusal Requirements",
+      "type": "array"
+    },
+    "request_fingerprint": {
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "title": "Request Fingerprint",
+      "type": "string"
+    },
+    "request_id": {
+      "minLength": 1,
+      "title": "Request Id",
+      "type": "string"
+    },
+    "required_proposal_ids": {
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 3,
+      "minItems": 3,
+      "title": "Required Proposal Ids",
+      "type": "array"
+    },
+    "schema_version": {
+      "default": "0.3",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "status": {
+      "$ref": "#/$defs/ProposalRequestStatus"
+    },
+    "system_prompt": {
+      "minLength": 1,
+      "title": "System Prompt",
+      "type": "string"
+    },
+    "target_schema_name": {
+      "minLength": 1,
+      "title": "Target Schema Name",
+      "type": "string"
+    },
+    "target_schema_ref": {
+      "minLength": 1,
+      "title": "Target Schema Ref",
+      "type": "string"
+    },
+    "text_model_gate_ref": {
+      "minLength": 1,
+      "title": "Text Model Gate Ref",
+      "type": "string"
+    },
+    "user_prompt": {
+      "minLength": 1,
+      "title": "User Prompt",
+      "type": "string"
+    },
+    "validation_requirements": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Validation Requirements",
+      "type": "array"
+    }
+  },
+  "required": [
+    "request_id",
+    "project_id",
+    "status",
+    "proposal_context_ref",
+    "text_model_gate_ref",
+    "proposal_context_fingerprint",
+    "request_fingerprint",
+    "target_schema_ref",
+    "target_schema_name",
+    "required_proposal_ids",
+    "system_prompt",
+    "developer_prompt",
+    "user_prompt"
+  ],
+  "title": "ProposalRequestPacket",
+  "type": "object"
+}

@@ -2,7 +2,7 @@
 
 Authoritative source: `artist_portrait_editor_revision5_optimized.md`.
 
-The current V0-010d gate uses `.artist-portrait/state.json` as a step ledger,
+The current V0-010e gate uses `.artist-portrait/state.json` as a step ledger,
 not a single linear project state.
 
 Current step statuses:
@@ -28,11 +28,11 @@ degraded
 blocked
 ```
 
-Stage A initialized ledger entries for future V0 steps. V0-010d opens only the
+Stage A initialized ledger entries for future V0 steps. V0-010e opens only the
 media scan, fixed-window/PySceneDetect scene segmentation, local transcription,
 keyframe cache, evidence-only basic analysis, and analysis-led material map
-foundation steps plus proposal readiness checks and deterministic validation of
-existing proposal sets. It leaves visual
+foundation steps plus proposal readiness checks, deterministic proposal request
+packet construction, and deterministic validation of existing proposal sets. It leaves visual
 classification, full proposal generation, timeline, preview, remote model,
 image, network, and BGM capabilities closed.
 
@@ -64,7 +64,8 @@ does not create canonical data.
 
 `propose` currently requires `output/material_map.md`, writes deterministic
 `.artist-portrait/data/proposal_context.json`, writes deterministic
-`.artist-portrait/data/text_model_gate.json`, and then requires an explicitly
+`.artist-portrait/data/text_model_gate.json`, writes deterministic
+`.artist-portrait/data/proposal_request.json`, and then requires an explicitly
 opened generation gate. Without that gate it marks the `propose` step
 `blocked`, records run metadata, returns dependency exit code 4, and writes no
 fake `proposals.json` or `proposals.md`.
@@ -109,6 +110,7 @@ It reports `analysis_invalid` for malformed analysis manifests and
 `analysis_pending` when clips exist but analysis has not been generated.
 It reports `proposal_context_invalid` for malformed proposal context packets,
 `text_model_gate_invalid` for malformed text-model gate packets,
+`proposal_request_invalid` for malformed proposal request packets,
 `proposals_invalid` for malformed proposal sets, and
 `propose_text_model_missing` when a material map exists but the text-model
 proposal gate is unavailable.

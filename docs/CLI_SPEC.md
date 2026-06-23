@@ -2,7 +2,7 @@
 
 Authoritative source: `artist_portrait_editor_revision5_optimized.md`.
 
-Implemented V0-010d proposal validation gate commands:
+Implemented V0-010e proposal request gate commands:
 
 ```bash
 artist-portrait validate --project ./project.yaml
@@ -108,16 +108,18 @@ prerequisite_step_missing`. It writes deterministic
 `.artist-portrait/data/proposal_context.json` from local source, clip,
 analysis, and material-map evidence, then writes deterministic
 `.artist-portrait/data/text_model_gate.json` from project policy and detected
-capabilities. When the text-model gate is blocked, it records the `propose`
-step as `blocked`, writes run metadata, returns `4
+capabilities, then writes deterministic
+`.artist-portrait/data/proposal_request.json` for the future model adapter.
+When the text-model gate is blocked, it records the `propose` step as `blocked`,
+writes run metadata, returns `4
 missing_required_dependency_for_command`, and writes no fake
 `.artist-portrait/data/proposals.json` or `output/proposals.md`. If the gate is
 ready, current generation still remains closed and `propose` returns the same
 dependency code with `proposal_generation_not_implemented`.
 
 `status --json` includes the state ledger plus local artifact, source, clip,
-transcript, keyframe, analysis, proposal context, text-model gate, proposal,
-scan report, clip report, and analysis report summaries plus material map
+transcript, keyframe, analysis, proposal context, text-model gate, proposal
+request, proposal, scan report, clip report, and analysis report summaries plus material map
 presence. It also reports `artifact_issues` when
 completed ledger steps refer to outputs that no longer exist. It does not run
 media operations or mutate project files.

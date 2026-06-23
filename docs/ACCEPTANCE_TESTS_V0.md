@@ -85,6 +85,10 @@ Current local foundation tests cover:
 - `propose` writing deterministic `proposal_context.json`
 - committed text-model gate schema
 - `propose` writing deterministic `text_model_gate.json`
+- committed proposal request packet schema
+- `propose` writing deterministic `proposal_request.json`
+- blocked and ready proposal request statuses without model calls
+- status and doctor visibility for malformed proposal request packets
 - `propose` blocking without an approved text-model gate
 - `propose` blocking even when the text-model gate is ready because generation
   remains closed

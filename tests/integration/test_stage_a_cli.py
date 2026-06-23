@@ -1493,6 +1493,7 @@ def test_propose_without_text_model_blocks_without_fake_outputs(
     assert payload["output_refs"] == [
         ".artist-portrait/data/proposal_context.json",
         ".artist-portrait/data/text_model_gate.json",
+        ".artist-portrait/data/proposal_request.json",
     ]
     assert "text_model_gate_blocked" in payload["warnings"][0]
     assert "remote_text_model_not_allowed" in payload["warnings"][0]
@@ -1521,6 +1522,21 @@ def test_propose_without_text_model_blocks_without_fake_outputs(
         "remote_text_model_not_allowed",
         "text_model_capability_missing",
     ]
+    request_path = tmp_path / ".artist-portrait" / "data" / "proposal_request.json"
+    assert request_path.exists()
+    request_payload = json.loads(request_path.read_text(encoding="utf-8"))
+    assert request_payload["status"] == "blocked"
+    assert request_payload["target_schema_name"] == "ProposalSet"
+    assert request_payload["required_proposal_ids"] == [
+        "proposal_safe",
+        "proposal_advanced",
+        "proposal_risky",
+    ]
+    assert request_payload["blocking_reasons"] == [
+        "remote_text_model_not_allowed",
+        "text_model_capability_missing",
+    ]
+    assert "BGM" in request_payload["user_prompt"]
     assert not (tmp_path / ".artist-portrait" / "data" / "proposals.json").exists()
     assert not (tmp_path / "output" / "proposals.md").exists()
     state_payload = json.loads(
@@ -1530,6 +1546,7 @@ def test_propose_without_text_model_blocks_without_fake_outputs(
     assert state_payload["steps"]["propose"]["output_refs"] == [
         ".artist-portrait/data/proposal_context.json",
         ".artist-portrait/data/text_model_gate.json",
+        ".artist-portrait/data/proposal_request.json",
     ]
 
 
@@ -1572,6 +1589,14 @@ def test_propose_with_ready_text_model_gate_still_does_not_generate(
     )
     assert gate_payload["status"] == "ready"
     assert gate_payload["reasons"] == []
+    request_payload = json.loads(
+        (tmp_path / ".artist-portrait" / "data" / "proposal_request.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    assert request_payload["status"] == "ready"
+    assert request_payload["blocking_reasons"] == []
+    assert "ProposalSet" in request_payload["developer_prompt"]
     assert not (tmp_path / ".artist-portrait" / "data" / "proposals.json").exists()
     assert not (tmp_path / "output" / "proposals.md").exists()
 
@@ -1665,6 +1690,39 @@ def test_invalid_text_model_gate_status_and_doctor(tmp_path, capsys):
     assert code == 1
     assert any(
         issue["code"] == "text_model_gate_invalid"
+        for issue in doctor_payload["issues"]
+    )
+
+
+def test_invalid_proposal_request_status_and_doctor(tmp_path, capsys):
+    project_path = tmp_path / "project.yaml"
+    project_path.write_text(
+        project_fixture_with_scene_detection("off"),
+        encoding="utf-8",
+    )
+    assert main(["init", "--project", str(project_path), "--quiet"]) in (0, 1)
+    write_clean_source_ledger(tmp_path)
+    request_path = tmp_path / ".artist-portrait" / "data" / "proposal_request.json"
+    request_path.write_text('{"request_id": "missing-required-fields"}\n', encoding="utf-8")
+
+    code = main(["status", "--project", str(project_path), "--json"])
+    captured = capsys.readouterr()
+    status_payload = json.loads(captured.out)
+
+    assert code == 0
+    assert status_payload["summaries"]["proposal_request"]["valid"] is False
+    assert (
+        "invalid ProposalRequestPacket JSON"
+        in status_payload["summaries"]["proposal_request"]["error"]
+    )
+
+    code = main(["doctor", "--project", str(project_path), "--json"])
+    captured = capsys.readouterr()
+    doctor_payload = json.loads(captured.out)
+
+    assert code == 1
+    assert any(
+        issue["code"] == "proposal_request_invalid"
         for issue in doctor_payload["issues"]
     )
 

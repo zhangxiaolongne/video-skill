@@ -46,6 +46,10 @@ from artist_portrait_editor.models.proposal_context import (
     ProposalContext,
     ProposalSourceContext,
 )
+from artist_portrait_editor.models.proposal_request import (
+    ProposalRequestPacket,
+    ProposalRequestStatus,
+)
 from artist_portrait_editor.models.proposal_validation import (
     ProposalValidationIssue,
     ProposalValidationReport,
@@ -410,6 +414,13 @@ def render_status_panel(payload: dict) -> str:
         lines.append("text_model_gate: invalid")
     else:
         lines.append("text_model_gate: missing")
+    proposal_request = summaries.get("proposal_request") or {}
+    if proposal_request.get("exists") and proposal_request.get("valid", True):
+        lines.append(f"proposal_request: {proposal_request.get('status')}")
+    elif proposal_request.get("exists"):
+        lines.append("proposal_request: invalid")
+    else:
+        lines.append("proposal_request: missing")
     proposals = summaries.get("proposals") or {}
     if proposals.get("exists") and proposals.get("valid", True):
         lines.append(f"proposals: {proposals.get('count', 0)}")
@@ -645,6 +656,9 @@ def doctor_project_payload(project_path: Path) -> dict:
     text_model_gate = text_model_gate_summary(
         root / WORKSPACE_DIR / DATA_DIR / "text_model_gate.json"
     )
+    proposal_request = proposal_request_summary(
+        root / WORKSPACE_DIR / DATA_DIR / "proposal_request.json"
+    )
     if (
         sources.get("valid") is True
         and proposal_context.get("valid") is False
@@ -673,6 +687,22 @@ def doctor_project_payload(project_path: Path) -> dict:
                 detail=str(text_model_gate.get("error") or "text model gate is invalid"),
                 next_action=(
                     f"fix {gate_path.relative_to(root).as_posix()} or rerun "
+                    f"artist-portrait propose --project {project_path}"
+                ),
+            )
+        )
+    if (
+        sources.get("valid") is True
+        and proposal_request.get("valid") is False
+    ):
+        request_path = root / WORKSPACE_DIR / DATA_DIR / "proposal_request.json"
+        issues.append(
+            workspace_issue(
+                code="proposal_request_invalid",
+                severity="error",
+                detail=str(proposal_request.get("error") or "proposal request is invalid"),
+                next_action=(
+                    f"fix {request_path.relative_to(root).as_posix()} or rerun "
                     f"artist-portrait propose --project {project_path}"
                 ),
             )
@@ -825,6 +855,7 @@ def artifact_statuses(root: Path) -> dict[str, dict]:
         "relations": root / WORKSPACE_DIR / DATA_DIR / "relations.jsonl",
         "proposal_context": root / WORKSPACE_DIR / DATA_DIR / "proposal_context.json",
         "text_model_gate": root / WORKSPACE_DIR / DATA_DIR / "text_model_gate.json",
+        "proposal_request": root / WORKSPACE_DIR / DATA_DIR / "proposal_request.json",
         "proposals_json": root / WORKSPACE_DIR / DATA_DIR / "proposals.json",
         "proposal_validation": root / WORKSPACE_DIR / DATA_DIR / "proposal_validation.json",
         "run_report": root / "output" / "run_report.md",
@@ -901,6 +932,7 @@ def status_summaries(root: Path) -> dict:
     proposals_path = root / WORKSPACE_DIR / DATA_DIR / "proposals.json"
     proposal_context_path = root / WORKSPACE_DIR / DATA_DIR / "proposal_context.json"
     text_model_gate_path = root / WORKSPACE_DIR / DATA_DIR / "text_model_gate.json"
+    proposal_request_path = root / WORKSPACE_DIR / DATA_DIR / "proposal_request.json"
     proposal_validation_path = root / WORKSPACE_DIR / DATA_DIR / "proposal_validation.json"
     return {
         "sources": source_summary(sources_path),
@@ -914,6 +946,7 @@ def status_summaries(root: Path) -> dict:
         "material_map": output_summary(material_map_path),
         "proposal_context": proposal_context_summary(proposal_context_path),
         "text_model_gate": text_model_gate_summary(text_model_gate_path),
+        "proposal_request": proposal_request_summary(proposal_request_path),
         "proposals": proposal_summary(proposals_path),
         "proposal_validation": proposal_validation_summary(proposal_validation_path),
         "risk_report": output_summary(risk_report_path),
@@ -1126,6 +1159,15 @@ def read_text_model_gate_json(path: Path) -> TextModelGate:
         raise WorkspacePrerequisiteError(f"invalid TextModelGate JSON: {exc}") from exc
 
 
+def read_proposal_request_json(path: Path) -> ProposalRequestPacket:
+    try:
+        return ProposalRequestPacket.model_validate_json(path.read_text(encoding="utf-8"))
+    except ValueError as exc:
+        raise WorkspacePrerequisiteError(
+            f"invalid ProposalRequestPacket JSON: {exc}"
+        ) from exc
+
+
 def read_proposal_validation_json(path: Path) -> ProposalValidationReport:
     try:
         return ProposalValidationReport.model_validate_json(path.read_text(encoding="utf-8"))
@@ -1283,6 +1325,28 @@ def text_model_gate_summary(path: Path) -> dict:
     }
 
 
+def proposal_request_summary(path: Path) -> dict:
+    if not path.exists():
+        return {"exists": False}
+    try:
+        request = read_proposal_request_json(path)
+    except Exception as exc:
+        return {
+            "exists": True,
+            "valid": False,
+            "error": str(exc),
+        }
+    return {
+        "exists": True,
+        "valid": True,
+        "request_id": request.request_id,
+        "status": request.status.value,
+        "target_schema_name": request.target_schema_name,
+        "required_proposal_ids": request.required_proposal_ids,
+        "blocking_reasons": request.blocking_reasons,
+    }
+
+
 def proposal_validation_summary(path: Path) -> dict:
     if not path.exists():
         return {"exists": False}
@@ -1314,6 +1378,11 @@ def stable_context_id(project_id: str, input_fingerprint: str) -> str:
 def stable_gate_id(project_id: str, proposal_context_fingerprint: str) -> str:
     payload = f"{project_id}:{proposal_context_fingerprint}"
     return "gate_" + hashlib.sha256(payload.encode("utf-8")).hexdigest()[:24]
+
+
+def stable_request_id(project_id: str, request_fingerprint: str) -> str:
+    payload = f"{project_id}:{request_fingerprint}"
+    return "preq_" + hashlib.sha256(payload.encode("utf-8")).hexdigest()[:24]
 
 
 def stable_proposal_validation_report_id(
@@ -1500,6 +1569,87 @@ def write_text_model_gate_json(root: Path, gate: TextModelGate) -> Path:
     tmp = output.with_suffix(".json.tmp")
     tmp.write_text(
         json.dumps(gate.model_dump(mode="json"), ensure_ascii=False, indent=2, sort_keys=True)
+        + "\n",
+        encoding="utf-8",
+    )
+    tmp.replace(output)
+    return output
+
+
+def build_proposal_request_packet(
+    *,
+    context: ProposalContext,
+    text_model_gate: TextModelGate,
+    proposal_context_ref: str,
+    text_model_gate_ref: str,
+    proposal_context_fingerprint: str,
+    request_fingerprint: str,
+) -> ProposalRequestPacket:
+    status = (
+        ProposalRequestStatus.ready
+        if text_model_gate.status == TextModelGateStatus.ready
+        else ProposalRequestStatus.blocked
+    )
+    target_schema_ref = "schemas/proposal_set.schema.json"
+    return ProposalRequestPacket(
+        request_id=stable_request_id(context.project_id, request_fingerprint),
+        project_id=context.project_id,
+        status=status,
+        proposal_context_ref=proposal_context_ref,
+        text_model_gate_ref=text_model_gate_ref,
+        proposal_context_fingerprint=proposal_context_fingerprint,
+        request_fingerprint=request_fingerprint,
+        target_schema_ref=target_schema_ref,
+        target_schema_name="ProposalSet",
+        required_proposal_ids=context.proposal_ids_required,
+        system_prompt=(
+            "You generate evidence-grounded artist portrait video proposal JSON. "
+            "Return only a ProposalSet object matching the target JSON Schema."
+        ),
+        developer_prompt=(
+            "Use only the referenced proposal context. Do not invent facts, source IDs, "
+            "clip IDs, analysis IDs, rights status, dialogue, dates, or timecodes. "
+            "Generate exactly the required proposal IDs as a ProposalSet JSON object. "
+            "Cite evidence in every proposal. Respect forbidden_by_user sources and all "
+            "content policy constraints."
+        ),
+        user_prompt=(
+            "Draft three distinct proposal records for the project using the prepared "
+            "proposal context. Each proposal must include story_structure, "
+            "sound_structure, visual_motifs, risks, missing_material, and "
+            "minimum_viable_timeline fields. The sound_structure must describe BGM "
+            "strategy, original audio treatment, pacing, transitions, and speech/music "
+            "balance without choosing tracks or fitting a timeline."
+        ),
+        evidence=[
+            {"type": "proposal_context", "ref": proposal_context_ref},
+            {"type": "text_model_gate", "ref": text_model_gate_ref},
+            {"type": "schema", "ref": target_schema_ref},
+        ],
+        blocked_capabilities=context.blocked_capabilities,
+        bgm_requirements=context.bgm_requirements,
+        validation_requirements=[
+            "Output must validate as ProposalSet.",
+            "Every proposal must cite at least one valid clip and one valid fact ref.",
+            "Do not cite sources, clips, analyses, or ledgers absent from proposal_context.",
+            "Do not use forbidden_by_user sources.",
+            "sound_structure must explicitly include BGM/music strategy.",
+        ],
+        refusal_requirements=[
+            "If evidence is insufficient, state missing_material inside each proposal.",
+            "Do not fabricate missing evidence to satisfy a proposal field.",
+            "Do not emit prose outside the ProposalSet JSON object.",
+        ],
+        blocking_reasons=text_model_gate.reasons,
+    )
+
+
+def write_proposal_request_json(root: Path, request: ProposalRequestPacket) -> Path:
+    output = root / WORKSPACE_DIR / DATA_DIR / "proposal_request.json"
+    output.parent.mkdir(parents=True, exist_ok=True)
+    tmp = output.with_suffix(".json.tmp")
+    tmp.write_text(
+        json.dumps(request.model_dump(mode="json"), ensure_ascii=False, indent=2, sort_keys=True)
         + "\n",
         encoding="utf-8",
     )
@@ -3155,6 +3305,24 @@ def propose_workspace(project_path: Path) -> ProjectState:
     )
     gate_path = write_text_model_gate_json(root, text_model_gate)
     gate_ref = gate_path.relative_to(root).as_posix()
+    request_fingerprint = fingerprint_inputs(
+        [
+            ("proposal_context", context_path),
+            ("text_model_gate", gate_path),
+            ("proposal_set_schema", root / "schemas" / "proposal_set.schema.json"),
+        ]
+    )
+    proposal_request = build_proposal_request_packet(
+        context=proposal_context,
+        text_model_gate=text_model_gate,
+        proposal_context_ref=context_ref,
+        text_model_gate_ref=gate_ref,
+        proposal_context_fingerprint=fingerprint_file(context_path),
+        request_fingerprint=request_fingerprint,
+    )
+    request_path = write_proposal_request_json(root, proposal_request)
+    request_ref = request_path.relative_to(root).as_posix()
+    output_refs = [context_ref, gate_ref, request_ref]
     run_id = new_run_id()
     warnings: list[str] = []
     output_dir = root / config.paths.output_dir
@@ -3169,7 +3337,7 @@ def propose_workspace(project_path: Path) -> ProjectState:
         state.steps["propose"] = StepLedgerEntry(
             status=StepStatus.blocked,
             input_fingerprint=input_fingerprint,
-            output_refs=[context_ref, gate_ref],
+            output_refs=output_refs,
             last_run_id=run_id,
             warnings=warnings,
         )
@@ -3185,9 +3353,10 @@ def propose_workspace(project_path: Path) -> ProjectState:
             {
                 "step": "propose",
                 "status": StepStatus.blocked.value,
-                "output_refs": [context_ref, gate_ref],
+                "output_refs": output_refs,
                 "proposal_context": context_ref,
                 "text_model_gate": gate_ref,
+                "proposal_request": request_ref,
                 "reasons": text_model_gate.reasons,
                 "reason": "text_model_gate_blocked",
             },
@@ -3207,7 +3376,7 @@ def propose_workspace(project_path: Path) -> ProjectState:
     state.steps["propose"] = StepLedgerEntry(
         status=StepStatus.blocked,
         input_fingerprint=input_fingerprint,
-        output_refs=[context_ref, gate_ref],
+        output_refs=output_refs,
         last_run_id=run_id,
         warnings=warnings,
     )
@@ -3223,9 +3392,10 @@ def propose_workspace(project_path: Path) -> ProjectState:
         {
             "step": "propose",
             "status": StepStatus.blocked.value,
-            "output_refs": [context_ref, gate_ref],
+            "output_refs": output_refs,
             "proposal_context": context_ref,
             "text_model_gate": gate_ref,
+            "proposal_request": request_ref,
             "reason": "proposal_generation_not_implemented",
         },
     )

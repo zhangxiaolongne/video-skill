@@ -3,7 +3,7 @@
 Follow `artist_portrait_editor_revision5_optimized.md` as the governing V0
 engineering-freeze document.
 
-Current gate: V0-010d proposal validation gate only.
+Current gate: V0-010e proposal request gate only.
 
 Allowed:
 
@@ -50,6 +50,9 @@ Allowed:
 - `ProposalContext` Pydantic model and generated JSON Schema
 - canonical `.artist-portrait/data/text_model_gate.json`
 - `TextModelGate` Pydantic model and generated JSON Schema
+- canonical `.artist-portrait/data/proposal_request.json`
+- `ProposalRequestPacket` Pydantic model and generated JSON Schema
+- deterministic proposal model request packet construction without model calls
 - `ProposalSet` Pydantic model and generated JSON Schema
 - canonical `.artist-portrait/data/proposal_validation.json`
 - deterministic `output/proposal_review.md`
