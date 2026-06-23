@@ -15,6 +15,7 @@ Current committed schemas:
 - `schemas/proposal_adapter_check.schema.json`
 - `schemas/proposal_execution_approval_record.schema.json`
 - `schemas/proposal_execution_approval_request.schema.json`
+- `schemas/proposal_execution_readiness_plan.schema.json`
 - `schemas/proposal_context.schema.json`
 - `schemas/proposal_execution_authorization.schema.json`
 - `schemas/proposal_mock_adapter_handshake.schema.json`
@@ -144,11 +145,22 @@ actor or timestamp was recorded, no secret source was selected, no credential
 value was read, no model call occurred, no network access occurred, no provider
 execution was allowed or performed, and no proposal content was generated.
 
+`ProposalExecutionReadinessPlan` is implemented for the V0-010m execution
+readiness plan gate and has a committed schema at
+`schemas/proposal_execution_readiness_plan.schema.json`. It is written to
+`.artist-portrait/data/proposal_execution_readiness_plan.json` by `propose`
+after the approval record and before execution authorization. It closes five
+sub-stages in one packet: secret-source selection, credential access, execution
+planning, provider call preflight, and output capture planning. It proves that
+no secret source was selected, no credential value was read, no model call
+occurred, no network access occurred, no provider execution was allowed or
+performed, no raw output was captured, and no proposal content was generated.
+
 `ProposalExecutionAuthorization` is implemented for the V0-010i execution
 authorization gate and has a committed schema at
 `schemas/proposal_execution_authorization.schema.json`. It is written to
 `.artist-portrait/data/proposal_execution_authorization.json` by `propose`
-after the execution approval record and before provider output quarantine. It
+after the execution readiness plan and before provider output quarantine. It
 records that the execution gate is not approved, user approval is missing,
 credentials are not allowed, model calls and network access are not allowed,
 execution was not performed, and any future provider output must remain
@@ -221,6 +233,7 @@ Current stable diagnostic codes include:
 - `proposal_adapter_check_invalid`
 - `proposal_execution_approval_record_invalid`
 - `proposal_execution_approval_request_invalid`
+- `proposal_execution_readiness_plan_invalid`
 - `proposal_execution_authorization_invalid`
 - `proposal_provider_registry_invalid`
 - `proposal_mock_adapter_handshake_invalid`

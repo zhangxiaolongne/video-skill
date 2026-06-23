@@ -14,6 +14,7 @@ from artist_portrait_editor.models.proposal_adapter import (
     ProposalExecutionApprovalRecord,
     ProposalExecutionApprovalRequest,
     ProposalExecutionAuthorization,
+    ProposalExecutionReadinessPlan,
     ProposalMockAdapterHandshake,
     ProposalProviderOutputQuarantine,
     ProposalProviderResultEnvelope,
@@ -42,6 +43,9 @@ def write_schema_files(output_dir: Path) -> None:
         ),
         "proposal_execution_authorization.schema.json": (
             ProposalExecutionAuthorization.model_json_schema()
+        ),
+        "proposal_execution_readiness_plan.schema.json": (
+            ProposalExecutionReadinessPlan.model_json_schema()
         ),
         "proposal_mock_adapter_handshake.schema.json": (
             ProposalMockAdapterHandshake.model_json_schema()

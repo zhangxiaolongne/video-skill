@@ -13,7 +13,7 @@ Models may organize evidence in later phases, but they must not create facts,
 material IDs, timecodes, dialogue, provenance, identity, rights status, or
 timeline references.
 
-The current V0-010l proposal execution approval record gate performs no remote model calls.
+The current V0-010m proposal execution readiness plan gate performs no remote model calls.
 `scan`, `segment`, `transcribe`, `keyframes`, `analyze`, `map`, `propose`,
 `review`, `status`, and `doctor` must remain local. PySceneDetect output is a local
 tool-derived boundary signal, faster-whisper output is local ASR evidence,

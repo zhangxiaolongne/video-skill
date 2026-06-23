@@ -11,6 +11,7 @@ from artist_portrait_editor.models.proposal_adapter import ProposalAdapterCheck
 from artist_portrait_editor.models.proposal_adapter import ProposalExecutionApprovalRecord
 from artist_portrait_editor.models.proposal_adapter import ProposalExecutionApprovalRequest
 from artist_portrait_editor.models.proposal_adapter import ProposalExecutionAuthorization
+from artist_portrait_editor.models.proposal_adapter import ProposalExecutionReadinessPlan
 from artist_portrait_editor.models.proposal_adapter import ProposalMockAdapterHandshake
 from artist_portrait_editor.models.proposal_adapter import ProposalProviderOutputQuarantine
 from artist_portrait_editor.models.proposal_adapter import ProposalProviderResultEnvelope
@@ -38,6 +39,7 @@ def test_schema_generation_from_pydantic_models():
     execution_approval_record_schema = ProposalExecutionApprovalRecord.model_json_schema()
     execution_approval_schema = ProposalExecutionApprovalRequest.model_json_schema()
     execution_authorization_schema = ProposalExecutionAuthorization.model_json_schema()
+    execution_readiness_schema = ProposalExecutionReadinessPlan.model_json_schema()
     provider_registry_schema = ProposalProviderRegistry.model_json_schema()
     output_quarantine_schema = ProposalProviderOutputQuarantine.model_json_schema()
     mock_handshake_schema = ProposalMockAdapterHandshake.model_json_schema()
@@ -59,6 +61,7 @@ def test_schema_generation_from_pydantic_models():
     assert execution_approval_record_schema["title"] == "ProposalExecutionApprovalRecord"
     assert execution_approval_schema["title"] == "ProposalExecutionApprovalRequest"
     assert execution_authorization_schema["title"] == "ProposalExecutionAuthorization"
+    assert execution_readiness_schema["title"] == "ProposalExecutionReadinessPlan"
     assert provider_registry_schema["title"] == "ProposalProviderRegistry"
     assert output_quarantine_schema["title"] == "ProposalProviderOutputQuarantine"
     assert mock_handshake_schema["title"] == "ProposalMockAdapterHandshake"
@@ -79,6 +82,7 @@ def test_schema_generation_from_pydantic_models():
     assert "approval_granted" in execution_approval_record_schema["properties"]
     assert "approval_recorded" in execution_approval_schema["properties"]
     assert "approved_execution_gate" in execution_authorization_schema["properties"]
+    assert "secret_source_selection" in execution_readiness_schema["properties"]
     assert "providers" in provider_registry_schema["properties"]
     assert "raw_output_captured" in output_quarantine_schema["properties"]
     assert "proposal_content_generated" in mock_handshake_schema["properties"]
@@ -137,6 +141,11 @@ def test_committed_schemas_match_pydantic_generation():
     )
     committed_execution_authorization = json.loads(
         (schema_dir / "proposal_execution_authorization.schema.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    committed_execution_readiness = json.loads(
+        (schema_dir / "proposal_execution_readiness_plan.schema.json").read_text(
             encoding="utf-8"
         )
     )
@@ -208,6 +217,9 @@ def test_committed_schemas_match_pydantic_generation():
     )
     assert committed_execution_authorization == json.loads(
         json.dumps(ProposalExecutionAuthorization.model_json_schema(), sort_keys=True)
+    )
+    assert committed_execution_readiness == json.loads(
+        json.dumps(ProposalExecutionReadinessPlan.model_json_schema(), sort_keys=True)
     )
     assert committed_provider_registry == json.loads(
         json.dumps(ProposalProviderRegistry.model_json_schema(), sort_keys=True)

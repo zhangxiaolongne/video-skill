@@ -44,6 +44,11 @@ class ProposalExecutionApprovalRecordStatus(str, Enum):
     )
 
 
+class ProposalExecutionReadinessPlanStatus(str, Enum):
+    blocked = "blocked"
+    ready_for_future_execution = "ready_for_future_execution"
+
+
 class ProposalAdapterCheckIssue(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -191,6 +196,7 @@ class ProposalExecutionAuthorization(BaseModel):
     handshake_ref: str = Field(min_length=1)
     approval_request_ref: str = Field(min_length=1)
     approval_record_ref: str = Field(min_length=1)
+    execution_readiness_ref: str = Field(min_length=1)
     adapter_check_ref: str = Field(min_length=1)
     authorization_fingerprint: str = Field(pattern=r"^sha256:[0-9a-f]{64}$")
     approved_execution_gate: bool = False
@@ -205,6 +211,52 @@ class ProposalExecutionAuthorization(BaseModel):
     execution_performed: bool = False
     model_call_performed: bool = False
     network_performed: bool = False
+    proposal_content_generated: bool = False
+    quarantine_required: bool = True
+    issues: list[ProposalAdapterCheckIssue] = Field(default_factory=list)
+
+
+class ProposalExecutionReadinessStage(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    stage_id: str = Field(min_length=1)
+    status: ProposalExecutionReadinessPlanStatus
+    allowed: bool = False
+    performed: bool = False
+    ref: str | None = None
+    issues: list[ProposalAdapterCheckIssue] = Field(default_factory=list)
+
+
+class ProposalExecutionReadinessPlan(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    schema_version: str = SCHEMA_VERSION
+    readiness_plan_id: str = Field(min_length=1)
+    project_id: str = Field(min_length=1)
+    status: ProposalExecutionReadinessPlanStatus
+    provider_id: str = Field(min_length=1)
+    approval_record_ref: str = Field(min_length=1)
+    approval_request_ref: str = Field(min_length=1)
+    request_ref: str = Field(min_length=1)
+    registry_ref: str = Field(min_length=1)
+    handshake_ref: str = Field(min_length=1)
+    adapter_check_ref: str = Field(min_length=1)
+    readiness_fingerprint: str = Field(pattern=r"^sha256:[0-9a-f]{64}$")
+    secret_source_selection: ProposalExecutionReadinessStage
+    credential_access: ProposalExecutionReadinessStage
+    execution_plan: ProposalExecutionReadinessStage
+    provider_call_preflight: ProposalExecutionReadinessStage
+    output_capture_plan: ProposalExecutionReadinessStage
+    selected_secret_source: str | None = None
+    credential_value_read: bool = False
+    network_allowed: bool = False
+    model_call_allowed: bool = False
+    execution_allowed: bool = False
+    execution_performed: bool = False
+    model_call_performed: bool = False
+    network_performed: bool = False
+    raw_output_capture_allowed: bool = False
+    raw_output_captured: bool = False
     proposal_content_generated: bool = False
     quarantine_required: bool = True
     issues: list[ProposalAdapterCheckIssue] = Field(default_factory=list)

@@ -1499,6 +1499,7 @@ def test_propose_without_text_model_blocks_without_fake_outputs(
         ".artist-portrait/data/proposal_mock_adapter_handshake.json",
         ".artist-portrait/data/proposal_execution_approval_request.json",
         ".artist-portrait/data/proposal_execution_approval_record.json",
+        ".artist-portrait/data/proposal_execution_readiness_plan.json",
         ".artist-portrait/data/proposal_execution_authorization.json",
         ".artist-portrait/data/proposal_provider_output_quarantine.json",
         ".artist-portrait/data/proposal_provider_result.json",
@@ -1626,6 +1627,30 @@ def test_propose_without_text_model_blocks_without_fake_outputs(
     assert approval_record_payload["network_performed"] is False
     assert approval_record_payload["proposal_content_generated"] is False
     assert approval_record_payload["quarantine_required"] is True
+    readiness_path = (
+        tmp_path / ".artist-portrait" / "data" / "proposal_execution_readiness_plan.json"
+    )
+    assert readiness_path.exists()
+    readiness_payload = json.loads(readiness_path.read_text(encoding="utf-8"))
+    assert readiness_payload["status"] == "blocked"
+    assert readiness_payload["provider_id"] == "local_mock"
+    assert readiness_payload["secret_source_selection"]["status"] == "blocked"
+    assert readiness_payload["credential_access"]["status"] == "blocked"
+    assert readiness_payload["execution_plan"]["status"] == "blocked"
+    assert readiness_payload["provider_call_preflight"]["status"] == "blocked"
+    assert readiness_payload["output_capture_plan"]["status"] == "blocked"
+    assert readiness_payload["selected_secret_source"] is None
+    assert readiness_payload["credential_value_read"] is False
+    assert readiness_payload["network_allowed"] is False
+    assert readiness_payload["model_call_allowed"] is False
+    assert readiness_payload["execution_allowed"] is False
+    assert readiness_payload["execution_performed"] is False
+    assert readiness_payload["model_call_performed"] is False
+    assert readiness_payload["network_performed"] is False
+    assert readiness_payload["raw_output_capture_allowed"] is False
+    assert readiness_payload["raw_output_captured"] is False
+    assert readiness_payload["proposal_content_generated"] is False
+    assert readiness_payload["quarantine_required"] is True
     authorization_path = (
         tmp_path / ".artist-portrait" / "data" / "proposal_execution_authorization.json"
     )
@@ -1695,6 +1720,7 @@ def test_propose_without_text_model_blocks_without_fake_outputs(
         ".artist-portrait/data/proposal_mock_adapter_handshake.json",
         ".artist-portrait/data/proposal_execution_approval_request.json",
         ".artist-portrait/data/proposal_execution_approval_record.json",
+        ".artist-portrait/data/proposal_execution_readiness_plan.json",
         ".artist-portrait/data/proposal_execution_authorization.json",
         ".artist-portrait/data/proposal_provider_output_quarantine.json",
         ".artist-portrait/data/proposal_provider_result.json",
@@ -1801,6 +1827,23 @@ def test_propose_with_ready_text_model_gate_still_does_not_generate(
     assert approval_record_payload["credential_value_read"] is False
     assert approval_record_payload["execution_allowed"] is False
     assert approval_record_payload["execution_performed"] is False
+    readiness_payload = json.loads(
+        (
+            tmp_path
+            / ".artist-portrait"
+            / "data"
+            / "proposal_execution_readiness_plan.json"
+        ).read_text(encoding="utf-8")
+    )
+    assert readiness_payload["status"] == "blocked"
+    assert readiness_payload["secret_source_selection"]["status"] == "blocked"
+    assert readiness_payload["credential_access"]["status"] == "blocked"
+    assert readiness_payload["execution_plan"]["status"] == "blocked"
+    assert readiness_payload["provider_call_preflight"]["status"] == "blocked"
+    assert readiness_payload["output_capture_plan"]["status"] == "blocked"
+    assert readiness_payload["credential_value_read"] is False
+    assert readiness_payload["execution_allowed"] is False
+    assert readiness_payload["raw_output_captured"] is False
     authorization_payload = json.loads(
         (
             tmp_path
@@ -2188,6 +2231,47 @@ def test_invalid_proposal_execution_approval_record_status_and_doctor(tmp_path, 
     assert code == 1
     assert any(
         issue["code"] == "proposal_execution_approval_record_invalid"
+        for issue in doctor_payload["issues"]
+    )
+
+
+def test_invalid_proposal_execution_readiness_plan_status_and_doctor(tmp_path, capsys):
+    project_path = tmp_path / "project.yaml"
+    project_path.write_text(
+        project_fixture_with_scene_detection("off"),
+        encoding="utf-8",
+    )
+    assert main(["init", "--project", str(project_path), "--quiet"]) in (0, 1)
+    write_clean_source_ledger(tmp_path)
+    readiness_path = (
+        tmp_path / ".artist-portrait" / "data" / "proposal_execution_readiness_plan.json"
+    )
+    readiness_path.write_text(
+        '{"readiness_plan_id": "missing-required-fields"}\n',
+        encoding="utf-8",
+    )
+
+    code = main(["status", "--project", str(project_path), "--json"])
+    captured = capsys.readouterr()
+    status_payload = json.loads(captured.out)
+
+    assert code == 0
+    assert (
+        status_payload["summaries"]["proposal_execution_readiness_plan"]["valid"]
+        is False
+    )
+    assert (
+        "invalid ProposalExecutionReadinessPlan JSON"
+        in status_payload["summaries"]["proposal_execution_readiness_plan"]["error"]
+    )
+
+    code = main(["doctor", "--project", str(project_path), "--json"])
+    captured = capsys.readouterr()
+    doctor_payload = json.loads(captured.out)
+
+    assert code == 1
+    assert any(
+        issue["code"] == "proposal_execution_readiness_plan_invalid"
         for issue in doctor_payload["issues"]
     )
 

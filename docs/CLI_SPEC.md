@@ -2,7 +2,7 @@
 
 Authoritative source: `artist_portrait_editor_revision5_optimized.md`.
 
-Implemented V0-010l proposal execution approval record gate commands:
+Implemented V0-010m proposal execution readiness plan gate commands:
 
 ```bash
 artist-portrait validate --project ./project.yaml
@@ -119,6 +119,8 @@ adapter handshake, then writes deterministic
 execution request, then writes deterministic
 `.artist-portrait/data/proposal_execution_approval_record.json` for no-grant
 approval record, then writes deterministic
+`.artist-portrait/data/proposal_execution_readiness_plan.json` for five closed
+execution-readiness sub-stages, then writes deterministic
 `.artist-portrait/data/proposal_execution_authorization.json` for no-call
 execution authorization, then writes deterministic
 `.artist-portrait/data/proposal_provider_output_quarantine.json` for no-output

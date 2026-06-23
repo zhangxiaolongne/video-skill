@@ -53,6 +53,7 @@ def test_skill_frontmatter_and_boundaries():
     assert "ProposalProviderRegistry schema" in frontmatter["description"]
     assert "ProposalMockAdapterHandshake schema" in frontmatter["description"]
     assert "ProposalExecutionApprovalRequest/Record schema" in frontmatter["description"]
+    assert "ProposalExecutionReadinessPlan schema" in frontmatter["description"]
     assert "ProposalExecutionAuthorization schema" in frontmatter["description"]
     assert "ProposalProviderOutputQuarantine schema" in frontmatter["description"]
     assert "ProposalProviderResultEnvelope schema" in frontmatter["description"]
@@ -72,6 +73,7 @@ def test_skill_frontmatter_and_boundaries():
     assert ".artist-portrait/data/proposal_mock_adapter_handshake.json" in content
     assert ".artist-portrait/data/proposal_execution_approval_request.json" in content
     assert ".artist-portrait/data/proposal_execution_approval_record.json" in content
+    assert ".artist-portrait/data/proposal_execution_readiness_plan.json" in content
     assert ".artist-portrait/data/proposal_execution_authorization.json" in content
     assert ".artist-portrait/data/proposal_provider_output_quarantine.json" in content
     assert ".artist-portrait/data/proposal_provider_result.json" in content

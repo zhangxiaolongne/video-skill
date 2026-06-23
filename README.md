@@ -76,11 +76,13 @@ Local V0 media research foundation for the `artist-portrait-editor` skill.
 - [V0-010k Release Readiness](docs/V0_010K_RELEASE_READINESS.md)
 - [V0-010l Proposal Execution Approval Record Gate](docs/V0_010L_PROPOSAL_EXECUTION_APPROVAL_RECORD_GATE.md)
 - [V0-010l Release Readiness](docs/V0_010L_RELEASE_READINESS.md)
+- [V0-010m Proposal Execution Readiness Plan Gate](docs/V0_010M_PROPOSAL_EXECUTION_READINESS_PLAN_GATE.md)
+- [V0-010m Release Readiness](docs/V0_010M_RELEASE_READINESS.md)
 - [Non Goals](docs/NON_GOALS.md)
 
 ## Current Gate
 
-Current V0-010l proposal execution approval record gate work allows deterministic project
+Current V0-010m proposal execution readiness plan gate work allows deterministic project
 setup, local media scanning, fixed-window clip segmentation, optional
 PySceneDetect video scene segmentation, local-only faster-whisper transcription
 when available, ffmpeg midpoint keyframe extraction for video clips,
@@ -88,7 +90,7 @@ source/clip/transcript/keyframe/analysis ledger operations, rebuildable
 keyframe cache, analysis-led material maps, deterministic proposal context
 packets, text-model gate packets, deterministic proposal request packets,
 proposal adapter preflight packets, provider registry packets, local mock
-adapter handshake packets, execution approval request packets, execution approval record packets, execution authorization packets, provider output
+adapter handshake packets, execution approval request packets, execution approval record packets, execution readiness plan packets, execution authorization packets, provider output
 quarantine packets, provider result envelope packets, proposal contract validation, deterministic proposal review of existing proposals, and
 read-only/reporting outputs:
 
@@ -116,6 +118,7 @@ project.yaml
 -> proposal_mock_adapter_handshake.json for no-call response contract handshake
 -> proposal_execution_approval_request.json for no-approval execution request
 -> proposal_execution_approval_record.json for no-grant approval record
+-> proposal_execution_readiness_plan.json for five closed execution-readiness sub-stages
 -> proposal_execution_authorization.json for no-call execution authorization
 -> proposal_provider_output_quarantine.json for no-output quarantine
 -> proposal_provider_result.json for dry-run provider result envelope

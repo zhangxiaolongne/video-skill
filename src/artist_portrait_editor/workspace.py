@@ -50,6 +50,9 @@ from artist_portrait_editor.models.proposal_adapter import (
     ProposalExecutionApprovalRequestStatus,
     ProposalExecutionAuthorization,
     ProposalExecutionAuthorizationStatus,
+    ProposalExecutionReadinessPlan,
+    ProposalExecutionReadinessPlanStatus,
+    ProposalExecutionReadinessStage,
     ProposalMockAdapterHandshake,
     ProposalMockAdapterHandshakeStatus,
     ProposalProviderOutputQuarantine,
@@ -481,6 +484,15 @@ def render_status_panel(payload: dict) -> str:
         lines.append("proposal_execution_approval_record: invalid")
     else:
         lines.append("proposal_execution_approval_record: missing")
+    readiness_plan = summaries.get("proposal_execution_readiness_plan") or {}
+    if readiness_plan.get("exists") and readiness_plan.get("valid", True):
+        lines.append(
+            f"proposal_execution_readiness_plan: {readiness_plan.get('status')}"
+        )
+    elif readiness_plan.get("exists"):
+        lines.append("proposal_execution_readiness_plan: invalid")
+    else:
+        lines.append("proposal_execution_readiness_plan: missing")
     execution_authorization = summaries.get("proposal_execution_authorization") or {}
     if execution_authorization.get("exists") and execution_authorization.get("valid", True):
         lines.append(
@@ -759,6 +771,9 @@ def doctor_project_payload(project_path: Path) -> dict:
     approval_record = proposal_execution_approval_record_summary(
         root / WORKSPACE_DIR / DATA_DIR / "proposal_execution_approval_record.json"
     )
+    readiness_plan = proposal_execution_readiness_plan_summary(
+        root / WORKSPACE_DIR / DATA_DIR / "proposal_execution_readiness_plan.json"
+    )
     execution_authorization = proposal_execution_authorization_summary(
         root / WORKSPACE_DIR / DATA_DIR / "proposal_execution_authorization.json"
     )
@@ -911,6 +926,27 @@ def doctor_project_payload(project_path: Path) -> dict:
                 ),
                 next_action=(
                     f"fix {approval_record_path.relative_to(root).as_posix()} or rerun "
+                    f"artist-portrait propose --project {project_path}"
+                ),
+            )
+        )
+    if (
+        sources.get("valid") is True
+        and readiness_plan.get("valid") is False
+    ):
+        readiness_path = (
+            root / WORKSPACE_DIR / DATA_DIR / "proposal_execution_readiness_plan.json"
+        )
+        issues.append(
+            workspace_issue(
+                code="proposal_execution_readiness_plan_invalid",
+                severity="error",
+                detail=str(
+                    readiness_plan.get("error")
+                    or "proposal execution readiness plan is invalid"
+                ),
+                next_action=(
+                    f"fix {readiness_path.relative_to(root).as_posix()} or rerun "
                     f"artist-portrait propose --project {project_path}"
                 ),
             )
@@ -1145,6 +1181,10 @@ def artifact_statuses(root: Path) -> dict[str, dict]:
         / WORKSPACE_DIR
         / DATA_DIR
         / "proposal_execution_approval_record.json",
+        "proposal_execution_readiness_plan": root
+        / WORKSPACE_DIR
+        / DATA_DIR
+        / "proposal_execution_readiness_plan.json",
         "proposal_execution_authorization": root
         / WORKSPACE_DIR
         / DATA_DIR
@@ -1249,6 +1289,9 @@ def status_summaries(root: Path) -> dict:
     proposal_execution_approval_record_path = (
         root / WORKSPACE_DIR / DATA_DIR / "proposal_execution_approval_record.json"
     )
+    proposal_execution_readiness_plan_path = (
+        root / WORKSPACE_DIR / DATA_DIR / "proposal_execution_readiness_plan.json"
+    )
     proposal_execution_authorization_path = (
         root / WORKSPACE_DIR / DATA_DIR / "proposal_execution_authorization.json"
     )
@@ -1286,6 +1329,9 @@ def status_summaries(root: Path) -> dict:
         ),
         "proposal_execution_approval_record": proposal_execution_approval_record_summary(
             proposal_execution_approval_record_path
+        ),
+        "proposal_execution_readiness_plan": proposal_execution_readiness_plan_summary(
+            proposal_execution_readiness_plan_path
         ),
         "proposal_execution_authorization": proposal_execution_authorization_summary(
             proposal_execution_authorization_path
@@ -1569,6 +1615,19 @@ def read_proposal_execution_approval_record_json(
     except ValueError as exc:
         raise WorkspacePrerequisiteError(
             f"invalid ProposalExecutionApprovalRecord JSON: {exc}"
+        ) from exc
+
+
+def read_proposal_execution_readiness_plan_json(
+    path: Path,
+) -> ProposalExecutionReadinessPlan:
+    try:
+        return ProposalExecutionReadinessPlan.model_validate_json(
+            path.read_text(encoding="utf-8")
+        )
+    except ValueError as exc:
+        raise WorkspacePrerequisiteError(
+            f"invalid ProposalExecutionReadinessPlan JSON: {exc}"
         ) from exc
 
 
@@ -1919,6 +1978,46 @@ def proposal_execution_approval_record_summary(path: Path) -> dict:
     }
 
 
+def proposal_execution_readiness_plan_summary(path: Path) -> dict:
+    if not path.exists():
+        return {"exists": False}
+    try:
+        plan = read_proposal_execution_readiness_plan_json(path)
+    except Exception as exc:
+        return {
+            "exists": True,
+            "valid": False,
+            "error": str(exc),
+        }
+    stages = [
+        plan.secret_source_selection,
+        plan.credential_access,
+        plan.execution_plan,
+        plan.provider_call_preflight,
+        plan.output_capture_plan,
+    ]
+    return {
+        "exists": True,
+        "valid": True,
+        "readiness_plan_id": plan.readiness_plan_id,
+        "status": plan.status.value,
+        "provider_id": plan.provider_id,
+        "stage_count": len(stages),
+        "blocked_stage_count": sum(
+            1 for stage in stages if stage.status == ProposalExecutionReadinessPlanStatus.blocked
+        ),
+        "selected_secret_source": plan.selected_secret_source,
+        "credential_value_read": plan.credential_value_read,
+        "execution_allowed": plan.execution_allowed,
+        "execution_performed": plan.execution_performed,
+        "model_call_performed": plan.model_call_performed,
+        "network_performed": plan.network_performed,
+        "raw_output_captured": plan.raw_output_captured,
+        "proposal_content_generated": plan.proposal_content_generated,
+        "issue_count": len(plan.issues),
+    }
+
+
 def proposal_execution_authorization_summary(path: Path) -> dict:
     if not path.exists():
         return {"exists": False}
@@ -2070,6 +2169,14 @@ def stable_execution_approval_record_id(
 ) -> str:
     payload = f"{project_id}:{approval_record_fingerprint}"
     return "parec_" + hashlib.sha256(payload.encode("utf-8")).hexdigest()[:24]
+
+
+def stable_execution_readiness_plan_id(
+    project_id: str,
+    readiness_fingerprint: str,
+) -> str:
+    payload = f"{project_id}:{readiness_fingerprint}"
+    return "pread_" + hashlib.sha256(payload.encode("utf-8")).hexdigest()[:24]
 
 
 def stable_execution_authorization_id(
@@ -2819,6 +2926,145 @@ def write_proposal_execution_approval_record_json(
     return output
 
 
+def readiness_stage(
+    *,
+    stage_id: str,
+    code: str,
+    detail: str,
+    ref: str | None = None,
+) -> ProposalExecutionReadinessStage:
+    return ProposalExecutionReadinessStage(
+        stage_id=stage_id,
+        status=ProposalExecutionReadinessPlanStatus.blocked,
+        allowed=False,
+        performed=False,
+        ref=ref,
+        issues=[
+            proposal_adapter_issue(
+                code=code,
+                severity="error",
+                detail=detail,
+                ref=ref,
+            )
+        ],
+    )
+
+
+def build_proposal_execution_readiness_plan(
+    *,
+    project_id: str,
+    approval_request: ProposalExecutionApprovalRequest,
+    approval_request_ref: str,
+    approval_record: ProposalExecutionApprovalRecord,
+    approval_record_ref: str,
+    readiness_fingerprint: str,
+) -> ProposalExecutionReadinessPlan:
+    stages = {
+        "secret_source_selection": readiness_stage(
+            stage_id="secret_source_selection",
+            code="secret_source_selection_closed_current_gate",
+            detail="secret-source selection is planned but not allowed in the current gate",
+            ref=approval_record_ref,
+        ),
+        "credential_access": readiness_stage(
+            stage_id="credential_access",
+            code="credential_access_closed_current_gate",
+            detail="credential access is planned but credential values must not be read in the current gate",
+            ref=approval_record_ref,
+        ),
+        "execution_plan": readiness_stage(
+            stage_id="execution_plan",
+            code="execution_plan_closed_current_gate",
+            detail="provider execution planning remains blocked until approval and credentials are valid",
+            ref=approval_record_ref,
+        ),
+        "provider_call_preflight": readiness_stage(
+            stage_id="provider_call_preflight",
+            code="provider_call_preflight_closed_current_gate",
+            detail="provider call preflight remains blocked before model/network execution opens",
+            ref=approval_record_ref,
+        ),
+        "output_capture_plan": readiness_stage(
+            stage_id="output_capture_plan",
+            code="output_capture_closed_current_gate",
+            detail="provider output capture remains blocked before provider execution opens",
+            ref=approval_record_ref,
+        ),
+    }
+    issues: list[ProposalAdapterCheckIssue] = [
+        proposal_adapter_issue(
+            code="execution_readiness_blocked_current_gate",
+            severity="error",
+            detail="execution readiness plan records five closed sub-stages without opening execution",
+            ref=approval_record_ref,
+        )
+    ]
+    if approval_record.status == ProposalExecutionApprovalRecordStatus.blocked:
+        issues.append(
+            proposal_adapter_issue(
+                code="execution_approval_record_blocked",
+                severity="error",
+                detail="execution readiness cannot proceed because approval record is blocked",
+                ref=approval_record_ref,
+            )
+        )
+    return ProposalExecutionReadinessPlan(
+        readiness_plan_id=stable_execution_readiness_plan_id(
+            project_id,
+            readiness_fingerprint,
+        ),
+        project_id=project_id,
+        status=ProposalExecutionReadinessPlanStatus.blocked,
+        provider_id=approval_record.provider_id,
+        approval_record_ref=approval_record_ref,
+        approval_request_ref=approval_request_ref,
+        request_ref=approval_record.request_ref,
+        registry_ref=approval_record.registry_ref,
+        handshake_ref=approval_record.handshake_ref,
+        adapter_check_ref=approval_record.adapter_check_ref,
+        readiness_fingerprint=readiness_fingerprint,
+        secret_source_selection=stages["secret_source_selection"],
+        credential_access=stages["credential_access"],
+        execution_plan=stages["execution_plan"],
+        provider_call_preflight=stages["provider_call_preflight"],
+        output_capture_plan=stages["output_capture_plan"],
+        selected_secret_source=None,
+        credential_value_read=False,
+        network_allowed=False,
+        model_call_allowed=False,
+        execution_allowed=False,
+        execution_performed=False,
+        model_call_performed=False,
+        network_performed=False,
+        raw_output_capture_allowed=False,
+        raw_output_captured=False,
+        proposal_content_generated=False,
+        quarantine_required=True,
+        issues=issues,
+    )
+
+
+def write_proposal_execution_readiness_plan_json(
+    root: Path,
+    plan: ProposalExecutionReadinessPlan,
+) -> Path:
+    output = root / WORKSPACE_DIR / DATA_DIR / "proposal_execution_readiness_plan.json"
+    output.parent.mkdir(parents=True, exist_ok=True)
+    tmp = output.with_suffix(".json.tmp")
+    tmp.write_text(
+        json.dumps(
+            plan.model_dump(mode="json"),
+            ensure_ascii=False,
+            indent=2,
+            sort_keys=True,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    tmp.replace(output)
+    return output
+
+
 def build_proposal_execution_authorization(
     *,
     project_id: str,
@@ -2834,6 +3080,8 @@ def build_proposal_execution_authorization(
     approval_request_ref: str,
     approval_record: ProposalExecutionApprovalRecord,
     approval_record_ref: str,
+    readiness_plan: ProposalExecutionReadinessPlan,
+    readiness_plan_ref: str,
     authorization_fingerprint: str,
 ) -> ProposalExecutionAuthorization:
     issues: list[ProposalAdapterCheckIssue] = [
@@ -2893,6 +3141,15 @@ def build_proposal_execution_authorization(
                 ref=approval_record_ref,
             )
         )
+    if readiness_plan.status == ProposalExecutionReadinessPlanStatus.blocked:
+        issues.append(
+            proposal_adapter_issue(
+                code="execution_readiness_plan_blocked",
+                severity="error",
+                detail="provider execution cannot be authorized because execution readiness plan is blocked",
+                ref=readiness_plan_ref,
+            )
+        )
     if registry.generation_open:
         issues.append(
             proposal_adapter_issue(
@@ -2920,6 +3177,7 @@ def build_proposal_execution_authorization(
         handshake_ref=handshake_ref,
         approval_request_ref=approval_request_ref,
         approval_record_ref=approval_record_ref,
+        execution_readiness_ref=readiness_plan_ref,
         adapter_check_ref=adapter_check_ref,
         authorization_fingerprint=authorization_fingerprint,
         approved_execution_gate=False,
@@ -4915,6 +5173,28 @@ def propose_workspace(project_path: Path) -> ProjectState:
         approval_record,
     )
     approval_record_ref = approval_record_path.relative_to(root).as_posix()
+    readiness_fingerprint = fingerprint_inputs(
+        [
+            ("proposal_execution_approval_request", approval_path),
+            ("proposal_execution_approval_record", approval_record_path),
+            ("proposal_adapter_check", adapter_check_path),
+            ("proposal_provider_registry", registry_path),
+            ("proposal_mock_adapter_handshake", handshake_path),
+        ]
+    )
+    readiness_plan = build_proposal_execution_readiness_plan(
+        project_id=config.project.id,
+        approval_request=approval_request,
+        approval_request_ref=approval_ref,
+        approval_record=approval_record,
+        approval_record_ref=approval_record_ref,
+        readiness_fingerprint=readiness_fingerprint,
+    )
+    readiness_path = write_proposal_execution_readiness_plan_json(
+        root,
+        readiness_plan,
+    )
+    readiness_ref = readiness_path.relative_to(root).as_posix()
     authorization_fingerprint = fingerprint_inputs(
         [
             ("proposal_request", request_path),
@@ -4923,6 +5203,7 @@ def propose_workspace(project_path: Path) -> ProjectState:
             ("proposal_mock_adapter_handshake", handshake_path),
             ("proposal_execution_approval_request", approval_path),
             ("proposal_execution_approval_record", approval_record_path),
+            ("proposal_execution_readiness_plan", readiness_path),
         ]
     )
     execution_authorization = build_proposal_execution_authorization(
@@ -4939,6 +5220,8 @@ def propose_workspace(project_path: Path) -> ProjectState:
         approval_request_ref=approval_ref,
         approval_record=approval_record,
         approval_record_ref=approval_record_ref,
+        readiness_plan=readiness_plan,
+        readiness_plan_ref=readiness_ref,
         authorization_fingerprint=authorization_fingerprint,
     )
     authorization_path = write_proposal_execution_authorization_json(
@@ -5007,6 +5290,7 @@ def propose_workspace(project_path: Path) -> ProjectState:
         handshake_ref,
         approval_ref,
         approval_record_ref,
+        readiness_ref,
         authorization_ref,
         quarantine_ref,
         result_ref,
@@ -5050,6 +5334,7 @@ def propose_workspace(project_path: Path) -> ProjectState:
                 "proposal_mock_adapter_handshake": handshake_ref,
                 "proposal_execution_approval_request": approval_ref,
                 "proposal_execution_approval_record": approval_record_ref,
+                "proposal_execution_readiness_plan": readiness_ref,
                 "proposal_execution_authorization": authorization_ref,
                 "proposal_provider_output_quarantine": quarantine_ref,
                 "proposal_provider_result": result_ref,
@@ -5097,6 +5382,7 @@ def propose_workspace(project_path: Path) -> ProjectState:
             "proposal_mock_adapter_handshake": handshake_ref,
             "proposal_execution_approval_request": approval_ref,
             "proposal_execution_approval_record": approval_record_ref,
+            "proposal_execution_readiness_plan": readiness_ref,
             "proposal_execution_authorization": authorization_ref,
             "proposal_provider_output_quarantine": quarantine_ref,
             "proposal_provider_result": result_ref,

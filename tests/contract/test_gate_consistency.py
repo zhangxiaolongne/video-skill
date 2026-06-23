@@ -4,7 +4,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 
 
-def test_current_gate_is_proposal_execution_approval_record_gate_across_primary_docs():
+def test_current_gate_is_proposal_execution_readiness_plan_gate_across_primary_docs():
     agents = (ROOT / "AGENTS.md").read_text(encoding="utf-8")
     master = (ROOT / "artist_portrait_editor_revision5_optimized.md").read_text(
         encoding="utf-8"
@@ -12,16 +12,16 @@ def test_current_gate_is_proposal_execution_approval_record_gate_across_primary_
     readme = (ROOT / "README.md").read_text(encoding="utf-8")
     vision = (ROOT / "docs" / "VISION.md").read_text(encoding="utf-8")
     progress = (ROOT / "docs" / "DEVELOPMENT_PROGRESS.md").read_text(encoding="utf-8")
-    v010l = (
-        ROOT / "docs" / "V0_010L_PROPOSAL_EXECUTION_APPROVAL_RECORD_GATE.md"
+    v010m = (
+        ROOT / "docs" / "V0_010M_PROPOSAL_EXECUTION_READINESS_PLAN_GATE.md"
     ).read_text(encoding="utf-8")
 
-    assert "Current gate: V0-010l proposal execution approval record gate only." in agents
-    assert "V0-010l 提案 execution approval record 闸门" in master
-    assert "Current V0-010l proposal execution approval record gate work" in readme
-    assert "Current implementation gate: V0-010l proposal execution approval record gate only." in vision
-    assert "Current local gate: V0-010l proposal execution approval record gate only" in progress
-    assert "V0-010l opens deterministic provider execution approval record packets" in v010l
+    assert "Current gate: V0-010m proposal execution readiness plan gate only." in agents
+    assert "V0-010m 提案 execution readiness plan 闸门" in master
+    assert "Current V0-010m proposal execution readiness plan gate work" in readme
+    assert "Current implementation gate: V0-010m proposal execution readiness plan gate only." in vision
+    assert "Current local gate: V0-010m proposal execution readiness plan gate only" in progress
+    assert "V0-010m closes five execution-readiness sub-stages" in v010m
 
 
 def test_current_gate_forbids_future_media_and_creative_surfaces():
@@ -64,6 +64,9 @@ def test_current_gate_forbids_future_media_and_creative_surfaces():
             ).read_text(encoding="utf-8"),
             (
                 ROOT / "docs" / "V0_010L_PROPOSAL_EXECUTION_APPROVAL_RECORD_GATE.md"
+            ).read_text(encoding="utf-8"),
+            (
+                ROOT / "docs" / "V0_010M_PROPOSAL_EXECUTION_READINESS_PLAN_GATE.md"
             ).read_text(encoding="utf-8"),
         ]
     )
@@ -351,6 +354,27 @@ def test_v010l_release_readiness_records_scope():
     assert "`selected_secret_source: null`" in content
     assert "`credential_value_read: false`" in content
     assert "`execution_allowed: false`" in content
+    assert "`proposal_content_generated: false`" in content
+    assert "pytest:" in content
+    assert "run_checks.py:" in content
+
+
+def test_v010m_release_readiness_records_scope():
+    content = (ROOT / "docs" / "V0_010M_RELEASE_READINESS.md").read_text(
+        encoding="utf-8"
+    )
+
+    assert "Status: completed locally, ready to push, not tagged." in content
+    assert "`ProposalExecutionReadinessPlan` Pydantic model" in content
+    assert "Canonical `.artist-portrait/data/proposal_execution_readiness_plan.json`" in content
+    assert "`secret_source_selection`" in content
+    assert "`credential_access`" in content
+    assert "`execution_plan`" in content
+    assert "`provider_call_preflight`" in content
+    assert "`output_capture_plan`" in content
+    assert "`credential_value_read: false`" in content
+    assert "`execution_allowed: false`" in content
+    assert "`raw_output_captured: false`" in content
     assert "`proposal_content_generated: false`" in content
     assert "pytest:" in content
     assert "run_checks.py:" in content

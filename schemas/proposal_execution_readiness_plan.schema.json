@@ -39,13 +39,61 @@
       "title": "ProposalAdapterCheckIssue",
       "type": "object"
     },
-    "ProposalExecutionAuthorizationStatus": {
+    "ProposalExecutionReadinessPlanStatus": {
       "enum": [
         "blocked",
         "ready_for_future_execution"
       ],
-      "title": "ProposalExecutionAuthorizationStatus",
+      "title": "ProposalExecutionReadinessPlanStatus",
       "type": "string"
+    },
+    "ProposalExecutionReadinessStage": {
+      "additionalProperties": false,
+      "properties": {
+        "allowed": {
+          "default": false,
+          "title": "Allowed",
+          "type": "boolean"
+        },
+        "issues": {
+          "items": {
+            "$ref": "#/$defs/ProposalAdapterCheckIssue"
+          },
+          "title": "Issues",
+          "type": "array"
+        },
+        "performed": {
+          "default": false,
+          "title": "Performed",
+          "type": "boolean"
+        },
+        "ref": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Ref"
+        },
+        "stage_id": {
+          "minLength": 1,
+          "title": "Stage Id",
+          "type": "string"
+        },
+        "status": {
+          "$ref": "#/$defs/ProposalExecutionReadinessPlanStatus"
+        }
+      },
+      "required": [
+        "stage_id",
+        "status"
+      ],
+      "title": "ProposalExecutionReadinessStage",
+      "type": "object"
     }
   },
   "additionalProperties": false,
@@ -54,13 +102,6 @@
       "minLength": 1,
       "title": "Adapter Check Ref",
       "type": "string"
-    },
-    "allowed_secret_sources": {
-      "items": {
-        "type": "string"
-      },
-      "title": "Allowed Secret Sources",
-      "type": "array"
     },
     "approval_record_ref": {
       "minLength": 1,
@@ -72,35 +113,26 @@
       "title": "Approval Request Ref",
       "type": "string"
     },
-    "approved_execution_gate": {
+    "credential_access": {
+      "$ref": "#/$defs/ProposalExecutionReadinessStage"
+    },
+    "credential_value_read": {
       "default": false,
-      "title": "Approved Execution Gate",
+      "title": "Credential Value Read",
       "type": "boolean"
     },
-    "authorization_fingerprint": {
-      "pattern": "^sha256:[0-9a-f]{64}$",
-      "title": "Authorization Fingerprint",
-      "type": "string"
-    },
-    "authorization_id": {
-      "minLength": 1,
-      "title": "Authorization Id",
-      "type": "string"
-    },
-    "credential_policy": {
-      "minLength": 1,
-      "title": "Credential Policy",
-      "type": "string"
+    "execution_allowed": {
+      "default": false,
+      "title": "Execution Allowed",
+      "type": "boolean"
     },
     "execution_performed": {
       "default": false,
       "title": "Execution Performed",
       "type": "boolean"
     },
-    "execution_readiness_ref": {
-      "minLength": 1,
-      "title": "Execution Readiness Ref",
-      "type": "string"
+    "execution_plan": {
+      "$ref": "#/$defs/ProposalExecutionReadinessStage"
     },
     "handshake_ref": {
       "minLength": 1,
@@ -134,10 +166,8 @@
       "title": "Network Performed",
       "type": "boolean"
     },
-    "network_required": {
-      "default": false,
-      "title": "Network Required",
-      "type": "boolean"
+    "output_capture_plan": {
+      "$ref": "#/$defs/ProposalExecutionReadinessStage"
     },
     "project_id": {
       "minLength": 1,
@@ -149,6 +179,9 @@
       "title": "Proposal Content Generated",
       "type": "boolean"
     },
+    "provider_call_preflight": {
+      "$ref": "#/$defs/ProposalExecutionReadinessStage"
+    },
     "provider_id": {
       "minLength": 1,
       "title": "Provider Id",
@@ -158,6 +191,26 @@
       "default": true,
       "title": "Quarantine Required",
       "type": "boolean"
+    },
+    "raw_output_capture_allowed": {
+      "default": false,
+      "title": "Raw Output Capture Allowed",
+      "type": "boolean"
+    },
+    "raw_output_captured": {
+      "default": false,
+      "title": "Raw Output Captured",
+      "type": "boolean"
+    },
+    "readiness_fingerprint": {
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "title": "Readiness Fingerprint",
+      "type": "string"
+    },
+    "readiness_plan_id": {
+      "minLength": 1,
+      "title": "Readiness Plan Id",
+      "type": "string"
     },
     "registry_ref": {
       "minLength": 1,
@@ -174,6 +227,9 @@
       "title": "Schema Version",
       "type": "string"
     },
+    "secret_source_selection": {
+      "$ref": "#/$defs/ProposalExecutionReadinessStage"
+    },
     "selected_secret_source": {
       "anyOf": [
         {
@@ -187,34 +243,27 @@
       "title": "Selected Secret Source"
     },
     "status": {
-      "$ref": "#/$defs/ProposalExecutionAuthorizationStatus"
-    },
-    "user_approval_present": {
-      "default": false,
-      "title": "User Approval Present",
-      "type": "boolean"
-    },
-    "user_approval_required": {
-      "default": true,
-      "title": "User Approval Required",
-      "type": "boolean"
+      "$ref": "#/$defs/ProposalExecutionReadinessPlanStatus"
     }
   },
   "required": [
-    "authorization_id",
+    "readiness_plan_id",
     "project_id",
     "status",
     "provider_id",
+    "approval_record_ref",
+    "approval_request_ref",
     "request_ref",
     "registry_ref",
     "handshake_ref",
-    "approval_request_ref",
-    "approval_record_ref",
-    "execution_readiness_ref",
     "adapter_check_ref",
-    "authorization_fingerprint",
-    "credential_policy"
+    "readiness_fingerprint",
+    "secret_source_selection",
+    "credential_access",
+    "execution_plan",
+    "provider_call_preflight",
+    "output_capture_plan"
   ],
-  "title": "ProposalExecutionAuthorization",
+  "title": "ProposalExecutionReadinessPlan",
   "type": "object"
 }
