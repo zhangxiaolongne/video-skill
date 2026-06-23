@@ -66,11 +66,13 @@ Local V0 media research foundation for the `artist-portrait-editor` skill.
 - [V0-010f Release Readiness](docs/V0_010F_RELEASE_READINESS.md)
 - [V0-010g Proposal Provider Registry Gate](docs/V0_010G_PROPOSAL_PROVIDER_REGISTRY_GATE.md)
 - [V0-010g Release Readiness](docs/V0_010G_RELEASE_READINESS.md)
+- [V0-010h Proposal Provider Result Envelope Gate](docs/V0_010H_PROPOSAL_PROVIDER_RESULT_ENVELOPE_GATE.md)
+- [V0-010h Release Readiness](docs/V0_010H_RELEASE_READINESS.md)
 - [Non Goals](docs/NON_GOALS.md)
 
 ## Current Gate
 
-Current V0-010g proposal provider registry gate work allows deterministic project
+Current V0-010h proposal provider result envelope gate work allows deterministic project
 setup, local media scanning, fixed-window clip segmentation, optional
 PySceneDetect video scene segmentation, local-only faster-whisper transcription
 when available, ffmpeg midpoint keyframe extraction for video clips,
@@ -78,8 +80,9 @@ source/clip/transcript/keyframe/analysis ledger operations, rebuildable
 keyframe cache, analysis-led material maps, deterministic proposal context
 packets, text-model gate packets, deterministic proposal request packets,
 proposal adapter preflight packets, provider registry packets, local mock
-adapter handshake packets, proposal contract validation, deterministic proposal
-review of existing proposals, and read-only/reporting outputs:
+adapter handshake packets, provider result envelope packets, proposal contract
+validation, deterministic proposal review of existing proposals, and
+read-only/reporting outputs:
 
 ```text
 project.yaml
@@ -103,6 +106,7 @@ project.yaml
 -> proposal_adapter_check.json for provider/secret/model-call preflight
 -> proposal_provider_registry.json for local provider registration
 -> proposal_mock_adapter_handshake.json for no-call response contract handshake
+-> proposal_provider_result.json for dry-run provider result envelope
 -> proposal readiness gate without fake proposal generation
 -> proposal_validation.json and proposal_review.md for existing proposals
 -> minimal project risk report from sources.jsonl

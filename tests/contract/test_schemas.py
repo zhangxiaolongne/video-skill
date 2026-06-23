@@ -9,6 +9,7 @@ from artist_portrait_editor.models.model_gate import TextModelGate
 from artist_portrait_editor.models.proposal import ProposalSet
 from artist_portrait_editor.models.proposal_adapter import ProposalAdapterCheck
 from artist_portrait_editor.models.proposal_adapter import ProposalMockAdapterHandshake
+from artist_portrait_editor.models.proposal_adapter import ProposalProviderResultEnvelope
 from artist_portrait_editor.models.proposal_adapter import ProposalProviderRegistry
 from artist_portrait_editor.models.proposal_context import ProposalContext
 from artist_portrait_editor.models.proposal_request import ProposalRequestPacket
@@ -32,6 +33,7 @@ def test_schema_generation_from_pydantic_models():
     proposal_adapter_schema = ProposalAdapterCheck.model_json_schema()
     provider_registry_schema = ProposalProviderRegistry.model_json_schema()
     mock_handshake_schema = ProposalMockAdapterHandshake.model_json_schema()
+    provider_result_schema = ProposalProviderResultEnvelope.model_json_schema()
     source_schema = SourceRecord.model_json_schema()
     transcript_schema = TranscriptRecord.model_json_schema()
 
@@ -48,6 +50,7 @@ def test_schema_generation_from_pydantic_models():
     assert proposal_adapter_schema["title"] == "ProposalAdapterCheck"
     assert provider_registry_schema["title"] == "ProposalProviderRegistry"
     assert mock_handshake_schema["title"] == "ProposalMockAdapterHandshake"
+    assert provider_result_schema["title"] == "ProposalProviderResultEnvelope"
     assert source_schema["title"] == "SourceRecord"
     assert transcript_schema["title"] == "TranscriptRecord"
     assert "analysis_id" in analysis_schema["properties"]
@@ -63,6 +66,7 @@ def test_schema_generation_from_pydantic_models():
     assert "model_call_performed" in proposal_adapter_schema["properties"]
     assert "providers" in provider_registry_schema["properties"]
     assert "proposal_content_generated" in mock_handshake_schema["properties"]
+    assert "payload_generated" in provider_result_schema["properties"]
     assert "source_id" in source_schema["properties"]
     assert "transcript_id" in transcript_schema["properties"]
 
@@ -115,6 +119,11 @@ def test_committed_schemas_match_pydantic_generation():
             encoding="utf-8"
         )
     )
+    committed_provider_result = json.loads(
+        (schema_dir / "proposal_provider_result_envelope.schema.json").read_text(
+            encoding="utf-8"
+        )
+    )
     committed_source = json.loads(
         (schema_dir / "source_record.schema.json").read_text(encoding="utf-8")
     )
@@ -160,6 +169,9 @@ def test_committed_schemas_match_pydantic_generation():
     )
     assert committed_mock_handshake == json.loads(
         json.dumps(ProposalMockAdapterHandshake.model_json_schema(), sort_keys=True)
+    )
+    assert committed_provider_result == json.loads(
+        json.dumps(ProposalProviderResultEnvelope.model_json_schema(), sort_keys=True)
     )
     assert committed_source == json.loads(
         json.dumps(SourceRecord.model_json_schema(), sort_keys=True)

@@ -10,7 +10,7 @@ V0 has two future modes:
   `core_mode` data exists.
 
 Current repository implementation has entered deterministic core-mode
-foundation work only. The active gate is V0-010g proposal provider registry:
+foundation work only. The active gate is V0-010h proposal provider result envelope:
 
 ```text
 project.yaml

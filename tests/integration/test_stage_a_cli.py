@@ -1497,6 +1497,7 @@ def test_propose_without_text_model_blocks_without_fake_outputs(
         ".artist-portrait/data/proposal_adapter_check.json",
         ".artist-portrait/data/proposal_provider_registry.json",
         ".artist-portrait/data/proposal_mock_adapter_handshake.json",
+        ".artist-portrait/data/proposal_provider_result.json",
     ]
     assert "text_model_gate_blocked" in payload["warnings"][0]
     assert "remote_text_model_not_allowed" in payload["warnings"][0]
@@ -1571,6 +1572,18 @@ def test_propose_without_text_model_blocks_without_fake_outputs(
     assert handshake_payload["model_call_performed"] is False
     assert handshake_payload["network_performed"] is False
     assert handshake_payload["proposal_content_generated"] is False
+    result_path = tmp_path / ".artist-portrait" / "data" / "proposal_provider_result.json"
+    assert result_path.exists()
+    result_payload = json.loads(result_path.read_text(encoding="utf-8"))
+    assert result_payload["status"] == "blocked"
+    assert result_payload["provider_id"] == "local_mock"
+    assert result_payload["expected_output_kind"] == "ProposalSet"
+    assert result_payload["payload_generated"] is False
+    assert result_payload["payload_json_ref"] is None
+    assert result_payload["validation_performed"] is False
+    assert result_payload["model_call_performed"] is False
+    assert result_payload["network_performed"] is False
+    assert result_payload["proposal_content_generated"] is False
     assert not (tmp_path / ".artist-portrait" / "data" / "proposals.json").exists()
     assert not (tmp_path / "output" / "proposals.md").exists()
     state_payload = json.loads(
@@ -1584,6 +1597,7 @@ def test_propose_without_text_model_blocks_without_fake_outputs(
         ".artist-portrait/data/proposal_adapter_check.json",
         ".artist-portrait/data/proposal_provider_registry.json",
         ".artist-portrait/data/proposal_mock_adapter_handshake.json",
+        ".artist-portrait/data/proposal_provider_result.json",
     ]
 
 
@@ -1658,6 +1672,17 @@ def test_propose_with_ready_text_model_gate_still_does_not_generate(
     assert handshake_payload["model_call_performed"] is False
     assert handshake_payload["network_performed"] is False
     assert handshake_payload["proposal_content_generated"] is False
+    result_payload = json.loads(
+        (
+            tmp_path / ".artist-portrait" / "data" / "proposal_provider_result.json"
+        ).read_text(encoding="utf-8")
+    )
+    assert result_payload["status"] == "ready_for_future_result_validation"
+    assert result_payload["payload_generated"] is False
+    assert result_payload["validation_performed"] is False
+    assert result_payload["model_call_performed"] is False
+    assert result_payload["network_performed"] is False
+    assert result_payload["proposal_content_generated"] is False
     assert not (tmp_path / ".artist-portrait" / "data" / "proposals.json").exists()
     assert not (tmp_path / "output" / "proposals.md").exists()
 
@@ -1885,6 +1910,39 @@ def test_invalid_proposal_mock_adapter_handshake_status_and_doctor(tmp_path, cap
     assert code == 1
     assert any(
         issue["code"] == "proposal_mock_adapter_handshake_invalid"
+        for issue in doctor_payload["issues"]
+    )
+
+
+def test_invalid_proposal_provider_result_status_and_doctor(tmp_path, capsys):
+    project_path = tmp_path / "project.yaml"
+    project_path.write_text(
+        project_fixture_with_scene_detection("off"),
+        encoding="utf-8",
+    )
+    assert main(["init", "--project", str(project_path), "--quiet"]) in (0, 1)
+    write_clean_source_ledger(tmp_path)
+    result_path = tmp_path / ".artist-portrait" / "data" / "proposal_provider_result.json"
+    result_path.write_text('{"result_id": "missing-required-fields"}\n', encoding="utf-8")
+
+    code = main(["status", "--project", str(project_path), "--json"])
+    captured = capsys.readouterr()
+    status_payload = json.loads(captured.out)
+
+    assert code == 0
+    assert status_payload["summaries"]["proposal_provider_result"]["valid"] is False
+    assert (
+        "invalid ProposalProviderResultEnvelope JSON"
+        in status_payload["summaries"]["proposal_provider_result"]["error"]
+    )
+
+    code = main(["doctor", "--project", str(project_path), "--json"])
+    captured = capsys.readouterr()
+    doctor_payload = json.loads(captured.out)
+
+    assert code == 1
+    assert any(
+        issue["code"] == "proposal_provider_result_invalid"
         for issue in doctor_payload["issues"]
     )
 

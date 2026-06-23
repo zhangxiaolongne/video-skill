@@ -13,7 +13,7 @@ Models may organize evidence in later phases, but they must not create facts,
 material IDs, timecodes, dialogue, provenance, identity, rights status, or
 timeline references.
 
-The current V0-010g proposal provider registry gate performs no remote model calls.
+The current V0-010h proposal provider result envelope gate performs no remote model calls.
 `scan`, `segment`, `transcribe`, `keyframes`, `analyze`, `map`, `propose`,
 `review`, `status`, and `doctor` must remain local. PySceneDetect output is a local
 tool-derived boundary signal, faster-whisper output is local ASR evidence,
@@ -22,7 +22,8 @@ existing evidence. `material_map.md` is a deterministic report, and `propose`
 currently writes deterministic proposal context, writes deterministic
 text-model gate state, writes deterministic proposal request packets, writes
 deterministic proposal adapter preflight packets, writes deterministic provider
-registry and mock adapter handshake packets, and
+registry and mock adapter handshake packets, writes deterministic provider
+result envelope packets, and
 records readiness or blocked state only. `review
 --scope proposal` reads existing proposal artifacts and validates their
 references; it does not generate or improve proposals. None of these are creative

@@ -12,6 +12,7 @@ from artist_portrait_editor.models.proposal import ProposalSet
 from artist_portrait_editor.models.proposal_adapter import (
     ProposalAdapterCheck,
     ProposalMockAdapterHandshake,
+    ProposalProviderResultEnvelope,
     ProposalProviderRegistry,
 )
 from artist_portrait_editor.models.proposal_context import ProposalContext
@@ -33,6 +34,9 @@ def write_schema_files(output_dir: Path) -> None:
             ProposalMockAdapterHandshake.model_json_schema()
         ),
         "proposal_provider_registry.schema.json": ProposalProviderRegistry.model_json_schema(),
+        "proposal_provider_result_envelope.schema.json": (
+            ProposalProviderResultEnvelope.model_json_schema()
+        ),
         "proposal_set.schema.json": ProposalSet.model_json_schema(),
         "proposal_context.schema.json": ProposalContext.model_json_schema(),
         "proposal_request_packet.schema.json": ProposalRequestPacket.model_json_schema(),

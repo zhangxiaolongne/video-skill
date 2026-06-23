@@ -14,11 +14,12 @@ V0 does not aim to provide:
 - automatic publishing
 - commercial rights guarantees
 
-The current V0-010g gate allows only proposal context preparation, text-model
+The current V0-010h gate allows only proposal context preparation, text-model
 gate recording, deterministic proposal request packet construction,
 deterministic proposal adapter preflight, deterministic provider registry and
-mock handshake, readiness checks, and deterministic validation of existing
-proposal sets after the analysis-led material map. It still forbids OpenCV or
+mock handshake, dry-run provider result envelope, readiness checks, and
+deterministic validation of existing proposal sets after the analysis-led material map.
+It still forbids OpenCV or
 vision-model visual classification, BGM selection, fake/template proposals,
 full creative proposal generation, timeline generation, preview rendering,
 remote model calls, model downloads, image generation/editing, and network

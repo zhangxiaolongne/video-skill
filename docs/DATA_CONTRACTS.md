@@ -16,6 +16,7 @@ Current committed schemas:
 - `schemas/proposal_context.schema.json`
 - `schemas/proposal_mock_adapter_handshake.schema.json`
 - `schemas/proposal_provider_registry.schema.json`
+- `schemas/proposal_provider_result_envelope.schema.json`
 - `schemas/proposal_request_packet.schema.json`
 - `schemas/proposal_validation_report.schema.json`
 - `schemas/proposal_set.schema.json`
@@ -119,6 +120,15 @@ handshake gate and has a committed schema at
 after the provider registry. It validates the future response contract without
 calling a model, touching the network, or generating proposal content.
 
+`ProposalProviderResultEnvelope` is implemented for the V0-010h provider result
+envelope gate and has a committed schema at
+`schemas/proposal_provider_result_envelope.schema.json`. It is written to
+`.artist-portrait/data/proposal_provider_result.json` by `propose` after the
+mock adapter handshake. It declares the expected future `ProposalSet` output
+kind while recording that no payload was generated, no validation was
+performed, no model call occurred, no network access occurred, and no proposal
+content was generated.
+
 `ProposalSet` is implemented for the V0-010a proposal readiness gate and has a
 committed schema at `schemas/proposal_set.schema.json`. A future approved
 proposal generation gate may write `.artist-portrait/data/proposals.json`, but
@@ -166,6 +176,7 @@ Current stable diagnostic codes include:
 - `proposal_adapter_check_invalid`
 - `proposal_provider_registry_invalid`
 - `proposal_mock_adapter_handshake_invalid`
+- `proposal_provider_result_invalid`
 - `proposals_invalid`
 - `proposal_unknown_clip_id`
 - `proposal_unknown_fact_ref`

@@ -17,6 +17,11 @@ class ProposalMockAdapterHandshakeStatus(str, Enum):
     ready_for_future_execution = "ready_for_future_execution"
 
 
+class ProposalProviderResultStatus(str, Enum):
+    blocked = "blocked"
+    ready_for_future_result_validation = "ready_for_future_result_validation"
+
+
 class ProposalAdapterCheckIssue(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -90,6 +95,30 @@ class ProposalMockAdapterHandshake(BaseModel):
     adapter_check_ref: str = Field(min_length=1)
     handshake_fingerprint: str = Field(pattern=r"^sha256:[0-9a-f]{64}$")
     response_contract_ref: str = Field(min_length=1)
+    model_call_performed: bool = False
+    network_performed: bool = False
+    proposal_content_generated: bool = False
+    issues: list[ProposalAdapterCheckIssue] = Field(default_factory=list)
+
+
+class ProposalProviderResultEnvelope(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    schema_version: str = SCHEMA_VERSION
+    result_id: str = Field(min_length=1)
+    project_id: str = Field(min_length=1)
+    status: ProposalProviderResultStatus
+    provider_id: str = Field(min_length=1)
+    request_ref: str = Field(min_length=1)
+    registry_ref: str = Field(min_length=1)
+    handshake_ref: str = Field(min_length=1)
+    adapter_check_ref: str = Field(min_length=1)
+    result_fingerprint: str = Field(pattern=r"^sha256:[0-9a-f]{64}$")
+    expected_output_kind: str = Field(min_length=1)
+    target_schema_ref: str = Field(min_length=1)
+    payload_generated: bool = False
+    payload_json_ref: str | None = None
+    validation_performed: bool = False
     model_call_performed: bool = False
     network_performed: bool = False
     proposal_content_generated: bool = False

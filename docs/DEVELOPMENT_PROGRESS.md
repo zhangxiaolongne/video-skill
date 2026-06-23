@@ -34,7 +34,7 @@ When a user requirement changes long-term product behavior, update both files:
 - Canonical skill name: `artist-portrait-editor`
 - Canonical install directory: `artist-portrait-editor`
 - Distribution repository: `video-skill`
-- Current local gate: V0-010g proposal provider registry gate only
+- Current local gate: V0-010h proposal provider result envelope gate only
 
 ## Completed Local Versions
 
@@ -136,6 +136,11 @@ When a user requirement changes long-term product behavior, update both files:
   `.artist-portrait/data/proposal_mock_adapter_handshake.json` to validate the
   future response contract while recording no model call, no network access,
   and no generated proposal content.
+- V0-010w: `ProposalProviderResultEnvelope` schema and committed JSON Schema.
+- V0-010x: blocked `propose` now writes deterministic
+  `.artist-portrait/data/proposal_provider_result.json` as a dry-run provider
+  result envelope, recording no payload generation, no validation, no model
+  call, no network access, and no generated proposal content.
 
 ## Current Hard Boundaries
 
@@ -171,10 +176,10 @@ Tactical rule for future batches:
 - use third-party outputs as evidence with provenance, not unreviewed truth
 - keep config gates, failure modes, and review rules around every non-local or
   model-backed capability
-- keep current V0-010g bounded to existing local ledgers plus proposal
+- keep current V0-010h bounded to existing local ledgers plus proposal
   readiness, proposal request, adapter preflight, provider registry, mock
-  adapter handshake, and proposal validation checks; keyframes are visual
-  evidence references, not visual classification
+  adapter handshake, provider result envelope, and proposal validation checks;
+  keyframes are visual evidence references, not visual classification
 
 ### BGM Is Part Of Editing Logic
 
@@ -207,13 +212,13 @@ carried into the future proposal, timeline, review, and preview gates.
 
 ## Next Likely Batch
 
-Next action should plan the controlled provider execution envelope without
-confusing it with actual proposal generation. The big-version direction is
+Next action should plan the controlled provider execution gate without
+confusing it with full proposal generation. The big-version direction is
 evidence-grounded creative proposals that account for BGM strategy, target
 output, text, pacing, transitions, and evidence traceability. The next small
-batch should define a local dry-run response envelope and validation path for a
-future provider result, still with no real API key, no remote call, no network,
-and no fake proposal content until explicit model execution and generation
-gates are opened. Do not open timeline, BGM fitting, preview, network, OpenCV,
+batch should define how an approved provider execution may be authorized,
+where credentials may come from, how model output is captured, and how failed
+or malformed provider responses remain quarantined before becoming
+`proposals.json`. Do not open timeline, BGM fitting, preview, network, OpenCV,
 vision, image generation/editing, API-key setup, or model-free template
 proposal gates by accident.

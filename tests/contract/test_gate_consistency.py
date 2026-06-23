@@ -4,7 +4,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 
 
-def test_current_gate_is_proposal_provider_registry_gate_across_primary_docs():
+def test_current_gate_is_proposal_provider_result_envelope_gate_across_primary_docs():
     agents = (ROOT / "AGENTS.md").read_text(encoding="utf-8")
     master = (ROOT / "artist_portrait_editor_revision5_optimized.md").read_text(
         encoding="utf-8"
@@ -12,16 +12,16 @@ def test_current_gate_is_proposal_provider_registry_gate_across_primary_docs():
     readme = (ROOT / "README.md").read_text(encoding="utf-8")
     vision = (ROOT / "docs" / "VISION.md").read_text(encoding="utf-8")
     progress = (ROOT / "docs" / "DEVELOPMENT_PROGRESS.md").read_text(encoding="utf-8")
-    v010g = (ROOT / "docs" / "V0_010G_PROPOSAL_PROVIDER_REGISTRY_GATE.md").read_text(
+    v010h = (ROOT / "docs" / "V0_010H_PROPOSAL_PROVIDER_RESULT_ENVELOPE_GATE.md").read_text(
         encoding="utf-8"
     )
 
-    assert "Current gate: V0-010g proposal provider registry gate only." in agents
-    assert "V0-010g 提案 provider registry / mock adapter handshake 闸门" in master
-    assert "Current V0-010g proposal provider registry gate work" in readme
-    assert "Current implementation gate: V0-010g proposal provider registry gate only." in vision
-    assert "Current local gate: V0-010g proposal provider registry gate only" in progress
-    assert "V0-010g opens deterministic proposal provider registry" in v010g
+    assert "Current gate: V0-010h proposal provider result envelope gate only." in agents
+    assert "V0-010h 提案 provider result envelope 闸门" in master
+    assert "Current V0-010h proposal provider result envelope gate work" in readme
+    assert "Current implementation gate: V0-010h proposal provider result envelope gate only." in vision
+    assert "Current local gate: V0-010h proposal provider result envelope gate only" in progress
+    assert "V0-010h opens a deterministic provider result envelope" in v010h
 
 
 def test_current_gate_forbids_future_media_and_creative_surfaces():
@@ -50,6 +50,9 @@ def test_current_gate_forbids_future_media_and_creative_surfaces():
             (ROOT / "docs" / "V0_010G_PROPOSAL_PROVIDER_REGISTRY_GATE.md").read_text(
                 encoding="utf-8"
             ),
+            (
+                ROOT / "docs" / "V0_010H_PROPOSAL_PROVIDER_RESULT_ENVELOPE_GATE.md"
+            ).read_text(encoding="utf-8"),
         ]
     )
 
@@ -254,5 +257,20 @@ def test_v010g_release_readiness_records_scope():
     assert "Canonical `.artist-portrait/data/proposal_provider_registry.json`" in content
     assert "Canonical `.artist-portrait/data/proposal_mock_adapter_handshake.json`" in content
     assert "no proposal content generation" in content
+    assert "pytest:" in content
+    assert "run_checks.py:" in content
+
+
+def test_v010h_release_readiness_records_scope():
+    content = (ROOT / "docs" / "V0_010H_RELEASE_READINESS.md").read_text(
+        encoding="utf-8"
+    )
+
+    assert "Status: completed locally, ready to push, not tagged." in content
+    assert "`ProposalProviderResultEnvelope` Pydantic model" in content
+    assert "Canonical `.artist-portrait/data/proposal_provider_result.json`" in content
+    assert "`payload_generated: false`" in content
+    assert "`validation_performed: false`" in content
+    assert "`proposal_content_generated: false`" in content
     assert "pytest:" in content
     assert "run_checks.py:" in content
