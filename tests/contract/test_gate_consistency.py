@@ -4,7 +4,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 
 
-def test_current_gate_is_proposal_request_gate_across_primary_docs():
+def test_current_gate_is_proposal_adapter_preflight_gate_across_primary_docs():
     agents = (ROOT / "AGENTS.md").read_text(encoding="utf-8")
     master = (ROOT / "artist_portrait_editor_revision5_optimized.md").read_text(
         encoding="utf-8"
@@ -12,16 +12,16 @@ def test_current_gate_is_proposal_request_gate_across_primary_docs():
     readme = (ROOT / "README.md").read_text(encoding="utf-8")
     vision = (ROOT / "docs" / "VISION.md").read_text(encoding="utf-8")
     progress = (ROOT / "docs" / "DEVELOPMENT_PROGRESS.md").read_text(encoding="utf-8")
-    v010e = (ROOT / "docs" / "V0_010E_PROPOSAL_REQUEST_GATE.md").read_text(
+    v010f = (ROOT / "docs" / "V0_010F_PROPOSAL_ADAPTER_PREFLIGHT_GATE.md").read_text(
         encoding="utf-8"
     )
 
-    assert "Current gate: V0-010e proposal request gate only." in agents
-    assert "V0-010e 提案请求闸门" in master
-    assert "Current V0-010e proposal request gate work" in readme
-    assert "Current implementation gate: V0-010e proposal request gate only." in vision
-    assert "Current local gate: V0-010e proposal request gate only" in progress
-    assert "V0-010e opens deterministic proposal request packet construction" in v010e
+    assert "Current gate: V0-010f proposal adapter preflight gate only." in agents
+    assert "V0-010f 提案适配器预检闸门" in master
+    assert "Current V0-010f proposal adapter preflight gate work" in readme
+    assert "Current implementation gate: V0-010f proposal adapter preflight gate only." in vision
+    assert "Current local gate: V0-010f proposal adapter preflight gate only" in progress
+    assert "V0-010f opens deterministic proposal adapter preflight" in v010f
 
 
 def test_current_gate_forbids_future_media_and_creative_surfaces():
@@ -42,6 +42,9 @@ def test_current_gate_forbids_future_media_and_creative_surfaces():
                 encoding="utf-8"
             ),
             (ROOT / "docs" / "V0_010E_PROPOSAL_REQUEST_GATE.md").read_text(
+                encoding="utf-8"
+            ),
+            (ROOT / "docs" / "V0_010F_PROPOSAL_ADAPTER_PREFLIGHT_GATE.md").read_text(
                 encoding="utf-8"
             ),
         ]
@@ -220,5 +223,18 @@ def test_v010e_release_readiness_records_scope():
     assert "`ProposalRequestPacket` Pydantic model" in content
     assert "Canonical `.artist-portrait/data/proposal_request.json`" in content
     assert "Blocked and ready proposal request packet states" in content
+    assert "pytest:" in content
+    assert "run_checks.py:" in content
+
+
+def test_v010f_release_readiness_records_scope():
+    content = (ROOT / "docs" / "V0_010F_RELEASE_READINESS.md").read_text(
+        encoding="utf-8"
+    )
+
+    assert "Status: completed locally, ready to push, not tagged." in content
+    assert "`ProposalAdapterCheck` Pydantic model" in content
+    assert "Canonical `.artist-portrait/data/proposal_adapter_check.json`" in content
+    assert "Plaintext secret material detection" in content
     assert "pytest:" in content
     assert "run_checks.py:" in content

@@ -1494,6 +1494,7 @@ def test_propose_without_text_model_blocks_without_fake_outputs(
         ".artist-portrait/data/proposal_context.json",
         ".artist-portrait/data/text_model_gate.json",
         ".artist-portrait/data/proposal_request.json",
+        ".artist-portrait/data/proposal_adapter_check.json",
     ]
     assert "text_model_gate_blocked" in payload["warnings"][0]
     assert "remote_text_model_not_allowed" in payload["warnings"][0]
@@ -1537,6 +1538,17 @@ def test_propose_without_text_model_blocks_without_fake_outputs(
         "text_model_capability_missing",
     ]
     assert "BGM" in request_payload["user_prompt"]
+    adapter_path = tmp_path / ".artist-portrait" / "data" / "proposal_adapter_check.json"
+    assert adapter_path.exists()
+    adapter_payload = json.loads(adapter_path.read_text(encoding="utf-8"))
+    assert adapter_payload["status"] == "blocked"
+    assert adapter_payload["provider"] == "unconfigured"
+    assert adapter_payload["provider_mode"] == "dry_run_contract_only"
+    assert adapter_payload["model_call_performed"] is False
+    assert adapter_payload["network_performed"] is False
+    assert "plaintext_secret_material_detected" not in {
+        issue["code"] for issue in adapter_payload["issues"]
+    }
     assert not (tmp_path / ".artist-portrait" / "data" / "proposals.json").exists()
     assert not (tmp_path / "output" / "proposals.md").exists()
     state_payload = json.loads(
@@ -1547,6 +1559,7 @@ def test_propose_without_text_model_blocks_without_fake_outputs(
         ".artist-portrait/data/proposal_context.json",
         ".artist-portrait/data/text_model_gate.json",
         ".artist-portrait/data/proposal_request.json",
+        ".artist-portrait/data/proposal_adapter_check.json",
     ]
 
 
@@ -1597,6 +1610,14 @@ def test_propose_with_ready_text_model_gate_still_does_not_generate(
     assert request_payload["status"] == "ready"
     assert request_payload["blocking_reasons"] == []
     assert "ProposalSet" in request_payload["developer_prompt"]
+    adapter_payload = json.loads(
+        (
+            tmp_path / ".artist-portrait" / "data" / "proposal_adapter_check.json"
+        ).read_text(encoding="utf-8")
+    )
+    assert adapter_payload["status"] == "ready_for_future_adapter"
+    assert adapter_payload["model_call_performed"] is False
+    assert adapter_payload["network_performed"] is False
     assert not (tmp_path / ".artist-portrait" / "data" / "proposals.json").exists()
     assert not (tmp_path / "output" / "proposals.md").exists()
 
@@ -1725,6 +1746,80 @@ def test_invalid_proposal_request_status_and_doctor(tmp_path, capsys):
         issue["code"] == "proposal_request_invalid"
         for issue in doctor_payload["issues"]
     )
+
+
+def test_invalid_proposal_adapter_check_status_and_doctor(tmp_path, capsys):
+    project_path = tmp_path / "project.yaml"
+    project_path.write_text(
+        project_fixture_with_scene_detection("off"),
+        encoding="utf-8",
+    )
+    assert main(["init", "--project", str(project_path), "--quiet"]) in (0, 1)
+    write_clean_source_ledger(tmp_path)
+    check_path = tmp_path / ".artist-portrait" / "data" / "proposal_adapter_check.json"
+    check_path.write_text('{"check_id": "missing-required-fields"}\n', encoding="utf-8")
+
+    code = main(["status", "--project", str(project_path), "--json"])
+    captured = capsys.readouterr()
+    status_payload = json.loads(captured.out)
+
+    assert code == 0
+    assert status_payload["summaries"]["proposal_adapter_check"]["valid"] is False
+    assert (
+        "invalid ProposalAdapterCheck JSON"
+        in status_payload["summaries"]["proposal_adapter_check"]["error"]
+    )
+
+    code = main(["doctor", "--project", str(project_path), "--json"])
+    captured = capsys.readouterr()
+    doctor_payload = json.loads(captured.out)
+
+    assert code == 1
+    assert any(
+        issue["code"] == "proposal_adapter_check_invalid"
+        for issue in doctor_payload["issues"]
+    )
+
+
+def test_proposal_adapter_check_rejects_plaintext_secret_material(
+    tmp_path,
+    monkeypatch,
+    capsys,
+):
+    project_path = tmp_path / "project.yaml"
+    project_path.write_text(
+        project_fixture_with_remote_text_model_allowed()
+        .replace("scene_detection: auto", "scene_detection: off")
+        + "\n# OPENAI_API_KEY=sk-proj-test-secret\n",
+        encoding="utf-8",
+    )
+    assert main(["init", "--project", str(project_path), "--quiet"]) in (0, 1)
+    write_clean_source_ledger(tmp_path)
+    assert main(["segment", "--project", str(project_path), "--quiet"]) == 0
+    assert main(["analyze", "--project", str(project_path), "--quiet"]) == 0
+    assert main(["map", "--project", str(project_path), "--quiet"]) == 0
+    monkeypatch.setattr(
+        workspace,
+        "detect_capabilities",
+        lambda: Capabilities(text_model=True),
+    )
+
+    code = main(["propose", "--project", str(project_path), "--json"])
+    captured = capsys.readouterr()
+    payload = json.loads(captured.out)
+
+    assert code == 4
+    assert payload["status"] == "blocked"
+    adapter_payload = json.loads(
+        (
+            tmp_path / ".artist-portrait" / "data" / "proposal_adapter_check.json"
+        ).read_text(encoding="utf-8")
+    )
+    issue_codes = {issue["code"] for issue in adapter_payload["issues"]}
+    assert adapter_payload["status"] == "blocked"
+    assert "plaintext_secret_material_detected" in issue_codes
+    assert adapter_payload["model_call_performed"] is False
+    assert adapter_payload["network_performed"] is False
 
 
 def test_review_project_requires_scan_first(tmp_path, capsys):

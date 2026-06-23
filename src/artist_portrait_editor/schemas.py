@@ -9,6 +9,7 @@ from artist_portrait_editor.models.config import ProjectConfig
 from artist_portrait_editor.models.keyframe import KeyframeRecord
 from artist_portrait_editor.models.model_gate import TextModelGate
 from artist_portrait_editor.models.proposal import ProposalSet
+from artist_portrait_editor.models.proposal_adapter import ProposalAdapterCheck
 from artist_portrait_editor.models.proposal_context import ProposalContext
 from artist_portrait_editor.models.proposal_request import ProposalRequestPacket
 from artist_portrait_editor.models.proposal_validation import ProposalValidationReport
@@ -23,6 +24,7 @@ def write_schema_files(output_dir: Path) -> None:
         "analysis_record.schema.json": AnalysisRecord.model_json_schema(),
         "project_config.schema.json": ProjectConfig.model_json_schema(),
         "project_state.schema.json": ProjectState.model_json_schema(),
+        "proposal_adapter_check.schema.json": ProposalAdapterCheck.model_json_schema(),
         "proposal_set.schema.json": ProposalSet.model_json_schema(),
         "proposal_context.schema.json": ProposalContext.model_json_schema(),
         "proposal_request_packet.schema.json": ProposalRequestPacket.model_json_schema(),

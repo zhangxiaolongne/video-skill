@@ -27,7 +27,7 @@ Required Stage A properties:
 - state and run records are auditable.
 - repeated `init` does not cross the Stage A boundary.
 
-Current V0-010e implementation scope additionally allows:
+Current V0-010f implementation scope additionally allows:
 
 - `scan`
 - deterministic `sources.jsonl`
@@ -56,6 +56,9 @@ Current V0-010e implementation scope additionally allows:
 - `ProposalRequestPacket` Pydantic model and generated JSON Schema
 - deterministic `.artist-portrait/data/proposal_request.json`
 - proposal model request packet construction without model calls
+- `ProposalAdapterCheck` Pydantic model and generated JSON Schema
+- deterministic `.artist-portrait/data/proposal_adapter_check.json`
+- provider/secret/model-call preflight without model calls or network
 - `ProposalSet` Pydantic model and generated JSON Schema
 - `propose` readiness gate requiring `material_map.md`
 - blocked `propose` state when no approved text model is available

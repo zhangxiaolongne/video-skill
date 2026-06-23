@@ -40,6 +40,11 @@ from artist_portrait_editor.models.clip import (
 from artist_portrait_editor.models.keyframe import KeyframeRecord, KeyframeRiskFlag
 from artist_portrait_editor.models.model_gate import TextModelGate, TextModelGateStatus
 from artist_portrait_editor.models.proposal import ProposalSet
+from artist_portrait_editor.models.proposal_adapter import (
+    ProposalAdapterCheck,
+    ProposalAdapterCheckIssue,
+    ProposalAdapterCheckStatus,
+)
 from artist_portrait_editor.models.proposal_context import (
     ProposalAnalysisContext,
     ProposalClipContext,
@@ -421,6 +426,13 @@ def render_status_panel(payload: dict) -> str:
         lines.append("proposal_request: invalid")
     else:
         lines.append("proposal_request: missing")
+    proposal_adapter_check = summaries.get("proposal_adapter_check") or {}
+    if proposal_adapter_check.get("exists") and proposal_adapter_check.get("valid", True):
+        lines.append(f"proposal_adapter_check: {proposal_adapter_check.get('status')}")
+    elif proposal_adapter_check.get("exists"):
+        lines.append("proposal_adapter_check: invalid")
+    else:
+        lines.append("proposal_adapter_check: missing")
     proposals = summaries.get("proposals") or {}
     if proposals.get("exists") and proposals.get("valid", True):
         lines.append(f"proposals: {proposals.get('count', 0)}")
@@ -659,6 +671,9 @@ def doctor_project_payload(project_path: Path) -> dict:
     proposal_request = proposal_request_summary(
         root / WORKSPACE_DIR / DATA_DIR / "proposal_request.json"
     )
+    proposal_adapter_check = proposal_adapter_check_summary(
+        root / WORKSPACE_DIR / DATA_DIR / "proposal_adapter_check.json"
+    )
     if (
         sources.get("valid") is True
         and proposal_context.get("valid") is False
@@ -703,6 +718,25 @@ def doctor_project_payload(project_path: Path) -> dict:
                 detail=str(proposal_request.get("error") or "proposal request is invalid"),
                 next_action=(
                     f"fix {request_path.relative_to(root).as_posix()} or rerun "
+                    f"artist-portrait propose --project {project_path}"
+                ),
+            )
+        )
+    if (
+        sources.get("valid") is True
+        and proposal_adapter_check.get("valid") is False
+    ):
+        check_path = root / WORKSPACE_DIR / DATA_DIR / "proposal_adapter_check.json"
+        issues.append(
+            workspace_issue(
+                code="proposal_adapter_check_invalid",
+                severity="error",
+                detail=str(
+                    proposal_adapter_check.get("error")
+                    or "proposal adapter check is invalid"
+                ),
+                next_action=(
+                    f"fix {check_path.relative_to(root).as_posix()} or rerun "
                     f"artist-portrait propose --project {project_path}"
                 ),
             )
@@ -856,6 +890,10 @@ def artifact_statuses(root: Path) -> dict[str, dict]:
         "proposal_context": root / WORKSPACE_DIR / DATA_DIR / "proposal_context.json",
         "text_model_gate": root / WORKSPACE_DIR / DATA_DIR / "text_model_gate.json",
         "proposal_request": root / WORKSPACE_DIR / DATA_DIR / "proposal_request.json",
+        "proposal_adapter_check": root
+        / WORKSPACE_DIR
+        / DATA_DIR
+        / "proposal_adapter_check.json",
         "proposals_json": root / WORKSPACE_DIR / DATA_DIR / "proposals.json",
         "proposal_validation": root / WORKSPACE_DIR / DATA_DIR / "proposal_validation.json",
         "run_report": root / "output" / "run_report.md",
@@ -933,6 +971,9 @@ def status_summaries(root: Path) -> dict:
     proposal_context_path = root / WORKSPACE_DIR / DATA_DIR / "proposal_context.json"
     text_model_gate_path = root / WORKSPACE_DIR / DATA_DIR / "text_model_gate.json"
     proposal_request_path = root / WORKSPACE_DIR / DATA_DIR / "proposal_request.json"
+    proposal_adapter_check_path = (
+        root / WORKSPACE_DIR / DATA_DIR / "proposal_adapter_check.json"
+    )
     proposal_validation_path = root / WORKSPACE_DIR / DATA_DIR / "proposal_validation.json"
     return {
         "sources": source_summary(sources_path),
@@ -947,6 +988,9 @@ def status_summaries(root: Path) -> dict:
         "proposal_context": proposal_context_summary(proposal_context_path),
         "text_model_gate": text_model_gate_summary(text_model_gate_path),
         "proposal_request": proposal_request_summary(proposal_request_path),
+        "proposal_adapter_check": proposal_adapter_check_summary(
+            proposal_adapter_check_path
+        ),
         "proposals": proposal_summary(proposals_path),
         "proposal_validation": proposal_validation_summary(proposal_validation_path),
         "risk_report": output_summary(risk_report_path),
@@ -1168,6 +1212,15 @@ def read_proposal_request_json(path: Path) -> ProposalRequestPacket:
         ) from exc
 
 
+def read_proposal_adapter_check_json(path: Path) -> ProposalAdapterCheck:
+    try:
+        return ProposalAdapterCheck.model_validate_json(path.read_text(encoding="utf-8"))
+    except ValueError as exc:
+        raise WorkspacePrerequisiteError(
+            f"invalid ProposalAdapterCheck JSON: {exc}"
+        ) from exc
+
+
 def read_proposal_validation_json(path: Path) -> ProposalValidationReport:
     try:
         return ProposalValidationReport.model_validate_json(path.read_text(encoding="utf-8"))
@@ -1347,6 +1400,30 @@ def proposal_request_summary(path: Path) -> dict:
     }
 
 
+def proposal_adapter_check_summary(path: Path) -> dict:
+    if not path.exists():
+        return {"exists": False}
+    try:
+        check = read_proposal_adapter_check_json(path)
+    except Exception as exc:
+        return {
+            "exists": True,
+            "valid": False,
+            "error": str(exc),
+        }
+    return {
+        "exists": True,
+        "valid": True,
+        "check_id": check.check_id,
+        "status": check.status.value,
+        "provider": check.provider,
+        "provider_mode": check.provider_mode,
+        "issue_count": len(check.issues),
+        "model_call_performed": check.model_call_performed,
+        "network_performed": check.network_performed,
+    }
+
+
 def proposal_validation_summary(path: Path) -> dict:
     if not path.exists():
         return {"exists": False}
@@ -1383,6 +1460,11 @@ def stable_gate_id(project_id: str, proposal_context_fingerprint: str) -> str:
 def stable_request_id(project_id: str, request_fingerprint: str) -> str:
     payload = f"{project_id}:{request_fingerprint}"
     return "preq_" + hashlib.sha256(payload.encode("utf-8")).hexdigest()[:24]
+
+
+def stable_adapter_check_id(project_id: str, request_fingerprint: str) -> str:
+    payload = f"{project_id}:{request_fingerprint}"
+    return "pachk_" + hashlib.sha256(payload.encode("utf-8")).hexdigest()[:24]
 
 
 def stable_proposal_validation_report_id(
@@ -1650,6 +1732,110 @@ def write_proposal_request_json(root: Path, request: ProposalRequestPacket) -> P
     tmp = output.with_suffix(".json.tmp")
     tmp.write_text(
         json.dumps(request.model_dump(mode="json"), ensure_ascii=False, indent=2, sort_keys=True)
+        + "\n",
+        encoding="utf-8",
+    )
+    tmp.replace(output)
+    return output
+
+
+def contains_plaintext_secret(text: str) -> bool:
+    markers = (
+        "sk-",
+        "sk-proj-",
+        "OPENAI_API_KEY=",
+        "ANTHROPIC_API_KEY=",
+        "GEMINI_API_KEY=",
+        "api_key:",
+        "apiKey",
+    )
+    return any(marker in text for marker in markers)
+
+
+def proposal_adapter_issue(
+    *,
+    code: str,
+    severity: str,
+    detail: str,
+    ref: str | None = None,
+) -> ProposalAdapterCheckIssue:
+    return ProposalAdapterCheckIssue(
+        code=code,
+        severity=severity,
+        detail=detail,
+        ref=ref,
+    )
+
+
+def build_proposal_adapter_check(
+    *,
+    project_id: str,
+    request: ProposalRequestPacket,
+    request_ref: str,
+    request_path: Path,
+    checked_paths: list[tuple[str, Path]],
+) -> ProposalAdapterCheck:
+    issues: list[ProposalAdapterCheckIssue] = [
+        proposal_adapter_issue(
+            code="model_execution_closed_current_gate",
+            severity="warning",
+            detail="current gate prepares adapter inputs but does not execute model calls",
+        )
+    ]
+    if request.status == ProposalRequestStatus.blocked:
+        issues.append(
+            proposal_adapter_issue(
+                code="proposal_request_blocked",
+                severity="error",
+                detail="proposal request is blocked by text-model gate reasons",
+                ref=request_ref,
+            )
+        )
+    for ref, path in checked_paths:
+        if path.exists() and contains_plaintext_secret(path.read_text(encoding="utf-8")):
+            issues.append(
+                proposal_adapter_issue(
+                    code="plaintext_secret_material_detected",
+                    severity="error",
+                    detail="checked project artifact appears to contain plaintext secret material",
+                    ref=ref,
+                )
+            )
+    status = (
+        ProposalAdapterCheckStatus.ready_for_future_adapter
+        if request.status == ProposalRequestStatus.ready
+        and not any(issue.severity == "error" for issue in issues)
+        else ProposalAdapterCheckStatus.blocked
+    )
+    return ProposalAdapterCheck(
+        check_id=stable_adapter_check_id(project_id, request.request_fingerprint),
+        project_id=project_id,
+        status=status,
+        provider="unconfigured",
+        provider_mode="dry_run_contract_only",
+        request_ref=request_ref,
+        request_status=request.status.value,
+        request_fingerprint=request.request_fingerprint,
+        target_schema_ref=request.target_schema_ref,
+        secret_policy="future adapters must use environment, keychain, or encrypted secret flow; plaintext project files are rejected",
+        allowed_secret_sources=[
+            "environment_variable_name_only",
+            "os_keychain_reference",
+            "encrypted_secret_reference",
+        ],
+        checked_refs=[ref for ref, _path in checked_paths],
+        model_call_performed=False,
+        network_performed=False,
+        issues=issues,
+    )
+
+
+def write_proposal_adapter_check_json(root: Path, check: ProposalAdapterCheck) -> Path:
+    output = root / WORKSPACE_DIR / DATA_DIR / "proposal_adapter_check.json"
+    output.parent.mkdir(parents=True, exist_ok=True)
+    tmp = output.with_suffix(".json.tmp")
+    tmp.write_text(
+        json.dumps(check.model_dump(mode="json"), ensure_ascii=False, indent=2, sort_keys=True)
         + "\n",
         encoding="utf-8",
     )
@@ -3322,7 +3508,21 @@ def propose_workspace(project_path: Path) -> ProjectState:
     )
     request_path = write_proposal_request_json(root, proposal_request)
     request_ref = request_path.relative_to(root).as_posix()
-    output_refs = [context_ref, gate_ref, request_ref]
+    adapter_check = build_proposal_adapter_check(
+        project_id=config.project.id,
+        request=proposal_request,
+        request_ref=request_ref,
+        request_path=request_path,
+        checked_paths=[
+            ("project_config", project_path),
+            (context_ref, context_path),
+            (gate_ref, gate_path),
+            (request_ref, request_path),
+        ],
+    )
+    adapter_check_path = write_proposal_adapter_check_json(root, adapter_check)
+    adapter_check_ref = adapter_check_path.relative_to(root).as_posix()
+    output_refs = [context_ref, gate_ref, request_ref, adapter_check_ref]
     run_id = new_run_id()
     warnings: list[str] = []
     output_dir = root / config.paths.output_dir
@@ -3357,6 +3557,7 @@ def propose_workspace(project_path: Path) -> ProjectState:
                 "proposal_context": context_ref,
                 "text_model_gate": gate_ref,
                 "proposal_request": request_ref,
+                "proposal_adapter_check": adapter_check_ref,
                 "reasons": text_model_gate.reasons,
                 "reason": "text_model_gate_blocked",
             },
@@ -3396,6 +3597,7 @@ def propose_workspace(project_path: Path) -> ProjectState:
             "proposal_context": context_ref,
             "text_model_gate": gate_ref,
             "proposal_request": request_ref,
+            "proposal_adapter_check": adapter_check_ref,
             "reason": "proposal_generation_not_implemented",
         },
     )

@@ -88,7 +88,13 @@ Current local foundation tests cover:
 - committed proposal request packet schema
 - `propose` writing deterministic `proposal_request.json`
 - blocked and ready proposal request statuses without model calls
+- committed proposal adapter check schema
+- `propose` writing deterministic `proposal_adapter_check.json`
+- adapter preflight records `model_call_performed: false` and
+  `network_performed: false`
+- adapter preflight detects plaintext secret material in checked project files
 - status and doctor visibility for malformed proposal request packets
+- status and doctor visibility for malformed proposal adapter check packets
 - `propose` blocking without an approved text-model gate
 - `propose` blocking even when the text-model gate is ready because generation
   remains closed

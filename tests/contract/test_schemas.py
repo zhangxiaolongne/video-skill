@@ -7,6 +7,7 @@ from artist_portrait_editor.models.config import ProjectConfig
 from artist_portrait_editor.models.keyframe import KeyframeRecord
 from artist_portrait_editor.models.model_gate import TextModelGate
 from artist_portrait_editor.models.proposal import ProposalSet
+from artist_portrait_editor.models.proposal_adapter import ProposalAdapterCheck
 from artist_portrait_editor.models.proposal_context import ProposalContext
 from artist_portrait_editor.models.proposal_request import ProposalRequestPacket
 from artist_portrait_editor.models.proposal_validation import ProposalValidationReport
@@ -26,6 +27,7 @@ def test_schema_generation_from_pydantic_models():
     proposal_validation_schema = ProposalValidationReport.model_json_schema()
     text_model_gate_schema = TextModelGate.model_json_schema()
     state_schema = ProjectState.model_json_schema()
+    proposal_adapter_schema = ProposalAdapterCheck.model_json_schema()
     source_schema = SourceRecord.model_json_schema()
     transcript_schema = TranscriptRecord.model_json_schema()
 
@@ -39,6 +41,7 @@ def test_schema_generation_from_pydantic_models():
     assert proposal_validation_schema["title"] == "ProposalValidationReport"
     assert text_model_gate_schema["title"] == "TextModelGate"
     assert state_schema["title"] == "ProjectState"
+    assert proposal_adapter_schema["title"] == "ProposalAdapterCheck"
     assert source_schema["title"] == "SourceRecord"
     assert transcript_schema["title"] == "TranscriptRecord"
     assert "analysis_id" in analysis_schema["properties"]
@@ -51,6 +54,7 @@ def test_schema_generation_from_pydantic_models():
     assert "issues" in proposal_validation_schema["properties"]
     assert "reasons" in text_model_gate_schema["properties"]
     assert "steps" in state_schema["properties"]
+    assert "model_call_performed" in proposal_adapter_schema["properties"]
     assert "source_id" in source_schema["properties"]
     assert "transcript_id" in transcript_schema["properties"]
 
@@ -88,6 +92,11 @@ def test_committed_schemas_match_pydantic_generation():
     committed_state = json.loads(
         (schema_dir / "project_state.schema.json").read_text(encoding="utf-8")
     )
+    committed_proposal_adapter = json.loads(
+        (schema_dir / "proposal_adapter_check.schema.json").read_text(
+            encoding="utf-8"
+        )
+    )
     committed_source = json.loads(
         (schema_dir / "source_record.schema.json").read_text(encoding="utf-8")
     )
@@ -124,6 +133,9 @@ def test_committed_schemas_match_pydantic_generation():
     )
     assert committed_state == json.loads(
         json.dumps(ProjectState.model_json_schema(), sort_keys=True)
+    )
+    assert committed_proposal_adapter == json.loads(
+        json.dumps(ProposalAdapterCheck.model_json_schema(), sort_keys=True)
     )
     assert committed_source == json.loads(
         json.dumps(SourceRecord.model_json_schema(), sort_keys=True)

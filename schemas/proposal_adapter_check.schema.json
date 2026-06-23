@@ -1,0 +1,152 @@
+{
+  "$defs": {
+    "ProposalAdapterCheckIssue": {
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "minLength": 1,
+          "title": "Code",
+          "type": "string"
+        },
+        "detail": {
+          "minLength": 1,
+          "title": "Detail",
+          "type": "string"
+        },
+        "ref": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Ref"
+        },
+        "severity": {
+          "pattern": "^(info|warning|error)$",
+          "title": "Severity",
+          "type": "string"
+        }
+      },
+      "required": [
+        "code",
+        "severity",
+        "detail"
+      ],
+      "title": "ProposalAdapterCheckIssue",
+      "type": "object"
+    },
+    "ProposalAdapterCheckStatus": {
+      "enum": [
+        "blocked",
+        "ready_for_future_adapter"
+      ],
+      "title": "ProposalAdapterCheckStatus",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "allowed_secret_sources": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Allowed Secret Sources",
+      "type": "array"
+    },
+    "check_id": {
+      "minLength": 1,
+      "title": "Check Id",
+      "type": "string"
+    },
+    "checked_refs": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Checked Refs",
+      "type": "array"
+    },
+    "issues": {
+      "items": {
+        "$ref": "#/$defs/ProposalAdapterCheckIssue"
+      },
+      "title": "Issues",
+      "type": "array"
+    },
+    "model_call_performed": {
+      "default": false,
+      "title": "Model Call Performed",
+      "type": "boolean"
+    },
+    "network_performed": {
+      "default": false,
+      "title": "Network Performed",
+      "type": "boolean"
+    },
+    "project_id": {
+      "minLength": 1,
+      "title": "Project Id",
+      "type": "string"
+    },
+    "provider": {
+      "minLength": 1,
+      "title": "Provider",
+      "type": "string"
+    },
+    "provider_mode": {
+      "minLength": 1,
+      "title": "Provider Mode",
+      "type": "string"
+    },
+    "request_fingerprint": {
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "title": "Request Fingerprint",
+      "type": "string"
+    },
+    "request_ref": {
+      "minLength": 1,
+      "title": "Request Ref",
+      "type": "string"
+    },
+    "request_status": {
+      "minLength": 1,
+      "title": "Request Status",
+      "type": "string"
+    },
+    "schema_version": {
+      "default": "0.3",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "secret_policy": {
+      "minLength": 1,
+      "title": "Secret Policy",
+      "type": "string"
+    },
+    "status": {
+      "$ref": "#/$defs/ProposalAdapterCheckStatus"
+    },
+    "target_schema_ref": {
+      "minLength": 1,
+      "title": "Target Schema Ref",
+      "type": "string"
+    }
+  },
+  "required": [
+    "check_id",
+    "project_id",
+    "status",
+    "provider",
+    "provider_mode",
+    "request_ref",
+    "request_status",
+    "request_fingerprint",
+    "target_schema_ref",
+    "secret_policy"
+  ],
+  "title": "ProposalAdapterCheck",
+  "type": "object"
+}

@@ -62,18 +62,20 @@ Local V0 media research foundation for the `artist-portrait-editor` skill.
 - [V0-010d Release Readiness](docs/V0_010D_RELEASE_READINESS.md)
 - [V0-010e Proposal Request Gate](docs/V0_010E_PROPOSAL_REQUEST_GATE.md)
 - [V0-010e Release Readiness](docs/V0_010E_RELEASE_READINESS.md)
+- [V0-010f Proposal Adapter Preflight Gate](docs/V0_010F_PROPOSAL_ADAPTER_PREFLIGHT_GATE.md)
+- [V0-010f Release Readiness](docs/V0_010F_RELEASE_READINESS.md)
 - [Non Goals](docs/NON_GOALS.md)
 
 ## Current Gate
 
-Current V0-010e proposal request gate work allows deterministic project
+Current V0-010f proposal adapter preflight gate work allows deterministic project
 setup, local media scanning, fixed-window clip segmentation, optional
 PySceneDetect video scene segmentation, local-only faster-whisper transcription
 when available, ffmpeg midpoint keyframe extraction for video clips,
 source/clip/transcript/keyframe/analysis ledger operations, rebuildable
 keyframe cache, analysis-led material maps, deterministic proposal context
 packets, text-model gate packets, deterministic proposal request packets,
-proposal contract validation, deterministic proposal review of existing
+proposal adapter preflight packets, proposal contract validation, deterministic proposal review of existing
 proposals, and read-only/reporting outputs:
 
 ```text
@@ -95,6 +97,7 @@ project.yaml
 -> proposal_context.json from local ledgers
 -> text_model_gate.json from project policy and detected capabilities
 -> proposal_request.json for future model adapter input
+-> proposal_adapter_check.json for provider/secret/model-call preflight
 -> proposal readiness gate without fake proposal generation
 -> proposal_validation.json and proposal_review.md for existing proposals
 -> minimal project risk report from sources.jsonl
