@@ -34,7 +34,7 @@ When a user requirement changes long-term product behavior, update both files:
 - Canonical skill name: `artist-portrait-editor`
 - Canonical install directory: `artist-portrait-editor`
 - Distribution repository: `video-skill`
-- Current local gate: V0-010f proposal adapter preflight gate only
+- Current local gate: V0-010g proposal provider registry gate only
 
 ## Completed Local Versions
 
@@ -127,6 +127,15 @@ When a user requirement changes long-term product behavior, update both files:
   `.artist-portrait/data/proposal_adapter_check.json` after proposal request.
 - V0-010r: adapter preflight records no model call, no network access, allowed
   future secret sources, and plaintext secret leakage issues.
+- V0-010s: `ProposalProviderRegistry` schema and committed JSON Schema.
+- V0-010t: blocked `propose` now writes deterministic
+  `.artist-portrait/data/proposal_provider_registry.json` with the local
+  `local_mock` provider and generation closed.
+- V0-010u: `ProposalMockAdapterHandshake` schema and committed JSON Schema.
+- V0-010v: blocked `propose` now writes deterministic
+  `.artist-portrait/data/proposal_mock_adapter_handshake.json` to validate the
+  future response contract while recording no model call, no network access,
+  and no generated proposal content.
 
 ## Current Hard Boundaries
 
@@ -162,10 +171,10 @@ Tactical rule for future batches:
 - use third-party outputs as evidence with provenance, not unreviewed truth
 - keep config gates, failure modes, and review rules around every non-local or
   model-backed capability
-- keep current V0-010f bounded to existing local ledgers plus proposal
-  readiness, proposal request, adapter preflight, and proposal validation
-  checks; keyframes are
-  visual evidence references, not visual classification
+- keep current V0-010g bounded to existing local ledgers plus proposal
+  readiness, proposal request, adapter preflight, provider registry, mock
+  adapter handshake, and proposal validation checks; keyframes are visual
+  evidence references, not visual classification
 
 ### BGM Is Part Of Editing Logic
 
@@ -198,12 +207,13 @@ carried into the future proposal, timeline, review, and preview gates.
 
 ## Next Likely Batch
 
-Next action should plan the actual model-adapter execution gate without
-confusing it with V0-010f adapter preflight. The big-version direction is
+Next action should plan the controlled provider execution envelope without
+confusing it with actual proposal generation. The big-version direction is
 evidence-grounded creative proposals that account for BGM strategy, target
 output, text, pacing, transitions, and evidence traceability. The next small
-batch should add a controlled local mock adapter or explicit provider registry
-that still performs no real remote call until secret handling and user approval
-are tested. Do not open timeline, BGM fitting, preview, network, OpenCV,
+batch should define a local dry-run response envelope and validation path for a
+future provider result, still with no real API key, no remote call, no network,
+and no fake proposal content until explicit model execution and generation
+gates are opened. Do not open timeline, BGM fitting, preview, network, OpenCV,
 vision, image generation/editing, API-key setup, or model-free template
 proposal gates by accident.

@@ -1,0 +1,137 @@
+{
+  "$defs": {
+    "ProposalProviderRecord": {
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "title": "Enabled",
+          "type": "boolean"
+        },
+        "execution_mode": {
+          "minLength": 1,
+          "title": "Execution Mode",
+          "type": "string"
+        },
+        "notes": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Notes",
+          "type": "array"
+        },
+        "provider_id": {
+          "minLength": 1,
+          "title": "Provider Id",
+          "type": "string"
+        },
+        "provider_type": {
+          "minLength": 1,
+          "title": "Provider Type",
+          "type": "string"
+        },
+        "requires_network": {
+          "title": "Requires Network",
+          "type": "boolean"
+        },
+        "secret_source": {
+          "minLength": 1,
+          "title": "Secret Source",
+          "type": "string"
+        },
+        "supports_structured_output": {
+          "title": "Supports Structured Output",
+          "type": "boolean"
+        },
+        "target_schema_ref": {
+          "minLength": 1,
+          "title": "Target Schema Ref",
+          "type": "string"
+        }
+      },
+      "required": [
+        "provider_id",
+        "provider_type",
+        "enabled",
+        "execution_mode",
+        "secret_source",
+        "requires_network",
+        "supports_structured_output",
+        "target_schema_ref"
+      ],
+      "title": "ProposalProviderRecord",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "adapter_check_ref": {
+      "minLength": 1,
+      "title": "Adapter Check Ref",
+      "type": "string"
+    },
+    "generation_open": {
+      "default": false,
+      "title": "Generation Open",
+      "type": "boolean"
+    },
+    "model_call_performed": {
+      "default": false,
+      "title": "Model Call Performed",
+      "type": "boolean"
+    },
+    "network_performed": {
+      "default": false,
+      "title": "Network Performed",
+      "type": "boolean"
+    },
+    "project_id": {
+      "minLength": 1,
+      "title": "Project Id",
+      "type": "string"
+    },
+    "providers": {
+      "items": {
+        "$ref": "#/$defs/ProposalProviderRecord"
+      },
+      "minItems": 1,
+      "title": "Providers",
+      "type": "array"
+    },
+    "registry_fingerprint": {
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "title": "Registry Fingerprint",
+      "type": "string"
+    },
+    "registry_id": {
+      "minLength": 1,
+      "title": "Registry Id",
+      "type": "string"
+    },
+    "request_ref": {
+      "minLength": 1,
+      "title": "Request Ref",
+      "type": "string"
+    },
+    "schema_version": {
+      "default": "0.3",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "selected_provider_id": {
+      "minLength": 1,
+      "title": "Selected Provider Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "registry_id",
+    "project_id",
+    "request_ref",
+    "adapter_check_ref",
+    "registry_fingerprint",
+    "selected_provider_id",
+    "providers"
+  ],
+  "title": "ProposalProviderRegistry",
+  "type": "object"
+}

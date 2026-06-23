@@ -93,8 +93,18 @@ Current local foundation tests cover:
 - adapter preflight records `model_call_performed: false` and
   `network_performed: false`
 - adapter preflight detects plaintext secret material in checked project files
+- committed proposal provider registry schema
+- `propose` writing deterministic `proposal_provider_registry.json`
+- provider registry records `local_mock`, `generation_open: false`,
+  `model_call_performed: false`, and `network_performed: false`
+- committed proposal mock adapter handshake schema
+- `propose` writing deterministic `proposal_mock_adapter_handshake.json`
+- mock adapter handshake validates the future response contract without model
+  calls, network access, or generated proposal content
 - status and doctor visibility for malformed proposal request packets
 - status and doctor visibility for malformed proposal adapter check packets
+- status and doctor visibility for malformed proposal provider registries
+- status and doctor visibility for malformed proposal mock adapter handshakes
 - `propose` blocking without an approved text-model gate
 - `propose` blocking even when the text-model gate is ready because generation
   remains closed

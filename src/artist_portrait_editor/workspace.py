@@ -44,6 +44,10 @@ from artist_portrait_editor.models.proposal_adapter import (
     ProposalAdapterCheck,
     ProposalAdapterCheckIssue,
     ProposalAdapterCheckStatus,
+    ProposalMockAdapterHandshake,
+    ProposalMockAdapterHandshakeStatus,
+    ProposalProviderRecord,
+    ProposalProviderRegistry,
 )
 from artist_portrait_editor.models.proposal_context import (
     ProposalAnalysisContext,
@@ -433,6 +437,22 @@ def render_status_panel(payload: dict) -> str:
         lines.append("proposal_adapter_check: invalid")
     else:
         lines.append("proposal_adapter_check: missing")
+    provider_registry = summaries.get("proposal_provider_registry") or {}
+    if provider_registry.get("exists") and provider_registry.get("valid", True):
+        lines.append(
+            f"proposal_provider_registry: {provider_registry.get('selected_provider_id')}"
+        )
+    elif provider_registry.get("exists"):
+        lines.append("proposal_provider_registry: invalid")
+    else:
+        lines.append("proposal_provider_registry: missing")
+    mock_handshake = summaries.get("proposal_mock_adapter_handshake") or {}
+    if mock_handshake.get("exists") and mock_handshake.get("valid", True):
+        lines.append(f"proposal_mock_adapter_handshake: {mock_handshake.get('status')}")
+    elif mock_handshake.get("exists"):
+        lines.append("proposal_mock_adapter_handshake: invalid")
+    else:
+        lines.append("proposal_mock_adapter_handshake: missing")
     proposals = summaries.get("proposals") or {}
     if proposals.get("exists") and proposals.get("valid", True):
         lines.append(f"proposals: {proposals.get('count', 0)}")
@@ -674,6 +694,12 @@ def doctor_project_payload(project_path: Path) -> dict:
     proposal_adapter_check = proposal_adapter_check_summary(
         root / WORKSPACE_DIR / DATA_DIR / "proposal_adapter_check.json"
     )
+    provider_registry = proposal_provider_registry_summary(
+        root / WORKSPACE_DIR / DATA_DIR / "proposal_provider_registry.json"
+    )
+    mock_handshake = proposal_mock_adapter_handshake_summary(
+        root / WORKSPACE_DIR / DATA_DIR / "proposal_mock_adapter_handshake.json"
+    )
     if (
         sources.get("valid") is True
         and proposal_context.get("valid") is False
@@ -737,6 +763,44 @@ def doctor_project_payload(project_path: Path) -> dict:
                 ),
                 next_action=(
                     f"fix {check_path.relative_to(root).as_posix()} or rerun "
+                    f"artist-portrait propose --project {project_path}"
+                ),
+            )
+        )
+    if (
+        sources.get("valid") is True
+        and provider_registry.get("valid") is False
+    ):
+        registry_path = root / WORKSPACE_DIR / DATA_DIR / "proposal_provider_registry.json"
+        issues.append(
+            workspace_issue(
+                code="proposal_provider_registry_invalid",
+                severity="error",
+                detail=str(
+                    provider_registry.get("error")
+                    or "proposal provider registry is invalid"
+                ),
+                next_action=(
+                    f"fix {registry_path.relative_to(root).as_posix()} or rerun "
+                    f"artist-portrait propose --project {project_path}"
+                ),
+            )
+        )
+    if (
+        sources.get("valid") is True
+        and mock_handshake.get("valid") is False
+    ):
+        handshake_path = root / WORKSPACE_DIR / DATA_DIR / "proposal_mock_adapter_handshake.json"
+        issues.append(
+            workspace_issue(
+                code="proposal_mock_adapter_handshake_invalid",
+                severity="error",
+                detail=str(
+                    mock_handshake.get("error")
+                    or "proposal mock adapter handshake is invalid"
+                ),
+                next_action=(
+                    f"fix {handshake_path.relative_to(root).as_posix()} or rerun "
                     f"artist-portrait propose --project {project_path}"
                 ),
             )
@@ -894,6 +958,14 @@ def artifact_statuses(root: Path) -> dict[str, dict]:
         / WORKSPACE_DIR
         / DATA_DIR
         / "proposal_adapter_check.json",
+        "proposal_provider_registry": root
+        / WORKSPACE_DIR
+        / DATA_DIR
+        / "proposal_provider_registry.json",
+        "proposal_mock_adapter_handshake": root
+        / WORKSPACE_DIR
+        / DATA_DIR
+        / "proposal_mock_adapter_handshake.json",
         "proposals_json": root / WORKSPACE_DIR / DATA_DIR / "proposals.json",
         "proposal_validation": root / WORKSPACE_DIR / DATA_DIR / "proposal_validation.json",
         "run_report": root / "output" / "run_report.md",
@@ -974,6 +1046,12 @@ def status_summaries(root: Path) -> dict:
     proposal_adapter_check_path = (
         root / WORKSPACE_DIR / DATA_DIR / "proposal_adapter_check.json"
     )
+    proposal_provider_registry_path = (
+        root / WORKSPACE_DIR / DATA_DIR / "proposal_provider_registry.json"
+    )
+    proposal_mock_adapter_handshake_path = (
+        root / WORKSPACE_DIR / DATA_DIR / "proposal_mock_adapter_handshake.json"
+    )
     proposal_validation_path = root / WORKSPACE_DIR / DATA_DIR / "proposal_validation.json"
     return {
         "sources": source_summary(sources_path),
@@ -990,6 +1068,12 @@ def status_summaries(root: Path) -> dict:
         "proposal_request": proposal_request_summary(proposal_request_path),
         "proposal_adapter_check": proposal_adapter_check_summary(
             proposal_adapter_check_path
+        ),
+        "proposal_provider_registry": proposal_provider_registry_summary(
+            proposal_provider_registry_path
+        ),
+        "proposal_mock_adapter_handshake": proposal_mock_adapter_handshake_summary(
+            proposal_mock_adapter_handshake_path
         ),
         "proposals": proposal_summary(proposals_path),
         "proposal_validation": proposal_validation_summary(proposal_validation_path),
@@ -1221,6 +1305,26 @@ def read_proposal_adapter_check_json(path: Path) -> ProposalAdapterCheck:
         ) from exc
 
 
+def read_proposal_provider_registry_json(path: Path) -> ProposalProviderRegistry:
+    try:
+        return ProposalProviderRegistry.model_validate_json(path.read_text(encoding="utf-8"))
+    except ValueError as exc:
+        raise WorkspacePrerequisiteError(
+            f"invalid ProposalProviderRegistry JSON: {exc}"
+        ) from exc
+
+
+def read_proposal_mock_adapter_handshake_json(path: Path) -> ProposalMockAdapterHandshake:
+    try:
+        return ProposalMockAdapterHandshake.model_validate_json(
+            path.read_text(encoding="utf-8")
+        )
+    except ValueError as exc:
+        raise WorkspacePrerequisiteError(
+            f"invalid ProposalMockAdapterHandshake JSON: {exc}"
+        ) from exc
+
+
 def read_proposal_validation_json(path: Path) -> ProposalValidationReport:
     try:
         return ProposalValidationReport.model_validate_json(path.read_text(encoding="utf-8"))
@@ -1424,6 +1528,53 @@ def proposal_adapter_check_summary(path: Path) -> dict:
     }
 
 
+def proposal_provider_registry_summary(path: Path) -> dict:
+    if not path.exists():
+        return {"exists": False}
+    try:
+        registry = read_proposal_provider_registry_json(path)
+    except Exception as exc:
+        return {
+            "exists": True,
+            "valid": False,
+            "error": str(exc),
+        }
+    return {
+        "exists": True,
+        "valid": True,
+        "registry_id": registry.registry_id,
+        "selected_provider_id": registry.selected_provider_id,
+        "provider_count": len(registry.providers),
+        "generation_open": registry.generation_open,
+        "model_call_performed": registry.model_call_performed,
+        "network_performed": registry.network_performed,
+    }
+
+
+def proposal_mock_adapter_handshake_summary(path: Path) -> dict:
+    if not path.exists():
+        return {"exists": False}
+    try:
+        handshake = read_proposal_mock_adapter_handshake_json(path)
+    except Exception as exc:
+        return {
+            "exists": True,
+            "valid": False,
+            "error": str(exc),
+        }
+    return {
+        "exists": True,
+        "valid": True,
+        "handshake_id": handshake.handshake_id,
+        "status": handshake.status.value,
+        "provider_id": handshake.provider_id,
+        "issue_count": len(handshake.issues),
+        "model_call_performed": handshake.model_call_performed,
+        "network_performed": handshake.network_performed,
+        "proposal_content_generated": handshake.proposal_content_generated,
+    }
+
+
 def proposal_validation_summary(path: Path) -> dict:
     if not path.exists():
         return {"exists": False}
@@ -1465,6 +1616,16 @@ def stable_request_id(project_id: str, request_fingerprint: str) -> str:
 def stable_adapter_check_id(project_id: str, request_fingerprint: str) -> str:
     payload = f"{project_id}:{request_fingerprint}"
     return "pachk_" + hashlib.sha256(payload.encode("utf-8")).hexdigest()[:24]
+
+
+def stable_provider_registry_id(project_id: str, registry_fingerprint: str) -> str:
+    payload = f"{project_id}:{registry_fingerprint}"
+    return "preg_" + hashlib.sha256(payload.encode("utf-8")).hexdigest()[:24]
+
+
+def stable_mock_handshake_id(project_id: str, handshake_fingerprint: str) -> str:
+    payload = f"{project_id}:{handshake_fingerprint}"
+    return "pmock_" + hashlib.sha256(payload.encode("utf-8")).hexdigest()[:24]
 
 
 def stable_proposal_validation_report_id(
@@ -1836,6 +1997,147 @@ def write_proposal_adapter_check_json(root: Path, check: ProposalAdapterCheck) -
     tmp = output.with_suffix(".json.tmp")
     tmp.write_text(
         json.dumps(check.model_dump(mode="json"), ensure_ascii=False, indent=2, sort_keys=True)
+        + "\n",
+        encoding="utf-8",
+    )
+    tmp.replace(output)
+    return output
+
+
+def build_proposal_provider_registry(
+    *,
+    project_id: str,
+    request_ref: str,
+    adapter_check_ref: str,
+    request: ProposalRequestPacket,
+    registry_fingerprint: str,
+) -> ProposalProviderRegistry:
+    provider = ProposalProviderRecord(
+        provider_id="local_mock",
+        provider_type="local_mock_adapter",
+        enabled=True,
+        execution_mode="dry_run_mock_no_generation",
+        secret_source="none_required",
+        requires_network=False,
+        supports_structured_output=True,
+        target_schema_ref=request.target_schema_ref,
+        notes=[
+            "handshake-only provider for contract validation",
+            "does not call a model",
+            "does not generate proposals",
+        ],
+    )
+    return ProposalProviderRegistry(
+        registry_id=stable_provider_registry_id(project_id, registry_fingerprint),
+        project_id=project_id,
+        request_ref=request_ref,
+        adapter_check_ref=adapter_check_ref,
+        registry_fingerprint=registry_fingerprint,
+        selected_provider_id=provider.provider_id,
+        providers=[provider],
+        generation_open=False,
+        model_call_performed=False,
+        network_performed=False,
+    )
+
+
+def write_proposal_provider_registry_json(
+    root: Path,
+    registry: ProposalProviderRegistry,
+) -> Path:
+    output = root / WORKSPACE_DIR / DATA_DIR / "proposal_provider_registry.json"
+    output.parent.mkdir(parents=True, exist_ok=True)
+    tmp = output.with_suffix(".json.tmp")
+    tmp.write_text(
+        json.dumps(registry.model_dump(mode="json"), ensure_ascii=False, indent=2, sort_keys=True)
+        + "\n",
+        encoding="utf-8",
+    )
+    tmp.replace(output)
+    return output
+
+
+def build_proposal_mock_adapter_handshake(
+    *,
+    project_id: str,
+    request: ProposalRequestPacket,
+    request_ref: str,
+    adapter_check: ProposalAdapterCheck,
+    adapter_check_ref: str,
+    registry: ProposalProviderRegistry,
+    registry_ref: str,
+    handshake_fingerprint: str,
+) -> ProposalMockAdapterHandshake:
+    issues: list[ProposalAdapterCheckIssue] = [
+        proposal_adapter_issue(
+            code="proposal_generation_closed_current_gate",
+            severity="warning",
+            detail="mock adapter handshake is allowed, but proposal generation remains closed",
+        )
+    ]
+    provider = next(
+        item
+        for item in registry.providers
+        if item.provider_id == registry.selected_provider_id
+    )
+    if request.status == ProposalRequestStatus.blocked:
+        issues.append(
+            proposal_adapter_issue(
+                code="proposal_request_blocked",
+                severity="error",
+                detail="mock adapter cannot proceed because proposal request is blocked",
+                ref=request_ref,
+            )
+        )
+    if adapter_check.status == ProposalAdapterCheckStatus.blocked:
+        issues.append(
+            proposal_adapter_issue(
+                code="adapter_preflight_blocked",
+                severity="error",
+                detail="mock adapter cannot proceed because adapter preflight is blocked",
+                ref=adapter_check_ref,
+            )
+        )
+    if registry.generation_open:
+        issues.append(
+            proposal_adapter_issue(
+                code="generation_unexpectedly_open",
+                severity="error",
+                detail="mock adapter handshake requires generation_open to remain false",
+                ref=registry_ref,
+            )
+        )
+    status = (
+        ProposalMockAdapterHandshakeStatus.ready_for_future_execution
+        if not any(issue.severity == "error" for issue in issues)
+        else ProposalMockAdapterHandshakeStatus.blocked
+    )
+    return ProposalMockAdapterHandshake(
+        handshake_id=stable_mock_handshake_id(project_id, handshake_fingerprint),
+        project_id=project_id,
+        status=status,
+        provider_id=provider.provider_id,
+        request_ref=request_ref,
+        registry_ref=registry_ref,
+        adapter_check_ref=adapter_check_ref,
+        handshake_fingerprint=handshake_fingerprint,
+        response_contract_ref=request.target_schema_ref,
+        model_call_performed=False,
+        network_performed=False,
+        proposal_content_generated=False,
+        issues=issues,
+    )
+
+
+def write_proposal_mock_adapter_handshake_json(
+    root: Path,
+    handshake: ProposalMockAdapterHandshake,
+) -> Path:
+    output = root / WORKSPACE_DIR / DATA_DIR / "proposal_mock_adapter_handshake.json"
+    output.parent.mkdir(parents=True, exist_ok=True)
+    tmp = output.with_suffix(".json.tmp")
+    tmp.write_text(
+        json.dumps(handshake.model_dump(mode="json"), ensure_ascii=False, indent=2, sort_keys=True)
         + "\n",
         encoding="utf-8",
     )
@@ -3522,7 +3824,48 @@ def propose_workspace(project_path: Path) -> ProjectState:
     )
     adapter_check_path = write_proposal_adapter_check_json(root, adapter_check)
     adapter_check_ref = adapter_check_path.relative_to(root).as_posix()
-    output_refs = [context_ref, gate_ref, request_ref, adapter_check_ref]
+    registry_fingerprint = fingerprint_inputs(
+        [
+            ("proposal_request", request_path),
+            ("proposal_adapter_check", adapter_check_path),
+        ]
+    )
+    provider_registry = build_proposal_provider_registry(
+        project_id=config.project.id,
+        request_ref=request_ref,
+        adapter_check_ref=adapter_check_ref,
+        request=proposal_request,
+        registry_fingerprint=registry_fingerprint,
+    )
+    registry_path = write_proposal_provider_registry_json(root, provider_registry)
+    registry_ref = registry_path.relative_to(root).as_posix()
+    handshake_fingerprint = fingerprint_inputs(
+        [
+            ("proposal_request", request_path),
+            ("proposal_adapter_check", adapter_check_path),
+            ("proposal_provider_registry", registry_path),
+        ]
+    )
+    mock_handshake = build_proposal_mock_adapter_handshake(
+        project_id=config.project.id,
+        request=proposal_request,
+        request_ref=request_ref,
+        adapter_check=adapter_check,
+        adapter_check_ref=adapter_check_ref,
+        registry=provider_registry,
+        registry_ref=registry_ref,
+        handshake_fingerprint=handshake_fingerprint,
+    )
+    handshake_path = write_proposal_mock_adapter_handshake_json(root, mock_handshake)
+    handshake_ref = handshake_path.relative_to(root).as_posix()
+    output_refs = [
+        context_ref,
+        gate_ref,
+        request_ref,
+        adapter_check_ref,
+        registry_ref,
+        handshake_ref,
+    ]
     run_id = new_run_id()
     warnings: list[str] = []
     output_dir = root / config.paths.output_dir
@@ -3558,6 +3901,8 @@ def propose_workspace(project_path: Path) -> ProjectState:
                 "text_model_gate": gate_ref,
                 "proposal_request": request_ref,
                 "proposal_adapter_check": adapter_check_ref,
+                "proposal_provider_registry": registry_ref,
+                "proposal_mock_adapter_handshake": handshake_ref,
                 "reasons": text_model_gate.reasons,
                 "reason": "text_model_gate_blocked",
             },
@@ -3598,6 +3943,8 @@ def propose_workspace(project_path: Path) -> ProjectState:
             "text_model_gate": gate_ref,
             "proposal_request": request_ref,
             "proposal_adapter_check": adapter_check_ref,
+            "proposal_provider_registry": registry_ref,
+            "proposal_mock_adapter_handshake": handshake_ref,
             "reason": "proposal_generation_not_implemented",
         },
     )

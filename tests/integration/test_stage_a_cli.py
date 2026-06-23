@@ -1495,6 +1495,8 @@ def test_propose_without_text_model_blocks_without_fake_outputs(
         ".artist-portrait/data/text_model_gate.json",
         ".artist-portrait/data/proposal_request.json",
         ".artist-portrait/data/proposal_adapter_check.json",
+        ".artist-portrait/data/proposal_provider_registry.json",
+        ".artist-portrait/data/proposal_mock_adapter_handshake.json",
     ]
     assert "text_model_gate_blocked" in payload["warnings"][0]
     assert "remote_text_model_not_allowed" in payload["warnings"][0]
@@ -1549,6 +1551,26 @@ def test_propose_without_text_model_blocks_without_fake_outputs(
     assert "plaintext_secret_material_detected" not in {
         issue["code"] for issue in adapter_payload["issues"]
     }
+    registry_path = (
+        tmp_path / ".artist-portrait" / "data" / "proposal_provider_registry.json"
+    )
+    assert registry_path.exists()
+    registry_payload = json.loads(registry_path.read_text(encoding="utf-8"))
+    assert registry_payload["selected_provider_id"] == "local_mock"
+    assert registry_payload["generation_open"] is False
+    assert registry_payload["model_call_performed"] is False
+    assert registry_payload["network_performed"] is False
+    assert registry_payload["providers"][0]["execution_mode"] == "dry_run_mock_no_generation"
+    handshake_path = (
+        tmp_path / ".artist-portrait" / "data" / "proposal_mock_adapter_handshake.json"
+    )
+    assert handshake_path.exists()
+    handshake_payload = json.loads(handshake_path.read_text(encoding="utf-8"))
+    assert handshake_payload["status"] == "blocked"
+    assert handshake_payload["provider_id"] == "local_mock"
+    assert handshake_payload["model_call_performed"] is False
+    assert handshake_payload["network_performed"] is False
+    assert handshake_payload["proposal_content_generated"] is False
     assert not (tmp_path / ".artist-portrait" / "data" / "proposals.json").exists()
     assert not (tmp_path / "output" / "proposals.md").exists()
     state_payload = json.loads(
@@ -1560,6 +1582,8 @@ def test_propose_without_text_model_blocks_without_fake_outputs(
         ".artist-portrait/data/text_model_gate.json",
         ".artist-portrait/data/proposal_request.json",
         ".artist-portrait/data/proposal_adapter_check.json",
+        ".artist-portrait/data/proposal_provider_registry.json",
+        ".artist-portrait/data/proposal_mock_adapter_handshake.json",
     ]
 
 
@@ -1618,6 +1642,22 @@ def test_propose_with_ready_text_model_gate_still_does_not_generate(
     assert adapter_payload["status"] == "ready_for_future_adapter"
     assert adapter_payload["model_call_performed"] is False
     assert adapter_payload["network_performed"] is False
+    registry_payload = json.loads(
+        (
+            tmp_path / ".artist-portrait" / "data" / "proposal_provider_registry.json"
+        ).read_text(encoding="utf-8")
+    )
+    assert registry_payload["selected_provider_id"] == "local_mock"
+    assert registry_payload["generation_open"] is False
+    handshake_payload = json.loads(
+        (
+            tmp_path / ".artist-portrait" / "data" / "proposal_mock_adapter_handshake.json"
+        ).read_text(encoding="utf-8")
+    )
+    assert handshake_payload["status"] == "ready_for_future_execution"
+    assert handshake_payload["model_call_performed"] is False
+    assert handshake_payload["network_performed"] is False
+    assert handshake_payload["proposal_content_generated"] is False
     assert not (tmp_path / ".artist-portrait" / "data" / "proposals.json").exists()
     assert not (tmp_path / "output" / "proposals.md").exists()
 
@@ -1777,6 +1817,74 @@ def test_invalid_proposal_adapter_check_status_and_doctor(tmp_path, capsys):
     assert code == 1
     assert any(
         issue["code"] == "proposal_adapter_check_invalid"
+        for issue in doctor_payload["issues"]
+    )
+
+
+def test_invalid_proposal_provider_registry_status_and_doctor(tmp_path, capsys):
+    project_path = tmp_path / "project.yaml"
+    project_path.write_text(
+        project_fixture_with_scene_detection("off"),
+        encoding="utf-8",
+    )
+    assert main(["init", "--project", str(project_path), "--quiet"]) in (0, 1)
+    write_clean_source_ledger(tmp_path)
+    registry_path = tmp_path / ".artist-portrait" / "data" / "proposal_provider_registry.json"
+    registry_path.write_text('{"registry_id": "missing-required-fields"}\n', encoding="utf-8")
+
+    code = main(["status", "--project", str(project_path), "--json"])
+    captured = capsys.readouterr()
+    status_payload = json.loads(captured.out)
+
+    assert code == 0
+    assert status_payload["summaries"]["proposal_provider_registry"]["valid"] is False
+    assert (
+        "invalid ProposalProviderRegistry JSON"
+        in status_payload["summaries"]["proposal_provider_registry"]["error"]
+    )
+
+    code = main(["doctor", "--project", str(project_path), "--json"])
+    captured = capsys.readouterr()
+    doctor_payload = json.loads(captured.out)
+
+    assert code == 1
+    assert any(
+        issue["code"] == "proposal_provider_registry_invalid"
+        for issue in doctor_payload["issues"]
+    )
+
+
+def test_invalid_proposal_mock_adapter_handshake_status_and_doctor(tmp_path, capsys):
+    project_path = tmp_path / "project.yaml"
+    project_path.write_text(
+        project_fixture_with_scene_detection("off"),
+        encoding="utf-8",
+    )
+    assert main(["init", "--project", str(project_path), "--quiet"]) in (0, 1)
+    write_clean_source_ledger(tmp_path)
+    handshake_path = (
+        tmp_path / ".artist-portrait" / "data" / "proposal_mock_adapter_handshake.json"
+    )
+    handshake_path.write_text('{"handshake_id": "missing-required-fields"}\n', encoding="utf-8")
+
+    code = main(["status", "--project", str(project_path), "--json"])
+    captured = capsys.readouterr()
+    status_payload = json.loads(captured.out)
+
+    assert code == 0
+    assert status_payload["summaries"]["proposal_mock_adapter_handshake"]["valid"] is False
+    assert (
+        "invalid ProposalMockAdapterHandshake JSON"
+        in status_payload["summaries"]["proposal_mock_adapter_handshake"]["error"]
+    )
+
+    code = main(["doctor", "--project", str(project_path), "--json"])
+    captured = capsys.readouterr()
+    doctor_payload = json.loads(captured.out)
+
+    assert code == 1
+    assert any(
+        issue["code"] == "proposal_mock_adapter_handshake_invalid"
         for issue in doctor_payload["issues"]
     )
 

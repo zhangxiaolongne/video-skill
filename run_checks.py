@@ -60,7 +60,9 @@ def check_schema_drift() -> None:
             "project_config.schema.json",
             "project_state.schema.json",
             "proposal_adapter_check.schema.json",
+            "proposal_mock_adapter_handshake.schema.json",
             "proposal_context.schema.json",
+            "proposal_provider_registry.schema.json",
             "proposal_request_packet.schema.json",
             "proposal_validation_report.schema.json",
             "proposal_set.schema.json",
@@ -122,30 +124,30 @@ def check_gate_consistency() -> None:
         "master": ROOT / "artist_portrait_editor_revision5_optimized.md",
         "README.md": ROOT / "README.md",
         "DEVELOPMENT_PROGRESS.md": ROOT / "docs" / "DEVELOPMENT_PROGRESS.md",
-        "V0_010F_PROPOSAL_ADAPTER_PREFLIGHT_GATE.md": ROOT
+        "V0_010G_PROPOSAL_PROVIDER_REGISTRY_GATE.md": ROOT
         / "docs"
-        / "V0_010F_PROPOSAL_ADAPTER_PREFLIGHT_GATE.md",
+        / "V0_010G_PROPOSAL_PROVIDER_REGISTRY_GATE.md",
     }
     content = {name: path.read_text(encoding="utf-8") for name, path in docs.items()}
     if (
-        "Current gate: V0-010f proposal adapter preflight gate only."
+        "Current gate: V0-010g proposal provider registry gate only."
         not in content["AGENTS.md"]
     ):
-        raise SystemExit("AGENTS.md current gate is not V0-010f adapter preflight")
-    if "V0-010f 提案适配器预检闸门" not in content["master"]:
-        raise SystemExit("master document current gate is not V0-010f adapter preflight")
-    if "Current V0-010f proposal adapter preflight gate work" not in content["README.md"]:
-        raise SystemExit("README current gate is not V0-010f adapter preflight")
+        raise SystemExit("AGENTS.md current gate is not V0-010g provider registry")
+    if "V0-010g 提案 provider registry / mock adapter handshake 闸门" not in content["master"]:
+        raise SystemExit("master document current gate is not V0-010g provider registry")
+    if "Current V0-010g proposal provider registry gate work" not in content["README.md"]:
+        raise SystemExit("README current gate is not V0-010g provider registry")
     if (
-        "Current local gate: V0-010f proposal adapter preflight gate only"
+        "Current local gate: V0-010g proposal provider registry gate only"
         not in content["DEVELOPMENT_PROGRESS.md"]
     ):
         raise SystemExit("development progress current gate is stale")
     if (
-        "V0-010f opens deterministic proposal adapter preflight"
-        not in content["V0_010F_PROPOSAL_ADAPTER_PREFLIGHT_GATE.md"]
+        "V0-010g opens deterministic proposal provider registry"
+        not in content["V0_010G_PROPOSAL_PROVIDER_REGISTRY_GATE.md"]
     ):
-        raise SystemExit("V0-010f adapter preflight gate doc is missing active gate")
+        raise SystemExit("V0-010g provider registry gate doc is missing active gate")
 
 
 def write_sine_wav(path: Path, *, seconds: float = 0.25, sample_rate: int = 8000) -> None:
@@ -499,6 +501,10 @@ def check_local_foundation_outputs() -> None:
             raise SystemExit("propose did not report proposal_request output ref")
         if ".artist-portrait/data/proposal_adapter_check.json" not in output_refs:
             raise SystemExit("propose did not report proposal_adapter_check output ref")
+        if ".artist-portrait/data/proposal_provider_registry.json" not in output_refs:
+            raise SystemExit("propose did not report proposal_provider_registry output ref")
+        if ".artist-portrait/data/proposal_mock_adapter_handshake.json" not in output_refs:
+            raise SystemExit("propose did not report proposal_mock_adapter_handshake output ref")
         if "no fake proposals" not in propose_payload.get("error", ""):
             raise SystemExit("propose did not explain fake proposals were not generated")
         context = tmp_path / ".artist-portrait" / "data" / "proposal_context.json"
@@ -506,6 +512,12 @@ def check_local_foundation_outputs() -> None:
         request = tmp_path / ".artist-portrait" / "data" / "proposal_request.json"
         adapter_check = (
             tmp_path / ".artist-portrait" / "data" / "proposal_adapter_check.json"
+        )
+        registry = (
+            tmp_path / ".artist-portrait" / "data" / "proposal_provider_registry.json"
+        )
+        handshake = (
+            tmp_path / ".artist-portrait" / "data" / "proposal_mock_adapter_handshake.json"
         )
         if not context.exists():
             raise SystemExit("blocked propose did not write proposal_context.json")
@@ -515,6 +527,10 @@ def check_local_foundation_outputs() -> None:
             raise SystemExit("blocked propose did not write proposal_request.json")
         if not adapter_check.exists():
             raise SystemExit("blocked propose did not write proposal_adapter_check.json")
+        if not registry.exists():
+            raise SystemExit("blocked propose did not write proposal_provider_registry.json")
+        if not handshake.exists():
+            raise SystemExit("blocked propose did not write proposal_mock_adapter_handshake.json")
         context_payload = json.loads(context.read_text(encoding="utf-8"))
         if not context_payload.get("bgm_requirements"):
             raise SystemExit("proposal_context did not carry BGM requirements")
@@ -531,6 +547,12 @@ def check_local_foundation_outputs() -> None:
             raise SystemExit("proposal_adapter_check reported a model call")
         if adapter_payload.get("network_performed") is not False:
             raise SystemExit("proposal_adapter_check reported network access")
+        registry_payload = json.loads(registry.read_text(encoding="utf-8"))
+        if registry_payload.get("generation_open") is not False:
+            raise SystemExit("proposal_provider_registry opened generation unexpectedly")
+        handshake_payload = json.loads(handshake.read_text(encoding="utf-8"))
+        if handshake_payload.get("proposal_content_generated") is not False:
+            raise SystemExit("proposal_mock_adapter_handshake generated proposal content")
         if (tmp_path / ".artist-portrait" / "data" / "proposals.json").exists():
             raise SystemExit("blocked propose wrote proposals.json")
         if (tmp_path / "output" / "proposals.md").exists():

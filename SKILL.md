@@ -1,6 +1,6 @@
 ---
 name: artist-portrait-editor
-description: Deterministic local workflow for artist portrait video-editing projects. Use when Codex needs to validate config, initialize state, scan media into a source ledger and scan report, segment into a fixed-window or PySceneDetect-gated clip ledger, transcribe through a local faster-whisper transcript ledger, extract keyframe ledger/cache, run evidence-only analysis ledger/report, generate an analysis-led material map, prepare proposal context with a ProposalContext schema, run the blocked propose gate with a TextModelGate schema, ProposalRequestPacket schemas, and ProposalAdapterCheck schema, validate existing ProposalSet schema outputs with a ProposalValidationReport schema, run project/proposal review/doctor, or preserve boundaries before BGM selection, full proposal generation, timeline generation, preview rendering, model calls, image generation/editing, or network search.
+description: Deterministic local workflow for artist portrait video-editing projects. Use when Codex needs to validate config, initialize state, scan media into a source ledger and scan report, segment into a fixed-window or PySceneDetect-gated clip ledger, transcribe through a local faster-whisper transcript ledger, extract keyframe ledger/cache, run evidence-only analysis ledger/report, generate an analysis-led material map, prepare proposal context with a ProposalContext schema, run the blocked propose gate with a TextModelGate schema, ProposalRequestPacket schemas, ProposalAdapterCheck schema, ProposalProviderRegistry schema, and ProposalMockAdapterHandshake schema, validate existing ProposalSet schema outputs with a ProposalValidationReport schema, run project/proposal review/doctor, or preserve boundaries before BGM selection, full proposal generation, timeline generation, preview rendering, model calls, image generation/editing, or network search.
 ---
 
 # Artist Portrait Editor
@@ -92,10 +92,12 @@ artist portrait project preparation and audit work.
    `.artist-portrait/data/proposal_context.json`, writes
    `.artist-portrait/data/text_model_gate.json`, writes
    `.artist-portrait/data/proposal_request.json`, writes
-   `.artist-portrait/data/proposal_adapter_check.json`, and then requires an
-   approved text-model gate plus an explicitly opened generation gate. Current
-   generation remains closed even when the gate is ready. It records `propose`
-   as blocked, returns exit code 4, and writes no fake
+   `.artist-portrait/data/proposal_adapter_check.json`, writes
+   `.artist-portrait/data/proposal_provider_registry.json`, writes
+   `.artist-portrait/data/proposal_mock_adapter_handshake.json`, and then
+   requires an approved text-model gate plus an explicitly opened generation
+   gate. Current generation remains closed even when the gate is ready. It
+   records `propose` as blocked, returns exit code 4, and writes no fake
    `.artist-portrait/data/proposals.json` or `output/proposals.md`.
 
    Existing proposals can be validated deterministically:
@@ -162,6 +164,12 @@ artist portrait project preparation and audit work.
   `.artist-portrait/data/text_model_gate.json` is fixed or regenerated.
 - Treat `propose_text_model_missing` as a dependency stop condition. Do not
   produce fake proposals; open the approved text-model proposal gate first.
+- Treat `proposal_provider_registry_invalid` as a stop condition until
+  `.artist-portrait/data/proposal_provider_registry.json` is fixed or
+  regenerated.
+- Treat `proposal_mock_adapter_handshake_invalid` as a stop condition until
+  `.artist-portrait/data/proposal_mock_adapter_handshake.json` is fixed or
+  regenerated.
 
 ## Hard Boundaries
 

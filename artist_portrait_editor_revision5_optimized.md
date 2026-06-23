@@ -5,7 +5,7 @@
 > **工作名称**：`artist-portrait-editor`  
 > **中文名称**：人物向剪辑导演 / 艺人肖像剪辑 Skill  
 > **适用范围**：产品愿景、V0 产品规格、V0 工程规格  
-> **当前开发闸门**：V0-010f 提案适配器预检闸门。阶段 A、V0-003、V0-004、V0-005、V0-006、V0-007、V0-008、V0-009、V0-010a、V0-010b、V0-010c、V0-010d 与 V0-010e 已作为工程、媒体扫描、固定窗口切分、PySceneDetect 场景切分、本地转写、关键帧缓存、基础证据分析、分析驱动素材地图、提案就绪、提案上下文、文本模型闸门契约、提案验证与提案请求契约验收；当前只允许生成 deterministic `proposal_adapter_check.json` 作为未来模型适配器 provider/secret/model-call 预检，并继续允许生成 request packet 与验证既有 `proposals.json`。不得实现 OpenCV/视觉模型分类、BGM 选择、完整创作提案生成、时间线生成或预览渲染；不得执行模型调用或生成 fake/template/model-free proposals 冒充 creative_mode 成功。
+> **当前开发闸门**：V0-010g 提案 provider registry / mock adapter handshake 闸门。阶段 A、V0-003、V0-004、V0-005、V0-006、V0-007、V0-008、V0-009、V0-010a、V0-010b、V0-010c、V0-010d、V0-010e 与 V0-010f 已作为工程、媒体扫描、固定窗口切分、PySceneDetect 场景切分、本地转写、关键帧缓存、基础证据分析、分析驱动素材地图、提案就绪、提案上下文、文本模型闸门契约、提案验证、提案请求契约与提案适配器预检验收；当前只允许生成 deterministic `proposal_provider_registry.json` 与 `proposal_mock_adapter_handshake.json`，用于登记本地 mock provider 并验证未来响应契约，不得生成 proposal content。不得实现 OpenCV/视觉模型分类、BGM 选择、完整创作提案生成、时间线生成或预览渲染；不得执行模型调用、联网或生成 fake/template/model-free proposals 冒充 creative_mode 成功。
 
 ---
 
@@ -51,7 +51,7 @@ docs/DEVELOPMENT_PROGRESS.md
 - 不重复造轮子；优先复用成熟工具，再补本项目特有的数据契约、证据链、审查和降级逻辑。
 - 第三方结果不得直接冒充 canonical truth，必须记录来源、输入、输出、置信度、失败模式和可复验路径。
 - 使用第三方模型或联网能力时，必须由对应 gate、配置开关和 review 规则控制。
-- 当前 V0-010f proposal adapter preflight gate 仍保持本地、无远程模型调用、无联网、无 image generation / editing 调用；`propose` 只准备 `proposal_context.json`、`text_model_gate.json`、`proposal_request.json` 与 `proposal_adapter_check.json`，`review --scope proposal` 只验证已有 `proposals.json`，不得生成提案、调用模型、选择 BGM 或生成时间线。
+- 当前 V0-010g proposal provider registry gate 仍保持本地、无远程模型调用、无联网、无 image generation / editing 调用；`propose` 只准备 `proposal_context.json`、`text_model_gate.json`、`proposal_request.json`、`proposal_adapter_check.json`、`proposal_provider_registry.json` 与 `proposal_mock_adapter_handshake.json`，`review --scope proposal` 只验证已有 `proposals.json`，不得生成提案、调用模型、选择 BGM 或生成时间线。
 
 # 0. 执行摘要
 
@@ -70,7 +70,7 @@ V0 分为两个模式：
 - `core_mode`：不依赖文本生成模型或视觉模型，负责确定性媒体处理、canonical 数据、风险规则和素材结构报告。
 - `creative_mode`：在 `core_mode` 证据基础上，生成三套可回溯创作提案，并在用户选择后生成时间线草案。
 
-阶段 A 已完成基础工程验收，V0-003 已完成媒体扫描基础，V0-004 已完成固定窗口切分基础，V0-005 已完成 PySceneDetect 场景切分闸门，V0-006 已完成本地转写闸门，V0-007 已完成关键帧缓存闸门，V0-008 已完成基础证据分析闸门，V0-009 已完成分析驱动素材地图闸门，V0-010a 已完成提案就绪闸门，V0-010b 已完成提案上下文闸门，V0-010c 已完成文本模型闸门契约，V0-010d 已完成提案验证闸门，V0-010e 已完成提案请求闸门。当前允许实现 V0-010f 提案适配器预检闸门：
+阶段 A 已完成基础工程验收，V0-003 已完成媒体扫描基础，V0-004 已完成固定窗口切分基础，V0-005 已完成 PySceneDetect 场景切分闸门，V0-006 已完成本地转写闸门，V0-007 已完成关键帧缓存闸门，V0-008 已完成基础证据分析闸门，V0-009 已完成分析驱动素材地图闸门，V0-010a 已完成提案就绪闸门，V0-010b 已完成提案上下文闸门，V0-010c 已完成文本模型闸门契约，V0-010d 已完成提案验证闸门，V0-010e 已完成提案请求闸门，V0-010f 已完成提案适配器预检闸门。当前允许实现 V0-010g 提案 provider registry / mock adapter handshake 闸门：
 
 ```text
 project.yaml
@@ -102,6 +102,8 @@ project.yaml
 → text_model_gate.json
 → proposal_request.json
 → proposal_adapter_check.json
+→ proposal_provider_registry.json
+→ proposal_mock_adapter_handshake.json
 → proposal_validation.json
 → proposal_review.md
 → propose readiness gate
@@ -110,7 +112,7 @@ project.yaml
 → doctor/status 诊断
 ```
 
-当前 V0-010f 禁止实现：
+当前 V0-010g 禁止实现：
 
 ```text
 OpenCV
@@ -2301,6 +2303,51 @@ output/proposal_review.md
 - ready request 只能得到 `ready_for_future_adapter` 预检状态，仍不得生成 proposal。
 - 明文 secret material 必须触发 error issue。
 - 非法 `proposal_adapter_check.json` 可被 `status` / `doctor` 检出。
+
+### 16.10g V0-010g：提案 provider registry / mock adapter handshake 闸门
+
+当前小版本只允许登记本地 deterministic provider，并执行无模型、无联网、无内容生成的 mock adapter handshake。它验证未来 provider response contract 的形状，但不生成创意提案。
+
+生成：
+
+```text
+.artist-portrait/data/proposal_provider_registry.json
+.artist-portrait/data/proposal_mock_adapter_handshake.json
+```
+
+允许：
+
+- `ProposalProviderRegistry` Pydantic 模型和 `schemas/proposal_provider_registry.schema.json`。
+- `ProposalMockAdapterHandshake` Pydantic 模型和 `schemas/proposal_mock_adapter_handshake.schema.json`。
+- `propose` 在写入 `proposal_adapter_check.json` 后写入 `proposal_provider_registry.json`。
+- provider registry 当前只登记 `local_mock` provider。
+- `local_mock` provider 的 execution mode 必须是 dry-run / handshake-only，不得生成 proposal content。
+- provider registry 必须记录 `generation_open: false`、`model_call_performed: false` 和 `network_performed: false`。
+- `propose` 在写入 provider registry 后写入 `proposal_mock_adapter_handshake.json`。
+- mock adapter handshake 必须指向 future `ProposalSet` response contract。
+- request 或 adapter check blocked 时，mock handshake status 为 `blocked`。
+- request ready 且 adapter preflight ready 时，mock handshake status 可以为 `ready_for_future_execution`，但仍不得生成 proposal。
+- mock handshake 必须记录 `model_call_performed: false`、`network_performed: false` 和 `proposal_content_generated: false`。
+- `status` / `doctor` 可识别存在但非法的 `proposal_provider_registry.json` 与 `proposal_mock_adapter_handshake.json`。
+
+禁止：
+
+- 读取、创建或发送真实 API key
+- 发送 request packet 到模型
+- 访问网络
+- 生成 `proposals.json`
+- fake/template/model-free proposals
+- BGM selection、beat analysis、music recommendation 或 music/timeline fitting
+- timeline draft
+- preview render
+
+验收：
+
+- blocked `propose --json` output refs 包含 `proposal_provider_registry.json` 与 `proposal_mock_adapter_handshake.json`。
+- provider registry 必须证明 generation gate 仍关闭且未执行模型调用或网络访问。
+- mock handshake 必须证明未生成 proposal content。
+- ready request / ready adapter check 只能得到 `ready_for_future_execution` handshake 状态，仍不得生成 proposal。
+- 非法 provider registry 与 mock handshake 可被 `status` / `doctor` 检出。
 
 ## 16.11 V0-011：时间线草案
 

@@ -50,6 +50,8 @@ def test_skill_frontmatter_and_boundaries():
     assert "TextModelGate schema" in frontmatter["description"]
     assert "ProposalRequestPacket schemas" in frontmatter["description"]
     assert "ProposalAdapterCheck schema" in frontmatter["description"]
+    assert "ProposalProviderRegistry schema" in frontmatter["description"]
+    assert "ProposalMockAdapterHandshake schema" in frontmatter["description"]
     assert "ProposalValidationReport schema" in frontmatter["description"]
     assert "ProposalSet schema" in frontmatter["description"]
     assert "blocked propose gate" in frontmatter["description"]
@@ -62,6 +64,8 @@ def test_skill_frontmatter_and_boundaries():
     assert ".artist-portrait/data/text_model_gate.json" in content
     assert ".artist-portrait/data/proposal_request.json" in content
     assert ".artist-portrait/data/proposal_adapter_check.json" in content
+    assert ".artist-portrait/data/proposal_provider_registry.json" in content
+    assert ".artist-portrait/data/proposal_mock_adapter_handshake.json" in content
     assert ".artist-portrait/data/proposal_validation.json" in content
     assert "output/proposal_review.md" in content
     assert "fake" in content

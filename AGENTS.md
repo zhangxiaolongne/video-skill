@@ -3,7 +3,7 @@
 Follow `artist_portrait_editor_revision5_optimized.md` as the governing V0
 engineering-freeze document.
 
-Current gate: V0-010f proposal adapter preflight gate only.
+Current gate: V0-010g proposal provider registry gate only.
 
 Allowed:
 
@@ -56,6 +56,10 @@ Allowed:
 - canonical `.artist-portrait/data/proposal_adapter_check.json`
 - `ProposalAdapterCheck` Pydantic model and generated JSON Schema
 - deterministic provider/secret/model-call preflight without model calls
+- canonical `.artist-portrait/data/proposal_provider_registry.json`
+- canonical `.artist-portrait/data/proposal_mock_adapter_handshake.json`
+- `ProposalProviderRegistry` and `ProposalMockAdapterHandshake` Pydantic models and generated JSON Schema
+- deterministic local mock adapter handshake without model calls or proposal content
 - `ProposalSet` Pydantic model and generated JSON Schema
 - canonical `.artist-portrait/data/proposal_validation.json`
 - deterministic `output/proposal_review.md`

@@ -10,7 +10,7 @@ V0 has two future modes:
   `core_mode` data exists.
 
 Current repository implementation has entered deterministic core-mode
-foundation work only. The active gate is V0-010f proposal adapter preflight:
+foundation work only. The active gate is V0-010g proposal provider registry:
 
 ```text
 project.yaml
@@ -30,6 +30,7 @@ project.yaml
 -> deterministic text-model gate packet
 -> deterministic proposal model request packet
 -> deterministic proposal adapter preflight packet
+-> deterministic proposal provider registry and mock adapter handshake packets
 -> deterministic validation of existing proposal sets
 -> proposal validation report
 -> proposal readiness gate without fake proposal generation

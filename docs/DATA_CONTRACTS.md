@@ -14,6 +14,8 @@ Current committed schemas:
 - `schemas/project_state.schema.json`
 - `schemas/proposal_adapter_check.schema.json`
 - `schemas/proposal_context.schema.json`
+- `schemas/proposal_mock_adapter_handshake.schema.json`
+- `schemas/proposal_provider_registry.schema.json`
 - `schemas/proposal_request_packet.schema.json`
 - `schemas/proposal_validation_report.schema.json`
 - `schemas/proposal_set.schema.json`
@@ -102,6 +104,21 @@ proposal request packet. It records provider mode, secret policy, checked refs,
 issue list, and hard booleans showing that no model call or network access was
 performed.
 
+`ProposalProviderRegistry` is implemented for the V0-010g proposal provider
+registry gate and has a committed schema at
+`schemas/proposal_provider_registry.schema.json`. It is written to
+`.artist-portrait/data/proposal_provider_registry.json` by `propose` after the
+adapter check. The current registry contains only the deterministic
+`local_mock` provider, declares generation closed, and records
+`model_call_performed: false` and `network_performed: false`.
+
+`ProposalMockAdapterHandshake` is implemented for the V0-010g mock adapter
+handshake gate and has a committed schema at
+`schemas/proposal_mock_adapter_handshake.schema.json`. It is written to
+`.artist-portrait/data/proposal_mock_adapter_handshake.json` by `propose`
+after the provider registry. It validates the future response contract without
+calling a model, touching the network, or generating proposal content.
+
 `ProposalSet` is implemented for the V0-010a proposal readiness gate and has a
 committed schema at `schemas/proposal_set.schema.json`. A future approved
 proposal generation gate may write `.artist-portrait/data/proposals.json`, but
@@ -147,6 +164,8 @@ Current stable diagnostic codes include:
 - `text_model_gate_invalid`
 - `proposal_request_invalid`
 - `proposal_adapter_check_invalid`
+- `proposal_provider_registry_invalid`
+- `proposal_mock_adapter_handshake_invalid`
 - `proposals_invalid`
 - `proposal_unknown_clip_id`
 - `proposal_unknown_fact_ref`
