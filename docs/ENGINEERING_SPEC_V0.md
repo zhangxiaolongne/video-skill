@@ -1,5 +1,112 @@
 # Engineering Spec V0
 
+This is the canonical human-readable implementation specification. It owns
+command behavior, state/invalidation rules, acceptance requirements, and data
+contract policy in addition to core engineering constraints.
+
+Machine-readable field semantics are owned by Pydantic models under
+`src/artist_portrait_editor/models/` and generated JSON Schemas under
+`schemas/`. `generate-schema` plus schema-drift checks prevent those two
+sources from diverging; do not maintain a third field-by-field Markdown mirror.
+
+## Data Contract Policy
+
+- Canonical ledgers and packets validate against typed Pydantic models.
+- Committed JSON Schemas are generated artifacts and must match those models.
+- JSON/JSONL artifacts reject unknown fields unless a model explicitly permits them.
+- Canonical identity and provenance remain in data artifacts; reports and cache
+  are rebuildable.
+- Artifact readers must produce stable invalid-JSON diagnostics.
+- Proposal, timeline, and BGM artifacts bind current upstream fingerprints.
+- Absolute local paths, secrets, fabricated evidence, and unsupported model
+  assertions are forbidden in portable artifacts.
+
+## Command Contract
+
+Implemented local commands:
+
+```text
+validate
+init
+status
+doctor
+generate-schema
+scan
+segment
+transcribe
+keyframes
+analyze
+map
+propose
+timeline
+bgm import
+bgm list
+bgm fit
+bgm review
+preview
+review --scope project|proposal|timeline|preview|all
+```
+
+Commands use fixed exit codes, project-relative paths, deterministic canonical
+artifacts, atomic writes, and explicit prerequisites. `timeline` requires an
+explicit proposal ID. `bgm fit` requires an explicit candidate ID. `preview`
+renders only low-resolution local review media from the canonical timeline and
+optional current BGM fit; `--width` and `--fps` are bounded review controls, not
+final export settings. No command may silently select a proposal, music
+candidate, remote provider, or secret.
+
+## State And Invalidation
+
+`.artist-portrait/state.json` is the canonical step ledger. Canonical data lives
+under `.artist-portrait/data/`; rebuildable cache lives under
+`.artist-portrait/cache/`; command audit records live under
+`.artist-portrait/runs/`; human-readable outputs live under `output/`.
+
+Invalidation flows downstream:
+
+```text
+sources -> clips/transcripts/keyframes/analysis/map/proposals/timeline/BGM fit
+clips -> keyframes/analysis/map/proposals/timeline/BGM fit
+analysis -> map/proposals/timeline/BGM fit
+material map -> proposals/timeline/BGM fit
+proposals -> timeline/BGM fit
+timeline -> BGM fit
+BGM candidates -> BGM fit
+BGM fit -> preview
+timeline -> preview
+```
+
+`status` reports artifacts and step states. `doctor` is read-only and reports
+invalid JSON, missing output references, stale steps, missing dependencies, and
+exact recovery commands. Derived keyframes and BGM WAV files are cache, not
+canonical identity.
+
+## Acceptance Contract
+
+Every open capability must have deterministic contract and integration tests.
+The full check entrypoint is:
+
+```bash
+.venv/bin/python run_checks.py
+```
+
+It must cover configuration, schemas, Skill/package metadata, source identity,
+media probing, segmentation, gated local transcription, keyframes, analysis,
+material map, Host-Agent proposal quarantine/promotion, proposal validation,
+explicit timeline generation, multi-source BGM ingestion/fitting,
+low-resolution preview rendering, state, invalidation, diagnostics, audit
+records, and documentation governance.
+
+Required negative coverage includes malformed artifacts, unknown references,
+forbidden/restricted sources, unsafe paths, missing dependencies, invalid audio
+streams/ranges, stale fingerprints, policy-disabled music, fake proposal
+methods, hidden model/network activity, and failed writes that must not replace
+valid canonical outputs.
+
+Preview testing must use real local FFmpeg media generation/probing. Browser
+automation is not required for low-resolution file output unless a future UI
+preview surface opens.
+
 Authoritative source: `artist_portrait_editor_revision5_optimized.md`.
 
 Stage A historical implementation scope:
@@ -27,7 +134,116 @@ Required Stage A properties:
 - state and run records are auditable.
 - repeated `init` does not cross the Stage A boundary.
 
-Current V0-010m implementation scope additionally allows:
+Current V0-011 implementation scope additionally allows:
+
+- local `output/proposal_agent_handoff.json`
+- explicit `--agent-output` candidate import
+- candidate quarantine before parsing
+- ProposalSet schema and semantic validation
+- atomic canonical `proposals.json` promotion
+- no paid API, API key, or network dependency
+
+Current V0-012 implementation scope additionally allows:
+
+- explicit `timeline --proposal` selection
+- canonical `TimelineDraft` and `TimelineValidationReport`
+- deterministic target-duration assembly from required clips
+- atomic timeline, validation, and review outputs
+- timeline state, diagnostics, run audit, and upstream invalidation
+- unresolved or policy-disabled music slots without BGM processing
+
+V0-013 BGM engineering models input mode independently from media kind.
+Video-derived music requires deterministic ffmpeg/ffprobe stream selection,
+project-relative provenance, extraction range, content hash, and rebuildable
+audio cache. Extraction alone must not assert source separation or clean BGM.
+
+Current V0-014 implementation scope additionally allows:
+
+- `preview`
+- local FFmpeg/ffprobe low-resolution MP4 rendering
+- canonical `.artist-portrait/data/preview_manifest.json`
+- canonical `.artist-portrait/data/preview_validation.json`
+- deterministic `output/preview_review.md`
+- rebuildable `.artist-portrait/cache/preview/`
+- timeline video segment extraction and concatenation
+- retained original source audio where timeline segments carry audio
+- optional BGM fit rendering from the explicit current BGM fit plan
+- BGM target gain, fade, loop/trim, and ducking application
+- no-BGM preview with original audio or explicit silence
+- preview status, doctor diagnostics, run audit, and upstream invalidation
+
+V0-014 does not allow final-quality export, automatic BGM recommendation,
+fabricated beat alignment, model calls, image generation/editing, or network
+access.
+
+Current V0-015 implementation scope additionally allows:
+
+- bounded `preview --width` and `preview --fps`
+- preview manifest expected/actual duration metrics
+- preview video/audio stream presence validation
+- preview dimension and frame-rate quality checks
+- render profile and parameter drift detection
+- preview review quality summary and recovery command
+- status and doctor preview QC surfacing
+
+V0-015 does not allow final-quality export, automatic BGM recommendation,
+fabricated beat alignment, model calls, image generation/editing, or network
+access.
+
+Current V0-016 implementation scope additionally allows:
+
+- `export --profile review_720p|delivery_1080p`
+- local FFmpeg/ffprobe final MP4 rendering
+- canonical `.artist-portrait/data/final_export_manifest.json`
+- canonical `.artist-portrait/data/final_export_validation.json`
+- deterministic `output/final_export_review.md`
+- rebuildable `.artist-portrait/cache/final_export/`
+- final export from canonical timeline source ranges
+- retained original source audio and optional current BGM fit rendering
+- BGM target gain, fade, loop/trim, and ducking application in final export
+- no-BGM export with original audio or explicit silence
+- final export duration, stream, width, frame-rate, profile, stale-input, and hash QC
+- final export status, doctor diagnostics, run audit, and upstream invalidation
+
+V0-016 does not allow automatic BGM recommendation, fabricated beat alignment,
+model calls, image generation/editing, network access, paid APIs, API keys,
+remote providers, or hidden Python-side model calls.
+
+Current V0-017 implementation scope additionally allows:
+
+- `bgm analyze`
+- canonical `.artist-portrait/data/bgm_analysis.json`
+- deterministic `output/bgm_analysis_report.md`
+- local PCM energy-window analysis from cached BGM candidate audio
+- RMS/peak window metrics and quiet/low/medium/high energy labels
+- quiet head/tail and high-energy range detection
+- loop-safe technical hints for human review
+- mature local beat-engine package detection without beat-grid execution
+- BGM fit binding to analysis reference and fingerprint
+- BGM analysis status, doctor diagnostics, schema, run audit, and invalidation
+
+V0-017 does not allow automatic BGM recommendation or selection, fabricated BPM
+or beat-grid claims, source separation, model calls, image generation/editing,
+network access, paid APIs, API keys, remote providers, or hidden Python-side
+model calls.
+
+Current V0-018 implementation scope additionally allows:
+
+- `bgm recommend`
+- canonical `.artist-portrait/data/bgm_recommendation_context.json`
+- canonical `.artist-portrait/data/bgm_recommendation_request.json`
+- deterministic `output/bgm_recommendation_agent_handoff.json`
+- explicit host-Agent/local-model/third-party recommendation candidate import
+- byte-exact `.artist-portrait/quarantine/bgm_recommendations/`
+- canonical `.artist-portrait/data/bgm_recommendations.json`
+- canonical `.artist-portrait/data/bgm_recommendation_validation.json`
+- deterministic `output/bgm_recommendation_review.md`
+- recommendation status, doctor diagnostics, schema, run audit, and invalidation
+
+V0-018 does not allow automatic music selection, automatic fitting, invented
+candidate IDs, fabricated BPM or beat-grid claims, source separation, CLI-side
+model calls, image generation/editing, network access, paid APIs, API keys,
+remote providers, or hidden Python-side model calls.
 
 - `scan`
 - deterministic `sources.jsonl`
@@ -81,15 +297,71 @@ Current V0-010m implementation scope additionally allows:
   planning without selected secrets, credential reads, model calls, network
   access, execution allowance, execution, raw output capture, or proposal
   content
+- `ProposalExecutionInputBundle` Pydantic model and generated JSON Schema
+- deterministic `.artist-portrait/data/proposal_execution_input_bundle.json`
+- execution input bundle packet covering ten blocked input sub-items: provider
+  identity, request packet, prompt contract, schema contract, approval chain,
+  secret reference, credential access policy, network policy, quarantine
+  target, and output routing without selected secrets, credential reads, model
+  calls, network access, execution allowance, execution, raw output capture,
+  prompt embedding, or proposal content
+- `ProposalProviderCallDryRun` Pydantic model and generated JSON Schema
+- deterministic `.artist-portrait/data/proposal_provider_call_dry_run.json`
+- provider call dry-run manifest covering ten blocked call sub-items: endpoint
+  reference, auth header policy, request body reference, timeout policy, retry
+  policy, rate-limit policy, idempotency policy, network egress policy,
+  response capture policy, and failure handling policy without endpoint
+  resolution, auth header materialization, request body materialization,
+  credential reads, model calls, network access, execution allowance,
+  execution, request sending, raw output capture, or proposal content
 - `ProposalExecutionAuthorization` Pydantic model and generated JSON Schema
 - deterministic `.artist-portrait/data/proposal_execution_authorization.json`
 - execution authorization packet without credentials, user approval, model
   calls, network access, execution, or proposal content
+- `ProposalProviderResponseIntakePlan` Pydantic model and generated JSON Schema
+- deterministic `.artist-portrait/data/proposal_provider_response_intake_plan.json`
+- provider response intake plan covering ten blocked response sub-items:
+  response channel, raw output location, content-type policy, size-limit
+  policy, checksum policy, redaction policy, parser selection, validation
+  queue, promotion gate, and audit trail without opening response channels,
+  materializing raw output storage, validating content type, computing
+  checksums, redacting, selecting parsers, enqueuing validation, allowing
+  promotion, writing audit events, capturing raw output, parsing payloads,
+  validating output, promoting proposals, model calls, network access, or
+  proposal content
 - `ProposalProviderOutputQuarantine` Pydantic model and generated JSON Schema
 - deterministic `.artist-portrait/data/proposal_provider_output_quarantine.json`
 - provider output quarantine packet without raw output capture, payload
   parsing, proposal promotion, validation, model calls, network access, or
   proposal content
+- `ProposalProviderResponseValidationPlan` Pydantic model and generated JSON
+  Schema
+- deterministic
+  `.artist-portrait/data/proposal_provider_response_validation_plan.json`
+- provider response validation plan covering ten blocked validation sub-items:
+  quarantine input binding, content-type check, size-limit check, checksum
+  verification, redaction verification, parser contract, JSON syntax
+  validation, schema validation, semantic validation, and promotion decision
+  without raw output reads, parsing, validation execution, promotion, model
+  calls, network access, or proposal content
+- `ProposalPromotionAuthorizationPlan` Pydantic model and generated JSON Schema
+- deterministic `.artist-portrait/data/proposal_promotion_authorization_plan.json`
+- ten blocked promotion conditions without validation success assertions, risk
+  acceptance, overwrite permission, canonical write preparation, promotion
+  authorization, promotion execution, model calls, network access, or proposal
+  content
+- `ProposalPromotionValidationReport` Pydantic model and generated JSON Schema
+- deterministic `.artist-portrait/data/proposal_promotion_validation_report.json`
+- ten blocked, unperformed report domains with zero pass counters and no
+  promotion recommendation, authorization, execution, canonical write, model
+  call, network access, or proposal content
+- `ProposalCanonicalWriteTransactionPlan` Pydantic model and generated JSON
+  Schema
+- deterministic
+  `.artist-portrait/data/proposal_canonical_write_transaction_plan.json`
+- ten blocked transaction stages without locks, snapshots, temporary files,
+  fsync, replacement, rollback, commit, canonical proposal writes, model calls,
+  network access, or proposal content
 - `ProposalProviderResultEnvelope` Pydantic model and generated JSON Schema
 - deterministic `.artist-portrait/data/proposal_provider_result.json`
 - dry-run provider result envelope without payload generation, validation,

@@ -1,0 +1,313 @@
+{
+  "$defs": {
+    "ProposalAdapterCheckIssue": {
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "minLength": 1,
+          "title": "Code",
+          "type": "string"
+        },
+        "detail": {
+          "minLength": 1,
+          "title": "Detail",
+          "type": "string"
+        },
+        "ref": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Ref"
+        },
+        "severity": {
+          "pattern": "^(info|warning|error)$",
+          "title": "Severity",
+          "type": "string"
+        }
+      },
+      "required": [
+        "code",
+        "severity",
+        "detail"
+      ],
+      "title": "ProposalAdapterCheckIssue",
+      "type": "object"
+    },
+    "ProposalProviderResponseIntakeItem": {
+      "additionalProperties": false,
+      "properties": {
+        "allowed": {
+          "default": false,
+          "title": "Allowed",
+          "type": "boolean"
+        },
+        "issues": {
+          "items": {
+            "$ref": "#/$defs/ProposalAdapterCheckIssue"
+          },
+          "title": "Issues",
+          "type": "array"
+        },
+        "item_id": {
+          "minLength": 1,
+          "title": "Item Id",
+          "type": "string"
+        },
+        "materialized": {
+          "default": false,
+          "title": "Materialized",
+          "type": "boolean"
+        },
+        "ref": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Ref"
+        },
+        "status": {
+          "$ref": "#/$defs/ProposalProviderResponseIntakeStatus"
+        }
+      },
+      "required": [
+        "item_id",
+        "status"
+      ],
+      "title": "ProposalProviderResponseIntakeItem",
+      "type": "object"
+    },
+    "ProposalProviderResponseIntakeStatus": {
+      "enum": [
+        "blocked",
+        "ready_for_future_response_intake"
+      ],
+      "title": "ProposalProviderResponseIntakeStatus",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "adapter_check_ref": {
+      "minLength": 1,
+      "title": "Adapter Check Ref",
+      "type": "string"
+    },
+    "audit_event_written": {
+      "default": false,
+      "title": "Audit Event Written",
+      "type": "boolean"
+    },
+    "audit_trail": {
+      "$ref": "#/$defs/ProposalProviderResponseIntakeItem"
+    },
+    "checksum_computed": {
+      "default": false,
+      "title": "Checksum Computed",
+      "type": "boolean"
+    },
+    "checksum_policy": {
+      "$ref": "#/$defs/ProposalProviderResponseIntakeItem"
+    },
+    "content_type_policy": {
+      "$ref": "#/$defs/ProposalProviderResponseIntakeItem"
+    },
+    "content_type_validated": {
+      "default": false,
+      "title": "Content Type Validated",
+      "type": "boolean"
+    },
+    "execution_authorization_ref": {
+      "minLength": 1,
+      "title": "Execution Authorization Ref",
+      "type": "string"
+    },
+    "handshake_ref": {
+      "minLength": 1,
+      "title": "Handshake Ref",
+      "type": "string"
+    },
+    "intake_fingerprint": {
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "title": "Intake Fingerprint",
+      "type": "string"
+    },
+    "intake_id": {
+      "minLength": 1,
+      "title": "Intake Id",
+      "type": "string"
+    },
+    "issues": {
+      "items": {
+        "$ref": "#/$defs/ProposalAdapterCheckIssue"
+      },
+      "title": "Issues",
+      "type": "array"
+    },
+    "model_call_performed": {
+      "default": false,
+      "title": "Model Call Performed",
+      "type": "boolean"
+    },
+    "network_performed": {
+      "default": false,
+      "title": "Network Performed",
+      "type": "boolean"
+    },
+    "parsed_payload_generated": {
+      "default": false,
+      "title": "Parsed Payload Generated",
+      "type": "boolean"
+    },
+    "parser_selected": {
+      "default": false,
+      "title": "Parser Selected",
+      "type": "boolean"
+    },
+    "parser_selection": {
+      "$ref": "#/$defs/ProposalProviderResponseIntakeItem"
+    },
+    "project_id": {
+      "minLength": 1,
+      "title": "Project Id",
+      "type": "string"
+    },
+    "promoted_to_proposals": {
+      "default": false,
+      "title": "Promoted To Proposals",
+      "type": "boolean"
+    },
+    "promotion_allowed": {
+      "default": false,
+      "title": "Promotion Allowed",
+      "type": "boolean"
+    },
+    "promotion_gate": {
+      "$ref": "#/$defs/ProposalProviderResponseIntakeItem"
+    },
+    "proposal_content_generated": {
+      "default": false,
+      "title": "Proposal Content Generated",
+      "type": "boolean"
+    },
+    "provider_call_dry_run_ref": {
+      "minLength": 1,
+      "title": "Provider Call Dry Run Ref",
+      "type": "string"
+    },
+    "provider_id": {
+      "minLength": 1,
+      "title": "Provider Id",
+      "type": "string"
+    },
+    "quarantine_required": {
+      "default": true,
+      "title": "Quarantine Required",
+      "type": "boolean"
+    },
+    "raw_output_captured": {
+      "default": false,
+      "title": "Raw Output Captured",
+      "type": "boolean"
+    },
+    "raw_output_location": {
+      "$ref": "#/$defs/ProposalProviderResponseIntakeItem"
+    },
+    "raw_output_location_materialized": {
+      "default": false,
+      "title": "Raw Output Location Materialized",
+      "type": "boolean"
+    },
+    "redaction_performed": {
+      "default": false,
+      "title": "Redaction Performed",
+      "type": "boolean"
+    },
+    "redaction_policy": {
+      "$ref": "#/$defs/ProposalProviderResponseIntakeItem"
+    },
+    "registry_ref": {
+      "minLength": 1,
+      "title": "Registry Ref",
+      "type": "string"
+    },
+    "request_ref": {
+      "minLength": 1,
+      "title": "Request Ref",
+      "type": "string"
+    },
+    "response_channel": {
+      "$ref": "#/$defs/ProposalProviderResponseIntakeItem"
+    },
+    "response_channel_open": {
+      "default": false,
+      "title": "Response Channel Open",
+      "type": "boolean"
+    },
+    "schema_version": {
+      "default": "0.3",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "size_limit_bytes": {
+      "default": 0,
+      "minimum": 0,
+      "title": "Size Limit Bytes",
+      "type": "integer"
+    },
+    "size_limit_policy": {
+      "$ref": "#/$defs/ProposalProviderResponseIntakeItem"
+    },
+    "status": {
+      "$ref": "#/$defs/ProposalProviderResponseIntakeStatus"
+    },
+    "validation_enqueued": {
+      "default": false,
+      "title": "Validation Enqueued",
+      "type": "boolean"
+    },
+    "validation_performed": {
+      "default": false,
+      "title": "Validation Performed",
+      "type": "boolean"
+    },
+    "validation_queue": {
+      "$ref": "#/$defs/ProposalProviderResponseIntakeItem"
+    }
+  },
+  "required": [
+    "intake_id",
+    "project_id",
+    "status",
+    "provider_id",
+    "request_ref",
+    "registry_ref",
+    "handshake_ref",
+    "adapter_check_ref",
+    "execution_authorization_ref",
+    "provider_call_dry_run_ref",
+    "intake_fingerprint",
+    "response_channel",
+    "raw_output_location",
+    "content_type_policy",
+    "size_limit_policy",
+    "checksum_policy",
+    "redaction_policy",
+    "parser_selection",
+    "validation_queue",
+    "promotion_gate",
+    "audit_trail"
+  ],
+  "title": "ProposalProviderResponseIntakePlan",
+  "type": "object"
+}

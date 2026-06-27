@@ -13,6 +13,10 @@ def detect_capabilities() -> Capabilities:
         pyscenedetect=which("scenedetect") is not None or find_spec("scenedetect") is not None,
         faster_whisper=find_spec("faster_whisper") is not None,
         opencv=find_spec("cv2") is not None,
+        beat_librosa=find_spec("librosa") is not None,
+        beat_aubio=find_spec("aubio") is not None,
+        beat_essentia=find_spec("essentia") is not None,
+        beat_madmom=find_spec("madmom") is not None,
         text_model=False,
         vision_model=False,
     )

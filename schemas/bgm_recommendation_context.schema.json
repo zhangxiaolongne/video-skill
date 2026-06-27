@@ -1,0 +1,206 @@
+{
+  "$defs": {
+    "BgmRecommendationContextCandidate": {
+      "additionalProperties": false,
+      "properties": {
+        "analysis_summary": {
+          "additionalProperties": true,
+          "title": "Analysis Summary",
+          "type": "object"
+        },
+        "beat_analysis_status": {
+          "minLength": 1,
+          "title": "Beat Analysis Status",
+          "type": "string"
+        },
+        "bpm": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Bpm"
+        },
+        "duration": {
+          "exclusiveMinimum": 0,
+          "title": "Duration",
+          "type": "number"
+        },
+        "input_mode": {
+          "minLength": 1,
+          "title": "Input Mode",
+          "type": "string"
+        },
+        "integrated_loudness_lufs": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Integrated Loudness Lufs"
+        },
+        "mixed_audio": {
+          "title": "Mixed Audio",
+          "type": "boolean"
+        },
+        "music_candidate_id": {
+          "minLength": 1,
+          "title": "Music Candidate Id",
+          "type": "string"
+        },
+        "rights_status": {
+          "minLength": 1,
+          "title": "Rights Status",
+          "type": "string"
+        },
+        "source_ref": {
+          "minLength": 1,
+          "title": "Source Ref",
+          "type": "string"
+        },
+        "user_intent": {
+          "minLength": 1,
+          "title": "User Intent",
+          "type": "string"
+        }
+      },
+      "required": [
+        "music_candidate_id",
+        "input_mode",
+        "source_ref",
+        "duration",
+        "rights_status",
+        "mixed_audio",
+        "user_intent",
+        "beat_analysis_status"
+      ],
+      "title": "BgmRecommendationContextCandidate",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "analysis_fingerprint": {
+      "anyOf": [
+        {
+          "pattern": "^sha256:[0-9a-f]{64}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Analysis Fingerprint"
+    },
+    "analysis_ref": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Analysis Ref"
+    },
+    "candidate_ledger_fingerprint": {
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "title": "Candidate Ledger Fingerprint",
+      "type": "string"
+    },
+    "candidate_ledger_ref": {
+      "default": ".artist-portrait/data/bgm_candidates.json",
+      "title": "Candidate Ledger Ref",
+      "type": "string"
+    },
+    "candidates": {
+      "items": {
+        "$ref": "#/$defs/BgmRecommendationContextCandidate"
+      },
+      "title": "Candidates",
+      "type": "array"
+    },
+    "context_id": {
+      "minLength": 1,
+      "title": "Context Id",
+      "type": "string"
+    },
+    "project_id": {
+      "minLength": 1,
+      "title": "Project Id",
+      "type": "string"
+    },
+    "proposal_id": {
+      "minLength": 1,
+      "title": "Proposal Id",
+      "type": "string"
+    },
+    "proposal_sound_structure": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Proposal Sound Structure",
+      "type": "array"
+    },
+    "recommendation_policy": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Recommendation Policy",
+      "type": "array"
+    },
+    "schema_version": {
+      "default": "0.3",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "target_duration": {
+      "exclusiveMinimum": 0,
+      "title": "Target Duration",
+      "type": "number"
+    },
+    "timeline_fingerprint": {
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "title": "Timeline Fingerprint",
+      "type": "string"
+    },
+    "timeline_id": {
+      "minLength": 1,
+      "title": "Timeline Id",
+      "type": "string"
+    },
+    "timeline_music_status": {
+      "minLength": 1,
+      "title": "Timeline Music Status",
+      "type": "string"
+    },
+    "timeline_ref": {
+      "minLength": 1,
+      "title": "Timeline Ref",
+      "type": "string"
+    }
+  },
+  "required": [
+    "context_id",
+    "project_id",
+    "timeline_id",
+    "timeline_ref",
+    "timeline_fingerprint",
+    "proposal_id",
+    "target_duration",
+    "timeline_music_status",
+    "candidate_ledger_fingerprint"
+  ],
+  "title": "BgmRecommendationContext",
+  "type": "object"
+}

@@ -1,5 +1,9 @@
 import json
+import shutil
+import subprocess
 from pathlib import Path
+
+import pytest
 
 import artist_portrait_editor.cli as cli
 import artist_portrait_editor.workspace as workspace
@@ -127,9 +131,32 @@ def write_proposals_from_context(root: Path, *, unknown_clip: bool = False, bgm:
     clip_id = context["clips"][0]["clip_id"]
     analysis_id = context["analyses"][0]["analysis_id"]
     required_clip = "clip_missing" if unknown_clip else clip_id
-    sound_structure = ["BGM strategy: low-interference music under speech"] if bgm else [
-        "voice-first sound plan"
-    ]
+    story_structures = {
+        "proposal_safe": ["chronological evidence-led opening", "measured conclusion"],
+        "proposal_advanced": ["contrast-driven cold open", "parallel development"],
+        "proposal_risky": ["disruptive question opening", "nonlinear reveal"],
+    }
+    sound_structures = {
+        "proposal_safe": [
+            "BGM strategy: low-interference music under speech with voice ducking"
+        ],
+        "proposal_advanced": [
+            "Music supports pacing and transitions with beat-aligned cuts"
+        ],
+        "proposal_risky": [
+            "Score drives emotional energy through a drop followed by silence"
+        ],
+    }
+    visual_motifs = {
+        "proposal_safe": ["chronological portrait details"],
+        "proposal_advanced": ["cross-media match cuts"],
+        "proposal_risky": ["delayed reveal and negative space"],
+    }
+    counter_proposals = {
+        "proposal_safe": "What if the opening avoids a direct face shot?",
+        "proposal_advanced": "What if chronology is replaced by thematic contrast?",
+        "proposal_risky": "What if the music climax cuts to intentional silence?",
+    }
     proposals = []
     for proposal_id in ("proposal_safe", "proposal_advanced", "proposal_risky"):
         proposals.append(
@@ -144,20 +171,24 @@ def write_proposals_from_context(root: Path, *, unknown_clip: bool = False, bgm:
                     {"type": "analysis", "ref": analysis_id},
                     {"type": "material_map", "ref": context["material_map_ref"]},
                 ],
-                "story_structure": ["open with established evidence", "develop contrast"],
-                "sound_structure": sound_structure,
-                "visual_motifs": ["manual confirmation required"],
+                "story_structure": story_structures[proposal_id],
+                "sound_structure": (
+                    sound_structures[proposal_id]
+                    if bgm
+                    else ["voice-first sound plan"]
+                ),
+                "visual_motifs": visual_motifs[proposal_id],
                 "risks": ["visual semantics not inferred"],
                 "minimum_viable_timeline": ["timeline generation not open"],
                 "missing_material": [],
-                "counter_proposal": None,
+                "counter_proposal": counter_proposals[proposal_id],
             }
         )
     payload = {
         "proposal_set_id": "proposal_set_test",
         "project_id": context["project_id"],
         "map_fingerprint": context["material_map_fingerprint"],
-        "method": "test_fixture",
+        "method": "codex_host_agent_test_fixture",
         "method_version": "test",
         "proposals": proposals,
         "evidence": [{"type": "proposal_context", "ref": context["context_id"]}],
@@ -167,6 +198,65 @@ def write_proposals_from_context(root: Path, *, unknown_clip: bool = False, bgm:
         json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
         encoding="utf-8",
     )
+
+
+def build_blocked_proposal_chain(root: Path, capsys) -> Path:
+    project_path = root / "project.yaml"
+    project_path.write_text(
+        project_fixture_with_scene_detection("off"),
+        encoding="utf-8",
+    )
+    assert main(["init", "--project", str(project_path), "--quiet"]) in (0, 1)
+    write_clean_source_ledger(root)
+    assert main(["segment", "--project", str(project_path), "--quiet"]) == 0
+    assert main(["analyze", "--project", str(project_path), "--quiet"]) == 0
+    assert main(["map", "--project", str(project_path), "--quiet"]) == 0
+    assert main(["propose", "--project", str(project_path), "--json"]) == 1
+    capsys.readouterr()
+    return project_path
+
+
+def build_valid_proposal_project(root: Path, capsys, *, allow_music: bool = True) -> Path:
+    project_path = build_blocked_proposal_chain(root, capsys)
+    if not allow_music:
+        project_path.write_text(
+            project_path.read_text(encoding="utf-8").replace(
+                "allow_music: true",
+                "allow_music: false",
+            ),
+            encoding="utf-8",
+        )
+    write_proposals_from_context(root, bgm=allow_music)
+    canonical = root / ".artist-portrait" / "data" / "proposals.json"
+    if not allow_music:
+        payload = json.loads(canonical.read_text(encoding="utf-8"))
+        for proposal in payload["proposals"]:
+            proposal["sound_structure"] = [
+                "no added music; preserve original voice and intentional silence "
+                f"for {proposal['proposal_id']}"
+            ]
+        canonical.write_text(
+            json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
+    candidate = root / "proposal_candidate.json"
+    candidate.write_bytes(canonical.read_bytes())
+    canonical.unlink()
+    assert (
+        main(
+            [
+                "propose",
+                "--project",
+                str(project_path),
+                "--agent-output",
+                str(candidate),
+                "--quiet",
+            ]
+        )
+        == 0
+    )
+    capsys.readouterr()
+    return project_path
 
 
 def test_validate_valid_project(capsys):
@@ -1487,27 +1577,34 @@ def test_propose_without_text_model_blocks_without_fake_outputs(
     code = main(["propose", "--project", str(project_path), "--json"])
     captured = capsys.readouterr()
 
-    assert code == 4
+    assert code == 1
     payload = json.loads(captured.out)
     assert payload["status"] == "blocked"
     assert payload["output_refs"] == [
         ".artist-portrait/data/proposal_context.json",
         ".artist-portrait/data/text_model_gate.json",
         ".artist-portrait/data/proposal_request.json",
+        "output/proposal_agent_handoff.json",
         ".artist-portrait/data/proposal_adapter_check.json",
         ".artist-portrait/data/proposal_provider_registry.json",
         ".artist-portrait/data/proposal_mock_adapter_handshake.json",
         ".artist-portrait/data/proposal_execution_approval_request.json",
         ".artist-portrait/data/proposal_execution_approval_record.json",
         ".artist-portrait/data/proposal_execution_readiness_plan.json",
+        ".artist-portrait/data/proposal_execution_input_bundle.json",
+        ".artist-portrait/data/proposal_provider_call_dry_run.json",
         ".artist-portrait/data/proposal_execution_authorization.json",
+        ".artist-portrait/data/proposal_provider_response_intake_plan.json",
         ".artist-portrait/data/proposal_provider_output_quarantine.json",
+        ".artist-portrait/data/proposal_provider_response_validation_plan.json",
+        ".artist-portrait/data/proposal_promotion_authorization_plan.json",
+        ".artist-portrait/data/proposal_promotion_validation_report.json",
+        ".artist-portrait/data/proposal_canonical_write_transaction_plan.json",
         ".artist-portrait/data/proposal_provider_result.json",
     ]
-    assert "text_model_gate_blocked" in payload["warnings"][0]
-    assert "remote_text_model_not_allowed" in payload["warnings"][0]
-    assert "text_model_capability_missing" in payload["warnings"][0]
-    assert "no fake proposals" in payload["error"]
+    assert "host_agent_candidate_required" in payload["warnings"][0]
+    assert "paid APIs were not used" in payload["warnings"][0]
+    assert payload["output"] is None
     context_path = tmp_path / ".artist-portrait" / "data" / "proposal_context.json"
     assert context_path.exists()
     context_payload = json.loads(context_path.read_text(encoding="utf-8"))
@@ -1520,7 +1617,15 @@ def test_propose_without_text_model_blocks_without_fake_outputs(
     assert context_payload["sources"][0]["source_id"] == "clean-source-1"
     assert context_payload["clips"][0]["clip_id"] == context_payload["analyses"][0]["clip_id"]
     assert context_payload["bgm_requirements"]
-    assert "full_creative_proposal_generation" in context_payload["blocked_capabilities"]
+    assert "timeline_generation" in context_payload["blocked_capabilities"]
+    assert "full_creative_proposal_generation" not in context_payload["blocked_capabilities"]
+    handoff_payload = json.loads(
+        (tmp_path / "output" / "proposal_agent_handoff.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    assert handoff_payload["mode"] == "codex_chatgpt_host_agent"
+    assert handoff_payload["proposal_set_json_schema"]["title"] == "ProposalSet"
     gate_path = tmp_path / ".artist-portrait" / "data" / "text_model_gate.json"
     assert gate_path.exists()
     gate_payload = json.loads(gate_path.read_text(encoding="utf-8"))
@@ -1651,6 +1756,82 @@ def test_propose_without_text_model_blocks_without_fake_outputs(
     assert readiness_payload["raw_output_captured"] is False
     assert readiness_payload["proposal_content_generated"] is False
     assert readiness_payload["quarantine_required"] is True
+    input_bundle_path = (
+        tmp_path / ".artist-portrait" / "data" / "proposal_execution_input_bundle.json"
+    )
+    assert input_bundle_path.exists()
+    input_bundle_payload = json.loads(input_bundle_path.read_text(encoding="utf-8"))
+    assert input_bundle_payload["status"] == "blocked"
+    assert input_bundle_payload["provider_id"] == "local_mock"
+    for item_id in [
+        "provider_identity",
+        "request_packet",
+        "prompt_contract",
+        "schema_contract",
+        "approval_chain",
+        "secret_reference",
+        "credential_access_policy",
+        "network_policy",
+        "quarantine_target",
+        "output_routing",
+    ]:
+        assert input_bundle_payload[item_id]["status"] == "blocked"
+        assert input_bundle_payload[item_id]["allowed"] is False
+        assert input_bundle_payload[item_id]["materialized"] is False
+    assert input_bundle_payload["selected_secret_source"] is None
+    assert input_bundle_payload["credential_value_read"] is False
+    assert input_bundle_payload["network_allowed"] is False
+    assert input_bundle_payload["model_call_allowed"] is False
+    assert input_bundle_payload["execution_allowed"] is False
+    assert input_bundle_payload["execution_performed"] is False
+    assert input_bundle_payload["model_call_performed"] is False
+    assert input_bundle_payload["network_performed"] is False
+    assert input_bundle_payload["raw_output_capture_allowed"] is False
+    assert input_bundle_payload["raw_output_captured"] is False
+    assert input_bundle_payload["proposal_content_generated"] is False
+    assert input_bundle_payload["prompt_embedded"] is False
+    assert input_bundle_payload["quarantine_required"] is True
+    call_dry_run_path = (
+        tmp_path / ".artist-portrait" / "data" / "proposal_provider_call_dry_run.json"
+    )
+    assert call_dry_run_path.exists()
+    call_dry_run_payload = json.loads(call_dry_run_path.read_text(encoding="utf-8"))
+    assert call_dry_run_payload["status"] == "blocked"
+    assert call_dry_run_payload["provider_id"] == "local_mock"
+    for item_id in [
+        "endpoint_reference",
+        "auth_header_policy",
+        "request_body_reference",
+        "timeout_policy",
+        "retry_policy",
+        "rate_limit_policy",
+        "idempotency_policy",
+        "network_egress_policy",
+        "response_capture_policy",
+        "failure_handling_policy",
+    ]:
+        assert call_dry_run_payload[item_id]["status"] == "blocked"
+        assert call_dry_run_payload[item_id]["allowed"] is False
+        assert call_dry_run_payload[item_id]["materialized"] is False
+    assert call_dry_run_payload["endpoint_resolved"] is False
+    assert call_dry_run_payload["auth_header_materialized"] is False
+    assert call_dry_run_payload["request_body_materialized"] is False
+    assert call_dry_run_payload["timeout_seconds"] is None
+    assert call_dry_run_payload["retry_count"] == 0
+    assert call_dry_run_payload["idempotency_key_materialized"] is False
+    assert call_dry_run_payload["selected_secret_source"] is None
+    assert call_dry_run_payload["credential_value_read"] is False
+    assert call_dry_run_payload["network_allowed"] is False
+    assert call_dry_run_payload["model_call_allowed"] is False
+    assert call_dry_run_payload["execution_allowed"] is False
+    assert call_dry_run_payload["execution_performed"] is False
+    assert call_dry_run_payload["model_call_performed"] is False
+    assert call_dry_run_payload["network_performed"] is False
+    assert call_dry_run_payload["raw_output_capture_allowed"] is False
+    assert call_dry_run_payload["raw_output_captured"] is False
+    assert call_dry_run_payload["request_payload_sent"] is False
+    assert call_dry_run_payload["proposal_content_generated"] is False
+    assert call_dry_run_payload["quarantine_required"] is True
     authorization_path = (
         tmp_path / ".artist-portrait" / "data" / "proposal_execution_authorization.json"
     )
@@ -1671,6 +1852,49 @@ def test_propose_without_text_model_blocks_without_fake_outputs(
     assert authorization_payload["network_performed"] is False
     assert authorization_payload["proposal_content_generated"] is False
     assert authorization_payload["quarantine_required"] is True
+    response_intake_path = (
+        tmp_path
+        / ".artist-portrait"
+        / "data"
+        / "proposal_provider_response_intake_plan.json"
+    )
+    assert response_intake_path.exists()
+    response_intake_payload = json.loads(response_intake_path.read_text(encoding="utf-8"))
+    assert response_intake_payload["status"] == "blocked"
+    assert response_intake_payload["provider_id"] == "local_mock"
+    for item_id in [
+        "response_channel",
+        "raw_output_location",
+        "content_type_policy",
+        "size_limit_policy",
+        "checksum_policy",
+        "redaction_policy",
+        "parser_selection",
+        "validation_queue",
+        "promotion_gate",
+        "audit_trail",
+    ]:
+        assert response_intake_payload[item_id]["status"] == "blocked"
+        assert response_intake_payload[item_id]["allowed"] is False
+        assert response_intake_payload[item_id]["materialized"] is False
+    assert response_intake_payload["response_channel_open"] is False
+    assert response_intake_payload["raw_output_location_materialized"] is False
+    assert response_intake_payload["content_type_validated"] is False
+    assert response_intake_payload["size_limit_bytes"] == 0
+    assert response_intake_payload["checksum_computed"] is False
+    assert response_intake_payload["redaction_performed"] is False
+    assert response_intake_payload["parser_selected"] is False
+    assert response_intake_payload["validation_enqueued"] is False
+    assert response_intake_payload["promotion_allowed"] is False
+    assert response_intake_payload["audit_event_written"] is False
+    assert response_intake_payload["raw_output_captured"] is False
+    assert response_intake_payload["parsed_payload_generated"] is False
+    assert response_intake_payload["validation_performed"] is False
+    assert response_intake_payload["promoted_to_proposals"] is False
+    assert response_intake_payload["model_call_performed"] is False
+    assert response_intake_payload["network_performed"] is False
+    assert response_intake_payload["proposal_content_generated"] is False
+    assert response_intake_payload["quarantine_required"] is True
     quarantine_path = (
         tmp_path
         / ".artist-portrait"
@@ -1693,12 +1917,184 @@ def test_propose_without_text_model_blocks_without_fake_outputs(
     assert quarantine_payload["network_performed"] is False
     assert quarantine_payload["proposal_content_generated"] is False
     assert quarantine_payload["quarantine_required"] is True
+    response_validation_path = (
+        tmp_path
+        / ".artist-portrait"
+        / "data"
+        / "proposal_provider_response_validation_plan.json"
+    )
+    assert response_validation_path.exists()
+    response_validation_payload = json.loads(
+        response_validation_path.read_text(encoding="utf-8")
+    )
+    assert response_validation_payload["status"] == "blocked"
+    assert response_validation_payload["provider_id"] == "local_mock"
+    for item_id in [
+        "quarantine_input_binding",
+        "content_type_check",
+        "size_limit_check",
+        "checksum_verification",
+        "redaction_verification",
+        "parser_contract",
+        "json_syntax_validation",
+        "schema_validation",
+        "semantic_validation",
+        "promotion_decision",
+    ]:
+        assert response_validation_payload[item_id]["status"] == "blocked"
+        assert response_validation_payload[item_id]["allowed"] is False
+        assert response_validation_payload[item_id]["materialized"] is False
+    assert response_validation_payload["quarantine_input_bound"] is False
+    assert response_validation_payload["content_type_checked"] is False
+    assert response_validation_payload["size_limit_checked"] is False
+    assert response_validation_payload["checksum_verified"] is False
+    assert response_validation_payload["redaction_verified"] is False
+    assert response_validation_payload["parser_contract_selected"] is False
+    assert response_validation_payload["json_syntax_validated"] is False
+    assert response_validation_payload["schema_validated"] is False
+    assert response_validation_payload["semantic_validation_performed"] is False
+    assert response_validation_payload["promotion_decided"] is False
+    assert response_validation_payload["raw_output_read"] is False
+    assert response_validation_payload["parsed_payload_generated"] is False
+    assert response_validation_payload["validation_performed"] is False
+    assert response_validation_payload["promoted_to_proposals"] is False
+    assert response_validation_payload["audit_event_written"] is False
+    assert response_validation_payload["model_call_performed"] is False
+    assert response_validation_payload["network_performed"] is False
+    assert response_validation_payload["proposal_content_generated"] is False
+    assert response_validation_payload["quarantine_required"] is True
+    promotion_path = (
+        tmp_path
+        / ".artist-portrait"
+        / "data"
+        / "proposal_promotion_authorization_plan.json"
+    )
+    assert promotion_path.exists()
+    promotion_payload = json.loads(promotion_path.read_text(encoding="utf-8"))
+    assert promotion_payload["status"] == "blocked"
+    assert promotion_payload["provider_id"] == "local_mock"
+    assert promotion_payload["promotion_target_ref"] == ".artist-portrait/data/proposals.json"
+    for item_id in [
+        "validation_report_binding",
+        "schema_validation_requirement",
+        "semantic_validation_requirement",
+        "evidence_validation_requirement",
+        "risk_acceptance_requirement",
+        "proposal_identity_requirement",
+        "overwrite_policy",
+        "atomic_write_policy",
+        "provenance_binding",
+        "final_promotion_authorization",
+    ]:
+        assert promotion_payload[item_id]["status"] == "blocked"
+        assert promotion_payload[item_id]["allowed"] is False
+        assert promotion_payload[item_id]["materialized"] is False
+    for field in [
+        "validation_report_bound",
+        "schema_validation_passed",
+        "semantic_validation_passed",
+        "evidence_validation_passed",
+        "risk_acceptance_recorded",
+        "proposal_ids_unique",
+        "overwrite_allowed",
+        "atomic_write_ready",
+        "provenance_bound",
+        "promotion_authorized",
+        "promotion_performed",
+        "proposals_file_written",
+        "audit_event_written",
+        "model_call_performed",
+        "network_performed",
+        "proposal_content_generated",
+    ]:
+        assert promotion_payload[field] is False
+    assert promotion_payload["quarantine_required"] is True
+    promotion_report_path = (
+        tmp_path
+        / ".artist-portrait"
+        / "data"
+        / "proposal_promotion_validation_report.json"
+    )
+    assert promotion_report_path.exists()
+    promotion_report_payload = json.loads(
+        promotion_report_path.read_text(encoding="utf-8")
+    )
+    assert promotion_report_payload["status"] == "blocked"
+    for check_id in [
+        "input_binding_check",
+        "schema_result_check",
+        "semantic_result_check",
+        "evidence_traceability_check",
+        "risk_result_check",
+        "proposal_identity_check",
+        "overwrite_conflict_check",
+        "atomic_write_readiness_check",
+        "provenance_integrity_check",
+        "final_authorization_check",
+    ]:
+        assert promotion_report_payload[check_id]["status"] == "blocked"
+        assert promotion_report_payload[check_id]["performed"] is False
+        assert promotion_report_payload[check_id]["passed"] is False
+        assert promotion_report_payload[check_id]["issue_count"] == 1
+    assert promotion_report_payload["checks_performed"] == 0
+    assert promotion_report_payload["checks_passed"] == 0
+    assert promotion_report_payload["error_count"] == 0
+    assert promotion_report_payload["warning_count"] == 0
+    assert promotion_report_payload["overall_passed"] is False
+    assert promotion_report_payload["promotion_recommended"] is False
+    assert promotion_report_payload["promotion_authorized"] is False
+    assert promotion_report_payload["promotion_performed"] is False
+    assert promotion_report_payload["proposals_file_written"] is False
+    assert promotion_report_payload["model_call_performed"] is False
+    assert promotion_report_payload["network_performed"] is False
+    assert promotion_report_payload["proposal_content_generated"] is False
+    assert promotion_report_payload["quarantine_required"] is True
+    transaction_path = (
+        tmp_path / ".artist-portrait" / "data" / "proposal_canonical_write_transaction_plan.json"
+    )
+    assert transaction_path.exists()
+    transaction_payload = json.loads(transaction_path.read_text(encoding="utf-8"))
+    assert transaction_payload["status"] == "blocked"
+    for item_id in [
+        "target_lock", "prewrite_snapshot", "temporary_file",
+        "schema_prewrite_check", "durability_policy", "atomic_replace",
+        "conflict_detection", "rollback_plan", "audit_commit",
+        "postcommit_verification",
+    ]:
+        assert transaction_payload[item_id]["status"] == "blocked"
+        assert transaction_payload[item_id]["allowed"] is False
+        assert transaction_payload[item_id]["materialized"] is False
+    for field in [
+        "lock_acquired", "snapshot_created", "temporary_file_created",
+        "schema_prewrite_passed", "fsync_performed", "atomic_replace_performed",
+        "conflict_check_performed", "rollback_prepared", "rollback_performed",
+        "audit_commit_written", "postcommit_verified", "transaction_started",
+        "transaction_committed", "proposals_file_written", "model_call_performed",
+        "network_performed", "proposal_content_generated",
+    ]:
+        assert transaction_payload[field] is False
     result_path = tmp_path / ".artist-portrait" / "data" / "proposal_provider_result.json"
     assert result_path.exists()
     result_payload = json.loads(result_path.read_text(encoding="utf-8"))
     assert result_payload["status"] == "blocked"
     assert result_payload["provider_id"] == "local_mock"
     assert result_payload["expected_output_kind"] == "ProposalSet"
+    assert (
+        result_payload["response_validation_ref"]
+        == ".artist-portrait/data/proposal_provider_response_validation_plan.json"
+    )
+    assert (
+        result_payload["promotion_authorization_ref"]
+        == ".artist-portrait/data/proposal_promotion_authorization_plan.json"
+    )
+    assert (
+        result_payload["promotion_validation_report_ref"]
+        == ".artist-portrait/data/proposal_promotion_validation_report.json"
+    )
+    assert (
+        result_payload["canonical_write_transaction_ref"]
+        == ".artist-portrait/data/proposal_canonical_write_transaction_plan.json"
+    )
     assert result_payload["payload_generated"] is False
     assert result_payload["payload_json_ref"] is None
     assert result_payload["validation_performed"] is False
@@ -1715,14 +2111,22 @@ def test_propose_without_text_model_blocks_without_fake_outputs(
         ".artist-portrait/data/proposal_context.json",
         ".artist-portrait/data/text_model_gate.json",
         ".artist-portrait/data/proposal_request.json",
+        "output/proposal_agent_handoff.json",
         ".artist-portrait/data/proposal_adapter_check.json",
         ".artist-portrait/data/proposal_provider_registry.json",
         ".artist-portrait/data/proposal_mock_adapter_handshake.json",
         ".artist-portrait/data/proposal_execution_approval_request.json",
         ".artist-portrait/data/proposal_execution_approval_record.json",
         ".artist-portrait/data/proposal_execution_readiness_plan.json",
+        ".artist-portrait/data/proposal_execution_input_bundle.json",
+        ".artist-portrait/data/proposal_provider_call_dry_run.json",
         ".artist-portrait/data/proposal_execution_authorization.json",
+        ".artist-portrait/data/proposal_provider_response_intake_plan.json",
         ".artist-portrait/data/proposal_provider_output_quarantine.json",
+        ".artist-portrait/data/proposal_provider_response_validation_plan.json",
+        ".artist-portrait/data/proposal_promotion_authorization_plan.json",
+        ".artist-portrait/data/proposal_promotion_validation_report.json",
+        ".artist-portrait/data/proposal_canonical_write_transaction_plan.json",
         ".artist-portrait/data/proposal_provider_result.json",
     ]
 
@@ -1754,11 +2158,11 @@ def test_propose_with_ready_text_model_gate_still_does_not_generate(
     code = main(["propose", "--project", str(project_path), "--json"])
     captured = capsys.readouterr()
 
-    assert code == 4
+    assert code == 1
     payload = json.loads(captured.out)
     assert payload["status"] == "blocked"
-    assert "proposal_generation_not_implemented" in payload["warnings"][0]
-    assert "generation is not implemented" in payload["error"]
+    assert "host_agent_candidate_required" in payload["warnings"][0]
+    assert payload["output"] is None
     gate_payload = json.loads(
         (tmp_path / ".artist-portrait" / "data" / "text_model_gate.json").read_text(
             encoding="utf-8"
@@ -1844,6 +2248,56 @@ def test_propose_with_ready_text_model_gate_still_does_not_generate(
     assert readiness_payload["credential_value_read"] is False
     assert readiness_payload["execution_allowed"] is False
     assert readiness_payload["raw_output_captured"] is False
+    input_bundle_payload = json.loads(
+        (
+            tmp_path
+            / ".artist-portrait"
+            / "data"
+            / "proposal_execution_input_bundle.json"
+        ).read_text(encoding="utf-8")
+    )
+    assert input_bundle_payload["status"] == "blocked"
+    assert input_bundle_payload["provider_identity"]["status"] == "blocked"
+    assert input_bundle_payload["request_packet"]["status"] == "blocked"
+    assert input_bundle_payload["prompt_contract"]["status"] == "blocked"
+    assert input_bundle_payload["schema_contract"]["status"] == "blocked"
+    assert input_bundle_payload["approval_chain"]["status"] == "blocked"
+    assert input_bundle_payload["secret_reference"]["status"] == "blocked"
+    assert input_bundle_payload["credential_access_policy"]["status"] == "blocked"
+    assert input_bundle_payload["network_policy"]["status"] == "blocked"
+    assert input_bundle_payload["quarantine_target"]["status"] == "blocked"
+    assert input_bundle_payload["output_routing"]["status"] == "blocked"
+    assert input_bundle_payload["credential_value_read"] is False
+    assert input_bundle_payload["execution_allowed"] is False
+    assert input_bundle_payload["raw_output_captured"] is False
+    assert input_bundle_payload["prompt_embedded"] is False
+    call_dry_run_payload = json.loads(
+        (
+            tmp_path
+            / ".artist-portrait"
+            / "data"
+            / "proposal_provider_call_dry_run.json"
+        ).read_text(encoding="utf-8")
+    )
+    assert call_dry_run_payload["status"] == "blocked"
+    assert call_dry_run_payload["endpoint_reference"]["status"] == "blocked"
+    assert call_dry_run_payload["auth_header_policy"]["status"] == "blocked"
+    assert call_dry_run_payload["request_body_reference"]["status"] == "blocked"
+    assert call_dry_run_payload["timeout_policy"]["status"] == "blocked"
+    assert call_dry_run_payload["retry_policy"]["status"] == "blocked"
+    assert call_dry_run_payload["rate_limit_policy"]["status"] == "blocked"
+    assert call_dry_run_payload["idempotency_policy"]["status"] == "blocked"
+    assert call_dry_run_payload["network_egress_policy"]["status"] == "blocked"
+    assert call_dry_run_payload["response_capture_policy"]["status"] == "blocked"
+    assert call_dry_run_payload["failure_handling_policy"]["status"] == "blocked"
+    assert call_dry_run_payload["endpoint_resolved"] is False
+    assert call_dry_run_payload["auth_header_materialized"] is False
+    assert call_dry_run_payload["request_body_materialized"] is False
+    assert call_dry_run_payload["credential_value_read"] is False
+    assert call_dry_run_payload["execution_allowed"] is False
+    assert call_dry_run_payload["network_performed"] is False
+    assert call_dry_run_payload["request_payload_sent"] is False
+    assert call_dry_run_payload["raw_output_captured"] is False
     authorization_payload = json.loads(
         (
             tmp_path
@@ -1858,6 +2312,33 @@ def test_propose_with_ready_text_model_gate_still_does_not_generate(
     assert authorization_payload["network_allowed"] is False
     assert authorization_payload["model_call_allowed"] is False
     assert authorization_payload["execution_performed"] is False
+    response_intake_payload = json.loads(
+        (
+            tmp_path
+            / ".artist-portrait"
+            / "data"
+            / "proposal_provider_response_intake_plan.json"
+        ).read_text(encoding="utf-8")
+    )
+    assert response_intake_payload["status"] == "blocked"
+    assert response_intake_payload["response_channel"]["status"] == "blocked"
+    assert response_intake_payload["raw_output_location"]["status"] == "blocked"
+    assert response_intake_payload["content_type_policy"]["status"] == "blocked"
+    assert response_intake_payload["size_limit_policy"]["status"] == "blocked"
+    assert response_intake_payload["checksum_policy"]["status"] == "blocked"
+    assert response_intake_payload["redaction_policy"]["status"] == "blocked"
+    assert response_intake_payload["parser_selection"]["status"] == "blocked"
+    assert response_intake_payload["validation_queue"]["status"] == "blocked"
+    assert response_intake_payload["promotion_gate"]["status"] == "blocked"
+    assert response_intake_payload["audit_trail"]["status"] == "blocked"
+    assert response_intake_payload["response_channel_open"] is False
+    assert response_intake_payload["raw_output_location_materialized"] is False
+    assert response_intake_payload["parser_selected"] is False
+    assert response_intake_payload["validation_enqueued"] is False
+    assert response_intake_payload["promotion_allowed"] is False
+    assert response_intake_payload["raw_output_captured"] is False
+    assert response_intake_payload["parsed_payload_generated"] is False
+    assert response_intake_payload["promoted_to_proposals"] is False
     quarantine_payload = json.loads(
         (
             tmp_path
@@ -1870,6 +2351,82 @@ def test_propose_with_ready_text_model_gate_still_does_not_generate(
     assert quarantine_payload["raw_output_captured"] is False
     assert quarantine_payload["promoted_to_proposals"] is False
     assert quarantine_payload["validation_performed"] is False
+    response_validation_payload = json.loads(
+        (
+            tmp_path
+            / ".artist-portrait"
+            / "data"
+            / "proposal_provider_response_validation_plan.json"
+        ).read_text(encoding="utf-8")
+    )
+    assert response_validation_payload["status"] == "blocked"
+    assert response_validation_payload["quarantine_input_binding"]["status"] == "blocked"
+    assert response_validation_payload["content_type_check"]["status"] == "blocked"
+    assert response_validation_payload["size_limit_check"]["status"] == "blocked"
+    assert response_validation_payload["checksum_verification"]["status"] == "blocked"
+    assert response_validation_payload["redaction_verification"]["status"] == "blocked"
+    assert response_validation_payload["parser_contract"]["status"] == "blocked"
+    assert response_validation_payload["json_syntax_validation"]["status"] == "blocked"
+    assert response_validation_payload["schema_validation"]["status"] == "blocked"
+    assert response_validation_payload["semantic_validation"]["status"] == "blocked"
+    assert response_validation_payload["promotion_decision"]["status"] == "blocked"
+    assert response_validation_payload["raw_output_read"] is False
+    assert response_validation_payload["parsed_payload_generated"] is False
+    assert response_validation_payload["validation_performed"] is False
+    assert response_validation_payload["promoted_to_proposals"] is False
+    promotion_payload = json.loads(
+        (
+            tmp_path
+            / ".artist-portrait"
+            / "data"
+            / "proposal_promotion_authorization_plan.json"
+        ).read_text(encoding="utf-8")
+    )
+    assert promotion_payload["status"] == "blocked"
+    assert promotion_payload["validation_report_binding"]["status"] == "blocked"
+    assert promotion_payload["schema_validation_requirement"]["status"] == "blocked"
+    assert promotion_payload["semantic_validation_requirement"]["status"] == "blocked"
+    assert promotion_payload["evidence_validation_requirement"]["status"] == "blocked"
+    assert promotion_payload["risk_acceptance_requirement"]["status"] == "blocked"
+    assert promotion_payload["proposal_identity_requirement"]["status"] == "blocked"
+    assert promotion_payload["overwrite_policy"]["status"] == "blocked"
+    assert promotion_payload["atomic_write_policy"]["status"] == "blocked"
+    assert promotion_payload["provenance_binding"]["status"] == "blocked"
+    assert promotion_payload["final_promotion_authorization"]["status"] == "blocked"
+    assert promotion_payload["promotion_authorized"] is False
+    assert promotion_payload["promotion_performed"] is False
+    assert promotion_payload["proposals_file_written"] is False
+    promotion_report_payload = json.loads(
+        (
+            tmp_path
+            / ".artist-portrait"
+            / "data"
+            / "proposal_promotion_validation_report.json"
+        ).read_text(encoding="utf-8")
+    )
+    assert promotion_report_payload["status"] == "blocked"
+    assert promotion_report_payload["input_binding_check"]["performed"] is False
+    assert promotion_report_payload["schema_result_check"]["passed"] is False
+    assert promotion_report_payload["semantic_result_check"]["passed"] is False
+    assert promotion_report_payload["evidence_traceability_check"]["passed"] is False
+    assert promotion_report_payload["risk_result_check"]["passed"] is False
+    assert promotion_report_payload["proposal_identity_check"]["passed"] is False
+    assert promotion_report_payload["overwrite_conflict_check"]["passed"] is False
+    assert promotion_report_payload["atomic_write_readiness_check"]["passed"] is False
+    assert promotion_report_payload["provenance_integrity_check"]["passed"] is False
+    assert promotion_report_payload["final_authorization_check"]["passed"] is False
+    assert promotion_report_payload["overall_passed"] is False
+    assert promotion_report_payload["promotion_recommended"] is False
+    transaction_payload = json.loads(
+        (
+            tmp_path / ".artist-portrait" / "data" / "proposal_canonical_write_transaction_plan.json"
+        ).read_text(encoding="utf-8")
+    )
+    assert transaction_payload["status"] == "blocked"
+    assert transaction_payload["transaction_started"] is False
+    assert transaction_payload["transaction_committed"] is False
+    assert transaction_payload["rollback_performed"] is False
+    assert transaction_payload["proposals_file_written"] is False
     result_payload = json.loads(
         (
             tmp_path / ".artist-portrait" / "data" / "proposal_provider_result.json"
@@ -2276,6 +2833,135 @@ def test_invalid_proposal_execution_readiness_plan_status_and_doctor(tmp_path, c
     )
 
 
+def test_invalid_proposal_execution_input_bundle_status_and_doctor(tmp_path, capsys):
+    project_path = tmp_path / "project.yaml"
+    project_path.write_text(
+        project_fixture_with_scene_detection("off"),
+        encoding="utf-8",
+    )
+    assert main(["init", "--project", str(project_path), "--quiet"]) in (0, 1)
+    write_clean_source_ledger(tmp_path)
+    input_bundle_path = (
+        tmp_path / ".artist-portrait" / "data" / "proposal_execution_input_bundle.json"
+    )
+    input_bundle_path.write_text(
+        '{"bundle_id": "missing-required-fields"}\n',
+        encoding="utf-8",
+    )
+
+    code = main(["status", "--project", str(project_path), "--json"])
+    captured = capsys.readouterr()
+    status_payload = json.loads(captured.out)
+
+    assert code == 0
+    assert (
+        status_payload["summaries"]["proposal_execution_input_bundle"]["valid"]
+        is False
+    )
+    assert (
+        "invalid ProposalExecutionInputBundle JSON"
+        in status_payload["summaries"]["proposal_execution_input_bundle"]["error"]
+    )
+
+    code = main(["doctor", "--project", str(project_path), "--json"])
+    captured = capsys.readouterr()
+    doctor_payload = json.loads(captured.out)
+
+    assert code == 1
+    assert any(
+        issue["code"] == "proposal_execution_input_bundle_invalid"
+        for issue in doctor_payload["issues"]
+    )
+
+
+def test_invalid_proposal_provider_call_dry_run_status_and_doctor(tmp_path, capsys):
+    project_path = tmp_path / "project.yaml"
+    project_path.write_text(
+        project_fixture_with_scene_detection("off"),
+        encoding="utf-8",
+    )
+    assert main(["init", "--project", str(project_path), "--quiet"]) in (0, 1)
+    write_clean_source_ledger(tmp_path)
+    call_dry_run_path = (
+        tmp_path / ".artist-portrait" / "data" / "proposal_provider_call_dry_run.json"
+    )
+    call_dry_run_path.write_text(
+        '{"dry_run_id": "missing-required-fields"}\n',
+        encoding="utf-8",
+    )
+
+    code = main(["status", "--project", str(project_path), "--json"])
+    captured = capsys.readouterr()
+    status_payload = json.loads(captured.out)
+
+    assert code == 0
+    assert (
+        status_payload["summaries"]["proposal_provider_call_dry_run"]["valid"]
+        is False
+    )
+    assert (
+        "invalid ProposalProviderCallDryRun JSON"
+        in status_payload["summaries"]["proposal_provider_call_dry_run"]["error"]
+    )
+
+    code = main(["doctor", "--project", str(project_path), "--json"])
+    captured = capsys.readouterr()
+    doctor_payload = json.loads(captured.out)
+
+    assert code == 1
+    assert any(
+        issue["code"] == "proposal_provider_call_dry_run_invalid"
+        for issue in doctor_payload["issues"]
+    )
+
+
+def test_invalid_proposal_provider_response_intake_plan_status_and_doctor(
+    tmp_path,
+    capsys,
+):
+    project_path = tmp_path / "project.yaml"
+    project_path.write_text(
+        project_fixture_with_scene_detection("off"),
+        encoding="utf-8",
+    )
+    assert main(["init", "--project", str(project_path), "--quiet"]) in (0, 1)
+    write_clean_source_ledger(tmp_path)
+    response_intake_path = (
+        tmp_path
+        / ".artist-portrait"
+        / "data"
+        / "proposal_provider_response_intake_plan.json"
+    )
+    response_intake_path.write_text(
+        '{"intake_id": "missing-required-fields"}\n',
+        encoding="utf-8",
+    )
+
+    code = main(["status", "--project", str(project_path), "--json"])
+    captured = capsys.readouterr()
+    status_payload = json.loads(captured.out)
+
+    assert code == 0
+    assert (
+        status_payload["summaries"]["proposal_provider_response_intake_plan"]["valid"]
+        is False
+    )
+    assert (
+        "invalid ProposalProviderResponseIntakePlan JSON"
+        in status_payload["summaries"]["proposal_provider_response_intake_plan"]["error"]
+    )
+
+    code = main(["doctor", "--project", str(project_path), "--json"])
+    captured = capsys.readouterr()
+    doctor_payload = json.loads(captured.out)
+
+    assert code == 1
+    assert any(
+        issue["code"] == "proposal_provider_response_intake_plan_invalid"
+        for issue in doctor_payload["issues"]
+    )
+
+
 def test_invalid_proposal_provider_output_quarantine_status_and_doctor(tmp_path, capsys):
     project_path = tmp_path / "project.yaml"
     project_path.write_text(
@@ -2313,6 +2999,181 @@ def test_invalid_proposal_provider_output_quarantine_status_and_doctor(tmp_path,
     assert code == 1
     assert any(
         issue["code"] == "proposal_provider_output_quarantine_invalid"
+        for issue in doctor_payload["issues"]
+    )
+
+
+def test_invalid_proposal_provider_response_validation_plan_status_and_doctor(
+    tmp_path,
+    capsys,
+):
+    project_path = tmp_path / "project.yaml"
+    project_path.write_text(
+        project_fixture_with_scene_detection("off"),
+        encoding="utf-8",
+    )
+    assert main(["init", "--project", str(project_path), "--quiet"]) in (0, 1)
+    write_clean_source_ledger(tmp_path)
+    response_validation_path = (
+        tmp_path
+        / ".artist-portrait"
+        / "data"
+        / "proposal_provider_response_validation_plan.json"
+    )
+    response_validation_path.write_text(
+        '{"validation_plan_id": "missing-required-fields"}\n',
+        encoding="utf-8",
+    )
+
+    code = main(["status", "--project", str(project_path), "--json"])
+    captured = capsys.readouterr()
+    status_payload = json.loads(captured.out)
+
+    assert code == 0
+    assert (
+        status_payload["summaries"]["proposal_provider_response_validation_plan"][
+            "valid"
+        ]
+        is False
+    )
+    assert (
+        "invalid ProposalProviderResponseValidationPlan JSON"
+        in status_payload["summaries"][
+            "proposal_provider_response_validation_plan"
+        ]["error"]
+    )
+
+    code = main(["doctor", "--project", str(project_path), "--json"])
+    captured = capsys.readouterr()
+    doctor_payload = json.loads(captured.out)
+
+    assert code == 1
+    assert any(
+        issue["code"] == "proposal_provider_response_validation_plan_invalid"
+        for issue in doctor_payload["issues"]
+    )
+
+
+def test_invalid_proposal_promotion_authorization_plan_status_and_doctor(
+    tmp_path,
+    capsys,
+):
+    project_path = tmp_path / "project.yaml"
+    project_path.write_text(
+        project_fixture_with_scene_detection("off"),
+        encoding="utf-8",
+    )
+    assert main(["init", "--project", str(project_path), "--quiet"]) in (0, 1)
+    write_clean_source_ledger(tmp_path)
+    promotion_path = (
+        tmp_path
+        / ".artist-portrait"
+        / "data"
+        / "proposal_promotion_authorization_plan.json"
+    )
+    promotion_path.write_text(
+        '{"promotion_plan_id": "missing-required-fields"}\n',
+        encoding="utf-8",
+    )
+
+    code = main(["status", "--project", str(project_path), "--json"])
+    captured = capsys.readouterr()
+    status_payload = json.loads(captured.out)
+
+    assert code == 0
+    assert (
+        status_payload["summaries"]["proposal_promotion_authorization_plan"]["valid"]
+        is False
+    )
+    assert (
+        "invalid ProposalPromotionAuthorizationPlan JSON"
+        in status_payload["summaries"]["proposal_promotion_authorization_plan"]["error"]
+    )
+
+    code = main(["doctor", "--project", str(project_path), "--json"])
+    captured = capsys.readouterr()
+    doctor_payload = json.loads(captured.out)
+
+    assert code == 1
+    assert any(
+        issue["code"] == "proposal_promotion_authorization_plan_invalid"
+        for issue in doctor_payload["issues"]
+    )
+
+
+def test_invalid_proposal_promotion_validation_report_status_and_doctor(
+    tmp_path,
+    capsys,
+):
+    project_path = tmp_path / "project.yaml"
+    project_path.write_text(
+        project_fixture_with_scene_detection("off"),
+        encoding="utf-8",
+    )
+    assert main(["init", "--project", str(project_path), "--quiet"]) in (0, 1)
+    write_clean_source_ledger(tmp_path)
+    report_path = (
+        tmp_path
+        / ".artist-portrait"
+        / "data"
+        / "proposal_promotion_validation_report.json"
+    )
+    report_path.write_text(
+        '{"report_id": "missing-required-fields"}\n',
+        encoding="utf-8",
+    )
+
+    code = main(["status", "--project", str(project_path), "--json"])
+    captured = capsys.readouterr()
+    status_payload = json.loads(captured.out)
+
+    assert code == 0
+    assert (
+        status_payload["summaries"]["proposal_promotion_validation_report"]["valid"]
+        is False
+    )
+    assert (
+        "invalid ProposalPromotionValidationReport JSON"
+        in status_payload["summaries"]["proposal_promotion_validation_report"]["error"]
+    )
+
+    code = main(["doctor", "--project", str(project_path), "--json"])
+    captured = capsys.readouterr()
+    doctor_payload = json.loads(captured.out)
+
+    assert code == 1
+    assert any(
+        issue["code"] == "proposal_promotion_validation_report_invalid"
+        for issue in doctor_payload["issues"]
+    )
+
+
+def test_invalid_proposal_canonical_write_transaction_plan_status_and_doctor(
+    tmp_path,
+    capsys,
+):
+    project_path = tmp_path / "project.yaml"
+    project_path.write_text(project_fixture_with_scene_detection("off"), encoding="utf-8")
+    assert main(["init", "--project", str(project_path), "--quiet"]) in (0, 1)
+    write_clean_source_ledger(tmp_path)
+    transaction_path = (
+        tmp_path / ".artist-portrait" / "data" / "proposal_canonical_write_transaction_plan.json"
+    )
+    transaction_path.write_text(
+        '{"transaction_plan_id": "missing-required-fields"}\n',
+        encoding="utf-8",
+    )
+
+    assert main(["status", "--project", str(project_path), "--json"]) == 0
+    status_payload = json.loads(capsys.readouterr().out)
+    summary = status_payload["summaries"]["proposal_canonical_write_transaction_plan"]
+    assert summary["valid"] is False
+    assert "invalid ProposalCanonicalWriteTransactionPlan JSON" in summary["error"]
+
+    assert main(["doctor", "--project", str(project_path), "--json"]) == 1
+    doctor_payload = json.loads(capsys.readouterr().out)
+    assert any(
+        issue["code"] == "proposal_canonical_write_transaction_plan_invalid"
         for issue in doctor_payload["issues"]
     )
 
@@ -2377,7 +3238,7 @@ def test_proposal_adapter_check_rejects_plaintext_secret_material(
     captured = capsys.readouterr()
     payload = json.loads(captured.out)
 
-    assert code == 4
+    assert code == 1
     assert payload["status"] == "blocked"
     adapter_payload = json.loads(
         (
@@ -2421,18 +3282,484 @@ def test_review_proposal_requires_context_and_proposals(tmp_path, capsys):
     assert "requires propose to prepare proposal context" in captured.err
 
 
-def test_review_timeline_scope_remains_blocked(tmp_path, capsys):
+def test_review_timeline_requires_generated_timeline(tmp_path, capsys):
     project_path = tmp_path / "project.yaml"
     project_path.write_text(
         (FIXTURES / "valid_project.yaml").read_text(encoding="utf-8"),
         encoding="utf-8",
     )
 
+    assert main(["init", "--project", str(project_path), "--quiet"]) in (0, 1)
     code = main(["review", "--project", str(project_path), "--scope", "timeline"])
     captured = capsys.readouterr()
 
     assert code == 7
-    assert "review --scope timeline" in captured.err
+    assert "requires timeline generation first" in captured.err
+
+
+def test_timeline_generates_selected_proposal_canonical_draft(tmp_path, capsys):
+    project_path = build_valid_proposal_project(tmp_path, capsys)
+
+    code = main(
+        [
+            "timeline",
+            "--project",
+            str(project_path),
+            "--proposal",
+            "proposal_advanced",
+            "--json",
+        ]
+    )
+    payload = json.loads(capsys.readouterr().out)
+
+    assert code in (0, 1)
+    assert payload["proposal"] == "proposal_advanced"
+    assert payload["output"] == "output/timeline_draft.json"
+    timeline = json.loads(
+        (tmp_path / "output" / "timeline_draft.json").read_text(encoding="utf-8")
+    )
+    assert timeline["proposal_id"] == "proposal_advanced"
+    assert timeline["segments"][0]["clip_id"]
+    assert timeline["segments"][0]["timeline_start"] == 0.0
+    assert timeline["music_plan"]["status"] == "unresolved"
+    assert timeline["music_plan"]["input_mode"] == "none_yet"
+    assert timeline["music_plan"]["selection_performed"] is False
+    assert timeline["music_plan"]["beat_analysis_performed"] is False
+    assert timeline["music_plan"]["fitting_performed"] is False
+    assert set(timeline["music_plan"]["future_input_modes"]) == {
+        "direct_audio",
+        "video_audio_extract",
+        "source_embedded_audio",
+        "multiple_candidates",
+        "none_yet",
+    }
+
+
+def test_timeline_is_deterministic_and_reviewable(tmp_path, capsys):
+    project_path = build_valid_proposal_project(tmp_path, capsys)
+    command = [
+        "timeline",
+        "--project",
+        str(project_path),
+        "--proposal",
+        "proposal_safe",
+        "--quiet",
+    ]
+    assert main(command) in (0, 1)
+    first = (tmp_path / "output" / "timeline_draft.json").read_bytes()
+    assert main(command) in (0, 1)
+    second = (tmp_path / "output" / "timeline_draft.json").read_bytes()
+    assert first == second
+
+    assert (
+        main(
+            [
+                "review",
+                "--project",
+                str(project_path),
+                "--scope",
+                "timeline",
+                "--json",
+            ]
+        )
+        == 0
+    )
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["issues"] == []
+    assert payload["validation"] == ".artist-portrait/data/timeline_validation.json"
+    assert (tmp_path / "output" / "timeline_review.md").exists()
+
+
+def test_timeline_respects_allow_music_false(tmp_path, capsys):
+    project_path = build_valid_proposal_project(tmp_path, capsys, allow_music=False)
+
+    assert (
+        main(
+            [
+                "timeline",
+                "--project",
+                str(project_path),
+                "--proposal",
+                "proposal_risky",
+                "--quiet",
+            ]
+        )
+        in (0, 1)
+    )
+    timeline = json.loads(
+        (tmp_path / "output" / "timeline_draft.json").read_text(encoding="utf-8")
+    )
+    assert timeline["music_plan"]["status"] == "disabled_by_policy"
+    assert timeline["music_plan"]["input_mode"] == "disabled_by_policy"
+
+
+def test_timeline_requires_validated_canonical_proposal(tmp_path, capsys):
+    project_path = build_blocked_proposal_chain(tmp_path, capsys)
+    write_proposals_from_context(tmp_path)
+
+    code = main(
+        [
+            "timeline",
+            "--project",
+            str(project_path),
+            "--proposal",
+            "proposal_safe",
+        ]
+    )
+
+    assert code == 7
+    assert "validated canonical proposal import" in capsys.readouterr().err
+
+
+def test_timeline_status_doctor_and_invalid_json_diagnostics(tmp_path, capsys):
+    project_path = build_valid_proposal_project(tmp_path, capsys)
+    assert (
+        main(
+            [
+                "timeline",
+                "--project",
+                str(project_path),
+                "--proposal",
+                "proposal_safe",
+                "--quiet",
+            ]
+        )
+        in (0, 1)
+    )
+    assert main(["status", "--project", str(project_path), "--json"]) == 0
+    status = json.loads(capsys.readouterr().out)
+    assert status["summaries"]["timeline"]["valid"] is True
+    assert status["steps"]["timeline"]["status"] in {
+        "completed",
+        "completed_with_warnings",
+    }
+
+    (tmp_path / "output" / "timeline_draft.json").write_text("{broken", encoding="utf-8")
+    assert main(["doctor", "--project", str(project_path), "--json"]) == 1
+    doctor = json.loads(capsys.readouterr().out)
+    assert "timeline_invalid" in {issue["code"] for issue in doctor["issues"]}
+
+
+def test_new_canonical_proposals_invalidate_existing_timeline(tmp_path, capsys):
+    project_path = build_valid_proposal_project(tmp_path, capsys)
+    assert (
+        main(
+            [
+                "timeline",
+                "--project",
+                str(project_path),
+                "--proposal",
+                "proposal_safe",
+                "--quiet",
+            ]
+        )
+        in (0, 1)
+    )
+    candidate = tmp_path / "proposal_candidate_v2.json"
+    payload = json.loads(
+        (tmp_path / ".artist-portrait" / "data" / "proposals.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    payload["proposal_set_id"] = "proposal_set_test_v2"
+    candidate.write_text(
+        json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+    assert (
+        main(
+            [
+                "propose",
+                "--project",
+                str(project_path),
+                "--agent-output",
+                str(candidate),
+                "--quiet",
+            ]
+        )
+        == 0
+    )
+    assert main(["status", "--project", str(project_path), "--json"]) == 0
+    status = json.loads(capsys.readouterr().out)
+    assert status["steps"]["timeline"]["status"] == "invalidated"
+    assert status["steps"]["review_timeline"]["status"] == "invalidated"
+
+
+def test_bgm_cli_import_list_fit_and_status(tmp_path, capsys):
+    project_path = build_valid_proposal_project(tmp_path, capsys)
+    assert (
+        main(
+            [
+                "timeline",
+                "--project",
+                str(project_path),
+                "--proposal",
+                "proposal_safe",
+                "--quiet",
+            ]
+        )
+        in (0, 1)
+    )
+    audio = tmp_path / "media" / "bgm.wav"
+    audio.parent.mkdir(parents=True, exist_ok=True)
+    subprocess.run(
+        [
+            "ffmpeg", "-y", "-hide_banner", "-loglevel", "error",
+            "-f", "lavfi", "-i", "sine=frequency=440:duration=1",
+            str(audio),
+        ],
+        check=True,
+    )
+    assert (
+        main(
+            [
+                "bgm", "import", "--project", str(project_path),
+                "--file", "media/bgm.wav", "--rights-status", "owned", "--json",
+            ]
+        )
+        == 1
+    )
+    imported = json.loads(capsys.readouterr().out)
+    candidate_id = imported["candidate"]["music_candidate_id"]
+    assert imported["candidate"]["beat_analysis_status"] == "unavailable"
+
+    assert (
+        main(
+            [
+                "bgm", "analyze", "--project", str(project_path),
+                "--window-seconds", "0.5", "--json",
+            ]
+        )
+        == 1
+    )
+    analyzed = json.loads(capsys.readouterr().out)
+    assert analyzed["analysis"]["analysis_engine"] == "local_pcm_energy_v1"
+    assert analyzed["analysis"]["automatic_music_selection"] is False
+    assert analyzed["report"] == "output/bgm_analysis_report.md"
+
+    assert (
+        main(
+            [
+                "bgm", "fit", "--project", str(project_path),
+                "--candidate", candidate_id, "--json",
+            ]
+        )
+        == 1
+    )
+    fitted = json.loads(capsys.readouterr().out)
+    assert fitted["fit"]["music_candidate_id"] == candidate_id
+    assert fitted["fit"]["beat_alignment_status"] == "unavailable"
+    assert fitted["fit"]["analysis_ref"] == ".artist-portrait/data/bgm_analysis.json"
+    assert fitted["fit"]["energy_alignment_status"] == "analysis_used"
+    timeline = json.loads(
+        (tmp_path / "output" / "timeline_draft.json").read_text(encoding="utf-8")
+    )
+    assert timeline["music_plan"]["status"] == "fitted"
+    assert timeline["music_plan"]["candidate_id"] == candidate_id
+    assert main(["status", "--project", str(project_path), "--json"]) == 0
+    status = json.loads(capsys.readouterr().out)
+    assert status["summaries"]["bgm_candidates"]["count"] == 1
+    assert status["summaries"]["bgm_analysis"]["candidate_count"] == 1
+    assert status["summaries"]["bgm_fit"]["candidate_id"] == candidate_id
+
+
+def test_bgm_cli_recommend_handoff_and_import(tmp_path, capsys):
+    project_path = build_valid_proposal_project(tmp_path, capsys)
+    assert (
+        main(
+            [
+                "timeline",
+                "--project",
+                str(project_path),
+                "--proposal",
+                "proposal_safe",
+                "--quiet",
+            ]
+        )
+        in (0, 1)
+    )
+    audio = tmp_path / "media" / "bgm.wav"
+    audio.parent.mkdir(parents=True, exist_ok=True)
+    subprocess.run(
+        [
+            "ffmpeg", "-y", "-hide_banner", "-loglevel", "error",
+            "-f", "lavfi", "-i", "sine=frequency=440:duration=1",
+            str(audio),
+        ],
+        check=True,
+    )
+    assert main(["bgm", "import", "--project", str(project_path), "--file", "media/bgm.wav", "--json"]) == 1
+    candidate_id = json.loads(capsys.readouterr().out)["candidate"]["music_candidate_id"]
+    assert main(["bgm", "analyze", "--project", str(project_path), "--json"]) == 1
+    capsys.readouterr()
+    assert main(["bgm", "recommend", "--project", str(project_path), "--json"]) == 1
+    prepared = json.loads(capsys.readouterr().out)
+    context = json.loads((tmp_path / prepared["context"]).read_text(encoding="utf-8"))
+    recommendation = tmp_path / "recommendation.json"
+    recommendation.write_text(
+        json.dumps(
+            {
+                "schema_version": "1.0",
+                "recommendation_set_id": "bgmrec_cli",
+                "project_id": context["project_id"],
+                "context_id": context["context_id"],
+                "method": "host_agent",
+                "method_version": "test",
+                "recommendations": [
+                    {
+                        "recommendation_id": "rec_001",
+                        "music_candidate_id": candidate_id,
+                        "rank": 1,
+                        "fit_rationale": "fits the brief",
+                        "timing_rationale": "fits the timeline",
+                        "risk_notes": [],
+                        "evidence_refs": [".artist-portrait/data/bgm_analysis.json"],
+                        "confidence": 0.8,
+                    }
+                ],
+                "selection_performed": False,
+                "automatic_selection_performed": False,
+                "network_performed": False,
+                "model_call_performed_by_cli": False,
+                "warnings": [],
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    assert (
+        main(
+            [
+                "bgm", "recommend", "--project", str(project_path),
+                "--agent-output", str(recommendation), "--json",
+            ]
+        )
+        == 0
+    )
+    imported = json.loads(capsys.readouterr().out)
+    assert imported["output"] == ".artist-portrait/data/bgm_recommendations.json"
+    assert imported["validation"]["valid"] is True
+
+
+@pytest.mark.skipif(
+    shutil.which("ffmpeg") is None or shutil.which("ffprobe") is None,
+    reason="preview CLI test requires ffmpeg and ffprobe",
+)
+def test_preview_cli_renders_review_media_from_timeline_and_bgm(tmp_path, capsys):
+    project_path = build_valid_proposal_project(tmp_path, capsys)
+    source_media = tmp_path / "media" / "clean.mp4"
+    source_media.parent.mkdir(parents=True, exist_ok=True)
+    subprocess.run(
+        [
+            "ffmpeg", "-y", "-hide_banner", "-loglevel", "error",
+            "-f", "lavfi", "-i", "testsrc=size=64x64:rate=24:duration=2",
+            "-c:v", "libx264", "-pix_fmt", "yuv420p", str(source_media),
+        ],
+        check=True,
+    )
+    assert (
+        main(
+            [
+                "timeline",
+                "--project",
+                str(project_path),
+                "--proposal",
+                "proposal_safe",
+                "--quiet",
+            ]
+        )
+        in (0, 1)
+    )
+    audio = tmp_path / "media" / "preview-bgm.wav"
+    subprocess.run(
+        [
+            "ffmpeg", "-y", "-hide_banner", "-loglevel", "error",
+            "-f", "lavfi", "-i", "sine=frequency=330:duration=1",
+            str(audio),
+        ],
+        check=True,
+    )
+    assert (
+        main(
+            [
+                "bgm", "import", "--project", str(project_path),
+                "--file", "media/preview-bgm.wav", "--rights-status", "owned", "--json",
+            ]
+        )
+        == 1
+    )
+    candidate_id = json.loads(capsys.readouterr().out)["candidate"]["music_candidate_id"]
+    assert (
+        main(
+            [
+                "bgm", "fit", "--project", str(project_path),
+                "--candidate", candidate_id, "--quiet",
+            ]
+        )
+        in (0, 1)
+    )
+
+    code = main(["preview", "--project", str(project_path), "--width", "320", "--fps", "10", "--json"])
+    payload = json.loads(capsys.readouterr().out)
+
+    assert code in (0, 1)
+    assert payload["output"] == "output/preview_lowres.mp4"
+    assert payload["manifest"] == ".artist-portrait/data/preview_manifest.json"
+    assert (tmp_path / "output" / "preview_lowres.mp4").exists()
+    manifest = json.loads(
+        (tmp_path / ".artist-portrait" / "data" / "preview_manifest.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    assert manifest["bgm_included"] is True
+    assert manifest["requested_width"] == 320
+    assert manifest["requested_fps"] == 10
+    assert manifest["duration_delta_seconds"] == pytest.approx(0, abs=0.25)
+    assert manifest["final_export"] is False
+    assert manifest["network_performed"] is False
+
+    assert main(["review", "--project", str(project_path), "--scope", "preview", "--json"]) == 0
+    review_payload = json.loads(capsys.readouterr().out)
+    assert review_payload["validation"] == ".artist-portrait/data/preview_validation.json"
+    assert review_payload["issues"] == []
+
+    assert main(["status", "--project", str(project_path), "--json"]) == 0
+    status = json.loads(capsys.readouterr().out)
+    assert status["summaries"]["preview"]["bgm_included"] is True
+    assert status["summaries"]["preview"]["requested_width"] == 320
+    assert status["summaries"]["preview_validation"]["quality_status"] == "passed"
+
+    manifest_path = tmp_path / ".artist-portrait" / "data" / "preview_manifest.json"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    manifest["expected_duration"] = 99
+    manifest_path.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
+    assert main(["doctor", "--project", str(project_path), "--json"]) == 1
+    doctor = json.loads(capsys.readouterr().out)
+    assert any(issue["code"] == "preview_duration_mismatch" for issue in doctor["issues"])
+    assert status["steps"]["preview"]["status"] in ("completed", "completed_with_warnings")
+
+
+def test_bgm_cli_respects_allow_music_false(tmp_path, capsys):
+    project_path = tmp_path / "project.yaml"
+    project_path.write_text(
+        (FIXTURES / "valid_project.yaml").read_text(encoding="utf-8").replace(
+            "allow_music: true",
+            "allow_music: false",
+        ),
+        encoding="utf-8",
+    )
+    assert main(["init", "--project", str(project_path), "--quiet"]) in (0, 1)
+
+    code = main(
+        [
+            "bgm", "import", "--project", str(project_path),
+            "--file", "media/unused.wav",
+        ]
+    )
+
+    assert code == 9
+    assert "allow_music" in capsys.readouterr().err
 
 
 def test_review_proposal_validates_existing_proposals(tmp_path, monkeypatch, capsys):
@@ -2451,7 +3778,7 @@ def test_review_proposal_validates_existing_proposals(tmp_path, monkeypatch, cap
         "detect_capabilities",
         lambda: Capabilities(text_model=False),
     )
-    assert main(["propose", "--project", str(project_path), "--quiet"]) == 4
+    assert main(["propose", "--project", str(project_path), "--quiet"]) == 1
     write_proposals_from_context(tmp_path)
 
     code = main(["review", "--project", str(project_path), "--scope", "proposal", "--json"])
@@ -2494,7 +3821,7 @@ def test_review_proposal_reports_unknown_clip_and_missing_bgm(
         "detect_capabilities",
         lambda: Capabilities(text_model=False),
     )
-    assert main(["propose", "--project", str(project_path), "--quiet"]) == 4
+    assert main(["propose", "--project", str(project_path), "--quiet"]) == 1
     write_proposals_from_context(tmp_path, unknown_clip=True, bgm=False)
 
     code = main(["review", "--project", str(project_path), "--scope", "proposal", "--json"])
@@ -2510,11 +3837,267 @@ def test_review_proposal_reports_unknown_clip_and_missing_bgm(
             encoding="utf-8"
         )
     )
-    assert validation["error_count"] == 3
+    assert validation["error_count"] == 10
     assert validation["warning_count"] == 3
 
 
-def test_review_all_runs_project_review_and_marks_unimplemented_scopes(
+@pytest.mark.parametrize(
+    ("mutation", "expected_code"),
+    [
+        ("missing_story", "proposal_missing_story_structure"),
+        ("missing_visual", "proposal_missing_visual_motifs"),
+        ("missing_timeline", "proposal_missing_minimum_timeline"),
+        ("duplicate_clip", "proposal_duplicate_required_clip"),
+        ("missing_required_clip_fact", "proposal_required_clip_missing_fact_ref"),
+        ("duplicate_fact", "proposal_duplicate_fact_ref"),
+        ("missing_clip_evidence", "proposal_missing_clip_evidence"),
+        ("missing_analysis_evidence", "proposal_missing_analysis_evidence"),
+        ("missing_material_map_evidence", "proposal_missing_material_map_evidence"),
+        ("identical_story", "proposal_story_structures_not_distinct"),
+        ("identical_sound", "proposal_sound_structures_not_distinct"),
+        ("incomplete_bgm", "proposal_incomplete_bgm_strategy"),
+        ("theme_mismatch", "proposal_theme_mismatch"),
+        ("audience_mismatch", "proposal_audience_mismatch"),
+        ("duplicate_title", "proposal_titles_not_unique"),
+        ("missing_risks", "proposal_missing_risks"),
+        ("missing_counter", "proposal_missing_counter_proposal"),
+        ("missing_set_context", "proposal_set_missing_context_evidence"),
+        ("duplicate_set_evidence", "proposal_set_duplicate_evidence"),
+        ("unknown_set_evidence", "proposal_set_unknown_evidence"),
+        ("identical_visual", "proposal_visual_motifs_not_distinct"),
+        ("absolute_path_text", "proposal_absolute_path_leak"),
+        ("absolute_path_evidence", "proposal_absolute_path_leak"),
+        ("forbidden_method", "proposal_forbidden_generation_method"),
+        ("forbidden_source_fact", "proposal_fact_ref_uses_forbidden_source"),
+        ("forbidden_clip_fact", "proposal_fact_ref_uses_forbidden_clip"),
+        ("analysis_not_required", "proposal_analysis_not_tied_to_required_clip"),
+        (
+            "required_clip_missing_analysis",
+            "proposal_required_clip_missing_analysis_ref",
+        ),
+        ("existing_missing_material", "proposal_missing_material_already_exists"),
+        ("duplicate_counter", "proposal_counter_proposals_not_distinct"),
+    ],
+)
+def test_review_proposal_quality_matrix(
+    tmp_path,
+    monkeypatch,
+    capsys,
+    mutation,
+    expected_code,
+):
+    project_path = tmp_path / "project.yaml"
+    project_path.write_text(
+        project_fixture_with_scene_detection("off"),
+        encoding="utf-8",
+    )
+    assert main(["init", "--project", str(project_path), "--quiet"]) in (0, 1)
+    write_clean_source_ledger(tmp_path)
+    assert main(["segment", "--project", str(project_path), "--quiet"]) == 0
+    assert main(["analyze", "--project", str(project_path), "--quiet"]) == 0
+    assert main(["map", "--project", str(project_path), "--quiet"]) == 0
+    monkeypatch.setattr(
+        workspace,
+        "detect_capabilities",
+        lambda: Capabilities(text_model=False),
+    )
+    assert main(["propose", "--project", str(project_path), "--quiet"]) == 1
+    write_proposals_from_context(tmp_path)
+
+    proposals_path = tmp_path / ".artist-portrait" / "data" / "proposals.json"
+    payload = json.loads(proposals_path.read_text(encoding="utf-8"))
+    proposal = payload["proposals"][0]
+    if mutation == "missing_story":
+        proposal["story_structure"] = []
+    elif mutation == "missing_visual":
+        proposal["visual_motifs"] = []
+    elif mutation == "missing_timeline":
+        proposal["minimum_viable_timeline"] = []
+    elif mutation == "duplicate_clip":
+        proposal["required_clip_ids"].append(proposal["required_clip_ids"][0])
+    elif mutation == "missing_required_clip_fact":
+        proposal["fact_refs"] = [
+            ref for ref in proposal["fact_refs"] if ref["type"] != "clip"
+        ]
+    elif mutation == "duplicate_fact":
+        proposal["fact_refs"].append(dict(proposal["fact_refs"][0]))
+    elif mutation == "missing_clip_evidence":
+        proposal["fact_refs"] = [
+            ref for ref in proposal["fact_refs"] if ref["type"] != "clip"
+        ]
+        proposal["required_clip_ids"] = []
+    elif mutation == "missing_analysis_evidence":
+        proposal["fact_refs"] = [
+            ref for ref in proposal["fact_refs"] if ref["type"] != "analysis"
+        ]
+    elif mutation == "missing_material_map_evidence":
+        proposal["fact_refs"] = [
+            ref for ref in proposal["fact_refs"] if ref["type"] != "material_map"
+        ]
+    elif mutation == "identical_story":
+        shared = ["same opening", "same ending"]
+        for item in payload["proposals"]:
+            item["story_structure"] = shared
+    elif mutation == "identical_sound":
+        shared = ["BGM supports speech with ducking"]
+        for item in payload["proposals"]:
+            item["sound_structure"] = shared
+    elif mutation == "incomplete_bgm":
+        proposal["sound_structure"] = ["BGM is present"]
+    elif mutation == "theme_mismatch":
+        proposal["theme"] = "different theme"
+    elif mutation == "audience_mismatch":
+        proposal["audience"] = "different audience"
+    elif mutation == "duplicate_title":
+        payload["proposals"][1]["title"] = proposal["title"]
+    elif mutation == "missing_risks":
+        proposal["risks"] = []
+    elif mutation == "missing_counter":
+        proposal["counter_proposal"] = None
+    elif mutation == "missing_set_context":
+        payload["evidence"] = []
+    elif mutation == "duplicate_set_evidence":
+        payload["evidence"].append(dict(payload["evidence"][0]))
+    elif mutation == "unknown_set_evidence":
+        payload["evidence"] = [{"type": "proposal_context", "ref": "unknown"}]
+    elif mutation == "identical_visual":
+        shared = ["same visual motif"]
+        for item in payload["proposals"]:
+            item["visual_motifs"] = shared
+    elif mutation == "absolute_path_text":
+        proposal["story_structure"] = ["/Users/example/private/story.txt"]
+    elif mutation == "absolute_path_evidence":
+        payload["evidence"] = [
+            {"type": "proposal_context", "ref": "/Users/example/private/context.json"}
+        ]
+    elif mutation == "forbidden_method":
+        payload["method"] = "template_generator"
+    elif mutation in {"forbidden_source_fact", "forbidden_clip_fact"}:
+        context_path = (
+            tmp_path / ".artist-portrait" / "data" / "proposal_context.json"
+        )
+        context = json.loads(context_path.read_text(encoding="utf-8"))
+        context["sources"][0]["forbidden_by_user"] = True
+        context_path.write_text(
+            json.dumps(context, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
+        if mutation == "forbidden_source_fact":
+            proposal["fact_refs"].append(
+                {"type": "source", "ref": context["sources"][0]["source_id"]}
+            )
+    elif mutation == "analysis_not_required":
+        context_path = (
+            tmp_path / ".artist-portrait" / "data" / "proposal_context.json"
+        )
+        context = json.loads(context_path.read_text(encoding="utf-8"))
+        extra_analysis = dict(context["analyses"][0])
+        extra_analysis["analysis_id"] = "analysis-not-required"
+        extra_analysis["clip_id"] = "clip-not-required"
+        context["analyses"].append(extra_analysis)
+        context_path.write_text(
+            json.dumps(context, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
+        proposal["fact_refs"].append(
+            {"type": "analysis", "ref": "analysis-not-required"}
+        )
+    elif mutation == "required_clip_missing_analysis":
+        proposal["fact_refs"] = [
+            ref for ref in proposal["fact_refs"] if ref["type"] != "analysis"
+        ]
+    elif mutation == "existing_missing_material":
+        proposal["missing_material"] = [proposal["required_clip_ids"][0]]
+    elif mutation == "duplicate_counter":
+        shared = "What if all three proposals use the same challenge?"
+        for item in payload["proposals"]:
+            item["counter_proposal"] = shared
+    proposals_path.write_text(
+        json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+
+    assert (
+        main(["review", "--project", str(project_path), "--scope", "proposal", "--json"])
+        == 1
+    )
+    review_payload = json.loads(capsys.readouterr().out)
+    assert expected_code in {issue["code"] for issue in review_payload["issues"]}
+
+
+@pytest.mark.parametrize(
+    ("sound_structures", "expected_code", "expected_exit"),
+    [
+        (
+            [
+                ["BGM drives pacing with beat-aligned cuts"],
+                ["Music supports emotion through a drop"],
+                ["Score supports transitions with voice ducking"],
+            ],
+            "proposal_music_policy_violation",
+            1,
+        ),
+        (
+            [
+                ["No added music; original audio only with intentional silence"],
+                ["Voice only, without music, using dialogue pauses"],
+                ["No BGM; silence only with original stage sound"],
+            ],
+            None,
+            0,
+        ),
+    ],
+)
+def test_review_proposal_music_policy(
+    tmp_path,
+    monkeypatch,
+    capsys,
+    sound_structures,
+    expected_code,
+    expected_exit,
+):
+    project_path = tmp_path / "project.yaml"
+    project_path.write_text(
+        project_fixture_with_scene_detection("off").replace(
+            "allow_music: true",
+            "allow_music: false",
+        ),
+        encoding="utf-8",
+    )
+    assert main(["init", "--project", str(project_path), "--quiet"]) in (0, 1)
+    write_clean_source_ledger(tmp_path)
+    assert main(["segment", "--project", str(project_path), "--quiet"]) == 0
+    assert main(["analyze", "--project", str(project_path), "--quiet"]) == 0
+    assert main(["map", "--project", str(project_path), "--quiet"]) == 0
+    monkeypatch.setattr(
+        workspace,
+        "detect_capabilities",
+        lambda: Capabilities(text_model=False),
+    )
+    assert main(["propose", "--project", str(project_path), "--quiet"]) == 1
+    write_proposals_from_context(tmp_path)
+    proposals_path = tmp_path / ".artist-portrait" / "data" / "proposals.json"
+    payload = json.loads(proposals_path.read_text(encoding="utf-8"))
+    for proposal, sound_structure in zip(payload["proposals"], sound_structures):
+        proposal["sound_structure"] = sound_structure
+    proposals_path.write_text(
+        json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+
+    assert (
+        main(["review", "--project", str(project_path), "--scope", "proposal", "--json"])
+        == expected_exit
+    )
+    review_payload = json.loads(capsys.readouterr().out)
+    issue_codes = {issue["code"] for issue in review_payload["issues"]}
+    if expected_code is None:
+        assert "proposal_music_policy_violation" not in issue_codes
+    else:
+        assert expected_code in issue_codes
+
+
+def test_review_all_runs_project_review_without_unimplemented_scope_warnings(
     tmp_path,
     capsys,
 ):
@@ -2529,15 +4112,12 @@ def test_review_all_runs_project_review_and_marks_unimplemented_scopes(
     code = main(["review", "--project", str(project_path), "--scope", "all", "--json"])
     captured = capsys.readouterr()
 
-    assert code == 1
+    assert code == 0
     payload = json.loads(captured.out)
     assert payload["output"] == "output/risk_report.md"
-    assert [issue["code"] for issue in payload["issues"]] == [
-        "review_scope_skipped",
-    ]
-    assert {issue["review_scope"] for issue in payload["issues"]} == {"timeline"}
+    assert payload["issues"] == []
     risk_report = (tmp_path / "output" / "risk_report.md").read_text(encoding="utf-8")
-    assert "Review scope: `timeline`" in risk_report
+    assert "review_scope_skipped" not in risk_report
 
     code = main(["status", "--project", str(project_path), "--json"])
     captured = capsys.readouterr()
@@ -2700,6 +4280,117 @@ def test_status_and_review_report_missing_output_ref(tmp_path, capsys):
     assert (
         "artist-portrait map --project <project.yaml>"
         in doctor_payload["recommended_commands"]
+    )
+
+
+def test_proposal_chain_health_has_no_integrity_issues(tmp_path, capsys):
+    project_path = build_blocked_proposal_chain(tmp_path, capsys)
+
+    assert main(["status", "--project", str(project_path), "--json"]) == 0
+    status_payload = json.loads(capsys.readouterr().out)
+
+    assert not [
+        issue
+        for issue in status_payload["artifact_issues"]
+        if issue["code"].startswith("proposal_")
+    ]
+
+
+def test_status_and_doctor_report_proposal_ref_mismatch(tmp_path, capsys):
+    project_path = build_blocked_proposal_chain(tmp_path, capsys)
+    result_path = (
+        tmp_path / ".artist-portrait" / "data" / "proposal_provider_result.json"
+    )
+    payload = json.loads(result_path.read_text(encoding="utf-8"))
+    payload["request_ref"] = ".artist-portrait/data/wrong_request.json"
+    result_path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+
+    assert main(["status", "--project", str(project_path), "--json"]) == 0
+    status_payload = json.loads(capsys.readouterr().out)
+    mismatch = [
+        issue
+        for issue in status_payload["artifact_issues"]
+        if issue["code"] == "proposal_ref_mismatch"
+    ]
+    assert mismatch
+    assert "request_ref" in mismatch[0]["detail"]
+
+    assert main(["doctor", "--project", str(project_path), "--json"]) == 1
+    doctor_payload = json.loads(capsys.readouterr().out)
+    assert any(
+        issue["code"] == "proposal_ref_mismatch"
+        for issue in doctor_payload["issues"]
+    )
+
+
+def test_status_reports_missing_proposal_dependency(tmp_path, capsys):
+    project_path = build_blocked_proposal_chain(tmp_path, capsys)
+    (
+        tmp_path / ".artist-portrait" / "data" / "proposal_adapter_check.json"
+    ).unlink()
+
+    assert main(["status", "--project", str(project_path), "--json"]) == 0
+    status_payload = json.loads(capsys.readouterr().out)
+    missing = [
+        issue
+        for issue in status_payload["artifact_issues"]
+        if issue["code"] == "proposal_ref_missing"
+    ]
+
+    assert missing
+    assert any("adapter_check_ref" in issue["detail"] for issue in missing)
+
+
+def test_status_reports_proposal_project_id_mismatch(tmp_path, capsys):
+    project_path = build_blocked_proposal_chain(tmp_path, capsys)
+    result_path = (
+        tmp_path / ".artist-portrait" / "data" / "proposal_provider_result.json"
+    )
+    payload = json.loads(result_path.read_text(encoding="utf-8"))
+    payload["project_id"] = "different_project"
+    result_path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+
+    assert main(["status", "--project", str(project_path), "--json"]) == 0
+    status_payload = json.loads(capsys.readouterr().out)
+
+    assert any(
+        issue["code"] == "proposal_project_id_mismatch"
+        for issue in status_payload["artifact_issues"]
+    )
+
+
+def test_status_reports_stale_proposal_context_after_map_change(tmp_path, capsys):
+    project_path = build_blocked_proposal_chain(tmp_path, capsys)
+    material_map_path = tmp_path / "output" / "material_map.md"
+    material_map_path.write_text(
+        material_map_path.read_text(encoding="utf-8") + "\nmanual change\n",
+        encoding="utf-8",
+    )
+
+    assert main(["status", "--project", str(project_path), "--json"]) == 0
+    status_payload = json.loads(capsys.readouterr().out)
+
+    assert any(
+        issue["code"] == "proposal_artifact_stale"
+        and "material_map_fingerprint" in issue["detail"]
+        for issue in status_payload["artifact_issues"]
+    )
+
+
+def test_status_reports_duplicate_proposal_output_ref(tmp_path, capsys):
+    project_path = build_blocked_proposal_chain(tmp_path, capsys)
+    state_path = tmp_path / ".artist-portrait" / "state.json"
+    state = json.loads(state_path.read_text(encoding="utf-8"))
+    duplicate_ref = state["steps"]["propose"]["output_refs"][0]
+    state["steps"]["propose"]["output_refs"].append(duplicate_ref)
+    state_path.write_text(json.dumps(state, indent=2) + "\n", encoding="utf-8")
+
+    assert main(["status", "--project", str(project_path), "--json"]) == 0
+    status_payload = json.loads(capsys.readouterr().out)
+
+    assert any(
+        issue["code"] == "duplicate_output_ref" and issue["ref"] == duplicate_ref
+        for issue in status_payload["artifact_issues"]
     )
 
 
@@ -3071,3 +4762,179 @@ def test_invalid_clips_jsonl_is_reported_by_status_and_doctor(tmp_path, capsys):
 
     assert code == 1
     assert any(issue["code"] == "clips_invalid" for issue in doctor_payload["issues"])
+
+
+def prepare_host_agent_proposal_handoff(tmp_path: Path) -> Path:
+    project_path = tmp_path / "project.yaml"
+    project_path.write_text(
+        project_fixture_with_scene_detection("off"),
+        encoding="utf-8",
+    )
+    assert main(["init", "--project", str(project_path), "--quiet"]) in (0, 1)
+    write_clean_source_ledger(tmp_path)
+    assert main(["segment", "--project", str(project_path), "--quiet"]) == 0
+    assert main(["analyze", "--project", str(project_path), "--quiet"]) == 0
+    assert main(["map", "--project", str(project_path), "--quiet"]) == 0
+    assert main(["propose", "--project", str(project_path), "--quiet"]) == 1
+    assert (tmp_path / "output" / "proposal_agent_handoff.json").exists()
+    return project_path
+
+
+def test_host_agent_candidate_is_quarantined_validated_and_promoted(
+    tmp_path,
+    capsys,
+):
+    project_path = prepare_host_agent_proposal_handoff(tmp_path)
+    write_proposals_from_context(tmp_path)
+    canonical = tmp_path / ".artist-portrait" / "data" / "proposals.json"
+    candidate = tmp_path / "host-agent-candidate.json"
+    canonical.replace(candidate)
+    capsys.readouterr()
+
+    code = main(
+        [
+            "propose",
+            "--project",
+            str(project_path),
+            "--agent-output",
+            str(candidate),
+            "--json",
+        ]
+    )
+    captured = capsys.readouterr()
+    payload = json.loads(captured.out)
+
+    assert code == 0
+    assert payload["status"] == "completed"
+    assert payload["output"] == ".artist-portrait/data/proposals.json"
+    assert payload["handoff"] == "output/proposal_agent_handoff.json"
+    assert payload["quarantine"].startswith(
+        ".artist-portrait/quarantine/proposals/host_agent_"
+    )
+    assert canonical.exists()
+    assert json.loads(canonical.read_text(encoding="utf-8"))["method"]
+    validation = json.loads(
+        (
+            tmp_path / ".artist-portrait" / "data" / "proposal_validation.json"
+        ).read_text(encoding="utf-8")
+    )
+    assert validation["error_count"] == 0
+    state = json.loads(
+        (tmp_path / ".artist-portrait" / "state.json").read_text(encoding="utf-8")
+    )
+    assert state["active_mode"] == "creative"
+    assert state["steps"]["propose"]["status"] == "completed"
+
+    assert main(["status", "--project", str(project_path), "--json"]) == 0
+    status_payload = json.loads(capsys.readouterr().out)
+    assert status_payload["summaries"]["proposal_agent_handoff"]["exists"] is True
+    assert (
+        status_payload["summaries"]["proposal_agent_quarantine"]["file_count"]
+        >= 1
+    )
+    assert status_payload["summaries"]["proposals"]["count"] == 3
+
+    assert main(["doctor", "--project", str(project_path), "--json"]) in (0, 1)
+    doctor_payload = json.loads(capsys.readouterr().out)
+    assert "proposal_agent_candidate_pending" not in {
+        issue["code"] for issue in doctor_payload["issues"]
+    }
+
+
+def test_invalid_host_agent_json_is_quarantined_without_canonical_overwrite(
+    tmp_path,
+    capsys,
+):
+    project_path = prepare_host_agent_proposal_handoff(tmp_path)
+    canonical = tmp_path / ".artist-portrait" / "data" / "proposals.json"
+    canonical.parent.mkdir(parents=True, exist_ok=True)
+    canonical.write_text('{"existing": true}\n', encoding="utf-8")
+    candidate = tmp_path / "invalid-host-agent.json"
+    candidate.write_text('{"broken":', encoding="utf-8")
+    capsys.readouterr()
+
+    code = main(
+        [
+            "propose",
+            "--project",
+            str(project_path),
+            "--agent-output",
+            str(candidate),
+            "--json",
+        ]
+    )
+    captured = capsys.readouterr()
+    payload = json.loads(captured.out)
+
+    assert code == 9
+    assert payload["error_code"] == "agent_candidate_invalid_json"
+    assert payload["quarantine"].startswith(
+        ".artist-portrait/quarantine/proposals/host_agent_"
+    )
+    assert canonical.read_text(encoding="utf-8") == '{"existing": true}\n'
+
+
+def test_semantically_invalid_host_agent_candidate_never_reaches_canonical(
+    tmp_path,
+    capsys,
+):
+    project_path = prepare_host_agent_proposal_handoff(tmp_path)
+    write_proposals_from_context(tmp_path, unknown_clip=True)
+    canonical = tmp_path / ".artist-portrait" / "data" / "proposals.json"
+    candidate = tmp_path / "semantic-invalid-host-agent.json"
+    canonical.replace(candidate)
+    capsys.readouterr()
+
+    code = main(
+        [
+            "propose",
+            "--project",
+            str(project_path),
+            "--agent-output",
+            str(candidate),
+            "--json",
+        ]
+    )
+    captured = capsys.readouterr()
+    payload = json.loads(captured.out)
+
+    assert code == 9
+    assert payload["error_code"] == "agent_candidate_semantic_invalid"
+    assert not canonical.exists()
+    quarantine = tmp_path / payload["quarantine"]
+    assert quarantine.exists()
+    assert quarantine.with_suffix(".validation.json").exists()
+
+
+def test_host_agent_candidate_requires_explicit_model_provenance(
+    tmp_path,
+    capsys,
+):
+    project_path = prepare_host_agent_proposal_handoff(tmp_path)
+    write_proposals_from_context(tmp_path)
+    canonical = tmp_path / ".artist-portrait" / "data" / "proposals.json"
+    payload = json.loads(canonical.read_text(encoding="utf-8"))
+    payload["method"] = "manual_json"
+    candidate = tmp_path / "missing-host-agent-provenance.json"
+    candidate.write_text(
+        json.dumps(payload, ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
+    canonical.unlink()
+    capsys.readouterr()
+
+    code = main(
+        [
+            "propose",
+            "--project",
+            str(project_path),
+            "--agent-output",
+            str(candidate),
+            "--json",
+        ]
+    )
+    result = json.loads(capsys.readouterr().out)
+
+    assert code == 9
+    assert result["error_code"] == "agent_candidate_method_invalid"
+    assert not canonical.exists()

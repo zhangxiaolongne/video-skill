@@ -55,6 +55,11 @@
       "title": "Adapter Check Ref",
       "type": "string"
     },
+    "canonical_write_transaction_ref": {
+      "minLength": 1,
+      "title": "Canonical Write Transaction Ref",
+      "type": "string"
+    },
     "execution_authorization_ref": {
       "minLength": 1,
       "title": "Execution Authorization Ref",
@@ -114,6 +119,16 @@
       "title": "Project Id",
       "type": "string"
     },
+    "promotion_authorization_ref": {
+      "minLength": 1,
+      "title": "Promotion Authorization Ref",
+      "type": "string"
+    },
+    "promotion_validation_report_ref": {
+      "minLength": 1,
+      "title": "Promotion Validation Report Ref",
+      "type": "string"
+    },
     "proposal_content_generated": {
       "default": false,
       "title": "Proposal Content Generated",
@@ -132,6 +147,11 @@
     "request_ref": {
       "minLength": 1,
       "title": "Request Ref",
+      "type": "string"
+    },
+    "response_validation_ref": {
+      "minLength": 1,
+      "title": "Response Validation Ref",
       "type": "string"
     },
     "result_fingerprint": {
@@ -173,6 +193,10 @@
     "handshake_ref",
     "execution_authorization_ref",
     "output_quarantine_ref",
+    "response_validation_ref",
+    "promotion_authorization_ref",
+    "promotion_validation_report_ref",
+    "canonical_write_transaction_ref",
     "adapter_check_ref",
     "result_fingerprint",
     "expected_output_kind",

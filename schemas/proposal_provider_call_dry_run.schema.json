@@ -1,0 +1,344 @@
+{
+  "$defs": {
+    "ProposalAdapterCheckIssue": {
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "minLength": 1,
+          "title": "Code",
+          "type": "string"
+        },
+        "detail": {
+          "minLength": 1,
+          "title": "Detail",
+          "type": "string"
+        },
+        "ref": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Ref"
+        },
+        "severity": {
+          "pattern": "^(info|warning|error)$",
+          "title": "Severity",
+          "type": "string"
+        }
+      },
+      "required": [
+        "code",
+        "severity",
+        "detail"
+      ],
+      "title": "ProposalAdapterCheckIssue",
+      "type": "object"
+    },
+    "ProposalProviderCallDryRunItem": {
+      "additionalProperties": false,
+      "properties": {
+        "allowed": {
+          "default": false,
+          "title": "Allowed",
+          "type": "boolean"
+        },
+        "issues": {
+          "items": {
+            "$ref": "#/$defs/ProposalAdapterCheckIssue"
+          },
+          "title": "Issues",
+          "type": "array"
+        },
+        "item_id": {
+          "minLength": 1,
+          "title": "Item Id",
+          "type": "string"
+        },
+        "materialized": {
+          "default": false,
+          "title": "Materialized",
+          "type": "boolean"
+        },
+        "ref": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Ref"
+        },
+        "status": {
+          "$ref": "#/$defs/ProposalProviderCallDryRunStatus"
+        }
+      },
+      "required": [
+        "item_id",
+        "status"
+      ],
+      "title": "ProposalProviderCallDryRunItem",
+      "type": "object"
+    },
+    "ProposalProviderCallDryRunStatus": {
+      "enum": [
+        "blocked",
+        "ready_for_future_provider_call"
+      ],
+      "title": "ProposalProviderCallDryRunStatus",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "adapter_check_ref": {
+      "minLength": 1,
+      "title": "Adapter Check Ref",
+      "type": "string"
+    },
+    "approval_record_ref": {
+      "minLength": 1,
+      "title": "Approval Record Ref",
+      "type": "string"
+    },
+    "approval_request_ref": {
+      "minLength": 1,
+      "title": "Approval Request Ref",
+      "type": "string"
+    },
+    "auth_header_materialized": {
+      "default": false,
+      "title": "Auth Header Materialized",
+      "type": "boolean"
+    },
+    "auth_header_policy": {
+      "$ref": "#/$defs/ProposalProviderCallDryRunItem"
+    },
+    "credential_value_read": {
+      "default": false,
+      "title": "Credential Value Read",
+      "type": "boolean"
+    },
+    "dry_run_fingerprint": {
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "title": "Dry Run Fingerprint",
+      "type": "string"
+    },
+    "dry_run_id": {
+      "minLength": 1,
+      "title": "Dry Run Id",
+      "type": "string"
+    },
+    "endpoint_reference": {
+      "$ref": "#/$defs/ProposalProviderCallDryRunItem"
+    },
+    "endpoint_resolved": {
+      "default": false,
+      "title": "Endpoint Resolved",
+      "type": "boolean"
+    },
+    "execution_allowed": {
+      "default": false,
+      "title": "Execution Allowed",
+      "type": "boolean"
+    },
+    "execution_performed": {
+      "default": false,
+      "title": "Execution Performed",
+      "type": "boolean"
+    },
+    "failure_handling_policy": {
+      "$ref": "#/$defs/ProposalProviderCallDryRunItem"
+    },
+    "handshake_ref": {
+      "minLength": 1,
+      "title": "Handshake Ref",
+      "type": "string"
+    },
+    "idempotency_key_materialized": {
+      "default": false,
+      "title": "Idempotency Key Materialized",
+      "type": "boolean"
+    },
+    "idempotency_policy": {
+      "$ref": "#/$defs/ProposalProviderCallDryRunItem"
+    },
+    "input_bundle_ref": {
+      "minLength": 1,
+      "title": "Input Bundle Ref",
+      "type": "string"
+    },
+    "issues": {
+      "items": {
+        "$ref": "#/$defs/ProposalAdapterCheckIssue"
+      },
+      "title": "Issues",
+      "type": "array"
+    },
+    "model_call_allowed": {
+      "default": false,
+      "title": "Model Call Allowed",
+      "type": "boolean"
+    },
+    "model_call_performed": {
+      "default": false,
+      "title": "Model Call Performed",
+      "type": "boolean"
+    },
+    "network_allowed": {
+      "default": false,
+      "title": "Network Allowed",
+      "type": "boolean"
+    },
+    "network_egress_policy": {
+      "$ref": "#/$defs/ProposalProviderCallDryRunItem"
+    },
+    "network_performed": {
+      "default": false,
+      "title": "Network Performed",
+      "type": "boolean"
+    },
+    "project_id": {
+      "minLength": 1,
+      "title": "Project Id",
+      "type": "string"
+    },
+    "proposal_content_generated": {
+      "default": false,
+      "title": "Proposal Content Generated",
+      "type": "boolean"
+    },
+    "provider_id": {
+      "minLength": 1,
+      "title": "Provider Id",
+      "type": "string"
+    },
+    "quarantine_required": {
+      "default": true,
+      "title": "Quarantine Required",
+      "type": "boolean"
+    },
+    "rate_limit_policy": {
+      "$ref": "#/$defs/ProposalProviderCallDryRunItem"
+    },
+    "raw_output_capture_allowed": {
+      "default": false,
+      "title": "Raw Output Capture Allowed",
+      "type": "boolean"
+    },
+    "raw_output_captured": {
+      "default": false,
+      "title": "Raw Output Captured",
+      "type": "boolean"
+    },
+    "readiness_plan_ref": {
+      "minLength": 1,
+      "title": "Readiness Plan Ref",
+      "type": "string"
+    },
+    "registry_ref": {
+      "minLength": 1,
+      "title": "Registry Ref",
+      "type": "string"
+    },
+    "request_body_materialized": {
+      "default": false,
+      "title": "Request Body Materialized",
+      "type": "boolean"
+    },
+    "request_body_reference": {
+      "$ref": "#/$defs/ProposalProviderCallDryRunItem"
+    },
+    "request_payload_sent": {
+      "default": false,
+      "title": "Request Payload Sent",
+      "type": "boolean"
+    },
+    "request_ref": {
+      "minLength": 1,
+      "title": "Request Ref",
+      "type": "string"
+    },
+    "response_capture_policy": {
+      "$ref": "#/$defs/ProposalProviderCallDryRunItem"
+    },
+    "retry_count": {
+      "default": 0,
+      "minimum": 0,
+      "title": "Retry Count",
+      "type": "integer"
+    },
+    "retry_policy": {
+      "$ref": "#/$defs/ProposalProviderCallDryRunItem"
+    },
+    "schema_version": {
+      "default": "0.3",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "selected_secret_source": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Selected Secret Source"
+    },
+    "status": {
+      "$ref": "#/$defs/ProposalProviderCallDryRunStatus"
+    },
+    "timeout_policy": {
+      "$ref": "#/$defs/ProposalProviderCallDryRunItem"
+    },
+    "timeout_seconds": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Timeout Seconds"
+    }
+  },
+  "required": [
+    "dry_run_id",
+    "project_id",
+    "status",
+    "provider_id",
+    "request_ref",
+    "registry_ref",
+    "handshake_ref",
+    "adapter_check_ref",
+    "approval_request_ref",
+    "approval_record_ref",
+    "readiness_plan_ref",
+    "input_bundle_ref",
+    "dry_run_fingerprint",
+    "endpoint_reference",
+    "auth_header_policy",
+    "request_body_reference",
+    "timeout_policy",
+    "retry_policy",
+    "rate_limit_policy",
+    "idempotency_policy",
+    "network_egress_policy",
+    "response_capture_policy",
+    "failure_handling_policy"
+  ],
+  "title": "ProposalProviderCallDryRun",
+  "type": "object"
+}

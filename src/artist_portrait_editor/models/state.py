@@ -40,6 +40,10 @@ class Capabilities(BaseModel):
     pyscenedetect: bool = False
     faster_whisper: bool = False
     opencv: bool = False
+    beat_librosa: bool = False
+    beat_aubio: bool = False
+    beat_essentia: bool = False
+    beat_madmom: bool = False
     text_model: bool = False
     vision_model: bool = False
 
@@ -84,6 +88,16 @@ def initial_steps() -> dict[str, StepLedgerEntry]:
         "map": StepLedgerEntry(),
         "propose": StepLedgerEntry(),
         "timeline": StepLedgerEntry(),
+        "bgm_import": StepLedgerEntry(),
+        "bgm_analyze": StepLedgerEntry(),
+        "bgm_recommend": StepLedgerEntry(),
+        "review_bgm_recommendation": StepLedgerEntry(),
+        "bgm_fit": StepLedgerEntry(),
+        "preview": StepLedgerEntry(),
+        "review_preview": StepLedgerEntry(),
+        "final_export": StepLedgerEntry(),
+        "review_final_export": StepLedgerEntry(),
+        "review_bgm": StepLedgerEntry(),
         "review_project": StepLedgerEntry(),
         "review_proposal": StepLedgerEntry(),
         "review_timeline": StepLedgerEntry(),

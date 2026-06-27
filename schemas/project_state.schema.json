@@ -11,6 +11,26 @@
     "Capabilities": {
       "additionalProperties": false,
       "properties": {
+        "beat_aubio": {
+          "default": false,
+          "title": "Beat Aubio",
+          "type": "boolean"
+        },
+        "beat_essentia": {
+          "default": false,
+          "title": "Beat Essentia",
+          "type": "boolean"
+        },
+        "beat_librosa": {
+          "default": false,
+          "title": "Beat Librosa",
+          "type": "boolean"
+        },
+        "beat_madmom": {
+          "default": false,
+          "title": "Beat Madmom",
+          "type": "boolean"
+        },
         "faster_whisper": {
           "default": false,
           "title": "Faster Whisper",

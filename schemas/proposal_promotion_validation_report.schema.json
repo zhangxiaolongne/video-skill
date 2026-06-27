@@ -1,0 +1,297 @@
+{
+  "$defs": {
+    "ProposalAdapterCheckIssue": {
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "minLength": 1,
+          "title": "Code",
+          "type": "string"
+        },
+        "detail": {
+          "minLength": 1,
+          "title": "Detail",
+          "type": "string"
+        },
+        "ref": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Ref"
+        },
+        "severity": {
+          "pattern": "^(info|warning|error)$",
+          "title": "Severity",
+          "type": "string"
+        }
+      },
+      "required": [
+        "code",
+        "severity",
+        "detail"
+      ],
+      "title": "ProposalAdapterCheckIssue",
+      "type": "object"
+    },
+    "ProposalPromotionValidationCheck": {
+      "additionalProperties": false,
+      "properties": {
+        "check_id": {
+          "minLength": 1,
+          "title": "Check Id",
+          "type": "string"
+        },
+        "issue_count": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Issue Count",
+          "type": "integer"
+        },
+        "issues": {
+          "items": {
+            "$ref": "#/$defs/ProposalAdapterCheckIssue"
+          },
+          "title": "Issues",
+          "type": "array"
+        },
+        "passed": {
+          "default": false,
+          "title": "Passed",
+          "type": "boolean"
+        },
+        "performed": {
+          "default": false,
+          "title": "Performed",
+          "type": "boolean"
+        },
+        "ref": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Ref"
+        },
+        "status": {
+          "$ref": "#/$defs/ProposalPromotionValidationReportStatus"
+        }
+      },
+      "required": [
+        "check_id",
+        "status"
+      ],
+      "title": "ProposalPromotionValidationCheck",
+      "type": "object"
+    },
+    "ProposalPromotionValidationReportStatus": {
+      "enum": [
+        "blocked",
+        "ready_for_future_promotion_decision"
+      ],
+      "title": "ProposalPromotionValidationReportStatus",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "atomic_write_readiness_check": {
+      "$ref": "#/$defs/ProposalPromotionValidationCheck"
+    },
+    "checks_passed": {
+      "default": 0,
+      "minimum": 0,
+      "title": "Checks Passed",
+      "type": "integer"
+    },
+    "checks_performed": {
+      "default": 0,
+      "minimum": 0,
+      "title": "Checks Performed",
+      "type": "integer"
+    },
+    "error_count": {
+      "default": 0,
+      "minimum": 0,
+      "title": "Error Count",
+      "type": "integer"
+    },
+    "evidence_traceability_check": {
+      "$ref": "#/$defs/ProposalPromotionValidationCheck"
+    },
+    "final_authorization_check": {
+      "$ref": "#/$defs/ProposalPromotionValidationCheck"
+    },
+    "input_binding_check": {
+      "$ref": "#/$defs/ProposalPromotionValidationCheck"
+    },
+    "issues": {
+      "items": {
+        "$ref": "#/$defs/ProposalAdapterCheckIssue"
+      },
+      "title": "Issues",
+      "type": "array"
+    },
+    "model_call_performed": {
+      "default": false,
+      "title": "Model Call Performed",
+      "type": "boolean"
+    },
+    "network_performed": {
+      "default": false,
+      "title": "Network Performed",
+      "type": "boolean"
+    },
+    "output_quarantine_ref": {
+      "minLength": 1,
+      "title": "Output Quarantine Ref",
+      "type": "string"
+    },
+    "overall_passed": {
+      "default": false,
+      "title": "Overall Passed",
+      "type": "boolean"
+    },
+    "overwrite_conflict_check": {
+      "$ref": "#/$defs/ProposalPromotionValidationCheck"
+    },
+    "project_id": {
+      "minLength": 1,
+      "title": "Project Id",
+      "type": "string"
+    },
+    "promotion_authorization_ref": {
+      "minLength": 1,
+      "title": "Promotion Authorization Ref",
+      "type": "string"
+    },
+    "promotion_authorized": {
+      "default": false,
+      "title": "Promotion Authorized",
+      "type": "boolean"
+    },
+    "promotion_performed": {
+      "default": false,
+      "title": "Promotion Performed",
+      "type": "boolean"
+    },
+    "promotion_recommended": {
+      "default": false,
+      "title": "Promotion Recommended",
+      "type": "boolean"
+    },
+    "promotion_target_ref": {
+      "minLength": 1,
+      "title": "Promotion Target Ref",
+      "type": "string"
+    },
+    "proposal_content_generated": {
+      "default": false,
+      "title": "Proposal Content Generated",
+      "type": "boolean"
+    },
+    "proposal_identity_check": {
+      "$ref": "#/$defs/ProposalPromotionValidationCheck"
+    },
+    "proposals_file_written": {
+      "default": false,
+      "title": "Proposals File Written",
+      "type": "boolean"
+    },
+    "provenance_integrity_check": {
+      "$ref": "#/$defs/ProposalPromotionValidationCheck"
+    },
+    "provider_id": {
+      "minLength": 1,
+      "title": "Provider Id",
+      "type": "string"
+    },
+    "quarantine_required": {
+      "default": true,
+      "title": "Quarantine Required",
+      "type": "boolean"
+    },
+    "report_fingerprint": {
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "title": "Report Fingerprint",
+      "type": "string"
+    },
+    "report_id": {
+      "minLength": 1,
+      "title": "Report Id",
+      "type": "string"
+    },
+    "request_ref": {
+      "minLength": 1,
+      "title": "Request Ref",
+      "type": "string"
+    },
+    "response_validation_ref": {
+      "minLength": 1,
+      "title": "Response Validation Ref",
+      "type": "string"
+    },
+    "risk_result_check": {
+      "$ref": "#/$defs/ProposalPromotionValidationCheck"
+    },
+    "schema_result_check": {
+      "$ref": "#/$defs/ProposalPromotionValidationCheck"
+    },
+    "schema_version": {
+      "default": "0.3",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "semantic_result_check": {
+      "$ref": "#/$defs/ProposalPromotionValidationCheck"
+    },
+    "status": {
+      "$ref": "#/$defs/ProposalPromotionValidationReportStatus"
+    },
+    "target_schema_ref": {
+      "minLength": 1,
+      "title": "Target Schema Ref",
+      "type": "string"
+    },
+    "warning_count": {
+      "default": 0,
+      "minimum": 0,
+      "title": "Warning Count",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "report_id",
+    "project_id",
+    "status",
+    "provider_id",
+    "request_ref",
+    "response_validation_ref",
+    "promotion_authorization_ref",
+    "output_quarantine_ref",
+    "target_schema_ref",
+    "promotion_target_ref",
+    "report_fingerprint",
+    "input_binding_check",
+    "schema_result_check",
+    "semantic_result_check",
+    "evidence_traceability_check",
+    "risk_result_check",
+    "proposal_identity_check",
+    "overwrite_conflict_check",
+    "atomic_write_readiness_check",
+    "provenance_integrity_check",
+    "final_authorization_check"
+  ],
+  "title": "ProposalPromotionValidationReport",
+  "type": "object"
+}

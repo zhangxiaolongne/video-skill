@@ -1,0 +1,342 @@
+{
+  "$defs": {
+    "AudioTransition": {
+      "enum": [
+        "none",
+        "cut",
+        "crossfade",
+        "fade_in",
+        "fade_out",
+        "j_cut",
+        "l_cut"
+      ],
+      "title": "AudioTransition",
+      "type": "string"
+    },
+    "EvidenceRef": {
+      "additionalProperties": false,
+      "properties": {
+        "ref": {
+          "minLength": 1,
+          "title": "Ref",
+          "type": "string"
+        },
+        "type": {
+          "minLength": 1,
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "ref"
+      ],
+      "title": "EvidenceRef",
+      "type": "object"
+    },
+    "MediaRole": {
+      "enum": [
+        "video",
+        "audio",
+        "both"
+      ],
+      "title": "MediaRole",
+      "type": "string"
+    },
+    "MusicSlotStatus": {
+      "enum": [
+        "unresolved",
+        "disabled_by_policy",
+        "fitted"
+      ],
+      "title": "MusicSlotStatus",
+      "type": "string"
+    },
+    "ProposalId": {
+      "enum": [
+        "proposal_safe",
+        "proposal_advanced",
+        "proposal_risky"
+      ],
+      "title": "ProposalId",
+      "type": "string"
+    },
+    "TimelineMusicPlan": {
+      "additionalProperties": false,
+      "properties": {
+        "beat_analysis_performed": {
+          "default": false,
+          "title": "Beat Analysis Performed",
+          "type": "boolean"
+        },
+        "candidate_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Candidate Id"
+        },
+        "fit_ref": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Fit Ref"
+        },
+        "fitting_performed": {
+          "default": false,
+          "title": "Fitting Performed",
+          "type": "boolean"
+        },
+        "future_input_modes": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 5,
+          "title": "Future Input Modes",
+          "type": "array"
+        },
+        "input_mode": {
+          "pattern": "^(none_yet|disabled_by_policy|direct_audio|video_audio_extract|source_embedded_audio)$",
+          "title": "Input Mode",
+          "type": "string"
+        },
+        "proposal_sound_structure": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Proposal Sound Structure",
+          "type": "array"
+        },
+        "selection_performed": {
+          "default": false,
+          "title": "Selection Performed",
+          "type": "boolean"
+        },
+        "status": {
+          "$ref": "#/$defs/MusicSlotStatus"
+        }
+      },
+      "required": [
+        "status",
+        "input_mode",
+        "future_input_modes"
+      ],
+      "title": "TimelineMusicPlan",
+      "type": "object"
+    },
+    "TimelineSegment": {
+      "additionalProperties": false,
+      "properties": {
+        "audio_transition": {
+          "$ref": "#/$defs/AudioTransition"
+        },
+        "clip_id": {
+          "minLength": 1,
+          "title": "Clip Id",
+          "type": "string"
+        },
+        "confidence": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Confidence",
+          "type": "number"
+        },
+        "creative_intent": {
+          "minLength": 1,
+          "title": "Creative Intent",
+          "type": "string"
+        },
+        "evidence": {
+          "items": {
+            "$ref": "#/$defs/EvidenceRef"
+          },
+          "minItems": 1,
+          "title": "Evidence",
+          "type": "array"
+        },
+        "media_role": {
+          "$ref": "#/$defs/MediaRole"
+        },
+        "reason": {
+          "minLength": 1,
+          "title": "Reason",
+          "type": "string"
+        },
+        "segment_id": {
+          "minLength": 1,
+          "title": "Segment Id",
+          "type": "string"
+        },
+        "source_id": {
+          "minLength": 1,
+          "title": "Source Id",
+          "type": "string"
+        },
+        "source_in": {
+          "minimum": 0,
+          "title": "Source In",
+          "type": "number"
+        },
+        "source_out": {
+          "exclusiveMinimum": 0,
+          "title": "Source Out",
+          "type": "number"
+        },
+        "timeline_end": {
+          "exclusiveMinimum": 0,
+          "title": "Timeline End",
+          "type": "number"
+        },
+        "timeline_start": {
+          "minimum": 0,
+          "title": "Timeline Start",
+          "type": "number"
+        },
+        "track_id": {
+          "minLength": 1,
+          "title": "Track Id",
+          "type": "string"
+        },
+        "video_transition": {
+          "$ref": "#/$defs/VideoTransition"
+        }
+      },
+      "required": [
+        "segment_id",
+        "timeline_start",
+        "timeline_end",
+        "clip_id",
+        "source_id",
+        "source_in",
+        "source_out",
+        "track_id",
+        "media_role",
+        "video_transition",
+        "audio_transition",
+        "reason",
+        "evidence",
+        "creative_intent",
+        "confidence"
+      ],
+      "title": "TimelineSegment",
+      "type": "object"
+    },
+    "VideoTransition": {
+      "enum": [
+        "none",
+        "hard_cut",
+        "crossfade",
+        "fade_in",
+        "fade_out",
+        "match_cut"
+      ],
+      "title": "VideoTransition",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "actual_duration": {
+      "exclusiveMinimum": 0,
+      "title": "Actual Duration",
+      "type": "number"
+    },
+    "evidence": {
+      "items": {
+        "$ref": "#/$defs/EvidenceRef"
+      },
+      "minItems": 1,
+      "title": "Evidence",
+      "type": "array"
+    },
+    "input_fingerprint": {
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "title": "Input Fingerprint",
+      "type": "string"
+    },
+    "music_plan": {
+      "$ref": "#/$defs/TimelineMusicPlan"
+    },
+    "project_id": {
+      "minLength": 1,
+      "title": "Project Id",
+      "type": "string"
+    },
+    "proposal_id": {
+      "$ref": "#/$defs/ProposalId"
+    },
+    "proposal_map_fingerprint": {
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "title": "Proposal Map Fingerprint",
+      "type": "string"
+    },
+    "proposal_set_id": {
+      "minLength": 1,
+      "title": "Proposal Set Id",
+      "type": "string"
+    },
+    "risks": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Risks",
+      "type": "array"
+    },
+    "schema_version": {
+      "default": "0.3",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "segments": {
+      "items": {
+        "$ref": "#/$defs/TimelineSegment"
+      },
+      "minItems": 1,
+      "title": "Segments",
+      "type": "array"
+    },
+    "target_duration": {
+      "exclusiveMinimum": 0,
+      "title": "Target Duration",
+      "type": "number"
+    },
+    "timeline_id": {
+      "minLength": 1,
+      "title": "Timeline Id",
+      "type": "string"
+    },
+    "warnings": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Warnings",
+      "type": "array"
+    }
+  },
+  "required": [
+    "timeline_id",
+    "project_id",
+    "proposal_set_id",
+    "proposal_id",
+    "proposal_map_fingerprint",
+    "input_fingerprint",
+    "target_duration",
+    "actual_duration",
+    "segments",
+    "music_plan",
+    "evidence"
+  ],
+  "title": "TimelineDraft",
+  "type": "object"
+}

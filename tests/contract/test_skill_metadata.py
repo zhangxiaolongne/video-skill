@@ -38,29 +38,13 @@ def test_skill_frontmatter_and_boundaries():
     frontmatter = yaml.safe_load(match.group(1))
 
     assert frontmatter["name"] == "artist-portrait-editor"
-    assert "network search" in frontmatter["description"]
-    assert "model calls" in frontmatter["description"]
-    assert "scan report" in frontmatter["description"]
-    assert "fixed-window or PySceneDetect-gated clip ledger" in frontmatter["description"]
-    assert "transcript ledger" in frontmatter["description"]
-    assert "keyframe ledger" in frontmatter["description"]
-    assert "analysis ledger" in frontmatter["description"]
+    assert "Codex/ChatGPT host Agent" in frontmatter["description"]
+    assert "without paid APIs, API keys, or network calls" in frontmatter["description"]
+    assert "deterministic media ledgers" in frontmatter["description"]
+    assert "evidence analysis" in frontmatter["description"]
     assert "analysis-led material map" in frontmatter["description"]
-    assert "ProposalContext schema" in frontmatter["description"]
-    assert "TextModelGate schema" in frontmatter["description"]
-    assert "ProposalRequestPacket schemas" in frontmatter["description"]
-    assert "ProposalAdapterCheck schema" in frontmatter["description"]
-    assert "ProposalProviderRegistry schema" in frontmatter["description"]
-    assert "ProposalMockAdapterHandshake schema" in frontmatter["description"]
-    assert "ProposalExecutionApprovalRequest/Record schema" in frontmatter["description"]
-    assert "ProposalExecutionReadinessPlan schema" in frontmatter["description"]
-    assert "ProposalExecutionAuthorization schema" in frontmatter["description"]
-    assert "ProposalProviderOutputQuarantine schema" in frontmatter["description"]
-    assert "ProposalProviderResultEnvelope schema" in frontmatter["description"]
-    assert "ProposalValidationReport schema" in frontmatter["description"]
-    assert "ProposalSet schema" in frontmatter["description"]
-    assert "blocked propose gate" in frontmatter["description"]
-    assert "BGM selection" in frontmatter["description"]
+    assert "quarantined, validated, reviewed, and atomically promoted" in frontmatter["description"]
+    assert "BGM fitting" in frontmatter["description"]
     assert "artist-portrait doctor --project ./project.yaml --json" in content
     assert "image generation or image editing" in content
     assert "output/scan_report.md" in content
@@ -74,9 +58,18 @@ def test_skill_frontmatter_and_boundaries():
     assert ".artist-portrait/data/proposal_execution_approval_request.json" in content
     assert ".artist-portrait/data/proposal_execution_approval_record.json" in content
     assert ".artist-portrait/data/proposal_execution_readiness_plan.json" in content
+    assert ".artist-portrait/data/proposal_execution_input_bundle.json" in content
+    assert ".artist-portrait/data/proposal_provider_call_dry_run.json" in content
     assert ".artist-portrait/data/proposal_execution_authorization.json" in content
+    assert ".artist-portrait/data/proposal_provider_response_intake_plan.json" in content
     assert ".artist-portrait/data/proposal_provider_output_quarantine.json" in content
+    assert ".artist-portrait/data/proposal_provider_response_validation_plan.json" in content
+    assert ".artist-portrait/data/proposal_promotion_authorization_plan.json" in content
+    assert ".artist-portrait/data/proposal_promotion_validation_report.json" in content
+    assert ".artist-portrait/data/proposal_canonical_write_transaction_plan.json" in content
     assert ".artist-portrait/data/proposal_provider_result.json" in content
+    assert "output/proposal_agent_handoff.json" in content
+    assert "--agent-output" in content
     assert ".artist-portrait/data/proposal_validation.json" in content
     assert "output/proposal_review.md" in content
     assert "fake" in content

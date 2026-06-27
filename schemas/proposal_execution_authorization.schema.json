@@ -92,6 +92,11 @@
       "title": "Credential Policy",
       "type": "string"
     },
+    "execution_input_bundle_ref": {
+      "minLength": 1,
+      "title": "Execution Input Bundle Ref",
+      "type": "string"
+    },
     "execution_performed": {
       "default": false,
       "title": "Execution Performed",
@@ -148,6 +153,11 @@
       "default": false,
       "title": "Proposal Content Generated",
       "type": "boolean"
+    },
+    "provider_call_dry_run_ref": {
+      "minLength": 1,
+      "title": "Provider Call Dry Run Ref",
+      "type": "string"
     },
     "provider_id": {
       "minLength": 1,
@@ -211,6 +221,8 @@
     "approval_request_ref",
     "approval_record_ref",
     "execution_readiness_ref",
+    "execution_input_bundle_ref",
+    "provider_call_dry_run_ref",
     "adapter_check_ref",
     "authorization_fingerprint",
     "credential_policy"

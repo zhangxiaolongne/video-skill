@@ -1,0 +1,354 @@
+import json
+import shutil
+import subprocess
+
+import pytest
+
+from artist_portrait_editor.bgm import (
+    BgmError,
+    analyze_candidates,
+    build_fit_plan,
+    import_candidate,
+    review_bgm,
+)
+from artist_portrait_editor.models.bgm import BgmInputMode
+from artist_portrait_editor.models.source import (
+    Assertion,
+    MediaKind,
+    MediaProbe,
+    RightsStatus,
+    SourceRecord,
+)
+from artist_portrait_editor.models.timeline import (
+    AudioTransition,
+    MediaRole,
+    MusicSlotStatus,
+    TimelineDraft,
+    TimelineMusicPlan,
+    TimelineSegment,
+    VideoTransition,
+)
+
+
+pytestmark = pytest.mark.skipif(
+    shutil.which("ffmpeg") is None or shutil.which("ffprobe") is None,
+    reason="BGM tests require ffmpeg and ffprobe",
+)
+
+
+def make_audio(path, duration=1.0, frequency=440):
+    path.parent.mkdir(parents=True, exist_ok=True)
+    subprocess.run(
+        [
+            "ffmpeg", "-y", "-hide_banner", "-loglevel", "error",
+            "-f", "lavfi", "-i", f"sine=frequency={frequency}:duration={duration}",
+            str(path),
+        ],
+        check=True,
+    )
+
+
+def make_video(path, duration=1.0):
+    path.parent.mkdir(parents=True, exist_ok=True)
+    subprocess.run(
+        [
+            "ffmpeg", "-y", "-hide_banner", "-loglevel", "error",
+            "-f", "lavfi", "-i", f"color=c=black:s=16x16:d={duration}",
+            "-f", "lavfi", "-i", f"sine=frequency=330:duration={duration}",
+            "-shortest", "-c:v", "libx264", "-c:a", "aac", str(path),
+        ],
+        check=True,
+    )
+
+
+def write_timeline(root, duration=2.5):
+    timeline = TimelineDraft(
+        timeline_id="timeline_test",
+        project_id="project-test",
+        proposal_set_id="proposal-set",
+        proposal_id="proposal_safe",
+        proposal_map_fingerprint="sha256:" + "1" * 64,
+        input_fingerprint="sha256:" + "2" * 64,
+        target_duration=duration,
+        actual_duration=duration,
+        segments=[
+            TimelineSegment(
+                segment_id="segment_001",
+                timeline_start=0,
+                timeline_end=duration,
+                clip_id="clip-1",
+                source_id="source-1",
+                source_in=0,
+                source_out=duration,
+                track_id="V1",
+                media_role=MediaRole.both,
+                video_transition=VideoTransition.fade_in,
+                audio_transition=AudioTransition.fade_in,
+                reason="test",
+                evidence=[{"type": "clip", "ref": "clip-1"}],
+                creative_intent="test",
+                confidence=1,
+            )
+        ],
+        music_plan=TimelineMusicPlan(
+            status=MusicSlotStatus.unresolved,
+            input_mode="none_yet",
+            future_input_modes=[
+                "direct_audio",
+                "video_audio_extract",
+                "source_embedded_audio",
+                "multiple_candidates",
+                "none_yet",
+            ],
+        ),
+        evidence=[{"type": "proposal", "ref": "proposal_safe"}],
+    )
+    path = root / "output" / "timeline_draft.json"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(timeline.model_dump_json(indent=2), encoding="utf-8")
+
+
+def test_direct_audio_import_and_multi_candidate_ledger(tmp_path):
+    make_audio(tmp_path / "media" / "one.wav", frequency=440)
+    make_audio(tmp_path / "media" / "two.wav", frequency=660)
+
+    ledger, first = import_candidate(
+        root=tmp_path,
+        project_id="project-test",
+        file_ref="media/one.wav",
+        source_id=None,
+        extract_in=0,
+        extract_out=None,
+        stream_index=0,
+        rights_status=RightsStatus.owned,
+        user_intent="quiet portrait",
+    )
+    ledger, second = import_candidate(
+        root=tmp_path,
+        project_id="project-test",
+        file_ref="media/two.wav",
+        source_id=None,
+        extract_in=0,
+        extract_out=None,
+        stream_index=0,
+        rights_status=RightsStatus.licensed,
+        user_intent="alternate ending",
+    )
+
+    assert first.input_mode == BgmInputMode.direct_audio
+    assert first.mixed_audio is False
+    assert first.bpm is None
+    assert first.beat_analysis_status == "unavailable"
+    assert len(ledger.candidates) == 2
+    assert (tmp_path / first.cache_ref).exists()
+    assert second.music_candidate_id != first.music_candidate_id
+
+
+def test_video_audio_extract_preserves_mixed_audio_and_range(tmp_path):
+    make_video(tmp_path / "media" / "music-source.mp4", duration=2)
+
+    _, candidate = import_candidate(
+        root=tmp_path,
+        project_id="project-test",
+        file_ref="media/music-source.mp4",
+        source_id=None,
+        extract_in=0.25,
+        extract_out=1.25,
+        stream_index=0,
+        rights_status=RightsStatus.publicly_available,
+        user_intent="use uploaded video audio",
+    )
+
+    assert candidate.input_mode == BgmInputMode.video_audio_extract
+    assert candidate.mixed_audio is True
+    assert candidate.extract_in == 0.25
+    assert candidate.extract_out == 1.25
+    assert candidate.duration == pytest.approx(1.0, abs=0.03)
+
+
+def test_source_embedded_audio_import(tmp_path):
+    make_video(tmp_path / "media" / "source.mp4")
+    source = SourceRecord(
+        source_id="source-1",
+        locations=["media/source.mp4"],
+        primary_location="media/source.mp4",
+        content_hash="sha256:" + "3" * 64,
+        media_kind=MediaKind.video,
+        media_probe=MediaProbe(
+            duration=1,
+            width=16,
+            height=16,
+            frame_rate=25,
+            video_codec="h264",
+            audio_present=True,
+            audio_codec="aac",
+        ),
+        source_type=Assertion(value="other", method="test", level=4, confidence=1),
+        rights_status=Assertion(
+            value=RightsStatus.owned,
+            method="test",
+            level=4,
+            confidence=1,
+        ),
+        provenance_confidence=1,
+        provenance_method="test",
+    )
+    data = tmp_path / ".artist-portrait" / "data"
+    data.mkdir(parents=True)
+    (data / "sources.jsonl").write_text(source.model_dump_json() + "\n", encoding="utf-8")
+
+    _, candidate = import_candidate(
+        root=tmp_path,
+        project_id="project-test",
+        file_ref=None,
+        source_id="source-1",
+        extract_in=0,
+        extract_out=None,
+        stream_index=0,
+        rights_status=RightsStatus.permission_unknown,
+        user_intent="reuse source music",
+    )
+
+    assert candidate.input_mode == BgmInputMode.source_embedded_audio
+    assert candidate.source_ref == "source_id:source-1"
+    assert candidate.rights_status == RightsStatus.owned
+
+
+def test_fit_plan_loops_ducks_and_binds_timeline(tmp_path):
+    make_audio(tmp_path / "media" / "short.wav", duration=1)
+    _, candidate = import_candidate(
+        root=tmp_path,
+        project_id="project-test",
+        file_ref="media/short.wav",
+        source_id=None,
+        extract_in=0,
+        extract_out=None,
+        stream_index=0,
+        rights_status=RightsStatus.owned,
+        user_intent="fit portrait",
+    )
+    write_timeline(tmp_path, duration=2.5)
+
+    plan, timeline = build_fit_plan(
+        root=tmp_path,
+        project_id="project-test",
+        candidate_id=candidate.music_candidate_id,
+    )
+
+    assert plan.fit_mode == "loop"
+    assert len(plan.segments) == 3
+    assert plan.segments[-1].timeline_end == 2.5
+    assert plan.ducking_intervals[0].gain_db == -9
+    assert plan.beat_alignment_status == "unavailable"
+    assert timeline.music_plan.status == MusicSlotStatus.fitted
+    assert timeline.music_plan.candidate_id == candidate.music_candidate_id
+    assert timeline.music_plan.fitting_performed is True
+    assert review_bgm(tmp_path, "project-test") == []
+
+    timeline_path = tmp_path / "output" / "timeline_draft.json"
+    payload = json.loads(timeline_path.read_text(encoding="utf-8"))
+    payload["warnings"].append("changed")
+    timeline_path.write_text(json.dumps(payload), encoding="utf-8")
+    assert "BGM fit timeline fingerprint is stale" in review_bgm(
+        tmp_path,
+        "project-test",
+    )
+
+
+def test_bgm_analysis_records_energy_windows_and_candidate_binding(tmp_path):
+    make_audio(tmp_path / "media" / "one.wav", duration=1.5)
+    _, candidate = import_candidate(
+        root=tmp_path,
+        project_id="project-test",
+        file_ref="media/one.wav",
+        source_id=None,
+        extract_in=0,
+        extract_out=None,
+        stream_index=0,
+        rights_status=RightsStatus.owned,
+        user_intent="analyze energy",
+    )
+
+    report = analyze_candidates(root=tmp_path, project_id="project-test", window_seconds=0.5)
+    ledger_payload = json.loads(
+        (tmp_path / ".artist-portrait" / "data" / "bgm_candidates.json").read_text(
+            encoding="utf-8"
+        )
+    )
+
+    assert report.analysis_engine == "local_pcm_energy_v1"
+    assert report.network_performed is False
+    assert report.model_call_performed is False
+    assert report.automatic_music_selection is False
+    assert len(report.candidates) == 1
+    analysis = report.candidates[0]
+    assert analysis.music_candidate_id == candidate.music_candidate_id
+    assert analysis.window_count >= 2
+    assert analysis.average_rms_dbfs < 0
+    assert analysis.beat_analysis_status == "unavailable"
+    assert analysis.bpm is None
+    assert ledger_payload["candidates"][0]["analysis_ref"] == ".artist-portrait/data/bgm_analysis.json"
+
+
+def test_bgm_fit_uses_existing_analysis_without_fabricating_beats(tmp_path):
+    make_audio(tmp_path / "media" / "short.wav", duration=1)
+    _, candidate = import_candidate(
+        root=tmp_path,
+        project_id="project-test",
+        file_ref="media/short.wav",
+        source_id=None,
+        extract_in=0,
+        extract_out=None,
+        stream_index=0,
+        rights_status=RightsStatus.owned,
+        user_intent="fit analyzed portrait",
+    )
+    analyze_candidates(root=tmp_path, project_id="project-test", window_seconds=0.5)
+    write_timeline(tmp_path, duration=2.5)
+
+    plan, _timeline = build_fit_plan(
+        root=tmp_path,
+        project_id="project-test",
+        candidate_id=candidate.music_candidate_id,
+    )
+
+    assert plan.analysis_ref == ".artist-portrait/data/bgm_analysis.json"
+    assert plan.analysis_fingerprint is not None
+    assert plan.energy_alignment_status == "analysis_used"
+    assert plan.beat_alignment_status == "unavailable"
+
+
+def test_video_bgm_analysis_keeps_contamination_warning(tmp_path):
+    make_video(tmp_path / "media" / "music-source.mp4", duration=1.5)
+    _, candidate = import_candidate(
+        root=tmp_path,
+        project_id="project-test",
+        file_ref="media/music-source.mp4",
+        source_id=None,
+        extract_in=0,
+        extract_out=None,
+        stream_index=0,
+        rights_status=RightsStatus.publicly_available,
+        user_intent="analyze video audio",
+    )
+
+    report = analyze_candidates(root=tmp_path, project_id="project-test", window_seconds=0.5)
+
+    assert candidate.mixed_audio is True
+    assert "extracted from video" in " ".join(report.candidates[0].warnings)
+
+
+def test_invalid_range_and_outside_project_are_rejected(tmp_path):
+    make_audio(tmp_path / "media" / "one.wav")
+    with pytest.raises(BgmError, match="invalid BGM extraction range"):
+        import_candidate(
+            root=tmp_path,
+            project_id="project-test",
+            file_ref="media/one.wav",
+            source_id=None,
+            extract_in=1,
+            extract_out=0.5,
+            stream_index=0,
+            rights_status=RightsStatus.owned,
+            user_intent="invalid",
+        )

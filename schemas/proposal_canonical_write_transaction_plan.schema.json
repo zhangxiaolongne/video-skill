@@ -1,0 +1,289 @@
+{
+  "$defs": {
+    "ProposalAdapterCheckIssue": {
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "minLength": 1,
+          "title": "Code",
+          "type": "string"
+        },
+        "detail": {
+          "minLength": 1,
+          "title": "Detail",
+          "type": "string"
+        },
+        "ref": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Ref"
+        },
+        "severity": {
+          "pattern": "^(info|warning|error)$",
+          "title": "Severity",
+          "type": "string"
+        }
+      },
+      "required": [
+        "code",
+        "severity",
+        "detail"
+      ],
+      "title": "ProposalAdapterCheckIssue",
+      "type": "object"
+    },
+    "ProposalCanonicalWriteTransactionItem": {
+      "additionalProperties": false,
+      "properties": {
+        "allowed": {
+          "default": false,
+          "title": "Allowed",
+          "type": "boolean"
+        },
+        "issues": {
+          "items": {
+            "$ref": "#/$defs/ProposalAdapterCheckIssue"
+          },
+          "title": "Issues",
+          "type": "array"
+        },
+        "item_id": {
+          "minLength": 1,
+          "title": "Item Id",
+          "type": "string"
+        },
+        "materialized": {
+          "default": false,
+          "title": "Materialized",
+          "type": "boolean"
+        },
+        "ref": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Ref"
+        },
+        "status": {
+          "$ref": "#/$defs/ProposalCanonicalWriteTransactionStatus"
+        }
+      },
+      "required": [
+        "item_id",
+        "status"
+      ],
+      "title": "ProposalCanonicalWriteTransactionItem",
+      "type": "object"
+    },
+    "ProposalCanonicalWriteTransactionStatus": {
+      "enum": [
+        "blocked",
+        "ready_for_future_transaction"
+      ],
+      "title": "ProposalCanonicalWriteTransactionStatus",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "atomic_replace": {
+      "$ref": "#/$defs/ProposalCanonicalWriteTransactionItem"
+    },
+    "atomic_replace_performed": {
+      "default": false,
+      "title": "Atomic Replace Performed",
+      "type": "boolean"
+    },
+    "audit_commit": {
+      "$ref": "#/$defs/ProposalCanonicalWriteTransactionItem"
+    },
+    "audit_commit_written": {
+      "default": false,
+      "title": "Audit Commit Written",
+      "type": "boolean"
+    },
+    "canonical_target_ref": {
+      "minLength": 1,
+      "title": "Canonical Target Ref",
+      "type": "string"
+    },
+    "conflict_check_performed": {
+      "default": false,
+      "title": "Conflict Check Performed",
+      "type": "boolean"
+    },
+    "conflict_detection": {
+      "$ref": "#/$defs/ProposalCanonicalWriteTransactionItem"
+    },
+    "durability_policy": {
+      "$ref": "#/$defs/ProposalCanonicalWriteTransactionItem"
+    },
+    "fsync_performed": {
+      "default": false,
+      "title": "Fsync Performed",
+      "type": "boolean"
+    },
+    "issues": {
+      "items": {
+        "$ref": "#/$defs/ProposalAdapterCheckIssue"
+      },
+      "title": "Issues",
+      "type": "array"
+    },
+    "lock_acquired": {
+      "default": false,
+      "title": "Lock Acquired",
+      "type": "boolean"
+    },
+    "model_call_performed": {
+      "default": false,
+      "title": "Model Call Performed",
+      "type": "boolean"
+    },
+    "network_performed": {
+      "default": false,
+      "title": "Network Performed",
+      "type": "boolean"
+    },
+    "postcommit_verification": {
+      "$ref": "#/$defs/ProposalCanonicalWriteTransactionItem"
+    },
+    "postcommit_verified": {
+      "default": false,
+      "title": "Postcommit Verified",
+      "type": "boolean"
+    },
+    "prewrite_snapshot": {
+      "$ref": "#/$defs/ProposalCanonicalWriteTransactionItem"
+    },
+    "project_id": {
+      "minLength": 1,
+      "title": "Project Id",
+      "type": "string"
+    },
+    "promotion_authorization_ref": {
+      "minLength": 1,
+      "title": "Promotion Authorization Ref",
+      "type": "string"
+    },
+    "promotion_validation_report_ref": {
+      "minLength": 1,
+      "title": "Promotion Validation Report Ref",
+      "type": "string"
+    },
+    "proposal_content_generated": {
+      "default": false,
+      "title": "Proposal Content Generated",
+      "type": "boolean"
+    },
+    "proposals_file_written": {
+      "default": false,
+      "title": "Proposals File Written",
+      "type": "boolean"
+    },
+    "request_ref": {
+      "minLength": 1,
+      "title": "Request Ref",
+      "type": "string"
+    },
+    "rollback_performed": {
+      "default": false,
+      "title": "Rollback Performed",
+      "type": "boolean"
+    },
+    "rollback_plan": {
+      "$ref": "#/$defs/ProposalCanonicalWriteTransactionItem"
+    },
+    "rollback_prepared": {
+      "default": false,
+      "title": "Rollback Prepared",
+      "type": "boolean"
+    },
+    "schema_prewrite_check": {
+      "$ref": "#/$defs/ProposalCanonicalWriteTransactionItem"
+    },
+    "schema_prewrite_passed": {
+      "default": false,
+      "title": "Schema Prewrite Passed",
+      "type": "boolean"
+    },
+    "schema_version": {
+      "default": "0.3",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "snapshot_created": {
+      "default": false,
+      "title": "Snapshot Created",
+      "type": "boolean"
+    },
+    "status": {
+      "$ref": "#/$defs/ProposalCanonicalWriteTransactionStatus"
+    },
+    "target_lock": {
+      "$ref": "#/$defs/ProposalCanonicalWriteTransactionItem"
+    },
+    "temporary_file": {
+      "$ref": "#/$defs/ProposalCanonicalWriteTransactionItem"
+    },
+    "temporary_file_created": {
+      "default": false,
+      "title": "Temporary File Created",
+      "type": "boolean"
+    },
+    "transaction_committed": {
+      "default": false,
+      "title": "Transaction Committed",
+      "type": "boolean"
+    },
+    "transaction_fingerprint": {
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "title": "Transaction Fingerprint",
+      "type": "string"
+    },
+    "transaction_plan_id": {
+      "minLength": 1,
+      "title": "Transaction Plan Id",
+      "type": "string"
+    },
+    "transaction_started": {
+      "default": false,
+      "title": "Transaction Started",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "transaction_plan_id",
+    "project_id",
+    "status",
+    "request_ref",
+    "promotion_authorization_ref",
+    "promotion_validation_report_ref",
+    "canonical_target_ref",
+    "transaction_fingerprint",
+    "target_lock",
+    "prewrite_snapshot",
+    "temporary_file",
+    "schema_prewrite_check",
+    "durability_policy",
+    "atomic_replace",
+    "conflict_detection",
+    "rollback_plan",
+    "audit_commit",
+    "postcommit_verification"
+  ],
+  "title": "ProposalCanonicalWriteTransactionPlan",
+  "type": "object"
+}

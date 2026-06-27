@@ -1,0 +1,229 @@
+{
+  "$defs": {
+    "BgmCandidate": {
+      "additionalProperties": false,
+      "properties": {
+        "analysis_fingerprint": {
+          "anyOf": [
+            {
+              "pattern": "^sha256:[0-9a-f]{64}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Analysis Fingerprint"
+        },
+        "analysis_ref": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Analysis Ref"
+        },
+        "analysis_status": {
+          "pattern": "^(technical_only|failed)$",
+          "title": "Analysis Status",
+          "type": "string"
+        },
+        "audio_stream_index": {
+          "minimum": 0,
+          "title": "Audio Stream Index",
+          "type": "integer"
+        },
+        "beat_analysis_reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Beat Analysis Reason"
+        },
+        "beat_analysis_status": {
+          "pattern": "^(unavailable|completed)$",
+          "title": "Beat Analysis Status",
+          "type": "string"
+        },
+        "bpm": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Bpm"
+        },
+        "cache_ref": {
+          "minLength": 1,
+          "title": "Cache Ref",
+          "type": "string"
+        },
+        "contains_environment": {
+          "$ref": "#/$defs/ContentPresence",
+          "default": "unknown"
+        },
+        "contains_sound_effects": {
+          "$ref": "#/$defs/ContentPresence",
+          "default": "unknown"
+        },
+        "contains_speech": {
+          "$ref": "#/$defs/ContentPresence",
+          "default": "unknown"
+        },
+        "contains_vocals": {
+          "$ref": "#/$defs/ContentPresence",
+          "default": "unknown"
+        },
+        "content_hash": {
+          "pattern": "^sha256:[0-9a-f]{64}$",
+          "title": "Content Hash",
+          "type": "string"
+        },
+        "duration": {
+          "exclusiveMinimum": 0,
+          "title": "Duration",
+          "type": "number"
+        },
+        "extract_in": {
+          "minimum": 0,
+          "title": "Extract In",
+          "type": "number"
+        },
+        "extract_out": {
+          "exclusiveMinimum": 0,
+          "title": "Extract Out",
+          "type": "number"
+        },
+        "input_mode": {
+          "$ref": "#/$defs/BgmInputMode"
+        },
+        "integrated_loudness_lufs": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Integrated Loudness Lufs"
+        },
+        "mixed_audio": {
+          "title": "Mixed Audio",
+          "type": "boolean"
+        },
+        "music_candidate_id": {
+          "minLength": 1,
+          "title": "Music Candidate Id",
+          "type": "string"
+        },
+        "rights_status": {
+          "$ref": "#/$defs/RightsStatus"
+        },
+        "source_media_kind": {
+          "pattern": "^(audio|video)$",
+          "title": "Source Media Kind",
+          "type": "string"
+        },
+        "source_ref": {
+          "minLength": 1,
+          "title": "Source Ref",
+          "type": "string"
+        },
+        "user_intent": {
+          "minLength": 1,
+          "title": "User Intent",
+          "type": "string"
+        }
+      },
+      "required": [
+        "music_candidate_id",
+        "input_mode",
+        "source_ref",
+        "source_media_kind",
+        "extract_in",
+        "extract_out",
+        "audio_stream_index",
+        "content_hash",
+        "cache_ref",
+        "duration",
+        "rights_status",
+        "user_intent",
+        "analysis_status",
+        "beat_analysis_status",
+        "mixed_audio"
+      ],
+      "title": "BgmCandidate",
+      "type": "object"
+    },
+    "BgmInputMode": {
+      "enum": [
+        "direct_audio",
+        "video_audio_extract",
+        "source_embedded_audio"
+      ],
+      "title": "BgmInputMode",
+      "type": "string"
+    },
+    "ContentPresence": {
+      "enum": [
+        "unknown",
+        "present",
+        "absent"
+      ],
+      "title": "ContentPresence",
+      "type": "string"
+    },
+    "RightsStatus": {
+      "enum": [
+        "owned",
+        "licensed",
+        "publicly_available",
+        "permission_unknown",
+        "restricted"
+      ],
+      "title": "RightsStatus",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "candidates": {
+      "items": {
+        "$ref": "#/$defs/BgmCandidate"
+      },
+      "title": "Candidates",
+      "type": "array"
+    },
+    "project_id": {
+      "minLength": 1,
+      "title": "Project Id",
+      "type": "string"
+    },
+    "schema_version": {
+      "default": "0.3",
+      "title": "Schema Version",
+      "type": "string"
+    }
+  },
+  "required": [
+    "project_id"
+  ],
+  "title": "BgmCandidateLedger",
+  "type": "object"
+}

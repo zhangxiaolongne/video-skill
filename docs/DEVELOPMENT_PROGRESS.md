@@ -1,254 +1,145 @@
 # Development Progress
 
-This file records project progress and non-negotiable design decisions that
-must survive across implementation batches.
+This is the current-stage dashboard. It answers where the project is now, how
+far it is from the final goal, what is blocked, and what decision comes next.
+It is not the task ledger, issue ledger, decision history, or release archive.
 
-## Relationship To Master Document
+## Document Map
 
-The master document `artist_portrait_editor_revision5_optimized.md` owns
-strategy:
+| Canonical owner | Purpose |
+|---|---|
+| `artist_portrait_editor_revision5_optimized.md` | Product strategy, engineering freeze, capability boundaries, and long-term editing principles |
+| `docs/DEVELOPMENT_PROGRESS.md` | Current stage, capability completion, principal blockers, and next major direction |
+| `docs/CURRENT_BATCH.md` | Active batch, ten version tasks, task statuses, acceptance evidence, and closeout |
+| `docs/ISSUES.md` | Open, blocked, accepted, resolved, and superseded issues and risks |
+| `docs/DECISIONS.md` | Durable product, architecture, workflow, and release decisions |
+| `docs/RELEASES.md` | Canonical release history, current validation evidence, and Git publication state |
 
-- product direction
-- capability boundaries
-- data contracts
-- creative principles
-- long-term design constraints
+Implementation behavior, CLI rules, invalidation, acceptance, and data-contract
+policy are consolidated in `ENGINEERING_SPEC_V0.md`. Typed models and generated
+Schemas own field-level contracts.
 
-This development document owns tactics:
-
-- completed local batches
-- current implementation state
-- known packaging or validation risks
-- next likely batch
-- tactical reminders that must be carried into implementation
-
-When a user requirement changes long-term product behavior, update both files:
-
-- record the strategic principle in the master document
-- record the implementation status, current gate, and next tactical step here
+`docs/current_progress.json` mirrors the current state for automatic checks.
+Historical version outcomes are consolidated in `RELEASES.md`; per-version
+readiness and gate-progress fragments must not be recreated.
 
 ## Current State
 
 - Branch: `main`
-- Remote: `zhangxiaolongne/video-skill`
-- Canonical skill name: `artist-portrait-editor`
-- Canonical install directory: `artist-portrait-editor`
-- Distribution repository: `video-skill`
-- Current local gate: V0-010m proposal execution readiness plan gate only
+- Remote configured: `zhangxiaolongne/video-skill`
+- Canonical skill: `artist-portrait-editor`
+- Current local gate: V0-018 BGM recommendation review gate
+- Current milestone: `V0-019 release publication closeout for V0-018 capability release`
+- Current batch: `V0-019`
+- Batch status: `completed`
+- Latest committed baseline: V0-010m
+- Release publication target: `main` with capability tag `v0.18.0`
+- Final usable Skill status: foundation, creative proposals, canonical timeline,
+  BGM fitting, and local low-resolution preview rendering are substantial;
+  preview quality review, render controls, controlled local final export, and
+  local BGM technical intelligence, and BGM recommendation review are
+  substantial; release publication has been prepared for `v0.18.0`; validated
+  beat-grid extraction and automatic music selection remain undelivered
 
-## Completed Local Versions
+## Capability Dashboard
 
-- V0-002a: media scan data contract and initial scan ledger.
-- V0-002b: media scan acceptance checks.
-- V0-002c: `sources.csv` metadata import.
-- V0-002d: rescan identity for moved files.
-- V0-002e: supersedes tracking for same-location content changes.
-- V0-002f: minimal deterministic material map.
-- V0-002g: minimal project risk review.
-- V0-002h: status dashboard.
-- V0-002i: run report refresh after state mutations.
-- V0-002j: expanded foundation checks.
-- V0-002k: invalid source ledger handling.
-- V0-002l: atomic writes for rebuildable report outputs.
-- V0-002m: artifact consistency checks.
-- V0-002n: read-only `doctor` diagnostics.
-- V0-002o: root `SKILL.md` and `agents/openai.yaml` metadata.
-- V0-002p: skill package preflight.
-- V0-002q: skill package policy.
-- V0-002r: canonical install simulation.
-- V0-002s: release readiness for the unpushed local batch.
-- V0-003a: gate reconciliation from Stage A-only to media scan foundation.
-- V0-003b: deterministic scan report and scan artifact status.
-- V0-003c: downstream map/review invalidation after source ledger changes.
-- V0-004a: clip record schema and committed JSON Schema.
-- V0-004b: deterministic fixed-window `segment`.
-- V0-004c: canonical `clips.jsonl` and rebuildable `clip_report.md`.
-- V0-004d: clip status, doctor diagnostics, and invalidation chain.
-- V0-005a: `features.scene_detection` routing for `off`, `auto`, and
-  `required`.
-- V0-005b: optional PySceneDetect adapter and scene-clip method records.
-- V0-005c: fixed-window fallback diagnostics and required-dependency failure
-  handling.
-- V0-006a: `TranscriptRecord` schema and committed JSON Schema.
-- V0-006b: `transcribe` CLI with `features.transcription` routing for `off`,
-  `auto`, and `required`.
-- V0-006c: local-only faster-whisper adapter, transcript ledger validation,
-  status/doctor diagnostics, and source-ledger invalidation.
-- V0-007a: `KeyframeRecord` schema and committed JSON Schema.
-- V0-007b: `keyframes` CLI with deterministic ffmpeg midpoint extraction for
-  video clips.
-- V0-007c: rebuildable keyframe cache diagnostics, audio-only handling, and
-  source/clip invalidation.
-- V0-008a: `AnalysisRecord` schema and committed JSON Schema.
-- V0-008b: `analyze` CLI with evidence-only source/clip/transcript/keyframe
-  aggregation.
-- V0-008c: canonical `.artist-portrait/data/analysis.jsonl`, rebuildable
-  `output/analysis_report.md`, status/doctor diagnostics, and invalidation
-  from source, clip, transcript, and keyframe ledgers.
-- V0-009a: `map` now requires current `analysis.jsonl`.
-- V0-009b: `material_map.md` renders source and analysis distributions,
-  deterministic priority review queue, pending confirmation fields, and risk
-  sections.
-- V0-009c: tests and `run_checks.py` now cover the analysis-led map chain.
-- V0-010a: `ProposalSet` Pydantic model and committed JSON Schema.
-- V0-010b: `propose` readiness command now requires `material_map.md`, blocks
-  without an approved text model, records run metadata, and writes no fake
-  `proposals.json` or `proposals.md`.
-- V0-010c: proposal artifact status, doctor diagnostics, schema drift checks,
-  and upstream invalidation coverage.
-- V0-010d: `ProposalContext` schema and committed JSON Schema.
-- V0-010e: blocked `propose` now writes deterministic
-  `.artist-portrait/data/proposal_context.json` from local source, clip,
-  analysis, and material-map evidence before returning the text-model
-  dependency error.
-- V0-010f: proposal context status, doctor diagnostics, BGM requirements, and
-  `run_checks.py` coverage.
-- V0-010g: `TextModelGate` schema and committed JSON Schema.
-- V0-010h: blocked `propose` now writes deterministic
-  `.artist-portrait/data/text_model_gate.json` with policy/capability reasons.
-- V0-010i: even a ready text-model gate remains blocked until ProposalSet
-  generation is explicitly opened and tested.
-- V0-010j: `ProposalValidationReport` schema and committed JSON Schema.
-- V0-010k: `review --scope proposal` now validates existing
-  `.artist-portrait/data/proposals.json` against deterministic
-  `.artist-portrait/data/proposal_context.json`.
-- V0-010l: proposal validation writes
-  `.artist-portrait/data/proposal_validation.json` and
-  `output/proposal_review.md`, checking required clips, forbidden sources,
-  fact references, material-map fingerprints, and BGM strategy fields.
-- V0-010m: `ProposalRequestPacket` schema and committed JSON Schema.
-- V0-010n: blocked `propose` now writes deterministic
-  `.artist-portrait/data/proposal_request.json` after proposal context and
-  text-model gate packets.
-- V0-010o: proposal request status/doctor diagnostics and `run_checks.py`
-  coverage without model calls or proposal generation.
-- V0-010p: `ProposalAdapterCheck` schema and committed JSON Schema.
-- V0-010q: blocked `propose` now writes deterministic
-  `.artist-portrait/data/proposal_adapter_check.json` after proposal request.
-- V0-010r: adapter preflight records no model call, no network access, allowed
-  future secret sources, and plaintext secret leakage issues.
-- V0-010s: `ProposalProviderRegistry` schema and committed JSON Schema.
-- V0-010t: blocked `propose` now writes deterministic
-  `.artist-portrait/data/proposal_provider_registry.json` with the local
-  `local_mock` provider and generation closed.
-- V0-010u: `ProposalMockAdapterHandshake` schema and committed JSON Schema.
-- V0-010v: blocked `propose` now writes deterministic
-  `.artist-portrait/data/proposal_mock_adapter_handshake.json` to validate the
-  future response contract while recording no model call, no network access,
-  and no generated proposal content.
-- V0-010w: `ProposalProviderResultEnvelope` schema and committed JSON Schema.
-- V0-010x: blocked `propose` now writes deterministic
-  `.artist-portrait/data/proposal_provider_result.json` as a dry-run provider
-  result envelope, recording no payload generation, no validation, no model
-  call, no network access, and no generated proposal content.
-- V0-010y: `ProposalExecutionAuthorization` schema and committed JSON Schema.
-- V0-010z: blocked `propose` now writes deterministic
-  `.artist-portrait/data/proposal_execution_authorization.json`, recording no
-  approved execution gate, no user approval, no credentials, no model calls, no
-  network access, no execution, no generated proposal content, and quarantine
-  required for any future provider output.
-- V0-010aa: `ProposalProviderOutputQuarantine` schema and committed JSON
-  Schema.
-- V0-010ab: blocked `propose` now writes deterministic
-  `.artist-portrait/data/proposal_provider_output_quarantine.json`, recording
-  no raw output capture, no parsed payload, no promotion to proposals, no
-  validation, no model calls, no network access, and no generated proposal
-  content.
-- V0-010ac: `ProposalExecutionApprovalRequest` schema and committed JSON
-  Schema.
-- V0-010ad: blocked `propose` now writes deterministic
-  `.artist-portrait/data/proposal_execution_approval_request.json`, recording
-  no approval, no selected secret source, no credential reads, no model calls,
-  no network access, no execution, and no generated proposal content.
-- V0-010ae: `ProposalExecutionApprovalRecord` schema and committed JSON Schema.
-- V0-010af: blocked `propose` now writes deterministic
-  `.artist-portrait/data/proposal_execution_approval_record.json`, recording no
-  granted approval, no selected secret source, no credential reads, no model
-  calls, no network access, no execution allowance, no execution, and no
-  generated proposal content.
-- V0-010ag: `ProposalExecutionReadinessPlan` schema and committed JSON Schema.
-- V0-010ah: blocked `propose` now writes deterministic
-  `.artist-portrait/data/proposal_execution_readiness_plan.json`, covering five
-  blocked sub-stages in one batch: secret-source selection, credential access,
-  execution planning, provider call preflight, and output capture planning.
+| Capability | Status | Current meaning |
+|---|---|---|
+| Project/config foundation | `completed` | Validation, initialization, state, diagnostics, and package checks work |
+| Media scan and identity | `completed` | Canonical source ledger and invalidation work |
+| Segmentation | `completed` | Fixed-window and optional scene segmentation work |
+| Local transcription | `completed` | Gated faster-whisper path and canonical ledger work |
+| Keyframes | `completed` | Deterministic extraction and rebuildable cache work |
+| Evidence analysis | `completed` | Deterministic evidence-only analysis works |
+| Material map | `completed` | Analysis-led review map works |
+| Proposal contracts and review | `completed` | Deterministic contracts and review of existing proposals work |
+| Real proposal generation | `completed` | Codex/ChatGPT host Agent generates; CLI quarantines, validates, and promotes |
+| Paid or remote provider execution | `forbidden` | No paid API, API key, or network dependency |
+| Timeline generation | `completed` | Explicit proposal selection, canonical draft, validation, review, diagnostics, and invalidation work |
+| BGM ingestion and fitting | `completed` | Multi-source candidates, explicit selection, loudness analysis, technical energy analysis, and fit planning work |
+| BGM technical intelligence | `completed` | Local candidate energy windows, quiet head/tail, high-energy range, loop-safe hints, beat-engine detection, and fit evidence binding work |
+| BGM recommendation review | `completed` | Host-Agent/local-model/third-party handoff, explicit candidate import, quarantine, validation, promotion, review, and no-auto-selection boundaries work |
+| Preview and rendering | `completed` | Local low-resolution preview rendering from timeline plus optional BGM fit works |
+| Preview quality review | `completed` | Bounded render controls and deterministic QC work before final export opens |
+| Final export | `completed` | Bounded local MP4 final export from canonical timeline, retained audio, optional fitted BGM, manifest, QC, review, status, doctor, audit, and invalidation work |
+| Development governance | `completed` | Six canonical owners and automatic drift checks are active |
 
 ## Current Hard Boundaries
 
-Do not implement these until the relevant gate is explicitly opened and tested:
+V0-018 permits BGM recommendation review through explicit handoff/import
+artifacts. It does not permit:
 
-- OpenCV or vision analysis
-- embeddings
-- remote ASR, model downloads, or ungrounded text classification
-- visual classification beyond explicit evidence placeholders
-- keyframe interpretation beyond raw evidence references
-- fake, template, or model-free creative proposals
-- full creative proposal generation
-- timeline generation
-- preview rendering
-- BGM selection, beat analysis, or music/timeline fitting
-- model calls
-- network search
-- image generation or image editing
+- paid API calls, API keys, remote provider execution, or network search
+- Python-side hidden model calls or automatic paid fallback
+- fake, template, mock, dummy, or model-free creative proposals
+- automatic music selection
+- fabricated BPM/beat analysis when no mature engine exists
+- automatic final-export profile choice beyond explicit user CLI selection
+- OpenCV, embeddings, vision classification, or image generation/editing
 
-## Non-Negotiable Future Constraints
+## Mandatory Batch Contract
+
+- Plan the next big-version direction before implementation.
+- Start an implementation batch only with at least ten independent version tasks.
+- Count outcomes, not fields, files, tests, or edit quantity.
+- Isolated fields/schemas, individual tests, local refactors, incidental bug
+  fixes, docs-only changes, diagnostics, and review-rule additions are support.
+- A release-level contract migration, comprehensive acceptance program,
+  capability-enabling architecture refactor, or major hardening program may
+  count when it has independent acceptance criteria, substantial impact, and a
+  measurable final-goal delta.
+- If the current gate cannot support ten real outcomes, stop and request the
+  exact capability-gate promotion. Do not pad the batch.
+- V0-010 foundation and proposal review are closed for ordinary expansion.
+
+The enforceable task list lives in `CURRENT_BATCH.md`; machine-readable rules
+live in `current_progress.json`.
+
+## Non-Negotiable Implementation Principles
 
 ### Prefer Mature Third-Party Tools
 
-Future implementation batches may use third-party tools directly when the gate
-allows it. Do not rebuild capabilities that stable tools, installed Codex
-skills, plugins, search, image generation/editing tools, OpenAI models, ffmpeg,
-ffprobe, PySceneDetect, Whisper, OpenCV, or similar libraries already provide.
-
-Tactical rule for future batches:
-
-- check available tools, skills, plugins, and libraries before implementing a
-  capability from scratch
-- use third-party outputs as evidence with provenance, not unreviewed truth
-- keep config gates, failure modes, and review rules around every non-local or
-  model-backed capability
-- keep current V0-010m bounded to existing local ledgers plus proposal
-  readiness, proposal request, adapter preflight, provider registry, mock
-  adapter handshake, execution approval request, approval record, execution readiness plan, execution authorization, provider output quarantine,
-  provider result envelope, and proposal validation checks; keyframes are
-  visual evidence references, not visual classification
+Check available tools, Skills, plugins, search, image generation/editing,
+models, local models, remote models, ffmpeg, ffprobe, PySceneDetect, Whisper,
+OpenCV, beat-analysis libraries, and stable third-party libraries before
+building a commodity capability from scratch. A validated gate may use mature
+third-party tools directly, but their outputs require provenance, validation,
+failure handling, and replaceable adapter boundaries.
 
 ### BGM Is Part Of Editing Logic
 
-BGM must not be treated as a final decorative layer. Different video outputs
-need different BGM strategies, and the selected BGM must coordinate with text,
-source video rhythm, pacing, transitions, and audio mix.
+BGM must not be treated as a final decorative layer. Future proposal, timeline,
+review, and preview gates must coordinate music with:
 
-Future proposal/timeline work must account for:
+- multiple input modes: direct audio upload, audio extracted from an uploaded
+  video, embedded source audio, multiple candidates, or no file yet
+- output type, mood, genre, BPM, phrases, sections, drops, loops, and endings
+- source-video rhythm, cuts, transitions, subtitle entrances/exits, and pauses
+- speech-first mixing, ducking under speech, fades, retained original audio,
+  transition sounds, and intentional silence
+- rights status and a written explanation of why the music strategy fits
 
-- BGM metadata: mood, genre, BPM, section structure, build/drop points, loop
-  points, ending behavior, and rights status.
-- Beat and phrase alignment: cuts, transitions, subtitle entrances/exits, and
-  highlight moments should be able to align to beats, bars, drops, breaks, or
-  intentional off-beat pauses.
-- Output-specific music strategy:
-  - high-energy short edits need stronger beat/drop alignment and faster cuts
-  - portrait narratives need controlled emotional build and release
-  - interview/documentary outputs need low-interference music and voice-first
-    mixing
-  - stage/performance outputs need careful handling of original performance
-    audio versus added BGM
-- Audio timeline requirements: BGM in/out points, fades, ducking under speech,
-  retained original audio, transition sounds, and intentional silence.
-- Review requirements: generated proposals and timelines should explain why a
-  BGM choice fits the target output and where music structure drives edit
-  decisions.
+Video extraction produces a mixed audio track, not automatically a clean BGM.
+Future processing must preserve the source video, extraction range, audio stream
+index, hash, and contamination flags for speech, vocals, environment, and
+effects. Video used as a music source must remain distinct from video used as
+picture material with retained original sound.
 
-This constraint is not implemented in the current local foundation. It must be
-carried into the future proposal, timeline, review, and preview gates.
+The current gate can analyze local BGM energy structure and validate imported
+recommendations, but preserves explicit candidate selection. Beat-grid
+extraction, separation, and automatic music-to-edit synchronization remain
+unimplemented.
 
-## Next Likely Batch
+## Principal Blockers
 
-Next action should plan the controlled provider execution gate without
-confusing it with full proposal generation. The big-version direction is
-evidence-grounded creative proposals that account for BGM strategy, target
-output, text, pacing, transitions, and evidence traceability. The next small
-batch should define explicit execution approval and local secret-source
-selection while keeping model output captured into quarantine before any
-parsing, validation, or promotion to `proposals.json`. Do not open timeline,
-BGM fitting, preview, OpenCV, vision, image generation/editing, API-key setup,
-or model-free template proposal gates by accident.
+- `ISSUE-008`: beat/BPM extraction remains unavailable without a validated local engine.
+- `ISSUE-003`: release publication blocker is resolved by V0-019 once Git
+  branch/tag remote verification completes.
+
+Full status and resolution conditions live in `ISSUES.md`.
+
+## Next Major Decision
+
+V0-019 publishes the accumulated local V0-018 capability release. The next
+major decision is whether to integrate a validated beat engine or convert
+recommendation review into an explicit fit-selection workflow.

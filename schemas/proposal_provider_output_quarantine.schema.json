@@ -179,6 +179,11 @@
       "title": "Request Ref",
       "type": "string"
     },
+    "response_intake_ref": {
+      "minLength": 1,
+      "title": "Response Intake Ref",
+      "type": "string"
+    },
     "schema_version": {
       "default": "0.3",
       "title": "Schema Version",
@@ -202,6 +207,7 @@
     "registry_ref",
     "handshake_ref",
     "execution_authorization_ref",
+    "response_intake_ref",
     "adapter_check_ref",
     "quarantine_fingerprint"
   ],

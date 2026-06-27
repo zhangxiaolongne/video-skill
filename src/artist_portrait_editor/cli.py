@@ -6,16 +6,50 @@ import sys
 from pathlib import Path
 
 from artist_portrait_editor.capabilities import detect_capabilities
+from artist_portrait_editor.bgm import (
+    BgmError,
+    analyze_candidates,
+    build_fit_plan,
+    import_candidate,
+    load_ledger,
+    render_bgm_analysis_report,
+    review_bgm,
+)
 from artist_portrait_editor.config_loader import ConfigLoadError, load_project_config
+from artist_portrait_editor.bgm_recommendation import (
+    BgmRecommendationError,
+    import_bgm_recommendation_candidate,
+    prepare_bgm_recommendation_handoff,
+)
 from artist_portrait_editor.exit_codes import ExitCode
+from artist_portrait_editor.final_export_workspace import (
+    final_export_workspace,
+    review_final_export_workspace,
+)
+from artist_portrait_editor.models.source import RightsStatus
+from artist_portrait_editor.models.state import OverallStatus, StepLedgerEntry, StepStatus
+from artist_portrait_editor.preview_workspace import (
+    preview_workspace,
+    review_preview_workspace,
+)
+from artist_portrait_editor.run_records import (
+    environment_snapshot,
+    new_run_id,
+    utc_now,
+    write_json,
+)
 from artist_portrait_editor.media.scanner import ScanError, SourceLedgerError
 from artist_portrait_editor.schemas import write_schema_files
 from artist_portrait_editor.workspace import (
     WorkspaceDependencyError,
+    WorkspaceProposalCandidateError,
+    WorkspacePreviewError,
     WorkspacePrerequisiteError,
+    WorkspaceTimelineError,
     analyze_workspace,
     doctor_project_payload,
     init_workspace,
+    import_agent_proposal_workspace,
     keyframes_workspace,
     load_state,
     map_workspace,
@@ -26,10 +60,14 @@ from artist_portrait_editor.workspace import (
     render_status_panel,
     review_proposal_workspace,
     review_project_workspace,
+    review_timeline_workspace,
     scan_workspace,
     segment_workspace,
     state_as_dict,
+    save_state,
     transcribe_workspace,
+    timeline_workspace,
+    write_run_report,
 )
 
 
@@ -91,7 +129,7 @@ def build_parser() -> argparse.ArgumentParser:
     review_sub.add_argument(
         "--scope",
         default="project",
-        choices=("project", "proposal", "timeline", "all"),
+        choices=("project", "proposal", "timeline", "preview", "final_export", "all"),
     )
     review_sub.add_argument("--json", action="store_true")
     review_sub.add_argument("--quiet", action="store_true")
@@ -102,8 +140,63 @@ def build_parser() -> argparse.ArgumentParser:
     propose_sub.add_argument("--json", action="store_true")
     propose_sub.add_argument("--quiet", action="store_true")
     propose_sub.add_argument("--verbose", action="store_true")
+    propose_sub.add_argument(
+        "--agent-output",
+        help="Host-Agent ProposalSet JSON candidate to quarantine, validate, and promote",
+    )
 
-    for command in ("relate", "timeline", "run"):
+    timeline_sub = subparsers.add_parser("timeline")
+    timeline_sub.add_argument("--project", required=True)
+    timeline_sub.add_argument(
+        "--proposal",
+        required=True,
+        choices=("proposal_safe", "proposal_advanced", "proposal_risky"),
+    )
+    timeline_sub.add_argument("--json", action="store_true")
+    timeline_sub.add_argument("--quiet", action="store_true")
+    timeline_sub.add_argument("--verbose", action="store_true")
+
+    bgm_sub = subparsers.add_parser("bgm")
+    bgm_sub.add_argument("action", choices=("import", "list", "analyze", "recommend", "fit", "review"))
+    bgm_sub.add_argument("--project", required=True)
+    bgm_sub.add_argument("--file")
+    bgm_sub.add_argument("--source-id")
+    bgm_sub.add_argument("--candidate")
+    bgm_sub.add_argument("--extract-in", type=float, default=0.0)
+    bgm_sub.add_argument("--extract-out", type=float)
+    bgm_sub.add_argument("--stream-index", type=int, default=0)
+    bgm_sub.add_argument("--window-seconds", type=float, default=0.5)
+    bgm_sub.add_argument("--agent-output")
+    bgm_sub.add_argument(
+        "--rights-status",
+        choices=tuple(item.value for item in RightsStatus),
+        default=RightsStatus.permission_unknown.value,
+    )
+    bgm_sub.add_argument("--intent", default="user-provided BGM candidate")
+    bgm_sub.add_argument("--json", action="store_true")
+    bgm_sub.add_argument("--quiet", action="store_true")
+    bgm_sub.add_argument("--verbose", action="store_true")
+
+    preview_sub = subparsers.add_parser("preview")
+    preview_sub.add_argument("--project", required=True)
+    preview_sub.add_argument("--width", type=int, default=480)
+    preview_sub.add_argument("--fps", type=int, default=12)
+    preview_sub.add_argument("--json", action="store_true")
+    preview_sub.add_argument("--quiet", action="store_true")
+    preview_sub.add_argument("--verbose", action="store_true")
+
+    export_sub = subparsers.add_parser("export")
+    export_sub.add_argument("--project", required=True)
+    export_sub.add_argument(
+        "--profile",
+        choices=("review_720p", "delivery_1080p"),
+        default="review_720p",
+    )
+    export_sub.add_argument("--json", action="store_true")
+    export_sub.add_argument("--quiet", action="store_true")
+    export_sub.add_argument("--verbose", action="store_true")
+
+    for command in ("relate", "run"):
         sub = subparsers.add_parser(command)
         sub.add_argument("--project", required=True)
 
@@ -455,12 +548,6 @@ def cmd_analyze(args: argparse.Namespace) -> int:
 def cmd_review(args: argparse.Namespace) -> int:
     if error := _validate_common_flags(args):
         return int(error)
-    if args.scope == "timeline":
-        print(
-            f"review --scope {args.scope} is outside the current gate and is not implemented",
-            file=sys.stderr,
-        )
-        return int(ExitCode.prerequisite_step_missing)
     project_path = Path(args.project)
     try:
         load_project_config(project_path)
@@ -471,6 +558,39 @@ def cmd_review(args: argparse.Namespace) -> int:
         if args.scope == "proposal":
             validation_path, report_path, _state, warnings, issues = review_proposal_workspace(
                 project_path
+            )
+            root = project_root(project_path)
+            payload = {
+                "output": report_path.relative_to(root).as_posix(),
+                "validation": validation_path.relative_to(root).as_posix(),
+                "warnings": warnings,
+                "issues": issues,
+            }
+        elif args.scope == "timeline":
+            validation_path, report_path, _state, warnings, issues = (
+                review_timeline_workspace(project_path)
+            )
+            root = project_root(project_path)
+            payload = {
+                "output": report_path.relative_to(root).as_posix(),
+                "validation": validation_path.relative_to(root).as_posix(),
+                "warnings": warnings,
+                "issues": issues,
+            }
+        elif args.scope == "preview":
+            validation_path, report_path, _state, warnings, issues = (
+                review_preview_workspace(project_path)
+            )
+            root = project_root(project_path)
+            payload = {
+                "output": report_path.relative_to(root).as_posix(),
+                "validation": validation_path.relative_to(root).as_posix(),
+                "warnings": warnings,
+                "issues": issues,
+            }
+        elif args.scope == "final_export":
+            validation_path, report_path, _state, warnings, issues = (
+                review_final_export_workspace(project_path)
             )
             root = project_root(project_path)
             payload = {
@@ -496,12 +616,472 @@ def cmd_review(args: argparse.Namespace) -> int:
     except SourceLedgerError as exc:
         print(str(exc), file=sys.stderr)
         return int(ExitCode.output_or_reference_validation_failed)
+    except WorkspaceTimelineError as exc:
+        print(str(exc), file=sys.stderr)
+        return int(ExitCode.output_or_reference_validation_failed)
+    except WorkspacePreviewError as exc:
+        print(str(exc), file=sys.stderr)
+        return int(ExitCode.output_or_reference_validation_failed)
     if args.json:
         print(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True))
     elif not args.quiet:
         print(f"wrote {payload['output']}")
         for warning in warnings:
             print(f"warning: {warning}", file=sys.stderr)
+    return int(ExitCode.success_with_warnings if warnings else ExitCode.success)
+
+
+def cmd_timeline(args: argparse.Namespace) -> int:
+    if error := _validate_common_flags(args):
+        return int(error)
+    project_path = Path(args.project)
+    try:
+        load_project_config(project_path)
+    except ConfigLoadError as exc:
+        print(str(exc), file=sys.stderr)
+        return int(ExitCode.invalid_project_config)
+    try:
+        timeline_path, validation_path, review_path, state, warnings, issues = (
+            timeline_workspace(project_path, proposal_id=args.proposal)
+        )
+    except WorkspacePrerequisiteError as exc:
+        print(str(exc), file=sys.stderr)
+        return int(ExitCode.prerequisite_step_missing)
+    except (WorkspaceTimelineError, SourceLedgerError) as exc:
+        print(str(exc), file=sys.stderr)
+        return int(ExitCode.output_or_reference_validation_failed)
+    root = project_root(project_path)
+    payload = {
+        "output": timeline_path.relative_to(root).as_posix(),
+        "validation": validation_path.relative_to(root).as_posix(),
+        "review": review_path.relative_to(root).as_posix(),
+        "proposal": args.proposal,
+        "status": state.steps["timeline"].status.value,
+        "warnings": warnings,
+        "issues": issues,
+    }
+    if args.json:
+        print(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True))
+    elif not args.quiet:
+        print(f"wrote {payload['output']}")
+        print(f"wrote {payload['review']}")
+        for warning in warnings:
+            print(f"warning: {warning}", file=sys.stderr)
+    return int(ExitCode.success_with_warnings if warnings else ExitCode.success)
+
+
+def cmd_preview(args: argparse.Namespace) -> int:
+    if error := _validate_common_flags(args):
+        return int(error)
+    project_path = Path(args.project)
+    try:
+        load_project_config(project_path)
+    except ConfigLoadError as exc:
+        print(str(exc), file=sys.stderr)
+        return int(ExitCode.invalid_project_config)
+    try:
+        preview_path, manifest_path, validation_path, review_path, state, warnings, issues = (
+            preview_workspace(project_path, width=args.width, fps=args.fps)
+        )
+    except WorkspacePrerequisiteError as exc:
+        print(str(exc), file=sys.stderr)
+        return int(ExitCode.prerequisite_step_missing)
+    except (WorkspacePreviewError, SourceLedgerError, ValueError) as exc:
+        print(str(exc), file=sys.stderr)
+        return int(ExitCode.output_or_reference_validation_failed)
+    root = project_root(project_path)
+    payload = {
+        "output": preview_path.relative_to(root).as_posix(),
+        "manifest": manifest_path.relative_to(root).as_posix(),
+        "validation": validation_path.relative_to(root).as_posix(),
+        "review": review_path.relative_to(root).as_posix(),
+        "status": state.steps["preview"].status.value,
+        "warnings": warnings,
+        "issues": issues,
+        "final_export": False,
+        "network_performed": False,
+        "model_call_performed": False,
+    }
+    if args.json:
+        print(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True))
+    elif not args.quiet:
+        print(f"wrote {payload['output']}")
+        print(f"wrote {payload['review']}")
+        for warning in warnings:
+            print(f"warning: {warning}", file=sys.stderr)
+    return int(ExitCode.success_with_warnings if warnings else ExitCode.success)
+
+
+def cmd_export(args: argparse.Namespace) -> int:
+    if error := _validate_common_flags(args):
+        return int(error)
+    project_path = Path(args.project)
+    try:
+        load_project_config(project_path)
+    except ConfigLoadError as exc:
+        print(str(exc), file=sys.stderr)
+        return int(ExitCode.invalid_project_config)
+    try:
+        export_path, manifest_path, validation_path, review_path, state, warnings, issues = (
+            final_export_workspace(project_path, profile=args.profile)
+        )
+    except WorkspacePrerequisiteError as exc:
+        print(str(exc), file=sys.stderr)
+        return int(ExitCode.prerequisite_step_missing)
+    except (WorkspacePreviewError, SourceLedgerError, ValueError) as exc:
+        print(str(exc), file=sys.stderr)
+        return int(ExitCode.output_or_reference_validation_failed)
+    root = project_root(project_path)
+    payload = {
+        "output": export_path.relative_to(root).as_posix(),
+        "manifest": manifest_path.relative_to(root).as_posix(),
+        "validation": validation_path.relative_to(root).as_posix(),
+        "review": review_path.relative_to(root).as_posix(),
+        "profile": args.profile,
+        "status": state.steps["final_export"].status.value,
+        "warnings": warnings,
+        "issues": issues,
+        "final_export": True,
+        "automatic_music_selection": False,
+        "network_performed": False,
+        "model_call_performed": False,
+    }
+    if args.json:
+        print(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True))
+    elif not args.quiet:
+        print(f"wrote {payload['output']}")
+        print(f"wrote {payload['review']}")
+        for warning in warnings:
+            print(f"warning: {warning}", file=sys.stderr)
+    return int(ExitCode.success_with_warnings if warnings else ExitCode.success)
+
+
+def cmd_bgm(args: argparse.Namespace) -> int:
+    if error := _validate_common_flags(args):
+        return int(error)
+    project_path = Path(args.project)
+    try:
+        config = load_project_config(project_path)
+    except ConfigLoadError as exc:
+        print(str(exc), file=sys.stderr)
+        return int(ExitCode.invalid_project_config)
+    if not config.content_policy.allow_music:
+        print("BGM operations are disabled by content_policy.allow_music", file=sys.stderr)
+        return int(ExitCode.output_or_reference_validation_failed)
+    root = project_root(project_path)
+    state = load_state(root)
+    if state is None:
+        print("bgm requires init to complete first", file=sys.stderr)
+        return int(ExitCode.prerequisite_step_missing)
+    try:
+        if args.action == "import":
+            ledger, candidate = import_candidate(
+                root=root,
+                project_id=config.project.id,
+                file_ref=args.file,
+                source_id=args.source_id,
+                extract_in=args.extract_in,
+                extract_out=args.extract_out,
+                stream_index=args.stream_index,
+                rights_status=RightsStatus(args.rights_status),
+                user_intent=args.intent,
+            )
+            payload = {
+                "candidate": candidate.model_dump(mode="json"),
+                "candidate_count": len(ledger.candidates),
+                "output": ".artist-portrait/data/bgm_candidates.json",
+            }
+            step_name = "bgm_import"
+            output_refs = [
+                ".artist-portrait/data/bgm_candidates.json",
+                candidate.cache_ref,
+            ]
+            warnings = [candidate.beat_analysis_reason] if candidate.beat_analysis_reason else []
+            existing_analysis = state.steps.get("bgm_analyze")
+            if existing_analysis and existing_analysis.status in {
+                StepStatus.completed,
+                StepStatus.completed_with_warnings,
+            }:
+                state.steps["bgm_analyze"] = StepLedgerEntry(
+                    status=StepStatus.invalidated,
+                    input_fingerprint=existing_analysis.input_fingerprint,
+                    output_refs=existing_analysis.output_refs,
+                    last_run_id=existing_analysis.last_run_id,
+                    warnings=[*existing_analysis.warnings, "BGM candidate ledger changed"],
+                )
+            existing_fit = state.steps.get("bgm_fit")
+            if existing_fit and existing_fit.status in {
+                StepStatus.completed,
+                StepStatus.completed_with_warnings,
+            }:
+                state.steps["bgm_fit"] = StepLedgerEntry(
+                    status=StepStatus.invalidated,
+                    input_fingerprint=existing_fit.input_fingerprint,
+                    output_refs=existing_fit.output_refs,
+                    last_run_id=existing_fit.last_run_id,
+                    warnings=[*existing_fit.warnings, "BGM candidate ledger changed"],
+                )
+            existing_preview = state.steps.get("preview")
+            if existing_preview and existing_preview.status in {
+                StepStatus.completed,
+                StepStatus.completed_with_warnings,
+            }:
+                state.steps["preview"] = StepLedgerEntry(
+                    status=StepStatus.invalidated,
+                    input_fingerprint=existing_preview.input_fingerprint,
+                    output_refs=existing_preview.output_refs,
+                    last_run_id=existing_preview.last_run_id,
+                    warnings=[*existing_preview.warnings, "BGM candidate ledger changed"],
+                )
+            existing_review = state.steps.get("review_preview")
+            if existing_review and existing_review.status in {
+                StepStatus.completed,
+                StepStatus.completed_with_warnings,
+            }:
+                state.steps["review_preview"] = StepLedgerEntry(
+                    status=StepStatus.invalidated,
+                    input_fingerprint=existing_review.input_fingerprint,
+                    output_refs=existing_review.output_refs,
+                    last_run_id=existing_review.last_run_id,
+                    warnings=[*existing_review.warnings, "BGM candidate ledger changed"],
+                )
+            for step_name in ("final_export", "review_final_export"):
+                existing_export = state.steps.get(step_name)
+                if existing_export and existing_export.status in {
+                    StepStatus.completed,
+                    StepStatus.completed_with_warnings,
+                }:
+                    state.steps[step_name] = StepLedgerEntry(
+                        status=StepStatus.invalidated,
+                        input_fingerprint=existing_export.input_fingerprint,
+                        output_refs=existing_export.output_refs,
+                        last_run_id=existing_export.last_run_id,
+                        warnings=[
+                            *existing_export.warnings,
+                            "BGM candidate ledger changed",
+                        ],
+                    )
+        elif args.action == "list":
+            ledger = load_ledger(
+                root / ".artist-portrait" / "data" / "bgm_candidates.json",
+                config.project.id,
+            )
+            payload = ledger.model_dump(mode="json")
+            if args.json:
+                print(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True))
+            elif not args.quiet:
+                for candidate in ledger.candidates:
+                    print(f"{candidate.music_candidate_id} {candidate.input_mode.value} {candidate.duration:.3f}s")
+            return int(ExitCode.success)
+        elif args.action == "analyze":
+            report = analyze_candidates(
+                root=root,
+                project_id=config.project.id,
+                window_seconds=args.window_seconds,
+            )
+            report_ref = "output/bgm_analysis_report.md"
+            report_path = root / report_ref
+            report_path.parent.mkdir(parents=True, exist_ok=True)
+            report_path.write_text(render_bgm_analysis_report(report) + "\n", encoding="utf-8")
+            payload = {
+                "analysis": report.model_dump(mode="json"),
+                "output": ".artist-portrait/data/bgm_analysis.json",
+                "report": report_ref,
+            }
+            step_name = "bgm_analyze"
+            output_refs = [".artist-portrait/data/bgm_analysis.json", report_ref]
+            warnings = [
+                warning
+                for candidate in report.candidates
+                for warning in candidate.warnings
+            ]
+            for dependent in (
+                "bgm_fit",
+                "preview",
+                "review_preview",
+                "final_export",
+                "review_final_export",
+            ):
+                existing = state.steps.get(dependent)
+                if existing and existing.status in {
+                    StepStatus.completed,
+                    StepStatus.completed_with_warnings,
+                }:
+                    state.steps[dependent] = StepLedgerEntry(
+                        status=StepStatus.invalidated,
+                        input_fingerprint=existing.input_fingerprint,
+                        output_refs=existing.output_refs,
+                        last_run_id=existing.last_run_id,
+                        warnings=[*existing.warnings, "BGM analysis changed"],
+                    )
+        elif args.action == "recommend":
+            if args.agent_output:
+                recommendation_path, review_path, validation = import_bgm_recommendation_candidate(
+                    root=root,
+                    project_id=config.project.id,
+                    candidate_path=Path(args.agent_output),
+                )
+                payload = {
+                    "output": recommendation_path.relative_to(root).as_posix(),
+                    "review": review_path.relative_to(root).as_posix(),
+                    "validation": validation.model_dump(mode="json"),
+                }
+                step_name = "bgm_recommend"
+                output_refs = [
+                    recommendation_path.relative_to(root).as_posix(),
+                    review_path.relative_to(root).as_posix(),
+                    ".artist-portrait/data/bgm_recommendation_validation.json",
+                ]
+                warnings = [issue.detail for issue in validation.issues if issue.severity == "warning"]
+                state.steps["review_bgm_recommendation"] = StepLedgerEntry(
+                    status=StepStatus.completed_with_warnings if warnings else StepStatus.completed,
+                    output_refs=[
+                        review_path.relative_to(root).as_posix(),
+                        ".artist-portrait/data/bgm_recommendation_validation.json",
+                    ],
+                    warnings=warnings,
+                )
+                for dependent in ("bgm_fit", "preview", "review_preview", "final_export", "review_final_export"):
+                    existing = state.steps.get(dependent)
+                    if existing and existing.status in {
+                        StepStatus.completed,
+                        StepStatus.completed_with_warnings,
+                    }:
+                        state.steps[dependent] = StepLedgerEntry(
+                            status=StepStatus.invalidated,
+                            input_fingerprint=existing.input_fingerprint,
+                            output_refs=existing.output_refs,
+                            last_run_id=existing.last_run_id,
+                            warnings=[*existing.warnings, "BGM recommendation changed"],
+                        )
+            else:
+                context_path, request_path, handoff_path = prepare_bgm_recommendation_handoff(
+                    root=root,
+                    project_id=config.project.id,
+                )
+                payload = {
+                    "context": context_path.relative_to(root).as_posix(),
+                    "request": request_path.relative_to(root).as_posix(),
+                    "handoff": handoff_path.relative_to(root).as_posix(),
+                    "next_command": "artist-portrait bgm recommend --project <project.yaml> --agent-output <candidate.json>",
+                }
+                step_name = "bgm_recommend"
+                output_refs = [
+                    context_path.relative_to(root).as_posix(),
+                    request_path.relative_to(root).as_posix(),
+                    handoff_path.relative_to(root).as_posix(),
+                ]
+                warnings = ["BGM recommendation handoff is ready; no recommendation imported yet"]
+        elif args.action == "fit":
+            if not args.candidate:
+                raise BgmError("bgm fit requires --candidate")
+            plan, timeline = build_fit_plan(
+                root=root,
+                project_id=config.project.id,
+                candidate_id=args.candidate,
+            )
+            payload = {
+                "fit": plan.model_dump(mode="json"),
+                "timeline": "output/timeline_draft.json",
+                "output": ".artist-portrait/data/bgm_fit.json",
+            }
+            step_name = "bgm_fit"
+            output_refs = [
+                ".artist-portrait/data/bgm_fit.json",
+                "output/timeline_draft.json",
+            ]
+            warnings = plan.warnings
+            existing_preview = state.steps.get("preview")
+            if existing_preview and existing_preview.status in {
+                StepStatus.completed,
+                StepStatus.completed_with_warnings,
+            }:
+                state.steps["preview"] = StepLedgerEntry(
+                    status=StepStatus.invalidated,
+                    input_fingerprint=existing_preview.input_fingerprint,
+                    output_refs=existing_preview.output_refs,
+                    last_run_id=existing_preview.last_run_id,
+                    warnings=[*existing_preview.warnings, "BGM fit plan changed"],
+                )
+            existing_review = state.steps.get("review_preview")
+            if existing_review and existing_review.status in {
+                StepStatus.completed,
+                StepStatus.completed_with_warnings,
+            }:
+                state.steps["review_preview"] = StepLedgerEntry(
+                    status=StepStatus.invalidated,
+                    input_fingerprint=existing_review.input_fingerprint,
+                    output_refs=existing_review.output_refs,
+                    last_run_id=existing_review.last_run_id,
+                    warnings=[*existing_review.warnings, "BGM fit plan changed"],
+                )
+            for step_name in ("final_export", "review_final_export"):
+                existing_export = state.steps.get(step_name)
+                if existing_export and existing_export.status in {
+                    StepStatus.completed,
+                    StepStatus.completed_with_warnings,
+                }:
+                    state.steps[step_name] = StepLedgerEntry(
+                        status=StepStatus.invalidated,
+                        input_fingerprint=existing_export.input_fingerprint,
+                        output_refs=existing_export.output_refs,
+                        last_run_id=existing_export.last_run_id,
+                        warnings=[*existing_export.warnings, "BGM fit plan changed"],
+                    )
+        else:
+            ledger = load_ledger(
+                root / ".artist-portrait" / "data" / "bgm_candidates.json",
+                config.project.id,
+            )
+            issues = review_bgm(root, config.project.id)
+            payload = {"issues": issues, "candidate_count": len(ledger.candidates)}
+            step_name = "review_bgm"
+            output_refs = []
+            warnings = issues
+    except (BgmError, BgmRecommendationError, ValueError) as exc:
+        print(str(exc), file=sys.stderr)
+        return int(ExitCode.output_or_reference_validation_failed)
+    run_id = new_run_id()
+    status = StepStatus.completed_with_warnings if warnings else StepStatus.completed
+    state.steps[step_name] = StepLedgerEntry(
+        status=status,
+        output_refs=output_refs,
+        last_run_id=run_id,
+        warnings=warnings,
+    )
+    state.latest_run_id = run_id
+    state.updated_at = utc_now()
+    state.overall_status = OverallStatus.degraded if warnings else OverallStatus.ready
+    runs_dir = root / ".artist-portrait" / "runs" / run_id
+    runs_dir.mkdir(parents=True, exist_ok=True)
+    write_json(
+        runs_dir / "command.json",
+        {"command": "bgm", "action": args.action, "project": str(project_path)},
+    )
+    write_json(runs_dir / "environment.json", environment_snapshot())
+    write_json(
+        runs_dir / "step_result.json",
+        {
+            "step": step_name,
+            "status": status.value,
+            "output_refs": output_refs,
+            "network_performed": False,
+            "model_call_performed": False,
+            "preview_rendered": False,
+        },
+    )
+    write_json(runs_dir / "warnings.json", warnings)
+    write_json(runs_dir / "errors.json", [])
+    (runs_dir / "log.txt").write_text(
+        f"bgm {args.action} completed\n",
+        encoding="utf-8",
+    )
+    save_state(root, state)
+    write_run_report(root / config.paths.output_dir, state, warnings)
+    if args.json:
+        print(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True))
+    elif not args.quiet:
+        print(f"bgm {args.action} completed")
     return int(ExitCode.success_with_warnings if warnings else ExitCode.success)
 
 
@@ -515,6 +1095,31 @@ def cmd_propose(args: argparse.Namespace) -> int:
         print(str(exc), file=sys.stderr)
         return int(ExitCode.invalid_project_config)
     try:
+        if args.agent_output:
+            result = import_agent_proposal_workspace(
+                project_path,
+                Path(args.agent_output),
+            )
+            payload = {
+                "output": result["proposals_ref"],
+                "handoff": result["handoff_ref"],
+                "quarantine": result["quarantine_ref"],
+                "validation": result["validation_ref"],
+                "review": result["review_ref"],
+                "status": result["status"],
+                "warnings": result["warnings"],
+            }
+            if args.json:
+                print(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True))
+            elif not args.quiet:
+                print(f"wrote {payload['output']}")
+                print(f"quarantined {payload['quarantine']}")
+                print(f"wrote {payload['review']}")
+            return int(
+                ExitCode.success_with_warnings
+                if result["warnings"]
+                else ExitCode.success
+            )
         state = propose_workspace(project_path)
     except WorkspacePrerequisiteError as exc:
         print(str(exc), file=sys.stderr)
@@ -540,6 +1145,18 @@ def cmd_propose(args: argparse.Namespace) -> int:
         else:
             print(str(exc), file=sys.stderr)
         return int(ExitCode.missing_required_dependency_for_command)
+    except WorkspaceProposalCandidateError as exc:
+        payload = {
+            "error": str(exc),
+            "error_code": exc.code,
+            "quarantine": exc.quarantine_ref,
+            "status": "failed",
+        }
+        if args.json:
+            print(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True))
+        else:
+            print(str(exc), file=sys.stderr)
+        return int(ExitCode.output_or_reference_validation_failed)
     step = state.steps["propose"]
     payload = {
         "output": None,
@@ -589,6 +1206,10 @@ def main(argv: list[str] | None = None) -> int:
         "map": cmd_map,
         "review": cmd_review,
         "propose": cmd_propose,
+        "timeline": cmd_timeline,
+        "preview": cmd_preview,
+        "export": cmd_export,
+        "bgm": cmd_bgm,
     }
     handler = handlers.get(args.command, blocked_stage_a_command)
     return handler(args)

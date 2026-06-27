@@ -1,0 +1,323 @@
+{
+  "$defs": {
+    "ProposalAdapterCheckIssue": {
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "minLength": 1,
+          "title": "Code",
+          "type": "string"
+        },
+        "detail": {
+          "minLength": 1,
+          "title": "Detail",
+          "type": "string"
+        },
+        "ref": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Ref"
+        },
+        "severity": {
+          "pattern": "^(info|warning|error)$",
+          "title": "Severity",
+          "type": "string"
+        }
+      },
+      "required": [
+        "code",
+        "severity",
+        "detail"
+      ],
+      "title": "ProposalAdapterCheckIssue",
+      "type": "object"
+    },
+    "ProposalProviderResponseValidationItem": {
+      "additionalProperties": false,
+      "properties": {
+        "allowed": {
+          "default": false,
+          "title": "Allowed",
+          "type": "boolean"
+        },
+        "issues": {
+          "items": {
+            "$ref": "#/$defs/ProposalAdapterCheckIssue"
+          },
+          "title": "Issues",
+          "type": "array"
+        },
+        "item_id": {
+          "minLength": 1,
+          "title": "Item Id",
+          "type": "string"
+        },
+        "materialized": {
+          "default": false,
+          "title": "Materialized",
+          "type": "boolean"
+        },
+        "ref": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Ref"
+        },
+        "status": {
+          "$ref": "#/$defs/ProposalProviderResponseValidationStatus"
+        }
+      },
+      "required": [
+        "item_id",
+        "status"
+      ],
+      "title": "ProposalProviderResponseValidationItem",
+      "type": "object"
+    },
+    "ProposalProviderResponseValidationStatus": {
+      "enum": [
+        "blocked",
+        "ready_for_future_response_validation"
+      ],
+      "title": "ProposalProviderResponseValidationStatus",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "adapter_check_ref": {
+      "minLength": 1,
+      "title": "Adapter Check Ref",
+      "type": "string"
+    },
+    "audit_event_written": {
+      "default": false,
+      "title": "Audit Event Written",
+      "type": "boolean"
+    },
+    "checksum_verification": {
+      "$ref": "#/$defs/ProposalProviderResponseValidationItem"
+    },
+    "checksum_verified": {
+      "default": false,
+      "title": "Checksum Verified",
+      "type": "boolean"
+    },
+    "content_type_check": {
+      "$ref": "#/$defs/ProposalProviderResponseValidationItem"
+    },
+    "content_type_checked": {
+      "default": false,
+      "title": "Content Type Checked",
+      "type": "boolean"
+    },
+    "handshake_ref": {
+      "minLength": 1,
+      "title": "Handshake Ref",
+      "type": "string"
+    },
+    "issues": {
+      "items": {
+        "$ref": "#/$defs/ProposalAdapterCheckIssue"
+      },
+      "title": "Issues",
+      "type": "array"
+    },
+    "json_syntax_validated": {
+      "default": false,
+      "title": "Json Syntax Validated",
+      "type": "boolean"
+    },
+    "json_syntax_validation": {
+      "$ref": "#/$defs/ProposalProviderResponseValidationItem"
+    },
+    "model_call_performed": {
+      "default": false,
+      "title": "Model Call Performed",
+      "type": "boolean"
+    },
+    "network_performed": {
+      "default": false,
+      "title": "Network Performed",
+      "type": "boolean"
+    },
+    "output_quarantine_ref": {
+      "minLength": 1,
+      "title": "Output Quarantine Ref",
+      "type": "string"
+    },
+    "parsed_payload_generated": {
+      "default": false,
+      "title": "Parsed Payload Generated",
+      "type": "boolean"
+    },
+    "parser_contract": {
+      "$ref": "#/$defs/ProposalProviderResponseValidationItem"
+    },
+    "parser_contract_selected": {
+      "default": false,
+      "title": "Parser Contract Selected",
+      "type": "boolean"
+    },
+    "project_id": {
+      "minLength": 1,
+      "title": "Project Id",
+      "type": "string"
+    },
+    "promoted_to_proposals": {
+      "default": false,
+      "title": "Promoted To Proposals",
+      "type": "boolean"
+    },
+    "promotion_decided": {
+      "default": false,
+      "title": "Promotion Decided",
+      "type": "boolean"
+    },
+    "promotion_decision": {
+      "$ref": "#/$defs/ProposalProviderResponseValidationItem"
+    },
+    "proposal_content_generated": {
+      "default": false,
+      "title": "Proposal Content Generated",
+      "type": "boolean"
+    },
+    "provider_id": {
+      "minLength": 1,
+      "title": "Provider Id",
+      "type": "string"
+    },
+    "quarantine_input_binding": {
+      "$ref": "#/$defs/ProposalProviderResponseValidationItem"
+    },
+    "quarantine_input_bound": {
+      "default": false,
+      "title": "Quarantine Input Bound",
+      "type": "boolean"
+    },
+    "quarantine_required": {
+      "default": true,
+      "title": "Quarantine Required",
+      "type": "boolean"
+    },
+    "raw_output_read": {
+      "default": false,
+      "title": "Raw Output Read",
+      "type": "boolean"
+    },
+    "redaction_verification": {
+      "$ref": "#/$defs/ProposalProviderResponseValidationItem"
+    },
+    "redaction_verified": {
+      "default": false,
+      "title": "Redaction Verified",
+      "type": "boolean"
+    },
+    "registry_ref": {
+      "minLength": 1,
+      "title": "Registry Ref",
+      "type": "string"
+    },
+    "request_ref": {
+      "minLength": 1,
+      "title": "Request Ref",
+      "type": "string"
+    },
+    "response_intake_ref": {
+      "minLength": 1,
+      "title": "Response Intake Ref",
+      "type": "string"
+    },
+    "schema_validated": {
+      "default": false,
+      "title": "Schema Validated",
+      "type": "boolean"
+    },
+    "schema_validation": {
+      "$ref": "#/$defs/ProposalProviderResponseValidationItem"
+    },
+    "schema_version": {
+      "default": "0.3",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "semantic_validation": {
+      "$ref": "#/$defs/ProposalProviderResponseValidationItem"
+    },
+    "semantic_validation_performed": {
+      "default": false,
+      "title": "Semantic Validation Performed",
+      "type": "boolean"
+    },
+    "size_limit_check": {
+      "$ref": "#/$defs/ProposalProviderResponseValidationItem"
+    },
+    "size_limit_checked": {
+      "default": false,
+      "title": "Size Limit Checked",
+      "type": "boolean"
+    },
+    "status": {
+      "$ref": "#/$defs/ProposalProviderResponseValidationStatus"
+    },
+    "target_schema_ref": {
+      "minLength": 1,
+      "title": "Target Schema Ref",
+      "type": "string"
+    },
+    "validation_fingerprint": {
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "title": "Validation Fingerprint",
+      "type": "string"
+    },
+    "validation_performed": {
+      "default": false,
+      "title": "Validation Performed",
+      "type": "boolean"
+    },
+    "validation_plan_id": {
+      "minLength": 1,
+      "title": "Validation Plan Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "validation_plan_id",
+    "project_id",
+    "status",
+    "provider_id",
+    "request_ref",
+    "registry_ref",
+    "handshake_ref",
+    "adapter_check_ref",
+    "response_intake_ref",
+    "output_quarantine_ref",
+    "target_schema_ref",
+    "validation_fingerprint",
+    "quarantine_input_binding",
+    "content_type_check",
+    "size_limit_check",
+    "checksum_verification",
+    "redaction_verification",
+    "parser_contract",
+    "json_syntax_validation",
+    "schema_validation",
+    "semantic_validation",
+    "promotion_decision"
+  ],
+  "title": "ProposalProviderResponseValidationPlan",
+  "type": "object"
+}

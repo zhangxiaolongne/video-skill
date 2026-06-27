@@ -7,82 +7,22 @@ Local V0 media research foundation for the `artist-portrait-editor` skill.
 - [artist_portrait_editor_revision5_optimized.md](artist_portrait_editor_revision5_optimized.md)
 - [SKILL.md](SKILL.md)
 - [Development Progress](docs/DEVELOPMENT_PROGRESS.md)
+- [Current Batch](docs/CURRENT_BATCH.md)
+- [Issues And Risks](docs/ISSUES.md)
+- [Decision Ledger](docs/DECISIONS.md)
+- [Release Ledger](docs/RELEASES.md)
+
+The files above are the canonical current documentation entry points.
+Historical version outcomes are consolidated in `docs/RELEASES.md`.
 
 ## Spec Entrypoints
 
-- [Vision](docs/VISION.md)
-- [Product Spec V0](docs/PRODUCT_SPEC_V0.md)
 - [Engineering Spec V0](docs/ENGINEERING_SPEC_V0.md)
-- [CLI Spec](docs/CLI_SPEC.md)
-- [State And Invalidation](docs/STATE_AND_INVALIDATION.md)
-- [Data Contracts](docs/DATA_CONTRACTS.md)
-- [Model Boundaries](docs/MODEL_BOUNDARIES.md)
-- [Acceptance Tests V0](docs/ACCEPTANCE_TESTS_V0.md)
-- [Stage A Acceptance](docs/STAGE_A_ACCEPTANCE.md)
-- [V0-002a Media Scan](docs/V0_002A_MEDIA_SCAN.md)
-- [V0-002b Media Scan Acceptance](docs/V0_002B_MEDIA_SCAN_ACCEPTANCE.md)
-- [V0-002c Sources CSV Import](docs/V0_002C_SOURCES_CSV_IMPORT.md)
-- [V0-002d Rescan Identity](docs/V0_002D_RESCAN_IDENTITY.md)
-- [V0-002e Supersedes Tracking](docs/V0_002E_SUPERSEDES.md)
-- [V0-002f Minimal Material Map](docs/V0_002F_MINIMAL_MATERIAL_MAP.md)
-- [V0-002g Minimal Project Review](docs/V0_002G_MINIMAL_PROJECT_REVIEW.md)
-- [V0-002h Status Dashboard](docs/V0_002H_STATUS_DASHBOARD.md)
-- [V0-002i Run Report Refresh](docs/V0_002I_RUN_REPORT_REFRESH.md)
-- [V0-002j Foundation Checks](docs/V0_002J_FOUNDATION_CHECKS.md)
-- [V0-002k Invalid Ledger Handling](docs/V0_002K_INVALID_LEDGER_HANDLING.md)
-- [V0-002l Atomic Report Writes](docs/V0_002L_ATOMIC_REPORT_WRITES.md)
-- [V0-002m Artifact Consistency](docs/V0_002M_ARTIFACT_CONSISTENCY.md)
-- [V0-002n Doctor Diagnostics](docs/V0_002N_DOCTOR_DIAGNOSTICS.md)
-- [V0-002o Skill Metadata](docs/V0_002O_SKILL_METADATA.md)
-- [V0-002p Skill Package Preflight](docs/V0_002P_SKILL_PACKAGE_PREFLIGHT.md)
-- [V0-002q Skill Package Policy](docs/V0_002Q_SKILL_PACKAGE_POLICY.md)
-- [V0-002r Canonical Install Simulation](docs/V0_002R_CANONICAL_INSTALL_SIMULATION.md)
-- [V0-002s Release Readiness](docs/V0_002S_RELEASE_READINESS.md)
-- [V0-003 Media Scan Foundation](docs/V0_003_MEDIA_SCAN_FOUNDATION.md)
-- [V0-003 Release Readiness](docs/V0_003_RELEASE_READINESS.md)
-- [V0-004 Segmentation Foundation](docs/V0_004_SEGMENTATION_FOUNDATION.md)
-- [V0-004 Release Readiness](docs/V0_004_RELEASE_READINESS.md)
-- [V0-005 Scene Segmentation Gate](docs/V0_005_SCENE_SEGMENTATION_GATE.md)
-- [V0-005 Release Readiness](docs/V0_005_RELEASE_READINESS.md)
-- [V0-006 Transcription Gate](docs/V0_006_TRANSCRIPTION_GATE.md)
-- [V0-006 Release Readiness](docs/V0_006_RELEASE_READINESS.md)
-- [V0-007 Keyframe Cache Gate](docs/V0_007_KEYFRAME_CACHE_GATE.md)
-- [V0-007 Release Readiness](docs/V0_007_RELEASE_READINESS.md)
-- [V0-008 Basic Analysis Gate](docs/V0_008_BASIC_ANALYSIS_GATE.md)
-- [V0-008 Release Readiness](docs/V0_008_RELEASE_READINESS.md)
-- [V0-009 Material Map Gate](docs/V0_009_MATERIAL_MAP_GATE.md)
-- [V0-009 Release Readiness](docs/V0_009_RELEASE_READINESS.md)
-- [V0-010a Proposal Readiness Gate](docs/V0_010A_PROPOSAL_READINESS_GATE.md)
-- [V0-010a Release Readiness](docs/V0_010A_RELEASE_READINESS.md)
-- [V0-010b Proposal Context Gate](docs/V0_010B_PROPOSAL_CONTEXT_GATE.md)
-- [V0-010b Release Readiness](docs/V0_010B_RELEASE_READINESS.md)
-- [V0-010c Text Model Gate](docs/V0_010C_TEXT_MODEL_GATE.md)
-- [V0-010c Release Readiness](docs/V0_010C_RELEASE_READINESS.md)
-- [V0-010d Proposal Validation Gate](docs/V0_010D_PROPOSAL_VALIDATION_GATE.md)
-- [V0-010d Release Readiness](docs/V0_010D_RELEASE_READINESS.md)
-- [V0-010e Proposal Request Gate](docs/V0_010E_PROPOSAL_REQUEST_GATE.md)
-- [V0-010e Release Readiness](docs/V0_010E_RELEASE_READINESS.md)
-- [V0-010f Proposal Adapter Preflight Gate](docs/V0_010F_PROPOSAL_ADAPTER_PREFLIGHT_GATE.md)
-- [V0-010f Release Readiness](docs/V0_010F_RELEASE_READINESS.md)
-- [V0-010g Proposal Provider Registry Gate](docs/V0_010G_PROPOSAL_PROVIDER_REGISTRY_GATE.md)
-- [V0-010g Release Readiness](docs/V0_010G_RELEASE_READINESS.md)
-- [V0-010h Proposal Provider Result Envelope Gate](docs/V0_010H_PROPOSAL_PROVIDER_RESULT_ENVELOPE_GATE.md)
-- [V0-010h Release Readiness](docs/V0_010H_RELEASE_READINESS.md)
-- [V0-010i Proposal Execution Authorization Gate](docs/V0_010I_PROPOSAL_EXECUTION_AUTHORIZATION_GATE.md)
-- [V0-010i Release Readiness](docs/V0_010I_RELEASE_READINESS.md)
-- [V0-010j Proposal Provider Output Quarantine Gate](docs/V0_010J_PROPOSAL_PROVIDER_OUTPUT_QUARANTINE_GATE.md)
-- [V0-010j Release Readiness](docs/V0_010J_RELEASE_READINESS.md)
-- [V0-010k Proposal Execution Approval Request Gate](docs/V0_010K_PROPOSAL_EXECUTION_APPROVAL_REQUEST_GATE.md)
-- [V0-010k Release Readiness](docs/V0_010K_RELEASE_READINESS.md)
-- [V0-010l Proposal Execution Approval Record Gate](docs/V0_010L_PROPOSAL_EXECUTION_APPROVAL_RECORD_GATE.md)
-- [V0-010l Release Readiness](docs/V0_010L_RELEASE_READINESS.md)
-- [V0-010m Proposal Execution Readiness Plan Gate](docs/V0_010M_PROPOSAL_EXECUTION_READINESS_PLAN_GATE.md)
-- [V0-010m Release Readiness](docs/V0_010M_RELEASE_READINESS.md)
-- [Non Goals](docs/NON_GOALS.md)
+- [Current Machine-Readable Progress](docs/current_progress.json)
 
 ## Current Gate
 
-Current V0-010m proposal execution readiness plan gate work allows deterministic project
+Current V0-018 BGM recommendation review gate work allows deterministic project
 setup, local media scanning, fixed-window clip segmentation, optional
 PySceneDetect video scene segmentation, local-only faster-whisper transcription
 when available, ffmpeg midpoint keyframe extraction for video clips,
@@ -90,9 +30,25 @@ source/clip/transcript/keyframe/analysis ledger operations, rebuildable
 keyframe cache, analysis-led material maps, deterministic proposal context
 packets, text-model gate packets, deterministic proposal request packets,
 proposal adapter preflight packets, provider registry packets, local mock
-adapter handshake packets, execution approval request packets, execution approval record packets, execution readiness plan packets, execution authorization packets, provider output
-quarantine packets, provider result envelope packets, proposal contract validation, deterministic proposal review of existing proposals, and
-read-only/reporting outputs:
+adapter handshake packets, execution approval request packets, execution approval record packets, execution readiness plan packets, execution input bundle packets, provider call dry-run packets, execution authorization packets, provider response intake plan packets, provider output
+quarantine packets, provider response validation plan packets, promotion authorization/validation packets, canonical write transaction plan packets, provider result envelope packets, a local host-Agent handoff, quarantined candidate import, atomic canonical proposal promotion, proposal contract validation, deterministic proposal review, explicit timeline generation, multi-source BGM fitting, local BGM technical analysis, BGM recommendation review, low-resolution preview rendering, preview render controls, preview QC, and read-only/reporting outputs and controlled local final MP4 export:
+
+The V0-010 proposal foundation is now consolidated around one artifact registry.
+`status` and `doctor` validate cross-artifact references, project identity,
+missing dependencies, upstream fingerprints, and duplicate ledger output refs.
+The registry and integrity checks now live in a dedicated proposal artifact
+module, while `docs/current_progress.json` records capability progress separately
+from implementation task counts.
+Proposal JSON loading now lives in `proposal_io.py`; the workspace keeps
+compatibility wrappers while status summary routing is registry-driven.
+Proposal review now checks structural completeness, evidence closure,
+safe/advanced/risky differentiation, and actionable BGM execution details.
+It also enforces creative-brief consistency, counter-proposal challenges,
+top-level evidence integrity, unique titles, explicit risks, and no absolute
+local path leakage.
+Policy review blocks forbidden generation methods and forbidden-material
+fact-ref bypasses, aligns analysis evidence to required clips, detects
+contradictory missing-material claims, and respects `allow_music: false`.
 
 ```text
 project.yaml
@@ -119,21 +75,41 @@ project.yaml
 -> proposal_execution_approval_request.json for no-approval execution request
 -> proposal_execution_approval_record.json for no-grant approval record
 -> proposal_execution_readiness_plan.json for five closed execution-readiness sub-stages
+-> proposal_execution_input_bundle.json for ten closed provider execution input sub-items
+-> proposal_provider_call_dry_run.json for ten closed provider call dry-run sub-items
 -> proposal_execution_authorization.json for no-call execution authorization
+-> proposal_provider_response_intake_plan.json for ten closed provider response intake sub-items
 -> proposal_provider_output_quarantine.json for no-output quarantine
+-> proposal_provider_response_validation_plan.json for ten closed response validation sub-items
+-> proposal_promotion_authorization_plan.json for ten closed promotion conditions
+-> proposal_promotion_validation_report.json for ten unperformed validation domains
+-> proposal_canonical_write_transaction_plan.json for ten blocked transaction stages
 -> proposal_provider_result.json for dry-run provider result envelope
--> proposal readiness gate without fake proposal generation
--> proposal_validation.json and proposal_review.md for existing proposals
+-> proposal_agent_handoff.json for Codex/ChatGPT host-Agent generation
+-> quarantined ProposalSet candidate import with no paid API or network call
+-> atomic proposals.json promotion after deterministic validation
+-> proposal_validation.json and proposal_review.md
+-> timeline_draft.json and timeline_review.md
+-> bgm_candidates.json and bgm_fit.json
+-> bgm_analysis.json and bgm_analysis_report.md
+-> bgm_recommendation_context.json, bgm_recommendation_request.json, and bgm_recommendation_agent_handoff.json
+-> bgm_recommendations.json and bgm_recommendation_review.md
+-> preview_lowres.mp4
+-> preview_manifest.json and preview_validation.json
+-> preview_review.md
+-> final_export.mp4
+-> final_export_manifest.json and final_export_validation.json
+-> final_export_review.md
 -> minimal project risk report from sources.jsonl
 -> run report
 -> fixed exit codes
 ```
 
 OpenCV/vision analysis, embeddings, visual classification beyond explicit
-evidence placeholders, fake/template proposals, full creative proposal
-generation, timeline generation, preview rendering, BGM selection or beat
-analysis, model calls, image generation/editing, remote ASR/model downloads,
-and network search remain out of scope.
+evidence placeholders, fake/template proposals, automatic BGM selection or
+recommendation, fabricated beat analysis, model calls, image
+generation/editing, remote ASR/model downloads, and network search remain out
+of scope.
 
 ## Local Setup
 
@@ -157,14 +133,20 @@ python3 -m venv .venv
 .venv/bin/artist-portrait analyze --project ./project.yaml
 .venv/bin/artist-portrait map --project ./project.yaml
 .venv/bin/artist-portrait propose --project ./project.yaml
+.venv/bin/artist-portrait timeline --project ./project.yaml --proposal proposal_safe
+.venv/bin/artist-portrait bgm import --project ./project.yaml --file media/bgm.wav --rights-status owned
+.venv/bin/artist-portrait bgm fit --project ./project.yaml --candidate <candidate-id>
+.venv/bin/artist-portrait preview --project ./project.yaml --width 480 --fps 12
 .venv/bin/artist-portrait review --project ./project.yaml --scope project
 .venv/bin/artist-portrait review --project ./project.yaml --scope proposal
+.venv/bin/artist-portrait review --project ./project.yaml --scope timeline
+.venv/bin/artist-portrait review --project ./project.yaml --scope preview
 .venv/bin/artist-portrait review --project ./project.yaml --scope all
 ```
 
-Commands such as `relate`, `timeline`, and `run` remain intentionally blocked.
-`propose` is open only as a readiness gate and returns a dependency error when
-no approved text model gate is available.
+Commands such as `relate` and final `run` remain intentionally blocked.
+`propose` prepares a host-Agent handoff and can import an explicit quarantined
+ProposalSet candidate; it does not call paid APIs or access the network.
 
 ## Tests
 

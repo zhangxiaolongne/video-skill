@@ -1,0 +1,253 @@
+{
+  "$defs": {
+    "BgmCandidateAnalysis": {
+      "additionalProperties": false,
+      "properties": {
+        "analysis_engine": {
+          "minLength": 1,
+          "title": "Analysis Engine",
+          "type": "string"
+        },
+        "average_rms_dbfs": {
+          "title": "Average Rms Dbfs",
+          "type": "number"
+        },
+        "beat_analysis_reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Beat Analysis Reason"
+        },
+        "beat_analysis_status": {
+          "pattern": "^(unavailable|completed)$",
+          "title": "Beat Analysis Status",
+          "type": "string"
+        },
+        "beat_engine": {
+          "minLength": 1,
+          "title": "Beat Engine",
+          "type": "string"
+        },
+        "bpm": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Bpm"
+        },
+        "cache_fingerprint": {
+          "pattern": "^sha256:[0-9a-f]{64}$",
+          "title": "Cache Fingerprint",
+          "type": "string"
+        },
+        "cache_ref": {
+          "minLength": 1,
+          "title": "Cache Ref",
+          "type": "string"
+        },
+        "duration": {
+          "exclusiveMinimum": 0,
+          "title": "Duration",
+          "type": "number"
+        },
+        "high_energy_end": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "High Energy End"
+        },
+        "high_energy_start": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "High Energy Start"
+        },
+        "max_peak_dbfs": {
+          "title": "Max Peak Dbfs",
+          "type": "number"
+        },
+        "music_candidate_id": {
+          "minLength": 1,
+          "title": "Music Candidate Id",
+          "type": "string"
+        },
+        "quiet_head_seconds": {
+          "minimum": 0,
+          "title": "Quiet Head Seconds",
+          "type": "number"
+        },
+        "quiet_tail_seconds": {
+          "minimum": 0,
+          "title": "Quiet Tail Seconds",
+          "type": "number"
+        },
+        "recommended_loop_safe": {
+          "title": "Recommended Loop Safe",
+          "type": "boolean"
+        },
+        "warnings": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Warnings",
+          "type": "array"
+        },
+        "window_count": {
+          "minimum": 0,
+          "title": "Window Count",
+          "type": "integer"
+        },
+        "window_seconds": {
+          "exclusiveMinimum": 0,
+          "title": "Window Seconds",
+          "type": "number"
+        },
+        "windows": {
+          "items": {
+            "$ref": "#/$defs/BgmEnergyWindow"
+          },
+          "title": "Windows",
+          "type": "array"
+        }
+      },
+      "required": [
+        "music_candidate_id",
+        "cache_ref",
+        "cache_fingerprint",
+        "duration",
+        "analysis_engine",
+        "beat_engine",
+        "beat_analysis_status",
+        "window_seconds",
+        "window_count",
+        "average_rms_dbfs",
+        "max_peak_dbfs",
+        "quiet_head_seconds",
+        "quiet_tail_seconds",
+        "recommended_loop_safe"
+      ],
+      "title": "BgmCandidateAnalysis",
+      "type": "object"
+    },
+    "BgmEnergyWindow": {
+      "additionalProperties": false,
+      "properties": {
+        "end": {
+          "exclusiveMinimum": 0,
+          "title": "End",
+          "type": "number"
+        },
+        "energy_label": {
+          "pattern": "^(quiet|low|medium|high)$",
+          "title": "Energy Label",
+          "type": "string"
+        },
+        "peak_dbfs": {
+          "title": "Peak Dbfs",
+          "type": "number"
+        },
+        "rms_dbfs": {
+          "title": "Rms Dbfs",
+          "type": "number"
+        },
+        "start": {
+          "minimum": 0,
+          "title": "Start",
+          "type": "number"
+        }
+      },
+      "required": [
+        "start",
+        "end",
+        "rms_dbfs",
+        "peak_dbfs",
+        "energy_label"
+      ],
+      "title": "BgmEnergyWindow",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "analysis_engine": {
+      "minLength": 1,
+      "title": "Analysis Engine",
+      "type": "string"
+    },
+    "automatic_music_selection": {
+      "default": false,
+      "title": "Automatic Music Selection",
+      "type": "boolean"
+    },
+    "candidates": {
+      "items": {
+        "$ref": "#/$defs/BgmCandidateAnalysis"
+      },
+      "title": "Candidates",
+      "type": "array"
+    },
+    "model_call_performed": {
+      "default": false,
+      "title": "Model Call Performed",
+      "type": "boolean"
+    },
+    "network_performed": {
+      "default": false,
+      "title": "Network Performed",
+      "type": "boolean"
+    },
+    "project_id": {
+      "minLength": 1,
+      "title": "Project Id",
+      "type": "string"
+    },
+    "schema_version": {
+      "default": "0.3",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "source_ledger_fingerprint": {
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "title": "Source Ledger Fingerprint",
+      "type": "string"
+    },
+    "source_ledger_ref": {
+      "default": ".artist-portrait/data/bgm_candidates.json",
+      "title": "Source Ledger Ref",
+      "type": "string"
+    }
+  },
+  "required": [
+    "project_id",
+    "source_ledger_fingerprint",
+    "analysis_engine"
+  ],
+  "title": "BgmAnalysisReport",
+  "type": "object"
+}

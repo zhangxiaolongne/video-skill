@@ -5,7 +5,7 @@
 > **工作名称**：`artist-portrait-editor`  
 > **中文名称**：人物向剪辑导演 / 艺人肖像剪辑 Skill  
 > **适用范围**：产品愿景、V0 产品规格、V0 工程规格  
-> **当前开发闸门**：V0-010m 提案 execution readiness plan 闸门。阶段 A、V0-003、V0-004、V0-005、V0-006、V0-007、V0-008、V0-009、V0-010a、V0-010b、V0-010c、V0-010d、V0-010e、V0-010f、V0-010g、V0-010h、V0-010i、V0-010j、V0-010k 与 V0-010l 已作为工程、媒体扫描、固定窗口切分、PySceneDetect 场景切分、本地转写、关键帧缓存、基础证据分析、分析驱动素材地图、提案就绪、提案上下文、文本模型闸门契约、提案验证、提案请求契约、提案适配器预检、本地 mock adapter handshake、provider result envelope、execution authorization、provider output quarantine、execution approval request 与 execution approval record 验收；当前只允许生成 deterministic `proposal_execution_readiness_plan.json`，一次关闭 secret-source selection、credential access、execution planning、provider call preflight 与 output capture planning 五个子阶段，不得选择真实 secret source、不得读取凭证值、不得联网、不得执行模型调用、不得执行 provider、不得捕获 raw output、不得生成 proposal content。不得实现 OpenCV/视觉模型分类、BGM 选择、完整创作提案生成、时间线生成或预览渲染；不得执行模型调用、联网或生成 fake/template/model-free proposals 冒充 creative_mode 成功。
+> **当前开发闸门**：V0-018 BGM recommendation review gate。用户可生成 BGM recommendation handoff，使用宿主 Agent、本地模型或第三方工具产出显式 JSON candidate，并由 CLI quarantine、validate、review、promote。不得自动选曲、自动 fit、伪造 BPM/beat grid、接入付费 API、API key、远程 provider、隐藏模型调用、image generation/editing 或网络调用。
 
 ---
 
@@ -21,17 +21,27 @@
 - 阶段闸门
 - 不可违背的设计约束
 
-开发进度、已完成批次、当前实现状态、下一步战术计划和临时风险记录，放入：
+战术信息按唯一归属拆分：
 
-```text
-docs/DEVELOPMENT_PROGRESS.md
-```
+| 文件 | 唯一职责 |
+|---|---|
+| `docs/DEVELOPMENT_PROGRESS.md` | 当前阶段、能力完成度、主要阻塞和下一大方向 |
+| `docs/CURRENT_BATCH.md` | 当前批次、十项版本任务、状态、验收证据和收口 |
+| `docs/ISSUES.md` | open、blocked、accepted、resolved、superseded 问题与风险 |
+| `docs/DECISIONS.md` | 长期有效的产品、架构、流程和发布决策 |
+| `docs/RELEASES.md` | 大版本结果、当前验证证据和 Git 发布状态 |
+| `docs/current_progress.json` | 供自动检查使用的机器可读镜像 |
 
-母版不记录每次小版本流水账；开发文档不得替代母版定义产品方向。
-当用户提出会改变长期产品能力或创作原则的新要求时，母版与开发文档必须同步更新：
+旧 `V0_*_RELEASE_READINESS.md` 只保留为历史验收证据，其中测试数字和发布状态
+不得作为当前状态引用。母版不记录每次小版本流水账；任何战术事实只允许有一个
+canonical owner，其它文档只能链接或摘要，不得建立第二套任务、问题或发布台账。
+
+当用户提出会改变长期产品能力或创作原则的新要求时：
 
 - 母版记录战略原则和长期约束。
-- 开发文档记录当前进度、战术状态和后续落地批次。
+- `DEVELOPMENT_PROGRESS.md` 更新当前阶段影响。
+- 当前执行任务进入 `CURRENT_BATCH.md`。
+- 新风险、决策和发布结果分别进入对应专用台账。
 
 ## 0.1 第三方能力复用原则
 
@@ -41,7 +51,7 @@ docs/DEVELOPMENT_PROGRESS.md
 - 已安装 Skill
 - 本地或远程搜索
 - image2 / image generation / image editing 能力
-- OpenAI 或其它模型能力
+- OpenAI、Codex/ChatGPT 宿主 Agent、本地模型或其它模型能力
 - ffmpeg、ffprobe、PySceneDetect、Whisper、OpenCV 等专业工具
 - 其它稳定、可验证、可替换的开源或商业工具
 
@@ -50,8 +60,8 @@ docs/DEVELOPMENT_PROGRESS.md
 - 公开素材场景下，第三方工具调用不是默认禁区。
 - 不重复造轮子；优先复用成熟工具，再补本项目特有的数据契约、证据链、审查和降级逻辑。
 - 第三方结果不得直接冒充 canonical truth，必须记录来源、输入、输出、置信度、失败模式和可复验路径。
-- 使用第三方模型或联网能力时，必须由对应 gate、配置开关和 review 规则控制。
-- 当前 V0-010m proposal execution readiness plan gate 仍保持本地、无远程模型调用、无联网、无 image generation / editing 调用；`propose` 只准备 `proposal_context.json`、`text_model_gate.json`、`proposal_request.json`、`proposal_adapter_check.json`、`proposal_provider_registry.json`、`proposal_mock_adapter_handshake.json`、`proposal_execution_approval_request.json`、`proposal_execution_approval_record.json`、`proposal_execution_readiness_plan.json`、`proposal_execution_authorization.json`、`proposal_provider_output_quarantine.json` 与 `proposal_provider_result.json`，`review --scope proposal` 只验证已有 `proposals.json`，不得生成提案、调用模型、选择 BGM 或生成时间线。
+- 使用第三方模型、联网能力、搜索、image2/image generation/editing 或本地模型时，必须由对应 gate、配置开关、provenance、validation、fallback 和 review 规则控制。
+- 当前 V0-011 使用 Codex/ChatGPT 宿主 Agent 生成候选提案；CLI 只执行本地 handoff、quarantine、validation 与 atomic promotion。不得接入付费 API、API key、远程 provider 或隐藏网络调用。
 
 # 0. 执行摘要
 
@@ -70,7 +80,7 @@ V0 分为两个模式：
 - `core_mode`：不依赖文本生成模型或视觉模型，负责确定性媒体处理、canonical 数据、风险规则和素材结构报告。
 - `creative_mode`：在 `core_mode` 证据基础上，生成三套可回溯创作提案，并在用户选择后生成时间线草案。
 
-阶段 A 已完成基础工程验收，V0-003 已完成媒体扫描基础，V0-004 已完成固定窗口切分基础，V0-005 已完成 PySceneDetect 场景切分闸门，V0-006 已完成本地转写闸门，V0-007 已完成关键帧缓存闸门，V0-008 已完成基础证据分析闸门，V0-009 已完成分析驱动素材地图闸门，V0-010a 已完成提案就绪闸门，V0-010b 已完成提案上下文闸门，V0-010c 已完成文本模型闸门契约，V0-010d 已完成提案验证闸门，V0-010e 已完成提案请求闸门，V0-010f 已完成提案适配器预检闸门，V0-010g 已完成提案 provider registry / mock adapter handshake 闸门，V0-010h 已完成提案 provider result envelope 闸门，V0-010i 已完成提案 execution authorization 闸门，V0-010j 已完成提案 provider output quarantine 闸门，V0-010k 已完成提案 execution approval request 闸门，V0-010l 已完成提案 execution approval record 闸门。当前允许实现 V0-010m 提案 execution readiness plan 闸门：
+阶段 A 至 V0-018 已完成 proposal generation、canonical timeline、multi-source BGM fitting、low-resolution preview rendering、preview QC、controlled local final export、local BGM technical intelligence 与 BGM recommendation review。当前开放 V0-018 BGM recommendation review gate：
 
 ```text
 project.yaml
@@ -107,32 +117,58 @@ project.yaml
 → proposal_execution_approval_request.json
 → proposal_execution_approval_record.json
 → proposal_execution_readiness_plan.json
+→ proposal_execution_input_bundle.json
+→ proposal_provider_call_dry_run.json
 → proposal_execution_authorization.json
+→ proposal_provider_response_intake_plan.json
 → proposal_provider_output_quarantine.json
+→ proposal_provider_response_validation_plan.json
+→ proposal_promotion_authorization_plan.json
+→ proposal_promotion_validation_report.json
+→ proposal_canonical_write_transaction_plan.json
 → proposal_provider_result.json
+→ proposal_agent_handoff.json
+→ host-Agent ProposalSet candidate
+→ .artist-portrait/quarantine/proposals/
+→ proposals.json atomic promotion
 → proposal_validation.json
 → proposal_review.md
 → propose readiness gate
 → ProposalSet schema validation
+→ timeline_draft.json
+→ bgm_candidates.json
+→ bgm_analysis.json
+→ bgm_analysis_report.md
+→ bgm_recommendation_context.json
+→ bgm_recommendation_request.json
+→ bgm_recommendation_agent_handoff.json
+→ bgm_recommendations.json
+→ bgm_recommendation_review.md
+→ bgm_fit.json
+→ preview_lowres.mp4
+→ preview_manifest.json
+→ preview_validation.json
+→ preview_review.md
+→ final_export.mp4
+→ final_export_manifest.json
+→ final_export_validation.json
+→ final_export_review.md
 → risk_report.md
 → doctor/status 诊断
 ```
 
-当前 V0-010m 禁止实现：
+当前 V0-018 仍禁止实现：
 
 ```text
 OpenCV
 Embedding
 视觉模型
 视觉分类或关键帧语义解读
-BGM 选择或节拍分析
+BGM 自动选择、自动推荐或节拍伪造
 fake/template/model-free proposals
-完整创作提案生成
-时间线生成
-预览渲染
 联网搜索
 image generation / editing
-模型调用
+付费 API、API key、远程 provider 或 Python 内隐藏模型调用
 ```
 
 ---
@@ -178,6 +214,52 @@ image generation / editing
 - 一旦输出方案使用 BGM，BGM 必须与文字、视频节奏、镜头停留、转场、原声和情绪曲线协同设计。
 - 不同输出目标需要不同 BGM 策略：高燃短视频、人物肖像、采访纪实、舞台表演和角色混剪不能使用同一套音乐逻辑。
 - 后续提案、时间线、review 和 preview 阶段必须能够解释 BGM 选择理由、入点/出点、节拍或段落对齐、ducking 与原声保留策略。
+- BGM 输入不得假设为单独音频文件。用户可能直接上传音频、上传一个需要提取音轨的视频、指定现有素材中的音轨、一次提供多个候选文件，或暂时不提供 BGM。
+- 从视频提取音轨只证明获得了该视频的混合音频，不证明获得了干净 BGM。系统必须保留原视频引用、提取时间范围和音轨信息，并标记其中可能存在的人声、对白、现场声、环境声、音效或版权不确定性。
+- 用户提供的视频既可能是“只借用其中音乐”的 BGM 来源，也可能是需要保留原声的画面素材；两种用途不得因文件类型相同而混淆。
+
+## 1.2.1 BGM 输入来源契约
+
+后续 BGM/timeline gate 至少必须支持：
+
+```text
+direct_audio
+video_audio_extract
+source_embedded_audio
+multiple_candidates
+none_yet
+```
+
+每个音乐候选必须保留：
+
+```text
+music_candidate_id
+input_mode
+source_ref
+source_media_kind
+extract_in
+extract_out
+audio_stream_index
+content_hash
+duration
+rights_status
+contains_speech
+contains_vocals
+contains_environment
+contains_sound_effects
+user_intent
+analysis_status
+```
+
+规则：
+
+- `direct_audio`：直接上传的音频文件，可作为完整曲目或局部候选。
+- `video_audio_extract`：从用户上传视频的指定音轨与时间范围确定性提取。
+- `source_embedded_audio`：复用素材库中已有视频/音频的原声或音乐段。
+- `multiple_candidates`：保留多个候选，按不同提案或输出版本分别评估，不得过早覆盖。
+- `none_yet`：允许先完成无具体曲目的节奏与声音结构设计，后续再绑定音乐。
+- 提取、转码、分离与分析产物放入可重建 cache；原始上传文件和候选身份必须可追溯。
+- 未执行人声/音乐分离时，禁止把视频混合音轨标记为 instrumental、clean BGM 或纯伴奏。
 
 ## 1.3 创意的最低解释要求
 
@@ -1229,15 +1311,13 @@ artist-portrait-editor/
 ├── AGENTS.md
 ├── pyproject.toml
 ├── docs/
-│   ├── VISION.md
-│   ├── PRODUCT_SPEC_V0.md
 │   ├── ENGINEERING_SPEC_V0.md
-│   ├── CLI_SPEC.md
-│   ├── STATE_AND_INVALIDATION.md
-│   ├── DATA_CONTRACTS.md
-│   ├── MODEL_BOUNDARIES.md
-│   ├── ACCEPTANCE_TESTS_V0.md
-│   └── NON_GOALS.md
+│   ├── DEVELOPMENT_PROGRESS.md
+│   ├── CURRENT_BATCH.md
+│   ├── ISSUES.md
+│   ├── DECISIONS.md
+│   ├── RELEASES.md
+│   └── current_progress.json
 ├── src/artist_portrait_editor/
 │   ├── cli.py
 │   ├── models/
@@ -2667,7 +2747,422 @@ output/proposal_review.md
 - readiness plan 必须证明未生成 proposal content。
 - 非法 readiness plan 可被 `status` / `doctor` 检出。
 
-## 16.11 V0-011：时间线草案
+### 16.10n V0-010n：提案 execution input bundle 闸门
+
+当前批次一次关闭十个 provider execution input 子项：provider identity、request packet、prompt contract、schema contract、approval chain、secret reference、credential access policy、network policy、quarantine target、output routing。它不选择 secret，不读取凭证，不嵌入 execution prompt，不允许执行，不调用模型，不联网，不捕获 raw output。
+
+生成：
+
+```text
+.artist-portrait/data/proposal_execution_input_bundle.json
+```
+
+允许：
+
+- `ProposalExecutionInputBundle` Pydantic 模型和 `schemas/proposal_execution_input_bundle.schema.json`。
+- `propose` 在写入 `proposal_execution_readiness_plan.json` 后、写入 `proposal_execution_authorization.json` 前写入 `proposal_execution_input_bundle.json`。
+- input bundle 必须包含十个子项：`provider_identity`、`request_packet`、`prompt_contract`、`schema_contract`、`approval_chain`、`secret_reference`、`credential_access_policy`、`network_policy`、`quarantine_target`、`output_routing`。
+- 十个子项当前 status 均必须为 `blocked`，且 `allowed: false`、`materialized: false`。
+- input bundle 必须记录 `selected_secret_source: null`。
+- input bundle 必须记录 `credential_value_read: false`。
+- input bundle 必须记录 `network_allowed: false` 与 `model_call_allowed: false`。
+- input bundle 必须记录 `execution_allowed: false` 与 `execution_performed: false`。
+- input bundle 必须记录 `raw_output_capture_allowed: false` 与 `raw_output_captured: false`。
+- input bundle 必须记录 `prompt_embedded: false`。
+- input bundle 必须记录 `proposal_content_generated: false`。
+- input bundle 必须记录 `quarantine_required: true`。
+- 当前 gate 中 input bundle status 必须为 `blocked`。
+- `status` / `doctor` 可识别存在但非法的 `proposal_execution_input_bundle.json`。
+
+禁止：
+
+- 读取、创建或发送真实 API key
+- 选择真实 secret source
+- 读取环境变量、keychain 或 encrypted secret 的真实值
+- 嵌入或发送 execution prompt
+- 打开 provider execution
+- 序列化并发送 request packet 到模型
+- 访问网络
+- 捕获 provider raw output
+- 写入 raw output 文件
+- 解析 provider payload
+- promotion 到 `.artist-portrait/data/proposals.json`
+- fake/template/model-free proposals
+- BGM selection、beat analysis、music recommendation 或 music/timeline fitting
+- timeline draft
+- preview render
+
+验收：
+
+- blocked `propose --json` output refs 包含 `proposal_execution_input_bundle.json`。
+- input bundle 必须证明十个子项都 blocked 且未 materialize。
+- input bundle 必须证明未选择 secret source。
+- input bundle 必须证明未读取 credential value。
+- input bundle 必须证明未允许模型调用或网络访问。
+- input bundle 必须证明未允许或执行 provider。
+- input bundle 必须证明未允许或捕获 raw output。
+- input bundle 必须证明未嵌入 execution prompt。
+- input bundle 必须证明未生成 proposal content。
+- 非法 input bundle 可被 `status` / `doctor` 检出。
+
+### 16.10o V0-010o：提案 provider call dry-run 闸门
+
+当前批次一次关闭十个 provider call dry-run 子项：endpoint reference、auth header policy、request body reference、timeout policy、retry policy、rate-limit policy、idempotency policy、network egress policy、response capture policy、failure handling policy。它不解析 endpoint，不 materialize auth header，不 materialize request body，不读取凭证，不发送请求，不允许执行，不调用模型，不联网，不捕获 raw output。
+
+生成：
+
+```text
+.artist-portrait/data/proposal_provider_call_dry_run.json
+```
+
+允许：
+
+- `ProposalProviderCallDryRun` Pydantic 模型和 `schemas/proposal_provider_call_dry_run.schema.json`。
+- `propose` 在写入 `proposal_execution_input_bundle.json` 后、写入 `proposal_execution_authorization.json` 前写入 `proposal_provider_call_dry_run.json`。
+- call dry-run 必须包含十个子项：`endpoint_reference`、`auth_header_policy`、`request_body_reference`、`timeout_policy`、`retry_policy`、`rate_limit_policy`、`idempotency_policy`、`network_egress_policy`、`response_capture_policy`、`failure_handling_policy`。
+- 十个子项当前 status 均必须为 `blocked`，且 `allowed: false`、`materialized: false`。
+- call dry-run 必须记录 `endpoint_resolved: false`。
+- call dry-run 必须记录 `auth_header_materialized: false`。
+- call dry-run 必须记录 `request_body_materialized: false`。
+- call dry-run 必须记录 `credential_value_read: false`。
+- call dry-run 必须记录 `network_allowed: false` 与 `model_call_allowed: false`。
+- call dry-run 必须记录 `execution_allowed: false` 与 `execution_performed: false`。
+- call dry-run 必须记录 `request_payload_sent: false`。
+- call dry-run 必须记录 `raw_output_capture_allowed: false` 与 `raw_output_captured: false`。
+- call dry-run 必须记录 `proposal_content_generated: false`。
+- call dry-run 必须记录 `quarantine_required: true`。
+- 当前 gate 中 call dry-run status 必须为 `blocked`。
+- `status` / `doctor` 可识别存在但非法的 `proposal_provider_call_dry_run.json`。
+
+禁止：
+
+- 读取、创建或发送真实 API key
+- 选择真实 secret source
+- 读取环境变量、keychain 或 encrypted secret 的真实值
+- 解析真实 provider endpoint
+- materialize auth header
+- materialize request body
+- 发送 request payload
+- 打开 provider execution
+- 访问网络
+- 捕获 provider raw output
+- 写入 raw output 文件
+- 解析 provider payload
+- promotion 到 `.artist-portrait/data/proposals.json`
+- fake/template/model-free proposals
+- BGM selection、beat analysis、music recommendation 或 music/timeline fitting
+- timeline draft
+- preview render
+
+验收：
+
+- blocked `propose --json` output refs 包含 `proposal_provider_call_dry_run.json`。
+- call dry-run 必须证明十个子项都 blocked 且未 materialize。
+- call dry-run 必须证明未解析 endpoint。
+- call dry-run 必须证明未 materialize auth header 或 request body。
+- call dry-run 必须证明未读取 credential value。
+- call dry-run 必须证明未允许模型调用或网络访问。
+- call dry-run 必须证明未允许或执行 provider。
+- call dry-run 必须证明未发送 request payload。
+- call dry-run 必须证明未允许或捕获 raw output。
+- call dry-run 必须证明未生成 proposal content。
+- 非法 call dry-run 可被 `status` / `doctor` 检出。
+
+### 16.10p V0-010p：提案 provider response intake 闸门
+
+当前批次一次关闭十个 provider response intake 子项：response channel、raw output location、content-type policy、size-limit policy、checksum policy、redaction policy、parser selection、validation queue、promotion gate、audit trail。它不打开 response channel，不创建 raw output 接收位置，不解析或验证 provider payload，不提升为 proposals，不调用模型，不联网，不生成 proposal content。
+
+生成：
+
+```text
+.artist-portrait/data/proposal_provider_response_intake_plan.json
+```
+
+允许：
+
+- `ProposalProviderResponseIntakePlan` Pydantic 模型和 `schemas/proposal_provider_response_intake_plan.schema.json`。
+- `propose` 在写入 `proposal_execution_authorization.json` 后、写入 `proposal_provider_output_quarantine.json` 前写入 `proposal_provider_response_intake_plan.json`。
+- response intake plan 必须包含十个子项：`response_channel`、`raw_output_location`、`content_type_policy`、`size_limit_policy`、`checksum_policy`、`redaction_policy`、`parser_selection`、`validation_queue`、`promotion_gate`、`audit_trail`。
+- 十个子项当前 status 均必须为 `blocked`，且 `allowed: false`、`materialized: false`。
+- response intake plan 必须记录 `response_channel_open: false`。
+- response intake plan 必须记录 `raw_output_location_materialized: false`。
+- response intake plan 必须记录 `content_type_validated: false`。
+- response intake plan 必须记录 `size_limit_bytes: 0`。
+- response intake plan 必须记录 `checksum_computed: false`。
+- response intake plan 必须记录 `redaction_performed: false`。
+- response intake plan 必须记录 `parser_selected: false`。
+- response intake plan 必须记录 `validation_enqueued: false`。
+- response intake plan 必须记录 `promotion_allowed: false`。
+- response intake plan 必须记录 `audit_event_written: false`。
+- response intake plan 必须记录 `raw_output_captured: false`。
+- response intake plan 必须记录 `parsed_payload_generated: false`。
+- response intake plan 必须记录 `validation_performed: false`。
+- response intake plan 必须记录 `promoted_to_proposals: false`。
+- response intake plan 必须记录 `model_call_performed: false` 与 `network_performed: false`。
+- response intake plan 必须记录 `proposal_content_generated: false`。
+- response intake plan 必须记录 `quarantine_required: true`。
+- 当前 gate 中 response intake plan status 必须为 `blocked`。
+- `status` / `doctor` 可识别存在但非法的 `proposal_provider_response_intake_plan.json`。
+
+禁止：
+
+- 打开 response channel
+- materialize raw output location
+- 捕获 provider raw output
+- 写入 raw output 文件
+- 校验 provider content type
+- 计算 provider output checksum
+- 执行 redaction
+- 选择 parser
+- 解析 provider payload
+- enqueue 或执行 proposal validation
+- promotion 到 `.artist-portrait/data/proposals.json`
+- 写 audit event 冒充真实 provider intake
+- 访问网络
+- 执行模型调用
+- fake/template/model-free proposals
+- BGM selection、beat analysis、music recommendation 或 music/timeline fitting
+- timeline draft
+- preview render
+
+验收：
+
+- blocked `propose --json` output refs 包含 `proposal_provider_response_intake_plan.json`。
+- response intake plan 必须证明十个子项都 blocked 且未 materialize。
+- response intake plan 必须证明未打开 response channel。
+- response intake plan 必须证明未 materialize raw output location。
+- response intake plan 必须证明未校验 content type 或计算 checksum。
+- response intake plan 必须证明未 redaction、未选择 parser、未 enqueue validation。
+- response intake plan 必须证明未允许 promotion。
+- response intake plan 必须证明未捕获 raw output。
+- response intake plan 必须证明未生成 parsed payload。
+- response intake plan 必须证明未执行 validation 或 promoted to proposals。
+- response intake plan 必须证明未调用模型或访问网络。
+- response intake plan 必须证明未生成 proposal content。
+- 非法 response intake plan 可被 `status` / `doctor` 检出。
+
+### 16.10q V0-010q：提案 provider response validation 闸门
+
+当前批次一次关闭十个 provider response validation 子项：quarantine input
+binding、content-type check、size-limit check、checksum verification、
+redaction verification、parser contract、JSON syntax validation、schema
+validation、semantic validation、promotion decision。它只定义 quarantine
+之后、provider result envelope 之前的验证计划，不读取 raw output，不解析
+payload，不执行 validation，不提升 proposals，不调用模型，不联网。
+
+生成：
+
+```text
+.artist-portrait/data/proposal_provider_response_validation_plan.json
+```
+
+允许：
+
+- `ProposalProviderResponseValidationPlan` Pydantic 模型和生成的 JSON Schema。
+- `propose` 在 provider output quarantine 后、provider result envelope 前写入 validation plan。
+- validation plan 包含上述十个子项。
+- 十个子项均为 `status: blocked`、`allowed: false`、`materialized: false`。
+- provider result envelope 必须引用 validation plan。
+- status / doctor 必须识别非法 validation plan。
+
+必须记录：
+
+- `quarantine_input_bound: false`
+- `content_type_checked: false`
+- `size_limit_checked: false`
+- `checksum_verified: false`
+- `redaction_verified: false`
+- `parser_contract_selected: false`
+- `json_syntax_validated: false`
+- `schema_validated: false`
+- `semantic_validation_performed: false`
+- `promotion_decided: false`
+- `raw_output_read: false`
+- `parsed_payload_generated: false`
+- `validation_performed: false`
+- `promoted_to_proposals: false`
+- `audit_event_written: false`
+- `model_call_performed: false`
+- `network_performed: false`
+- `proposal_content_generated: false`
+- `quarantine_required: true`
+
+禁止：
+
+- 读取或写入真实 provider raw output
+- 选择或执行 parser
+- 解析 provider payload
+- 执行 content-type、size、checksum、redaction、JSON、Schema、semantic 或 evidence validation
+- promotion 到 `.artist-portrait/data/proposals.json`
+- 写 audit event 冒充真实 validation
+- 访问网络或执行模型调用
+- fake/template/model-free proposals
+- BGM selection、beat analysis、music recommendation 或 music/timeline fitting
+- timeline draft 或 preview render
+
+验收：
+
+- blocked `propose --json` output refs 包含 response validation plan。
+- validation plan 的十个子项全部 blocked 且未 materialize。
+- validation plan 证明未读取 raw output、未生成 parsed payload、未执行 validation。
+- validation plan 证明未做 promotion decision、未提升 proposals。
+- validation plan 证明未调用模型、未联网、未生成 proposal content。
+- provider result envelope 引用 validation plan。
+- 非法 validation plan 可被 `status` / `doctor` 检出。
+
+### 16.10r V0-010r：提案 promotion authorization 闸门
+
+当前批次把 provider execution permission、response validation 与 canonical
+proposal promotion 拆成三个权限层。生成：
+
+```text
+.artist-portrait/data/proposal_promotion_authorization_plan.json
+```
+
+必须包含十个 blocked 条件：`validation_report_binding`、
+`schema_validation_requirement`、`semantic_validation_requirement`、
+`evidence_validation_requirement`、`risk_acceptance_requirement`、
+`proposal_identity_requirement`、`overwrite_policy`、`atomic_write_policy`、
+`provenance_binding`、`final_promotion_authorization`。所有条件均为
+`allowed: false`、`materialized: false`。
+
+所有 validation pass、risk acceptance、identity uniqueness、overwrite
+allowance、atomic write readiness、provenance binding、promotion
+authorization、promotion execution、canonical file write、audit event、model
+call、network access 与 proposal generation 均必须为 false。promotion target
+只能引用 `.artist-portrait/data/proposals.json`，不得创建该文件。provider
+result envelope 必须引用 promotion authorization plan。非法 plan 必须被
+`status` / `doctor` 检出。
+
+### 16.10s V0-010s：提案 promotion validation report 闸门
+
+生成 `.artist-portrait/data/proposal_promotion_validation_report.json`，包含
+十个报告域：input binding、schema result、semantic result、evidence
+traceability、risk result、proposal identity、overwrite conflict、atomic
+write readiness、provenance integrity、final authorization。
+
+所有域必须为 blocked，`performed: false`、`passed: false`。汇总必须记录
+`checks_performed: 0`、`checks_passed: 0`、`overall_passed: false`、
+`promotion_recommended: false`、`promotion_authorized: false`、
+`promotion_performed: false`、`proposals_file_written: false`。不得读取
+provider output，不得执行验证，不得伪造结果，不得调用模型或联网。
+
+provider result envelope 必须引用该报告；非法报告必须被 `status` /
+`doctor` 检出。
+
+### 16.10t V0-010t：canonical proposal write transaction 闸门
+
+生成 `.artist-portrait/data/proposal_canonical_write_transaction_plan.json`，
+覆盖 target lock、prewrite snapshot、temporary file、schema prewrite check、
+durability policy、atomic replace、conflict detection、rollback plan、audit
+commit、postcommit verification 十个阶段。
+
+全部阶段必须 blocked、disallowed、unmaterialized。所有 lock、snapshot、
+temporary file、fsync、replace、conflict check、rollback、audit、
+postcommit、transaction started/committed 和 proposals write 状态必须为
+false。provider result envelope 必须引用该计划；非法计划必须被 status /
+doctor 检出。
+
+### 16.10 Foundation 收口规则（不新增能力闸门）
+
+V0-010t 之后不得继续用“再增加一个 blocked packet”冒充任务进度。进入真实
+provider/model 执行前，proposal foundation 必须先满足以下工程收口条件：
+
+- 所有 proposal artifact 的 canonical path、状态键和非法产物诊断来自单一注册表。
+- `status` 与 `doctor` 必须验证跨产物引用，而不只验证单文件 schema。
+- 必须检测 missing dependency、wrong ref、project identity conflict、upstream
+  fingerprint stale 和 duplicate ledger output refs。
+- 上游 material map 或 proposal context 变化后，旧 proposal 链不得继续显示为可信。
+- 健康链与破坏性故障链必须有独立 integration tests。
+- canonical 安装模拟必须执行 proposal 链完整性检查。
+
+完成这些条件只代表 proposal 基础设施可进入下一次 gate 评审，不代表已经允许
+model call、network access、provider execution、raw output capture、proposal
+generation、promotion 或 canonical proposal write。
+
+工程进度与能力进度必须分开记录。`docs/current_progress.json` 是当前
+machine-readable 进度快照：任务完成只能改变 task status；任何能力闸门变化必须
+同时修改 `capability_gate`、母版允许范围、AGENTS.md 和对应 contract tests。
+不得因为完成维护、重构或测试任务，就把 proposal generation、timeline、BGM
+analysis、preview 或其他禁用能力标成已开放。
+
+Proposal JSON artifact 读取必须由独立 IO 模块统一执行。所有 canonical proposal
+artifact model 必须进入同一 typed registry，保持稳定的 invalid JSON 错误前缀；
+`workspace.py` 只允许保留兼容包装，不得重新直接读取这些 JSON 文件。状态摘要
+路由必须覆盖完整 artifact registry，避免新增 artifact 后漏接 `status` 或
+`doctor`。
+
+现有 `proposals.json` 的确定性 review 不得只做 schema 和引用存在性检查。每套
+提案必须具备 story structure、visual motif、minimum viable timeline、唯一的
+required clips，以及 clip/analysis/material-map 证据闭环。safe、advanced、
+risky 三套提案的 story 与 sound structure 不得完全相同。BGM 策略必须同时说明
+编辑用途和至少一种可执行的混音或节奏手段；只写“有 BGM”不算策略。该规则只
+验证已有提案，不生成、不修复、不排序提案。
+
+提案还必须与当前 creative brief 保持一致：theme、audience 不得漂移，标题不得
+重复，每套必须列出风险并回答至少一个反方案挑战。ProposalSet 顶层 evidence
+必须绑定当前 proposal context，引用必须唯一且有效。三套 visual motifs 不得
+完全相同。任何 proposal 文本或 evidence ref 都不得泄漏 `/Users/...`、
+`/home/...`、Windows drive 或其他绝对本地路径。
+
+Proposal review 还必须执行内容政策和证据语义检查：fake、template、mock、
+model-free、dummy 等方法不得作为提案来源；禁用 source 不得通过 source/clip
+fact ref 绕过；analysis fact ref 必须属于 required clip，且每个有效 required
+clip 必须有对应 analysis 证据。`missing_material` 不得把当前 context 已存在 ID
+声称为缺失。三套 counter proposal 不得复用同一句挑战。若
+`content_policy.allow_music: false`，sound structure 必须明确采用无新增音乐、
+原声、人声或留白策略，不得继续规划 BGM。
+
+下一次大版本评审应直接决定是否开放 evidence-grounded creative proposal
+generation。未开放前，不再增加 transaction recovery、retry planning 或其他只
+记录 `blocked` 的中间 packet。
+
+### 16.10.1 开发批次硬约束
+
+后续开发必须按“版本结果”计数，不得按代码改动数、字段数、文件数或测试数机械
+计数。每个实施批次开始前必须先确定下一大版本方向，并列出至少十个彼此独立的
+版本任务。
+
+以下结果可独立计作版本任务：
+
+- 增加可运行的端到端 pipeline behavior
+- 增加用户可感知的 workflow behavior
+- 开放并验证一个新的 capability gate
+- 关闭一个直接阻碍最终成片目标的 acceptance gap
+- 完成一个达到发布级别的 contract、quality、architecture 或 hardening 结果
+
+字段、schema、测试、重构和修 bug 不按工作类型一刀切，而按规模和版本作用判定。
+以下零碎或配套工作禁止单独计作任务、版本或进度：
+
+- 增删孤立字段
+- 单独增加一个局部 schema、model、packet、manifest 或 blocked artifact
+- 增加单项测试、fixture、文档或验证命令
+- 局部重构、拆文件、registry、wrapper、改名、格式化或清理
+- 当前任务过程中顺手发现并修复的普通 bug
+- 单独增加 status、doctor、diagnostic 或 proposal review 规则
+
+上述工作只有在同时满足以下条件时，才可作为大版本任务：
+
+- 属于一个已命名的大版本里程碑
+- 有独立、发布级的验收标准
+- 范围足够大，具有跨模块影响或发布关键性
+- 能改变能力就绪度、发布安全性或最终目标完成度
+- 没有被人为拆成多个字段、schema、测试、重构或 bug 小项
+
+可计数的典型例子包括：完整的版本化数据契约迁移、系统性验收或评测工程、为下一
+能力开放服务的架构重构、重大缺陷收口或发布加固。单个字段、单条测试、一次拆文件
+或一个顺手修复的 bug 不计数。
+
+每批结束必须报告最终目标完成度的前后变化，而不是只报告修改文件数或测试数。
+如果当前 gate 无法支持十个真实版本任务，必须停止实现，明确提出所需 gate
+promotion 和下一个能力里程碑，等待用户批准；不得用字段、packet、测试、文档、
+重构或 review 规则凑满任务数。
+
+V0-010 foundation 与 proposal review 已关闭普通扩展。除非修复 critical
+regression/security issue，或用户明确指定该项，否则不得继续扩充 V0-010
+packet、schema、review rule 或 diagnostic。正常下一步必须是实际 capability gate promotion。
+
+## 16.11 V0-012：用户选定提案后的规范时间线
 
 在用户选择提案后生成：
 
@@ -2683,6 +3178,17 @@ output/timeline_draft.json
 - 时长
 - 禁用素材
 - 权利与事实风险
+
+硬约束：
+
+- 用户必须显式选择 `proposal_safe`、`proposal_advanced` 或
+  `proposal_risky`；系统不得自动替用户决定。
+- 时间线只可引用当前 canonical `proposals.json`、`clips.jsonl` 和
+  `sources.jsonl` 中存在且一致的对象。
+- 时间线可以记录 `none_yet` 或 policy-disabled 音乐槽，不得因为尚未上传
+  BGM 而阻塞画面结构生成。
+- 本 gate 不执行 BGM 选择、提取、分离、节拍分析、推荐或 fitting。
+- 本 gate 不执行 preview/render，不访问网络，不调用付费或远程模型。
 
 ## 16.12 V0-012：整体验收
 
@@ -2823,15 +3329,8 @@ V0 不以自动精品成片为成功标准。
 
 # 21. 最终冻结结论
 
-本文档可作为：
-
-```text
-VISION.md
-PRODUCT_SPEC_V0.md
-ENGINEERING_SPEC_V0.md
-```
-
-的优化母版。
+本文档是产品愿景、产品边界、非目标和模型原则的唯一优化母版；
+`ENGINEERING_SPEC_V0.md` 只负责工程实现规范。
 
 当前只允许 Codex 开始阶段 A：
 
