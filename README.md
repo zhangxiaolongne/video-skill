@@ -22,7 +22,7 @@ Historical version outcomes are consolidated in `docs/RELEASES.md`.
 
 ## Current Gate
 
-Current V0-018 BGM recommendation review gate work allows deterministic project
+Current V0-024 project acceptance gate work allows deterministic project
 setup, local media scanning, fixed-window clip segmentation, optional
 PySceneDetect video scene segmentation, local-only faster-whisper transcription
 when available, ffmpeg midpoint keyframe extraction for video clips,
@@ -31,7 +31,7 @@ keyframe cache, analysis-led material maps, deterministic proposal context
 packets, text-model gate packets, deterministic proposal request packets,
 proposal adapter preflight packets, provider registry packets, local mock
 adapter handshake packets, execution approval request packets, execution approval record packets, execution readiness plan packets, execution input bundle packets, provider call dry-run packets, execution authorization packets, provider response intake plan packets, provider output
-quarantine packets, provider response validation plan packets, promotion authorization/validation packets, canonical write transaction plan packets, provider result envelope packets, a local host-Agent handoff, quarantined candidate import, atomic canonical proposal promotion, proposal contract validation, deterministic proposal review, explicit timeline generation, multi-source BGM fitting, local BGM technical analysis, BGM recommendation review, low-resolution preview rendering, preview render controls, preview QC, and read-only/reporting outputs and controlled local final MP4 export:
+quarantine packets, provider response validation plan packets, promotion authorization/validation packets, canonical write transaction plan packets, provider result envelope packets, a local host-Agent handoff, quarantined candidate import, atomic canonical proposal promotion, proposal contract validation, deterministic proposal review, explicit timeline generation, multi-source BGM fitting, explicit BGM fit controls, local BGM technical analysis, validated local beat-engine evidence when an adapter is available, BGM recommendation review, explicit recommendation-to-fit selection, recommendation-fit review, low-resolution preview rendering, preview render controls, preview QC, controlled local final MP4 export, and project acceptance reporting:
 
 The V0-010 proposal foundation is now consolidated around one artifact registry.
 `status` and `doctor` validate cross-artifact references, project identity,
@@ -92,14 +92,19 @@ project.yaml
 -> timeline_draft.json and timeline_review.md
 -> bgm_candidates.json and bgm_fit.json
 -> bgm_analysis.json and bgm_analysis_report.md
+-> bgm_beat_grids/<music_candidate_id>.json when a validated local beat adapter succeeds
 -> bgm_recommendation_context.json, bgm_recommendation_request.json, and bgm_recommendation_agent_handoff.json
 -> bgm_recommendations.json and bgm_recommendation_review.md
+-> bgm_recommendation_selection.json and bgm_recommendation_selection_review.md
+-> BgmFitControls embedded in bgm_fit.json
+-> bgm_fit_review.json and bgm_fit_review.md
 -> preview_lowres.mp4
 -> preview_manifest.json and preview_validation.json
 -> preview_review.md
 -> final_export.mp4
 -> final_export_manifest.json and final_export_validation.json
 -> final_export_review.md
+-> acceptance_report.json and acceptance_report.md
 -> minimal project risk report from sources.jsonl
 -> run report
 -> fixed exit codes
@@ -135,13 +140,17 @@ python3 -m venv .venv
 .venv/bin/artist-portrait propose --project ./project.yaml
 .venv/bin/artist-portrait timeline --project ./project.yaml --proposal proposal_safe
 .venv/bin/artist-portrait bgm import --project ./project.yaml --file media/bgm.wav --rights-status owned
-.venv/bin/artist-portrait bgm fit --project ./project.yaml --candidate <candidate-id>
+.venv/bin/artist-portrait bgm recommend --project ./project.yaml
+.venv/bin/artist-portrait bgm select --project ./project.yaml --recommendation-id <id>
+.venv/bin/artist-portrait bgm fit --project ./project.yaml --candidate <candidate-id> --fit-mode auto --fade-in-seconds 0.5 --fade-out-seconds 1.0 --ducking-gain-db -9
+.venv/bin/artist-portrait bgm review --project ./project.yaml
 .venv/bin/artist-portrait preview --project ./project.yaml --width 480 --fps 12
 .venv/bin/artist-portrait review --project ./project.yaml --scope project
 .venv/bin/artist-portrait review --project ./project.yaml --scope proposal
 .venv/bin/artist-portrait review --project ./project.yaml --scope timeline
 .venv/bin/artist-portrait review --project ./project.yaml --scope preview
 .venv/bin/artist-portrait review --project ./project.yaml --scope all
+.venv/bin/artist-portrait acceptance --project ./project.yaml
 ```
 
 Commands such as `relate` and final `run` remain intentionally blocked.

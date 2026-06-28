@@ -12,7 +12,7 @@ def test_current_gate_is_consistent_across_primary_docs():
     readme = (ROOT / "README.md").read_text(encoding="utf-8")
     progress = (ROOT / "docs" / "DEVELOPMENT_PROGRESS.md").read_text(encoding="utf-8")
 
-    gate = "V0-018 BGM recommendation review gate"
+    gate = "V0-024 project acceptance gate"
     assert f"Current gate: {gate}." in agents
     assert gate in master
     assert f"Current {gate} work" in readme
@@ -38,3 +38,8 @@ def test_current_gate_preserves_remaining_boundaries():
     assert "paid API" in docs
     assert "automatic music recommendation" in docs
     assert "fabricate BPM" in docs or "fabricated BPM" in docs
+    assert "automatic beat-synced editing" in docs
+    assert "automatic top-ranked selection" in docs
+    assert "render media" in docs or "media rendering" in docs
+    assert "fit controls" in docs
+    assert "acceptance" in docs

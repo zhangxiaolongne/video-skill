@@ -33,6 +33,70 @@
       "title": "BgmDuckingInterval",
       "type": "object"
     },
+    "BgmFitControls": {
+      "additionalProperties": false,
+      "properties": {
+        "automatic_music_selection": {
+          "default": false,
+          "title": "Automatic Music Selection",
+          "type": "boolean"
+        },
+        "beat_alignment_requested": {
+          "title": "Beat Alignment Requested",
+          "type": "boolean"
+        },
+        "control_policy": {
+          "pattern": "^(default_v1|explicit_cli_v1)$",
+          "title": "Control Policy",
+          "type": "string"
+        },
+        "ducking_enabled": {
+          "title": "Ducking Enabled",
+          "type": "boolean"
+        },
+        "ducking_gain_db": {
+          "maximum": 0,
+          "title": "Ducking Gain Db",
+          "type": "number"
+        },
+        "edit_points_moved": {
+          "default": false,
+          "title": "Edit Points Moved",
+          "type": "boolean"
+        },
+        "fade_in_seconds": {
+          "minimum": 0,
+          "title": "Fade In Seconds",
+          "type": "number"
+        },
+        "fade_out_seconds": {
+          "minimum": 0,
+          "title": "Fade Out Seconds",
+          "type": "number"
+        },
+        "requested_fit_mode": {
+          "pattern": "^(auto|single_pass|trim|loop)$",
+          "title": "Requested Fit Mode",
+          "type": "string"
+        },
+        "target_gain_db": {
+          "title": "Target Gain Db",
+          "type": "number"
+        }
+      },
+      "required": [
+        "control_policy",
+        "requested_fit_mode",
+        "fade_in_seconds",
+        "fade_out_seconds",
+        "target_gain_db",
+        "ducking_enabled",
+        "ducking_gain_db",
+        "beat_alignment_requested"
+      ],
+      "title": "BgmFitControls",
+      "type": "object"
+    },
     "BgmFitSegment": {
       "additionalProperties": false,
       "properties": {
@@ -105,10 +169,44 @@
       "title": "Beat Alignment Status",
       "type": "string"
     },
+    "beat_evidence_status": {
+      "default": "unavailable",
+      "pattern": "^(unavailable|bound)$",
+      "title": "Beat Evidence Status",
+      "type": "string"
+    },
+    "beat_grid_fingerprint": {
+      "anyOf": [
+        {
+          "pattern": "^sha256:[0-9a-f]{64}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Beat Grid Fingerprint"
+    },
+    "beat_grid_ref": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Beat Grid Ref"
+    },
     "candidate_content_hash": {
       "pattern": "^sha256:[0-9a-f]{64}$",
       "title": "Candidate Content Hash",
       "type": "string"
+    },
+    "controls": {
+      "$ref": "#/$defs/BgmFitControls"
     },
     "ducking_intervals": {
       "items": {
@@ -206,6 +304,7 @@
     "fade_in_seconds",
     "fade_out_seconds",
     "target_gain_db",
+    "controls",
     "beat_alignment_status"
   ],
   "title": "BgmFitPlan",

@@ -273,6 +273,88 @@ it. Do not use this file as a task list.
 - Revisit when: a later gate opens explicit recommendation-to-fit selection
   with user confirmation and validation
 
+### DEC-020: Beat evidence requires validated local adapter output
+
+- Recorded: `2026-06-28`
+- Status: `active`
+- Decision: V0-020 may execute a validated local beat-engine adapter and write
+  canonical beat-grid evidence, but PCM energy windows, package presence, or
+  recommendation prose must never be promoted into BPM or beat events
+- Rationale: rhythm-aware editing is a real final-goal requirement, but fake
+  BPM is worse than no BPM because it contaminates fitting, preview, export, and
+  recommendation review
+- Consequence: BGM analysis records beat-engine capabilities, writes beat-grid
+  evidence only after adapter success, binds beat-grid fingerprints into
+  candidates and fit plans, and keeps unavailable status when no validated
+  engine runs
+- Revisit when: beat-aware fit controls or recommendation-to-fit selection are
+  opened with explicit user confirmation
+
+### DEC-021: Recommendation-to-fit requires explicit user target
+
+- Recorded: `2026-06-28`
+- Status: `active`
+- Decision: V0-021 may convert an imported BGM recommendation into the current
+  BGM fit plan only when the user explicitly selects a recommendation ID or
+  rank; the CLI must not auto-pick the top-ranked recommendation
+- Rationale: recommendation review can help compare candidates, but fitting is
+  an editorial act that changes the timeline music plan and invalidates preview
+  and final export
+- Consequence: selection is written as a separate canonical artifact with
+  recommendation/context fingerprints, rationale, confidence, explicit-user
+  flags, and no model/network/automatic-selection flags
+- Revisit when: a later gate opens batch comparison previews or beat-aware fit
+  controls with explicit user confirmation
+
+### DEC-022: Recommendation-fit review is audit, not action
+
+- Recorded: `2026-06-28`
+- Status: `active`
+- Decision: V0-022 reviews an explicit BGM recommendation selection against the
+  current fit, timeline, analysis/beat evidence, preview, and final-export
+  readiness; it must not select music, fit music, move edit points, render
+  media, call models, or access the network
+- Rationale: after music is selected, the next risk is stale or inconsistent
+  evidence across fit, timeline, and rendered outputs; review must make that
+  visible without silently changing editorial state
+- Consequence: `bgm review` writes canonical JSON/Markdown review artifacts,
+  reports missing or stale downstream media, and leaves preview/final export to
+  explicit user commands
+- Revisit when: a later gate opens explicit batch preview comparison or
+  beat-aware fit controls
+
+### DEC-023: BGM fit controls are explicit parameters, not automatic editing
+
+- Recorded: `2026-06-28`
+- Status: `active`
+- Decision: V0-023 lets users explicitly control BGM fit mode, fades, target
+  gain, ducking, and beat-alignment request state, but these controls must not
+  move timeline edit points or create beat evidence
+- Rationale: the user needs practical music-fit control before preview/export,
+  while automatic beat-synced editing would require stronger beat, phrase, and
+  editorial evidence than this gate provides
+- Consequence: controls are persisted in `BgmFitControls`, bound into the fit
+  ID, reused by recommendation-driven selection, and surfaced in review; media
+  rendering remains an explicit preview/export command
+- Revisit when: a validated beat engine is available and a later gate opens
+  explicit phrase-level or beat-grid-guided edit controls
+
+### DEC-024: Acceptance reports readiness, not automatic repair
+
+- Recorded: `2026-06-28`
+- Status: `active`
+- Decision: V0-024 introduces project-level acceptance reporting that reads
+  existing artifacts and state, but it must not automatically generate,
+  repair, fit, render, or publish anything
+- Rationale: the project now has enough pipeline pieces that the user needs one
+  grounded readiness answer; automatic repair would hide which editorial or
+  media step is actually missing
+- Consequence: `acceptance` writes canonical JSON/Markdown reports with
+  per-stage status, issues, and next actions, and records run audit/state
+  without mutating creative or media outputs
+- Revisit when: a later gate opens explicit guided repair with user-selected
+  actions
+
 ## New Decision Template
 
 ```markdown

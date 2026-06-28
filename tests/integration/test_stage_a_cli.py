@@ -3534,6 +3534,7 @@ def test_bgm_cli_import_list_fit_and_status(tmp_path, capsys):
     )
     analyzed = json.loads(capsys.readouterr().out)
     assert analyzed["analysis"]["analysis_engine"] == "local_pcm_energy_v1"
+    assert analyzed["analysis"]["beat_engine_capabilities"]
     assert analyzed["analysis"]["automatic_music_selection"] is False
     assert analyzed["report"] == "output/bgm_analysis_report.md"
 
@@ -3541,7 +3542,14 @@ def test_bgm_cli_import_list_fit_and_status(tmp_path, capsys):
         main(
             [
                 "bgm", "fit", "--project", str(project_path),
-                "--candidate", candidate_id, "--json",
+                "--candidate", candidate_id,
+                "--fit-mode", "loop",
+                "--fade-in-seconds", "0.2",
+                "--fade-out-seconds", "0.4",
+                "--target-gain-db", "-7",
+                "--ducking-gain-db", "-11",
+                "--beat-align",
+                "--json",
             ]
         )
         == 1
@@ -3549,6 +3557,12 @@ def test_bgm_cli_import_list_fit_and_status(tmp_path, capsys):
     fitted = json.loads(capsys.readouterr().out)
     assert fitted["fit"]["music_candidate_id"] == candidate_id
     assert fitted["fit"]["beat_alignment_status"] == "unavailable"
+    assert fitted["fit"]["controls"]["control_policy"] == "explicit_cli_v1"
+    assert fitted["fit"]["controls"]["requested_fit_mode"] == "loop"
+    assert fitted["fit"]["controls"]["fade_in_seconds"] == 0.2
+    assert fitted["fit"]["controls"]["target_gain_db"] == -7
+    assert fitted["fit"]["controls"]["ducking_gain_db"] == -11
+    assert fitted["fit"]["controls"]["beat_alignment_requested"] is True
     assert fitted["fit"]["analysis_ref"] == ".artist-portrait/data/bgm_analysis.json"
     assert fitted["fit"]["energy_alignment_status"] == "analysis_used"
     timeline = json.loads(
@@ -3560,6 +3574,8 @@ def test_bgm_cli_import_list_fit_and_status(tmp_path, capsys):
     status = json.loads(capsys.readouterr().out)
     assert status["summaries"]["bgm_candidates"]["count"] == 1
     assert status["summaries"]["bgm_analysis"]["candidate_count"] == 1
+    assert status["summaries"]["bgm_analysis"]["beat_completed_count"] == 0
+    assert status["summaries"]["bgm_analysis"]["bpm_candidate_count"] == 0
     assert status["summaries"]["bgm_fit"]["candidate_id"] == candidate_id
 
 
@@ -3640,6 +3656,39 @@ def test_bgm_cli_recommend_handoff_and_import(tmp_path, capsys):
     imported = json.loads(capsys.readouterr().out)
     assert imported["output"] == ".artist-portrait/data/bgm_recommendations.json"
     assert imported["validation"]["valid"] is True
+    assert (
+        main(
+            [
+                "bgm", "select", "--project", str(project_path),
+                "--recommendation-id", "rec_001", "--json",
+            ]
+        )
+        == 1
+    )
+    selected = json.loads(capsys.readouterr().out)
+    assert selected["selection"]["recommendation_id"] == "rec_001"
+    assert selected["selection"]["explicit_user_selection"] is True
+    assert selected["selection"]["automatic_selection_performed"] is False
+    assert selected["fit"]["music_candidate_id"] == candidate_id
+    assert (tmp_path / ".artist-portrait" / "data" / "bgm_recommendation_selection.json").exists()
+    assert (tmp_path / ".artist-portrait" / "data" / "bgm_fit.json").exists()
+    assert main(["bgm", "review", "--project", str(project_path), "--json"]) == 1
+    reviewed = json.loads(capsys.readouterr().out)
+    assert reviewed["output"] == ".artist-portrait/data/bgm_fit_review.json"
+    assert reviewed["review"] == "output/bgm_fit_review.md"
+    assert reviewed["status"] == "warning"
+    assert {issue["code"] for issue in reviewed["issues"]} == {
+        "preview_missing_after_fit",
+        "final_export_missing_after_fit",
+    }
+    assert main(["status", "--project", str(project_path), "--json"]) == 0
+    status = json.loads(capsys.readouterr().out)
+    assert status["summaries"]["bgm_recommendation_selection"]["recommendation_id"] == "rec_001"
+    assert status["summaries"]["bgm_fit"]["candidate_id"] == candidate_id
+    assert status["steps"]["review_bgm"]["output_refs"] == [
+        ".artist-portrait/data/bgm_fit_review.json",
+        "output/bgm_fit_review.md",
+    ]
 
 
 @pytest.mark.skipif(
@@ -3760,6 +3809,59 @@ def test_bgm_cli_respects_allow_music_false(tmp_path, capsys):
 
     assert code == 9
     assert "allow_music" in capsys.readouterr().err
+
+
+def test_acceptance_cli_reports_core_ready_with_delivery_gaps(tmp_path, capsys):
+    project_path = build_valid_proposal_project(tmp_path, capsys)
+    assert (
+        main(
+            [
+                "timeline",
+                "--project",
+                str(project_path),
+                "--proposal",
+                "proposal_safe",
+                "--quiet",
+            ]
+        )
+        in (0, 1)
+    )
+    capsys.readouterr()
+
+    assert main(["acceptance", "--project", str(project_path), "--json"]) == 1
+    accepted = json.loads(capsys.readouterr().out)
+
+    assert accepted["output"] == ".artist-portrait/data/acceptance_report.json"
+    assert accepted["report"] == "output/acceptance_report.md"
+    assert accepted["status"] == "warning"
+    assert accepted["core_ready"] is True
+    assert accepted["preview_ready"] is False
+    assert accepted["final_export_ready"] is False
+    stages = {stage["stage_id"]: stage for stage in accepted["acceptance"]["stages"]}
+    assert stages["proposal"]["status"] == "passed"
+    assert stages["timeline"]["status"] == "passed"
+    assert stages["preview"]["status"] == "warning"
+    assert stages["final_export"]["status"] == "warning"
+    assert (tmp_path / ".artist-portrait" / "data" / "acceptance_report.json").exists()
+    assert (tmp_path / "output" / "acceptance_report.md").exists()
+
+
+def test_acceptance_cli_fails_when_core_pipeline_is_missing(tmp_path, capsys):
+    project_path = tmp_path / "project.yaml"
+    project_path.write_text(
+        project_fixture_with_scene_detection("off"),
+        encoding="utf-8",
+    )
+    assert main(["init", "--project", str(project_path), "--quiet"]) in (0, 1)
+    capsys.readouterr()
+
+    assert main(["acceptance", "--project", str(project_path), "--json"]) == 9
+    accepted = json.loads(capsys.readouterr().out)
+
+    assert accepted["status"] == "failed"
+    assert accepted["core_ready"] is False
+    stages = {stage["stage_id"]: stage for stage in accepted["acceptance"]["stages"]}
+    assert stages["source_scan"]["status"] == "failed"
 
 
 def test_review_proposal_validates_existing_proposals(tmp_path, monkeypatch, capsys):

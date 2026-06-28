@@ -28,18 +28,21 @@ readiness and gate-progress fragments must not be recreated.
 - Branch: `main`
 - Remote configured: `zhangxiaolongne/video-skill`
 - Canonical skill: `artist-portrait-editor`
-- Current local gate: V0-018 BGM recommendation review gate
-- Current milestone: `V0-019 release publication closeout for V0-018 capability release`
-- Current batch: `V0-019`
+- Current local gate: V0-024 project acceptance gate
+- Current milestone: `V0-024 project acceptance gate`
+- Current batch: `V0-024`
 - Batch status: `completed`
 - Latest committed baseline: V0-010m
-- Release publication target: `main` with capability tag `v0.18.0`
+- Release publication target: `main` with capability tag `v0.24.0`
 - Final usable Skill status: foundation, creative proposals, canonical timeline,
   BGM fitting, and local low-resolution preview rendering are substantial;
   preview quality review, render controls, controlled local final export, and
-  local BGM technical intelligence, and BGM recommendation review are
-  substantial; release publication has been prepared for `v0.18.0`; validated
-  beat-grid extraction and automatic music selection remain undelivered
+  local BGM technical intelligence, BGM recommendation review, beat-engine
+  evidence plumbing, recommendation-to-fit selection, recommendation-fit
+  review, explicit BGM fit controls, and project acceptance reporting are
+  substantial;
+  release publication target is `v0.24.0`; installed-engine BPM extraction and
+  automatic music selection remain undelivered
 
 ## Capability Dashboard
 
@@ -58,7 +61,12 @@ readiness and gate-progress fragments must not be recreated.
 | Timeline generation | `completed` | Explicit proposal selection, canonical draft, validation, review, diagnostics, and invalidation work |
 | BGM ingestion and fitting | `completed` | Multi-source candidates, explicit selection, loudness analysis, technical energy analysis, and fit planning work |
 | BGM technical intelligence | `completed` | Local candidate energy windows, quiet head/tail, high-energy range, loop-safe hints, beat-engine detection, and fit evidence binding work |
+| Beat-engine evidence | `completed` | Validated local beat-engine adapter gate, canonical beat-grid evidence contract, unavailable semantics, and fit-plan beat evidence binding work |
 | BGM recommendation review | `completed` | Host-Agent/local-model/third-party handoff, explicit candidate import, quarantine, validation, promotion, review, and no-auto-selection boundaries work |
+| Recommendation-to-fit selection | `completed` | Explicit user selection from imported BGM recommendations can generate the current BGM fit plan without auto-picking rank 1 |
+| Recommendation-fit review | `completed` | Selected BGM recommendations can be audited against the current fit, timeline, analysis/beat evidence, preview, and final-export readiness |
+| BGM fit controls | `completed` | Users can explicitly control fit mode, fades, gain, ducking, and beat-alignment request state without automatic edit-point movement |
+| Project acceptance | `completed` | Project-level acceptance reports evaluate core, BGM, preview, final export, and forbidden-capability readiness without auto-repair |
 | Preview and rendering | `completed` | Local low-resolution preview rendering from timeline plus optional BGM fit works |
 | Preview quality review | `completed` | Bounded render controls and deterministic QC work before final export opens |
 | Final export | `completed` | Bounded local MP4 final export from canonical timeline, retained audio, optional fitted BGM, manifest, QC, review, status, doctor, audit, and invalidation work |
@@ -66,14 +74,19 @@ readiness and gate-progress fragments must not be recreated.
 
 ## Current Hard Boundaries
 
-V0-018 permits BGM recommendation review through explicit handoff/import
-artifacts. It does not permit:
+V0-024 permits deterministic project acceptance reporting from existing
+artifacts and state. It does not permit:
 
 - paid API calls, API keys, remote provider execution, or network search
 - Python-side hidden model calls or automatic paid fallback
 - fake, template, mock, dummy, or model-free creative proposals
 - automatic music selection
-- fabricated BPM/beat analysis when no mature engine exists
+- automatic top-ranked recommendation selection
+- automatic review-driven fitting or rendering
+- automatic fit-control-driven edit-point movement
+- automatic acceptance-driven repair or pipeline execution
+- fabricated BPM/beat analysis when no validated local engine runs
+- automatic beat-synced edit-point changes
 - automatic final-export profile choice beyond explicit user CLI selection
 - OpenCV, embeddings, vision classification, or image generation/editing
 
@@ -125,21 +138,21 @@ index, hash, and contamination flags for speech, vocals, environment, and
 effects. Video used as a music source must remain distinct from video used as
 picture material with retained original sound.
 
-The current gate can analyze local BGM energy structure and validate imported
-recommendations, but preserves explicit candidate selection. Beat-grid
-extraction, separation, and automatic music-to-edit synchronization remain
-unimplemented.
+The current gate can analyze local BGM energy structure, validate imported
+recommendations, bind validated local beat-grid evidence when available, and
+convert an explicit recommendation target into a BGM fit plan. Source
+separation, automatic music-to-edit synchronization, automatic top-ranked
+selection, and automatic edit timing changes remain unimplemented.
 
 ## Principal Blockers
 
-- `ISSUE-008`: beat/BPM extraction remains unavailable without a validated local engine.
-- `ISSUE-003`: release publication blocker is resolved by V0-019 once Git
-  branch/tag remote verification completes.
+- `ISSUE-008`: the current environment has no installed mature beat engine, so
+  BPM output remains unavailable unless a validated local adapter succeeds.
 
 Full status and resolution conditions live in `ISSUES.md`.
 
 ## Next Major Decision
 
-V0-019 publishes the accumulated local V0-018 capability release. The next
-major decision is whether to integrate a validated beat engine or convert
-recommendation review into an explicit fit-selection workflow.
+V0-024 completed project acceptance reporting. The next major decision is
+whether to do a larger release closeout, add real-media fixture acceptance, or
+add phrase-level beat controls when validated beat evidence is present.

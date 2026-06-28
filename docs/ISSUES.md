@@ -91,16 +91,19 @@ here only when they block a current or planned milestone.
 
 - Status: `accepted`
 - Severity: medium
-- Owner: future beat-analysis gate
-- Boundary: V0-017 detects mature local beat-engine packages but does not
-  execute beat-grid extraction; BPM remains null when no validated engine runs
-- Reason accepted: no mature free local beat engine is installed in the current
-  environment
-- Resolution condition: install and validate a mature local beat engine and add
-  deterministic beat-grid validation
-- Related decisions: `DEC-012`, `DEC-018`
+- Owner: `V0-020`
+- Boundary: V0-020 adds a validated local beat-engine adapter and canonical
+  beat-grid evidence contract, but the current environment still has no mature
+  engine package installed; BPM remains null and beat-grid evidence remains
+  absent unless a validated adapter succeeds
+- Reason accepted: package installation and network access are outside the
+  current gate, and PCM energy windows must not be promoted into fake BPM
+- Resolution condition: install a mature local beat engine, run the validated
+  adapter on project-local cached BGM, produce canonical beat-grid evidence, and
+  pass stale-evidence validation without model/network calls
+- Related decisions: `DEC-012`, `DEC-018`, `DEC-020`
 
-### ISSUE-003: Current major local release is not committed or pushed
+### ISSUE-003: V0-019 accumulated local release was not committed or pushed
 
 - Status: `resolved`
 - Severity: medium

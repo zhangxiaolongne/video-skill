@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hashlib
+import importlib
 import json
 import math
 import re
@@ -14,11 +15,15 @@ from artist_portrait_editor.media.probe import ProbeError, probe_media
 from artist_portrait_editor.media.scanner import hash_file, read_sources_jsonl
 from artist_portrait_editor.models.bgm import (
     BgmAnalysisReport,
+    BgmBeatEngineCapability,
+    BgmBeatEvent,
+    BgmBeatGrid,
     BgmCandidate,
     BgmCandidateAnalysis,
     BgmCandidateLedger,
     BgmDuckingInterval,
     BgmEnergyWindow,
+    BgmFitControls,
     BgmFitPlan,
     BgmFitSegment,
     BgmInputMode,
@@ -32,6 +37,7 @@ class BgmError(ValueError):
 
 
 BEAT_ENGINE_PACKAGES = ("librosa", "aubio", "essentia", "madmom")
+EXECUTABLE_BEAT_ENGINES = ("librosa",)
 
 
 def load_ledger(path: Path, project_id: str) -> BgmCandidateLedger:
@@ -138,6 +144,8 @@ def import_candidate(
         bpm=None,
         beat_analysis_status="unavailable",
         beat_analysis_reason="no mature local beat-analysis engine is installed",
+        beat_grid_ref=None,
+        beat_grid_fingerprint=None,
         mixed_audio=media_kind == MediaKind.video,
     )
     ledger_path = root / ".artist-portrait" / "data" / "bgm_candidates.json"
@@ -157,7 +165,18 @@ def build_fit_plan(
     root: Path,
     project_id: str,
     candidate_id: str,
+    requested_fit_mode: str = "auto",
+    fade_in_seconds: float | None = None,
+    fade_out_seconds: float | None = None,
+    target_gain_db: float | None = None,
+    ducking_gain_db: float = -9.0,
+    ducking_enabled: bool = True,
+    beat_alignment_requested: bool = False,
 ) -> tuple[BgmFitPlan, TimelineDraft]:
+    if requested_fit_mode not in {"auto", "single_pass", "trim", "loop"}:
+        raise BgmError("BGM fit mode must be auto, single_pass, trim, or loop")
+    if ducking_gain_db > 0:
+        raise BgmError("BGM ducking gain must be 0 dB or lower")
     ledger = load_ledger(
         root / ".artist-portrait" / "data" / "bgm_candidates.json",
         project_id,
@@ -174,7 +193,10 @@ def build_fit_plan(
     timeline = TimelineDraft.model_validate_json(timeline_path.read_text(encoding="utf-8"))
     target = timeline.actual_duration
     duration = candidate.duration
-    fit_mode = "single_pass" if abs(duration - target) <= 0.001 else "trim" if duration > target else "loop"
+    default_fit_mode = "single_pass" if abs(duration - target) <= 0.001 else "trim" if duration > target else "loop"
+    fit_mode = default_fit_mode if requested_fit_mode == "auto" else requested_fit_mode
+    if fit_mode in {"single_pass", "trim"} and duration < target - 0.001:
+        raise BgmError(f"BGM fit mode {fit_mode} requires candidate duration to cover the timeline")
     segments: list[BgmFitSegment] = []
     cursor = 0.0
     loop_index = 0
@@ -191,15 +213,17 @@ def build_fit_plan(
         )
         cursor += length
         loop_index += 1
+        if fit_mode in {"single_pass", "trim"}:
+            break
     ducking = [
         BgmDuckingInterval(
             start=segment.timeline_start,
             end=segment.timeline_end,
-            gain_db=-9.0,
+            gain_db=ducking_gain_db,
             reason="preserve original audio, dialogue, or performance sound",
         )
         for segment in timeline.segments
-        if segment.media_role.value in {"audio", "both"}
+        if ducking_enabled and segment.media_role.value in {"audio", "both"}
     ]
     analysis_report = load_analysis_report(
         root / ".artist-portrait" / "data" / "bgm_analysis.json",
@@ -208,6 +232,10 @@ def build_fit_plan(
     candidate_analysis = None
     analysis_fingerprint = None
     analysis_ref = None
+    beat_grid_ref = None
+    beat_grid_fingerprint = None
+    beat_alignment_status = "unavailable"
+    beat_evidence_status = "unavailable"
     if analysis_report is not None:
         candidate_analysis = next(
             (
@@ -222,11 +250,52 @@ def build_fit_plan(
             analysis_fingerprint = "sha256:" + hashlib.sha256(
                 (root / analysis_ref).read_bytes()
             ).hexdigest()
+            if (
+                candidate_analysis.beat_analysis_status == "completed"
+                and candidate_analysis.beat_grid_ref
+                and candidate_analysis.beat_grid_fingerprint
+            ):
+                beat_grid_ref = candidate_analysis.beat_grid_ref
+                beat_grid_fingerprint = candidate_analysis.beat_grid_fingerprint
+                beat_alignment_status = "completed"
+                beat_evidence_status = "bound"
     timeline_fingerprint = "sha256:" + hashlib.sha256(timeline_path.read_bytes()).hexdigest()
-    fit_key = f"{timeline.timeline_id}:{candidate_id}:{timeline_fingerprint}"
+    default_gain = -3.0 if candidate.integrated_loudness_lufs is None else round(
+        min(0.0, -16.0 - candidate.integrated_loudness_lufs), 2
+    )
+    actual_fade_in = min(0.5, target / 4) if fade_in_seconds is None else fade_in_seconds
+    actual_fade_out = min(1.0, target / 4) if fade_out_seconds is None else fade_out_seconds
+    actual_target_gain = default_gain if target_gain_db is None else target_gain_db
+    if actual_fade_in + actual_fade_out > target:
+        raise BgmError("BGM fade-in plus fade-out must not exceed timeline duration")
+    control_policy = "default_v1" if (
+        requested_fit_mode == "auto"
+        and fade_in_seconds is None
+        and fade_out_seconds is None
+        and target_gain_db is None
+        and ducking_gain_db == -9.0
+        and ducking_enabled is True
+        and beat_alignment_requested is False
+    ) else "explicit_cli_v1"
+    controls = BgmFitControls(
+        control_policy=control_policy,
+        requested_fit_mode=requested_fit_mode,
+        fade_in_seconds=round(actual_fade_in, 3),
+        fade_out_seconds=round(actual_fade_out, 3),
+        target_gain_db=round(actual_target_gain, 2),
+        ducking_enabled=ducking_enabled,
+        ducking_gain_db=round(ducking_gain_db, 2),
+        beat_alignment_requested=beat_alignment_requested,
+    )
+    fit_key = (
+        f"{timeline.timeline_id}:{candidate_id}:{timeline_fingerprint}:"
+        f"{controls.model_dump_json()}"
+    )
     warnings = [candidate.beat_analysis_reason] if candidate.beat_analysis_reason else []
     if candidate_analysis is None:
         warnings.append("BGM analysis report is missing or does not include this candidate")
+    if beat_alignment_requested and beat_grid_ref is None:
+        warnings.append("Beat alignment was requested but no validated beat grid is available")
     plan = BgmFitPlan(
         fit_id="bgmfit_" + hashlib.sha256(fit_key.encode()).hexdigest()[:20],
         project_id=project_id,
@@ -237,13 +306,15 @@ def build_fit_plan(
         target_duration=target,
         fit_mode=fit_mode,
         segments=segments,
-        fade_in_seconds=min(0.5, target / 4),
-        fade_out_seconds=min(1.0, target / 4),
+        fade_in_seconds=controls.fade_in_seconds,
+        fade_out_seconds=controls.fade_out_seconds,
         ducking_intervals=ducking,
-        target_gain_db=-3.0 if candidate.integrated_loudness_lufs is None else round(
-            min(0.0, -16.0 - candidate.integrated_loudness_lufs), 2
-        ),
-        beat_alignment_status="unavailable",
+        target_gain_db=controls.target_gain_db,
+        controls=controls,
+        beat_alignment_status=beat_alignment_status,
+        beat_grid_ref=beat_grid_ref,
+        beat_grid_fingerprint=beat_grid_fingerprint,
+        beat_evidence_status=beat_evidence_status,
         analysis_ref=analysis_ref,
         analysis_fingerprint=analysis_fingerprint,
         energy_alignment_status="analysis_used" if candidate_analysis is not None else "unavailable",
@@ -278,14 +349,17 @@ def analyze_candidates(
     ledger = load_ledger(ledger_path, project_id)
     if not ledger.candidates:
         raise BgmError("BGM analysis requires at least one candidate")
-    beat_engine, beat_reason = detect_beat_engine()
+    beat_capabilities = detect_beat_engine_capabilities()
+    beat_engine, beat_reason = selected_beat_engine(beat_capabilities)
     analyses = [
         analyze_candidate_audio(
             root=root,
+            project_id=project_id,
             candidate=candidate,
             window_seconds=window_seconds,
             beat_engine=beat_engine,
             beat_reason=beat_reason,
+            beat_capabilities=beat_capabilities,
         )
         for candidate in ledger.candidates
     ]
@@ -293,6 +367,7 @@ def analyze_candidates(
         project_id=project_id,
         source_ledger_fingerprint="sha256:" + hashlib.sha256(ledger_path.read_bytes()).hexdigest(),
         analysis_engine="local_pcm_energy_v1",
+        beat_engine_capabilities=beat_capabilities,
         candidates=analyses,
     )
     analysis_path = root / ".artist-portrait" / "data" / "bgm_analysis.json"
@@ -309,6 +384,8 @@ def analyze_candidates(
                 "beat_analysis_status": analysis.beat_analysis_status,
                 "beat_analysis_reason": analysis.beat_analysis_reason,
                 "bpm": analysis.bpm,
+                "beat_grid_ref": analysis.beat_grid_ref,
+                "beat_grid_fingerprint": analysis.beat_grid_fingerprint,
             }
         )
     updated = BgmCandidateLedger(
@@ -334,10 +411,12 @@ def load_analysis_report(path: Path, project_id: str) -> BgmAnalysisReport | Non
 def analyze_candidate_audio(
     *,
     root: Path,
+    project_id: str,
     candidate: BgmCandidate,
     window_seconds: float,
     beat_engine: str,
     beat_reason: str | None,
+    beat_capabilities: list[BgmBeatEngineCapability],
 ) -> BgmCandidateAnalysis:
     cache_path = root / candidate.cache_ref
     if not cache_path.exists():
@@ -364,7 +443,32 @@ def analyze_candidate_audio(
     warnings = []
     if candidate.mixed_audio:
         warnings.append("candidate was extracted from video and may contain speech, effects, or environment audio")
-    if beat_reason:
+    beat_grid = run_beat_engine_if_available(
+        root=root,
+        project_id=project_id,
+        candidate=candidate,
+        cache_path=cache_path,
+        beat_engine=beat_engine,
+        capabilities=beat_capabilities,
+    )
+    beat_grid_ref = None
+    beat_grid_fingerprint = None
+    bpm = None
+    beat_status = "unavailable"
+    tempo_confidence = None
+    beat_count = 0
+    effective_beat_reason = beat_reason
+    if beat_grid is not None:
+        beat_grid_ref = f".artist-portrait/data/bgm_beat_grids/{candidate.music_candidate_id}.json"
+        beat_grid_path = root / beat_grid_ref
+        atomic_json(beat_grid_path, beat_grid.model_dump(mode="json"))
+        beat_grid_fingerprint = "sha256:" + hashlib.sha256(beat_grid_path.read_bytes()).hexdigest()
+        bpm = beat_grid.bpm
+        beat_status = "completed"
+        tempo_confidence = beat_grid.tempo_confidence
+        beat_count = beat_grid.beat_count
+        effective_beat_reason = None
+    elif beat_reason:
         warnings.append(beat_reason)
     return BgmCandidateAnalysis(
         music_candidate_id=candidate.music_candidate_id,
@@ -373,9 +477,13 @@ def analyze_candidate_audio(
         duration=candidate.duration,
         analysis_engine="local_pcm_energy_v1",
         beat_engine=beat_engine,
-        beat_analysis_status="unavailable",
-        beat_analysis_reason=beat_reason,
-        bpm=None,
+        beat_analysis_status=beat_status,
+        beat_analysis_reason=effective_beat_reason,
+        bpm=bpm,
+        beat_grid_ref=beat_grid_ref,
+        beat_grid_fingerprint=beat_grid_fingerprint,
+        tempo_confidence=tempo_confidence,
+        beat_count=beat_count,
         window_seconds=round(window_seconds, 3),
         window_count=len(windows),
         average_rms_dbfs=round(average_rms, 3),
@@ -433,15 +541,111 @@ def pcm_energy_windows(path: Path, *, window_seconds: float) -> list[BgmEnergyWi
     return windows
 
 
-def detect_beat_engine() -> tuple[str, str | None]:
-    available = [name for name in BEAT_ENGINE_PACKAGES if find_spec(name) is not None]
-    if not available:
-        return (
-            "none",
-            "no mature local beat-analysis engine is installed; BPM and beat grid remain unavailable",
+def detect_beat_engine_capabilities() -> list[BgmBeatEngineCapability]:
+    capabilities: list[BgmBeatEngineCapability] = []
+    for name in BEAT_ENGINE_PACKAGES:
+        available = find_spec(name) is not None
+        execution_supported = name in EXECUTABLE_BEAT_ENGINES
+        if available and execution_supported:
+            status = "available"
+            reason = None
+        elif available:
+            status = "unsupported"
+            reason = "package detected but no validated local adapter is implemented"
+        else:
+            status = "unavailable"
+            reason = "package is not installed"
+        capabilities.append(
+            BgmBeatEngineCapability(
+                engine=name,
+                package_available=available,
+                execution_supported=available and execution_supported,
+                status=status,
+                reason=reason,
+            )
         )
-    return ",".join(available), (
-        "mature beat-analysis package detected but V0-017 does not execute beat-grid extraction yet"
+    return capabilities
+
+
+def selected_beat_engine(
+    capabilities: list[BgmBeatEngineCapability],
+) -> tuple[str, str | None]:
+    executable = [item.engine for item in capabilities if item.status == "available"]
+    if executable:
+        return executable[0], None
+    available = [item.engine for item in capabilities if item.package_available]
+    if available:
+        return ",".join(available), (
+            "mature beat-analysis package detected but no validated executable adapter is available"
+        )
+    return (
+        "none",
+        "no mature local beat-analysis engine is installed; BPM and beat grid remain unavailable",
+    )
+
+
+def detect_beat_engine() -> tuple[str, str | None]:
+    return selected_beat_engine(detect_beat_engine_capabilities())
+
+
+def run_beat_engine_if_available(
+    *,
+    root: Path,
+    project_id: str,
+    candidate: BgmCandidate,
+    cache_path: Path,
+    beat_engine: str,
+    capabilities: list[BgmBeatEngineCapability],
+) -> BgmBeatGrid | None:
+    selected = next(
+        (item for item in capabilities if item.engine == beat_engine and item.status == "available"),
+        None,
+    )
+    if selected is None:
+        return None
+    if beat_engine == "librosa":
+        return analyze_beats_with_librosa(
+            project_id=project_id,
+            candidate=candidate,
+            cache_path=cache_path,
+        )
+    return None
+
+
+def analyze_beats_with_librosa(
+    *,
+    project_id: str,
+    candidate: BgmCandidate,
+    cache_path: Path,
+) -> BgmBeatGrid | None:
+    try:
+        librosa = importlib.import_module("librosa")
+    except Exception:
+        return None
+    try:
+        samples, sample_rate = librosa.load(str(cache_path), sr=None, mono=True)
+        tempo, beat_frames = librosa.beat.beat_track(y=samples, sr=sample_rate)
+        beat_times = librosa.frames_to_time(beat_frames, sr=sample_rate)
+    except Exception:
+        return None
+    bpm = float(tempo[0] if hasattr(tempo, "__len__") else tempo)
+    times = [float(value) for value in beat_times]
+    if bpm <= 0 or len(times) < 2:
+        return None
+    events = [
+        BgmBeatEvent(index=index, time=round(value, 3), confidence=0.8)
+        for index, value in enumerate(times)
+    ]
+    return BgmBeatGrid(
+        project_id=project_id,
+        music_candidate_id=candidate.music_candidate_id,
+        cache_ref=candidate.cache_ref,
+        cache_fingerprint=hash_file(cache_path),
+        beat_engine="librosa",
+        bpm=round(bpm, 3),
+        tempo_confidence=0.8,
+        beat_count=len(events),
+        beat_times=events,
     )
 
 
@@ -476,6 +680,9 @@ def render_bgm_analysis_report(report: BgmAnalysisReport) -> str:
                 f"- Beat engine: `{candidate.beat_engine}`",
                 f"- Beat status: `{candidate.beat_analysis_status}`",
                 f"- Beat reason: {candidate.beat_analysis_reason or 'None'}",
+                f"- BPM: `{candidate.bpm}`",
+                f"- Beat grid: `{candidate.beat_grid_ref or 'None'}`",
+                f"- Beat count: `{candidate.beat_count}`",
                 f"- Warnings: `{len(candidate.warnings)}`",
                 "",
             ]
@@ -499,6 +706,13 @@ def bgm_analysis_summary(path: Path) -> dict:
         "valid": True,
         "candidate_count": len(report.candidates),
         "analysis_engine": report.analysis_engine,
+        "beat_engine_capabilities": [
+            item.model_dump(mode="json") for item in report.beat_engine_capabilities
+        ],
+        "beat_completed_count": sum(
+            item.beat_analysis_status == "completed" for item in report.candidates
+        ),
+        "bpm_candidate_count": sum(item.bpm is not None for item in report.candidates),
         "network_performed": report.network_performed,
         "model_call_performed": report.model_call_performed,
         "automatic_music_selection": report.automatic_music_selection,
@@ -568,6 +782,14 @@ def review_bgm(root: Path, project_id: str) -> list[str]:
         issues.append("timeline music candidate does not match BGM fit")
     if timeline.music_plan.fit_ref != fit_path.relative_to(root).as_posix():
         issues.append("timeline music fit reference is missing or stale")
+    if plan.beat_grid_ref:
+        beat_grid_path = root / plan.beat_grid_ref
+        if not beat_grid_path.exists():
+            issues.append("BGM fit beat grid is missing")
+        else:
+            beat_grid_hash = "sha256:" + hashlib.sha256(beat_grid_path.read_bytes()).hexdigest()
+            if beat_grid_hash != plan.beat_grid_fingerprint:
+                issues.append("BGM fit beat grid fingerprint is stale")
     return issues
 
 

@@ -57,7 +57,22 @@ def check_schema_drift() -> None:
         run([str(ARTIST_PORTRAIT), "generate-schema", "--output-dir", str(tmp_path)])
         for name in (
             "analysis_record.schema.json",
+            "project_acceptance_report.schema.json",
+            "bgm_analysis_report.schema.json",
+            "bgm_beat_grid.schema.json",
+            "bgm_candidate_ledger.schema.json",
+            "bgm_fit_plan.schema.json",
+            "bgm_recommendation_context.schema.json",
+            "bgm_recommendation_fit_review.schema.json",
+            "bgm_recommendation_request.schema.json",
+            "bgm_recommendation_selection.schema.json",
+            "bgm_recommendation_set.schema.json",
+            "bgm_recommendation_validation_report.schema.json",
             "clip_record.schema.json",
+            "final_export_manifest.schema.json",
+            "final_export_validation_report.schema.json",
+            "preview_render_manifest.schema.json",
+            "preview_validation_report.schema.json",
             "project_config.schema.json",
             "project_state.schema.json",
             "proposal_adapter_check.schema.json",
@@ -84,6 +99,8 @@ def check_schema_drift() -> None:
             "keyframe_record.schema.json",
             "transcript_record.schema.json",
             "text_model_gate.schema.json",
+            "timeline_draft.schema.json",
+            "timeline_validation_report.schema.json",
         ):
             committed = ROOT / "schemas" / name
             generated = tmp_path / name
@@ -140,14 +157,14 @@ def check_gate_consistency() -> None:
         "DEVELOPMENT_PROGRESS.md": ROOT / "docs" / "DEVELOPMENT_PROGRESS.md",
     }
     content = {name: path.read_text(encoding="utf-8") for name, path in docs.items()}
-    if "Current gate: V0-018 BGM recommendation review gate." not in content["AGENTS.md"]:
-        raise SystemExit("AGENTS.md current gate is not V0-018 BGM recommendation")
-    if "V0-018 BGM recommendation review gate" not in content["master"]:
-        raise SystemExit("master document current gate is not V0-018 BGM recommendation")
-    if "Current V0-018 BGM recommendation review gate work" not in content["README.md"]:
-        raise SystemExit("README current gate is not V0-018 BGM recommendation")
+    if "Current gate: V0-024 project acceptance gate." not in content["AGENTS.md"]:
+        raise SystemExit("AGENTS.md current gate is not V0-024 project acceptance")
+    if "V0-024 project acceptance gate" not in content["master"]:
+        raise SystemExit("master document current gate is not V0-024 project acceptance")
+    if "Current V0-024 project acceptance gate work" not in content["README.md"]:
+        raise SystemExit("README current gate is not V0-024 project acceptance")
     if (
-        "Current local gate: V0-018 BGM recommendation review gate"
+        "Current local gate: V0-024 project acceptance gate"
         not in content["DEVELOPMENT_PROGRESS.md"]
     ):
         raise SystemExit("development progress current gate is stale")
@@ -162,7 +179,7 @@ def check_progress_contract() -> None:
     payload = json.loads(path.read_text(encoding="utf-8"))
     if payload.get("schema_version") != "1.4":
         raise SystemExit("progress snapshot schema_version is not 1.4")
-    if payload.get("capability_gate") != "V0-018":
+    if payload.get("capability_gate") != "V0-024":
         raise SystemExit("progress snapshot capability gate is stale")
     documentation_system = payload.get("documentation_system") or {}
     expected_documents = {
@@ -247,6 +264,18 @@ def check_progress_contract() -> None:
         raise SystemExit("progress snapshot did not open BGM technical analysis")
     if forbidden.get("bgm_recommendation_review") is not True:
         raise SystemExit("progress snapshot did not open BGM recommendation review")
+    if forbidden.get("bgm_beat_engine_evidence") is not True:
+        raise SystemExit("progress snapshot did not open beat-engine evidence")
+    if forbidden.get("bgm_recommendation_to_fit_selection") is not True:
+        raise SystemExit("progress snapshot did not open recommendation-to-fit selection")
+    if forbidden.get("bgm_recommendation_fit_review") is not True:
+        raise SystemExit("progress snapshot did not open recommendation-fit review")
+    if forbidden.get("bgm_fit_controls") is not True:
+        raise SystemExit("progress snapshot did not open BGM fit controls")
+    if forbidden.get("project_acceptance") is not True:
+        raise SystemExit("progress snapshot did not open project acceptance")
+    if forbidden.get("automatic_beat_synced_editing") is not False:
+        raise SystemExit("progress snapshot opened automatic beat-synced editing")
     if forbidden.get("preview_rendering") is not True:
         raise SystemExit("progress snapshot did not open preview rendering")
     if forbidden.get("final_export") is not True:
@@ -260,6 +289,11 @@ def check_progress_contract() -> None:
             "bgm_analysis",
             "bgm_technical_analysis",
             "bgm_recommendation_review",
+            "bgm_beat_engine_evidence",
+            "bgm_recommendation_to_fit_selection",
+            "bgm_recommendation_fit_review",
+            "bgm_fit_controls",
+            "project_acceptance",
             "preview_rendering",
             "final_export",
         }
@@ -276,6 +310,22 @@ def check_progress_contract() -> None:
         raise SystemExit("progress snapshot BGM technical analysis state is stale")
     if capability_progress.get("bgm_recommendation_review") != "completed":
         raise SystemExit("progress snapshot BGM recommendation state is stale")
+    if capability_progress.get("bgm_beat_engine_evidence") not in {
+        "in_progress",
+        "completed",
+    }:
+        raise SystemExit("progress snapshot beat-engine evidence state is stale")
+    if capability_progress.get("bgm_recommendation_to_fit_selection") not in {
+        "in_progress",
+        "completed",
+    }:
+        raise SystemExit("progress snapshot recommendation-to-fit state is stale")
+    if capability_progress.get("bgm_recommendation_fit_review") != "completed":
+        raise SystemExit("progress snapshot recommendation-fit review state is stale")
+    if capability_progress.get("bgm_fit_controls") != "completed":
+        raise SystemExit("progress snapshot BGM fit controls state is stale")
+    if capability_progress.get("project_acceptance") != "completed":
+        raise SystemExit("progress snapshot project acceptance state is stale")
     if capability_progress.get("preview_rendering") != "completed":
         raise SystemExit("progress snapshot preview state is stale")
     if capability_progress.get("preview_quality_review") != "completed":

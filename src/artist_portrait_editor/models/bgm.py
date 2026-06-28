@@ -44,6 +44,11 @@ class BgmCandidate(BaseModel):
     bpm: float | None = None
     beat_analysis_status: str = Field(pattern=r"^(unavailable|completed)$")
     beat_analysis_reason: str | None = None
+    beat_grid_ref: str | None = None
+    beat_grid_fingerprint: str | None = Field(
+        default=None,
+        pattern=r"^sha256:[0-9a-f]{64}$",
+    )
     analysis_ref: str | None = None
     analysis_fingerprint: str | None = Field(
         default=None,
@@ -70,6 +75,42 @@ class BgmEnergyWindow(BaseModel):
     energy_label: str = Field(pattern=r"^(quiet|low|medium|high)$")
 
 
+class BgmBeatEngineCapability(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    engine: str = Field(min_length=1)
+    package_available: bool
+    execution_supported: bool
+    status: str = Field(pattern=r"^(available|unavailable|unsupported)$")
+    reason: str | None = None
+
+
+class BgmBeatEvent(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    index: int = Field(ge=0)
+    time: float = Field(ge=0)
+    confidence: float = Field(ge=0, le=1)
+
+
+class BgmBeatGrid(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    schema_version: str = SCHEMA_VERSION
+    project_id: str = Field(min_length=1)
+    music_candidate_id: str = Field(min_length=1)
+    cache_ref: str = Field(min_length=1)
+    cache_fingerprint: str = Field(pattern=r"^sha256:[0-9a-f]{64}$")
+    beat_engine: str = Field(min_length=1)
+    bpm: float = Field(gt=0)
+    tempo_confidence: float = Field(ge=0, le=1)
+    beat_count: int = Field(ge=0)
+    beat_times: list[BgmBeatEvent] = Field(default_factory=list)
+    model_call_performed: bool = False
+    network_performed: bool = False
+    fabricated: bool = False
+
+
 class BgmCandidateAnalysis(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -82,6 +123,13 @@ class BgmCandidateAnalysis(BaseModel):
     beat_analysis_status: str = Field(pattern=r"^(unavailable|completed)$")
     beat_analysis_reason: str | None = None
     bpm: float | None = Field(default=None, gt=0)
+    beat_grid_ref: str | None = None
+    beat_grid_fingerprint: str | None = Field(
+        default=None,
+        pattern=r"^sha256:[0-9a-f]{64}$",
+    )
+    tempo_confidence: float | None = Field(default=None, ge=0, le=1)
+    beat_count: int = Field(default=0, ge=0)
     window_seconds: float = Field(gt=0)
     window_count: int = Field(ge=0)
     average_rms_dbfs: float
@@ -103,6 +151,7 @@ class BgmAnalysisReport(BaseModel):
     source_ledger_ref: str = ".artist-portrait/data/bgm_candidates.json"
     source_ledger_fingerprint: str = Field(pattern=r"^sha256:[0-9a-f]{64}$")
     analysis_engine: str = Field(min_length=1)
+    beat_engine_capabilities: list[BgmBeatEngineCapability] = Field(default_factory=list)
     network_performed: bool = False
     model_call_performed: bool = False
     automatic_music_selection: bool = False
@@ -128,6 +177,21 @@ class BgmDuckingInterval(BaseModel):
     reason: str = Field(min_length=1)
 
 
+class BgmFitControls(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    control_policy: str = Field(pattern=r"^(default_v1|explicit_cli_v1)$")
+    requested_fit_mode: str = Field(pattern=r"^(auto|single_pass|trim|loop)$")
+    fade_in_seconds: float = Field(ge=0)
+    fade_out_seconds: float = Field(ge=0)
+    target_gain_db: float
+    ducking_enabled: bool
+    ducking_gain_db: float = Field(le=0)
+    beat_alignment_requested: bool
+    edit_points_moved: bool = False
+    automatic_music_selection: bool = False
+
+
 class BgmFitPlan(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -145,7 +209,17 @@ class BgmFitPlan(BaseModel):
     fade_out_seconds: float = Field(ge=0)
     ducking_intervals: list[BgmDuckingInterval] = Field(default_factory=list)
     target_gain_db: float
+    controls: BgmFitControls
     beat_alignment_status: str = Field(pattern=r"^(unavailable|not_requested|completed)$")
+    beat_grid_ref: str | None = None
+    beat_grid_fingerprint: str | None = Field(
+        default=None,
+        pattern=r"^sha256:[0-9a-f]{64}$",
+    )
+    beat_evidence_status: str = Field(
+        default="unavailable",
+        pattern=r"^(unavailable|bound)$",
+    )
     analysis_ref: str | None = None
     analysis_fingerprint: str | None = Field(
         default=None,

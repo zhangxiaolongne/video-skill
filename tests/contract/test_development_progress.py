@@ -196,7 +196,7 @@ def test_machine_readable_progress_matches_current_dashboard():
     payload = snapshot()
 
     assert payload["schema_version"] == "1.4"
-    assert payload["capability_gate"] == "V0-018"
+    assert payload["capability_gate"] == "V0-024"
     assert payload["milestone"] in progress
     assert payload["active_batch"]["id"] in progress
     assert payload["capability_progress"]["proposal_generation"] == "completed"
@@ -204,6 +204,14 @@ def test_machine_readable_progress_matches_current_dashboard():
     assert payload["capability_progress"]["bgm_ingestion_and_fitting"] == "completed"
     assert payload["capability_progress"]["bgm_technical_analysis"] == "completed"
     assert payload["capability_progress"]["bgm_recommendation_review"] == "completed"
+    assert payload["capability_progress"]["bgm_beat_engine_evidence"] in {
+        "in_progress",
+        "completed",
+    }
+    assert payload["capability_progress"]["bgm_recommendation_to_fit_selection"] in {
+        "in_progress",
+        "completed",
+    }
     assert payload["capability_progress"]["preview_rendering"] == "completed"
     assert payload["capability_progress"]["preview_quality_review"] == "completed"
     assert payload["capability_progress"]["final_export"] == "completed"

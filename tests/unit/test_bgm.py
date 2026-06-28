@@ -4,6 +4,7 @@ import subprocess
 
 import pytest
 
+import artist_portrait_editor.bgm as bgm_module
 from artist_portrait_editor.bgm import (
     BgmError,
     analyze_candidates,
@@ -11,7 +12,7 @@ from artist_portrait_editor.bgm import (
     import_candidate,
     review_bgm,
 )
-from artist_portrait_editor.models.bgm import BgmInputMode
+from artist_portrait_editor.models.bgm import BgmBeatEvent, BgmBeatGrid, BgmInputMode
 from artist_portrait_editor.models.source import (
     Assertion,
     MediaKind,
@@ -287,7 +288,11 @@ def test_bgm_analysis_records_energy_windows_and_candidate_binding(tmp_path):
     assert analysis.average_rms_dbfs < 0
     assert analysis.beat_analysis_status == "unavailable"
     assert analysis.bpm is None
+    assert analysis.beat_grid_ref is None
+    assert analysis.beat_count == 0
+    assert report.beat_engine_capabilities
     assert ledger_payload["candidates"][0]["analysis_ref"] == ".artist-portrait/data/bgm_analysis.json"
+    assert ledger_payload["candidates"][0]["beat_grid_ref"] is None
 
 
 def test_bgm_fit_uses_existing_analysis_without_fabricating_beats(tmp_path):
@@ -316,6 +321,157 @@ def test_bgm_fit_uses_existing_analysis_without_fabricating_beats(tmp_path):
     assert plan.analysis_fingerprint is not None
     assert plan.energy_alignment_status == "analysis_used"
     assert plan.beat_alignment_status == "unavailable"
+    assert plan.beat_evidence_status == "unavailable"
+
+
+def test_validated_beat_grid_is_bound_to_analysis_candidate_and_fit(tmp_path, monkeypatch):
+    make_audio(tmp_path / "media" / "beat.wav", duration=2)
+    _, candidate = import_candidate(
+        root=tmp_path,
+        project_id="project-test",
+        file_ref="media/beat.wav",
+        source_id=None,
+        extract_in=0,
+        extract_out=None,
+        stream_index=0,
+        rights_status=RightsStatus.owned,
+        user_intent="beat fit",
+    )
+
+    def fake_capabilities():
+        from artist_portrait_editor.models.bgm import BgmBeatEngineCapability
+
+        return [
+            BgmBeatEngineCapability(
+                engine="librosa",
+                package_available=True,
+                execution_supported=True,
+                status="available",
+            )
+        ]
+
+    def fake_run_beat_engine(**kwargs):
+        return BgmBeatGrid(
+            project_id="project-test",
+            music_candidate_id=candidate.music_candidate_id,
+            cache_ref=candidate.cache_ref,
+            cache_fingerprint=bgm_module.hash_file(kwargs["cache_path"]),
+            beat_engine="librosa",
+            bpm=120.0,
+            tempo_confidence=0.8,
+            beat_count=4,
+            beat_times=[
+                BgmBeatEvent(index=0, time=0.0, confidence=0.8),
+                BgmBeatEvent(index=1, time=0.5, confidence=0.8),
+                BgmBeatEvent(index=2, time=1.0, confidence=0.8),
+                BgmBeatEvent(index=3, time=1.5, confidence=0.8),
+            ],
+        )
+
+    monkeypatch.setattr(bgm_module, "detect_beat_engine_capabilities", fake_capabilities)
+    monkeypatch.setattr(bgm_module, "run_beat_engine_if_available", fake_run_beat_engine)
+
+    report = analyze_candidates(root=tmp_path, project_id="project-test", window_seconds=0.5)
+    analysis = report.candidates[0]
+    ledger_payload = json.loads(
+        (tmp_path / ".artist-portrait" / "data" / "bgm_candidates.json").read_text(
+            encoding="utf-8"
+        )
+    )
+
+    assert analysis.beat_analysis_status == "completed"
+    assert analysis.bpm == 120.0
+    assert analysis.beat_grid_ref
+    assert analysis.beat_grid_fingerprint
+    assert analysis.beat_count == 4
+    assert (tmp_path / analysis.beat_grid_ref).exists()
+    assert ledger_payload["candidates"][0]["bpm"] == 120.0
+    assert ledger_payload["candidates"][0]["beat_grid_ref"] == analysis.beat_grid_ref
+
+    write_timeline(tmp_path, duration=2.0)
+    plan, _timeline = build_fit_plan(
+        root=tmp_path,
+        project_id="project-test",
+        candidate_id=candidate.music_candidate_id,
+    )
+
+    assert plan.beat_alignment_status == "completed"
+    assert plan.beat_evidence_status == "bound"
+    assert plan.beat_grid_ref == analysis.beat_grid_ref
+    assert review_bgm(tmp_path, "project-test") == []
+
+    beat_grid_path = tmp_path / analysis.beat_grid_ref
+    payload = json.loads(beat_grid_path.read_text(encoding="utf-8"))
+    payload["bpm"] = 90
+    beat_grid_path.write_text(json.dumps(payload), encoding="utf-8")
+    assert "BGM fit beat grid fingerprint is stale" in review_bgm(tmp_path, "project-test")
+
+
+def test_bgm_fit_accepts_explicit_controls_without_moving_edit_points(tmp_path):
+    make_audio(tmp_path / "media" / "long.wav", duration=3.0)
+    _, candidate = import_candidate(
+        root=tmp_path,
+        project_id="project-test",
+        file_ref="media/long.wav",
+        source_id=None,
+        extract_in=0,
+        extract_out=None,
+        stream_index=0,
+        rights_status=RightsStatus.owned,
+        user_intent="controlled fit",
+    )
+    write_timeline(tmp_path, duration=2.0)
+
+    plan, timeline = build_fit_plan(
+        root=tmp_path,
+        project_id="project-test",
+        candidate_id=candidate.music_candidate_id,
+        requested_fit_mode="trim",
+        fade_in_seconds=0.25,
+        fade_out_seconds=0.75,
+        target_gain_db=-6.0,
+        ducking_gain_db=-12.0,
+        ducking_enabled=True,
+        beat_alignment_requested=True,
+    )
+
+    assert plan.fit_mode == "trim"
+    assert plan.controls.control_policy == "explicit_cli_v1"
+    assert plan.controls.requested_fit_mode == "trim"
+    assert plan.controls.fade_in_seconds == 0.25
+    assert plan.controls.fade_out_seconds == 0.75
+    assert plan.controls.target_gain_db == -6.0
+    assert plan.controls.ducking_gain_db == -12.0
+    assert plan.controls.beat_alignment_requested is True
+    assert plan.controls.edit_points_moved is False
+    assert plan.controls.automatic_music_selection is False
+    assert plan.ducking_intervals[0].gain_db == -12.0
+    assert "Beat alignment was requested but no validated beat grid is available" in plan.warnings
+    assert timeline.segments[0].timeline_start == 0
+
+
+def test_bgm_fit_rejects_impossible_single_pass_control(tmp_path):
+    make_audio(tmp_path / "media" / "short.wav", duration=1.0)
+    _, candidate = import_candidate(
+        root=tmp_path,
+        project_id="project-test",
+        file_ref="media/short.wav",
+        source_id=None,
+        extract_in=0,
+        extract_out=None,
+        stream_index=0,
+        rights_status=RightsStatus.owned,
+        user_intent="controlled fit",
+    )
+    write_timeline(tmp_path, duration=2.0)
+
+    with pytest.raises(BgmError, match="requires candidate duration"):
+        build_fit_plan(
+            root=tmp_path,
+            project_id="project-test",
+            candidate_id=candidate.music_candidate_id,
+            requested_fit_mode="single_pass",
+        )
 
 
 def test_video_bgm_analysis_keeps_contamination_warning(tmp_path):

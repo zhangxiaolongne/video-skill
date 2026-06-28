@@ -3,7 +3,6 @@ from __future__ import annotations
 import hashlib
 import json
 from pathlib import Path
-
 from artist_portrait_editor.capabilities import capability_warnings, detect_capabilities
 from artist_portrait_editor.config_loader import load_project_config
 from artist_portrait_editor.constants import CACHE_DIR, DATA_DIR, RUNS_DIR, WORKSPACE_DIR
@@ -15,7 +14,7 @@ from artist_portrait_editor.diagnostics import (
     workspace_issue,
 )
 from artist_portrait_editor.bgm import bgm_analysis_summary
-from artist_portrait_editor.bgm_recommendation import bgm_recommendation_doctor_issues, bgm_recommendation_summary
+from artist_portrait_editor.bgm_recommendation import bgm_recommendation_doctor_issues, bgm_recommendation_selection_summary, bgm_recommendation_summary
 from artist_portrait_editor.media.keyframes import (
     KeyframeExtractionError,
     extract_keyframe_image,
@@ -1333,6 +1332,7 @@ def status_summaries(root: Path) -> dict:
         "bgm_analysis": bgm_analysis_summary(root / ".artist-portrait/data/bgm_analysis.json"),
         "bgm_analysis_report": output_summary(root / "output" / "bgm_analysis_report.md"),
         "bgm_recommendations": bgm_recommendation_summary(root / ".artist-portrait/data/bgm_recommendations.json"),
+        "bgm_recommendation_selection": bgm_recommendation_selection_summary(root / ".artist-portrait/data/bgm_recommendation_selection.json"),
         "bgm_fit": bgm_fit_summary(bgm_fit_path),
         "preview": preview_manifest_summary(preview_manifest_path),
         "preview_validation": preview_validation_summary(preview_validation_path),

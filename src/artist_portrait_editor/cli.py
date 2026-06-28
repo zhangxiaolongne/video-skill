@@ -5,6 +5,7 @@ import json
 import sys
 from pathlib import Path
 
+from artist_portrait_editor.acceptance import build_project_acceptance_report
 from artist_portrait_editor.capabilities import detect_capabilities
 from artist_portrait_editor.bgm import (
     BgmError,
@@ -20,6 +21,8 @@ from artist_portrait_editor.bgm_recommendation import (
     BgmRecommendationError,
     import_bgm_recommendation_candidate,
     prepare_bgm_recommendation_handoff,
+    review_bgm_recommendation_fit,
+    select_bgm_recommendation_for_fit,
 )
 from artist_portrait_editor.exit_codes import ExitCode
 from artist_portrait_editor.final_export_workspace import (
@@ -87,6 +90,12 @@ def build_parser() -> argparse.ArgumentParser:
 
     schema_sub = subparsers.add_parser("generate-schema")
     schema_sub.add_argument("--output-dir", default="schemas")
+
+    acceptance_sub = subparsers.add_parser("acceptance")
+    acceptance_sub.add_argument("--project", required=True)
+    acceptance_sub.add_argument("--json", action="store_true")
+    acceptance_sub.add_argument("--quiet", action="store_true")
+    acceptance_sub.add_argument("--verbose", action="store_true")
 
     scan_sub = subparsers.add_parser("scan")
     scan_sub.add_argument("--project", required=True)
@@ -157,15 +166,24 @@ def build_parser() -> argparse.ArgumentParser:
     timeline_sub.add_argument("--verbose", action="store_true")
 
     bgm_sub = subparsers.add_parser("bgm")
-    bgm_sub.add_argument("action", choices=("import", "list", "analyze", "recommend", "fit", "review"))
+    bgm_sub.add_argument("action", choices=("import", "list", "analyze", "recommend", "select", "fit", "review"))
     bgm_sub.add_argument("--project", required=True)
     bgm_sub.add_argument("--file")
     bgm_sub.add_argument("--source-id")
     bgm_sub.add_argument("--candidate")
+    bgm_sub.add_argument("--recommendation-id")
+    bgm_sub.add_argument("--rank", type=int)
     bgm_sub.add_argument("--extract-in", type=float, default=0.0)
     bgm_sub.add_argument("--extract-out", type=float)
     bgm_sub.add_argument("--stream-index", type=int, default=0)
     bgm_sub.add_argument("--window-seconds", type=float, default=0.5)
+    bgm_sub.add_argument("--fit-mode", choices=("auto", "single_pass", "trim", "loop"), default="auto")
+    bgm_sub.add_argument("--fade-in-seconds", type=float)
+    bgm_sub.add_argument("--fade-out-seconds", type=float)
+    bgm_sub.add_argument("--target-gain-db", type=float)
+    bgm_sub.add_argument("--ducking-gain-db", type=float, default=-9.0)
+    bgm_sub.add_argument("--no-ducking", action="store_true")
+    bgm_sub.add_argument("--beat-align", action="store_true")
     bgm_sub.add_argument("--agent-output")
     bgm_sub.add_argument(
         "--rights-status",
@@ -284,6 +302,102 @@ def cmd_generate_schema(args: argparse.Namespace) -> int:
     write_schema_files(Path(args.output_dir))
     print(f"schemas written to {args.output_dir}")
     return int(ExitCode.success)
+
+
+def cmd_acceptance(args: argparse.Namespace) -> int:
+    if error := _validate_common_flags(args):
+        return int(error)
+    project_path = Path(args.project)
+    try:
+        config = load_project_config(project_path)
+    except ConfigLoadError as exc:
+        print(str(exc), file=sys.stderr)
+        return int(ExitCode.invalid_project_config)
+    root = project_root(project_path)
+    state = load_state(root)
+    json_path, md_path, report = build_project_acceptance_report(
+        root=root,
+        project_id=config.project.id,
+        state=state,
+    )
+    if state is not None:
+        run_id = new_run_id()
+        warnings = [
+            item.detail
+            for stage in report.stages
+            for item in stage.issues
+            if item.severity == "warning"
+        ]
+        errors = [
+            item.detail
+            for stage in report.stages
+            for item in stage.issues
+            if item.severity == "error"
+        ]
+        status = (
+            StepStatus.failed
+            if report.status == "failed"
+            else StepStatus.completed_with_warnings
+            if report.status == "warning"
+            else StepStatus.completed
+        )
+        state.steps["acceptance"] = StepLedgerEntry(
+            status=status,
+            output_refs=[
+                json_path.relative_to(root).as_posix(),
+                md_path.relative_to(root).as_posix(),
+            ],
+            last_run_id=run_id,
+            warnings=warnings,
+        )
+        state.latest_run_id = run_id
+        state.updated_at = utc_now()
+        state.overall_status = (
+            OverallStatus.blocked
+            if report.status == "failed"
+            else OverallStatus.degraded
+            if report.status == "warning"
+            else OverallStatus.ready
+        )
+        runs_dir = root / ".artist-portrait" / "runs" / run_id
+        runs_dir.mkdir(parents=True, exist_ok=True)
+        write_json(
+            runs_dir / "command.json",
+            {"command": "acceptance", "project": str(project_path)},
+        )
+        write_json(runs_dir / "environment.json", environment_snapshot())
+        write_json(
+            runs_dir / "step_result.json",
+            {
+                "step": "acceptance",
+                "status": status.value,
+                "output_refs": state.steps["acceptance"].output_refs,
+                "network_performed": False,
+                "model_call_performed": False,
+                "media_rendered": False,
+            },
+        )
+        write_json(runs_dir / "warnings.json", warnings)
+        write_json(runs_dir / "errors.json", errors)
+        save_state(root, state)
+        write_run_report(root / config.paths.output_dir, state, warnings)
+    payload = {
+        "output": json_path.relative_to(root).as_posix(),
+        "report": md_path.relative_to(root).as_posix(),
+        "status": report.status,
+        "core_ready": report.core_ready,
+        "preview_ready": report.preview_ready,
+        "final_export_ready": report.final_export_ready,
+        "acceptance": report.model_dump(mode="json"),
+    }
+    if args.json:
+        print(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True))
+    elif not args.quiet:
+        print(f"acceptance {report.status}")
+        print(f"wrote {payload['report']}")
+    if report.status == "failed":
+        return int(ExitCode.output_or_reference_validation_failed)
+    return int(ExitCode.success_with_warnings if report.status == "warning" else ExitCode.success)
 
 
 def cmd_scan(args: argparse.Namespace) -> int:
@@ -845,13 +959,13 @@ def cmd_bgm(args: argparse.Namespace) -> int:
                     last_run_id=existing_review.last_run_id,
                     warnings=[*existing_review.warnings, "BGM candidate ledger changed"],
                 )
-            for step_name in ("final_export", "review_final_export"):
-                existing_export = state.steps.get(step_name)
+            for dependent_step in ("final_export", "review_final_export"):
+                existing_export = state.steps.get(dependent_step)
                 if existing_export and existing_export.status in {
                     StepStatus.completed,
                     StepStatus.completed_with_warnings,
                 }:
-                    state.steps[step_name] = StepLedgerEntry(
+                    state.steps[dependent_step] = StepLedgerEntry(
                         status=StepStatus.invalidated,
                         input_fingerprint=existing_export.input_fingerprint,
                         output_refs=existing_export.output_refs,
@@ -979,6 +1093,13 @@ def cmd_bgm(args: argparse.Namespace) -> int:
                 root=root,
                 project_id=config.project.id,
                 candidate_id=args.candidate,
+                requested_fit_mode=args.fit_mode,
+                fade_in_seconds=args.fade_in_seconds,
+                fade_out_seconds=args.fade_out_seconds,
+                target_gain_db=args.target_gain_db,
+                ducking_gain_db=args.ducking_gain_db,
+                ducking_enabled=not args.no_ducking,
+                beat_alignment_requested=args.beat_align,
             )
             payload = {
                 "fit": plan.model_dump(mode="json"),
@@ -1015,18 +1136,91 @@ def cmd_bgm(args: argparse.Namespace) -> int:
                     last_run_id=existing_review.last_run_id,
                     warnings=[*existing_review.warnings, "BGM fit plan changed"],
                 )
-            for step_name in ("final_export", "review_final_export"):
-                existing_export = state.steps.get(step_name)
+            for dependent_step in ("final_export", "review_final_export"):
+                existing_export = state.steps.get(dependent_step)
                 if existing_export and existing_export.status in {
                     StepStatus.completed,
                     StepStatus.completed_with_warnings,
                 }:
-                    state.steps[step_name] = StepLedgerEntry(
+                    state.steps[dependent_step] = StepLedgerEntry(
                         status=StepStatus.invalidated,
                         input_fingerprint=existing_export.input_fingerprint,
                         output_refs=existing_export.output_refs,
                         last_run_id=existing_export.last_run_id,
                         warnings=[*existing_export.warnings, "BGM fit plan changed"],
+                    )
+        elif args.action == "select":
+            selection, _item = select_bgm_recommendation_for_fit(
+                root=root,
+                project_id=config.project.id,
+                recommendation_id=args.recommendation_id,
+                rank=args.rank,
+            )
+            plan, timeline = build_fit_plan(
+                root=root,
+                project_id=config.project.id,
+                candidate_id=selection.music_candidate_id,
+                requested_fit_mode=args.fit_mode,
+                fade_in_seconds=args.fade_in_seconds,
+                fade_out_seconds=args.fade_out_seconds,
+                target_gain_db=args.target_gain_db,
+                ducking_gain_db=args.ducking_gain_db,
+                ducking_enabled=not args.no_ducking,
+                beat_alignment_requested=args.beat_align,
+            )
+            payload = {
+                "selection": selection.model_dump(mode="json"),
+                "fit": plan.model_dump(mode="json"),
+                "timeline": "output/timeline_draft.json",
+                "output": ".artist-portrait/data/bgm_recommendation_selection.json",
+            }
+            step_name = "bgm_select"
+            output_refs = [
+                ".artist-portrait/data/bgm_recommendation_selection.json",
+                "output/bgm_recommendation_selection_review.md",
+                ".artist-portrait/data/bgm_fit.json",
+                "output/timeline_draft.json",
+            ]
+            warnings = plan.warnings
+            existing_preview = state.steps.get("preview")
+            if existing_preview and existing_preview.status in {
+                StepStatus.completed,
+                StepStatus.completed_with_warnings,
+            }:
+                state.steps["preview"] = StepLedgerEntry(
+                    status=StepStatus.invalidated,
+                    input_fingerprint=existing_preview.input_fingerprint,
+                    output_refs=existing_preview.output_refs,
+                    last_run_id=existing_preview.last_run_id,
+                    warnings=[*existing_preview.warnings, "BGM recommendation selection changed"],
+                )
+            existing_review = state.steps.get("review_preview")
+            if existing_review and existing_review.status in {
+                StepStatus.completed,
+                StepStatus.completed_with_warnings,
+            }:
+                state.steps["review_preview"] = StepLedgerEntry(
+                    status=StepStatus.invalidated,
+                    input_fingerprint=existing_review.input_fingerprint,
+                    output_refs=existing_review.output_refs,
+                    last_run_id=existing_review.last_run_id,
+                    warnings=[*existing_review.warnings, "BGM recommendation selection changed"],
+                )
+            for dependent_step in ("final_export", "review_final_export"):
+                existing_export = state.steps.get(dependent_step)
+                if existing_export and existing_export.status in {
+                    StepStatus.completed,
+                    StepStatus.completed_with_warnings,
+                }:
+                    state.steps[dependent_step] = StepLedgerEntry(
+                        status=StepStatus.invalidated,
+                        input_fingerprint=existing_export.input_fingerprint,
+                        output_refs=existing_export.output_refs,
+                        last_run_id=existing_export.last_run_id,
+                        warnings=[
+                            *existing_export.warnings,
+                            "BGM recommendation selection changed",
+                        ],
                     )
         else:
             ledger = load_ledger(
@@ -1034,10 +1228,24 @@ def cmd_bgm(args: argparse.Namespace) -> int:
                 config.project.id,
             )
             issues = review_bgm(root, config.project.id)
-            payload = {"issues": issues, "candidate_count": len(ledger.candidates)}
+            review_json, review_md, report = review_bgm_recommendation_fit(
+                root=root,
+                project_id=config.project.id,
+                bgm_issues=issues,
+            )
+            payload = {
+                "issues": [item.model_dump(mode="json") for item in report.issues],
+                "candidate_count": len(ledger.candidates),
+                "review": review_md.relative_to(root).as_posix(),
+                "output": review_json.relative_to(root).as_posix(),
+                "status": report.status,
+            }
             step_name = "review_bgm"
-            output_refs = []
-            warnings = issues
+            output_refs = [
+                review_json.relative_to(root).as_posix(),
+                review_md.relative_to(root).as_posix(),
+            ]
+            warnings = [item.detail for item in report.issues]
     except (BgmError, BgmRecommendationError, ValueError) as exc:
         print(str(exc), file=sys.stderr)
         return int(ExitCode.output_or_reference_validation_failed)
@@ -1198,6 +1406,7 @@ def main(argv: list[str] | None = None) -> int:
         "status": cmd_status,
         "doctor": cmd_doctor,
         "generate-schema": cmd_generate_schema,
+        "acceptance": cmd_acceptance,
         "scan": cmd_scan,
         "segment": cmd_segment,
         "transcribe": cmd_transcribe,

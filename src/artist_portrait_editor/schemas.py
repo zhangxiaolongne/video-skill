@@ -3,11 +3,19 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+from artist_portrait_editor.models.acceptance import ProjectAcceptanceReport
 from artist_portrait_editor.models.analysis import AnalysisRecord
-from artist_portrait_editor.models.bgm import BgmAnalysisReport, BgmCandidateLedger, BgmFitPlan
+from artist_portrait_editor.models.bgm import (
+    BgmAnalysisReport,
+    BgmBeatGrid,
+    BgmCandidateLedger,
+    BgmFitPlan,
+)
 from artist_portrait_editor.models.bgm_recommendation import (
     BgmRecommendationContext,
+    BgmRecommendationFitReview,
     BgmRecommendationRequest,
+    BgmRecommendationSelection,
     BgmRecommendationSet,
     BgmRecommendationValidationReport,
 )
@@ -52,11 +60,15 @@ def write_schema_files(output_dir: Path) -> None:
     output_dir.mkdir(parents=True, exist_ok=True)
     schemas = {
         "analysis_record.schema.json": AnalysisRecord.model_json_schema(),
+        "project_acceptance_report.schema.json": ProjectAcceptanceReport.model_json_schema(),
         "bgm_analysis_report.schema.json": BgmAnalysisReport.model_json_schema(),
+        "bgm_beat_grid.schema.json": BgmBeatGrid.model_json_schema(),
         "bgm_candidate_ledger.schema.json": BgmCandidateLedger.model_json_schema(),
         "bgm_fit_plan.schema.json": BgmFitPlan.model_json_schema(),
         "bgm_recommendation_context.schema.json": BgmRecommendationContext.model_json_schema(),
+        "bgm_recommendation_fit_review.schema.json": BgmRecommendationFitReview.model_json_schema(),
         "bgm_recommendation_request.schema.json": BgmRecommendationRequest.model_json_schema(),
+        "bgm_recommendation_selection.schema.json": BgmRecommendationSelection.model_json_schema(),
         "bgm_recommendation_set.schema.json": BgmRecommendationSet.model_json_schema(),
         "bgm_recommendation_validation_report.schema.json": (
             BgmRecommendationValidationReport.model_json_schema()

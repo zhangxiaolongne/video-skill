@@ -1,5 +1,48 @@
 {
   "$defs": {
+    "BgmBeatEngineCapability": {
+      "additionalProperties": false,
+      "properties": {
+        "engine": {
+          "minLength": 1,
+          "title": "Engine",
+          "type": "string"
+        },
+        "execution_supported": {
+          "title": "Execution Supported",
+          "type": "boolean"
+        },
+        "package_available": {
+          "title": "Package Available",
+          "type": "boolean"
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Reason"
+        },
+        "status": {
+          "pattern": "^(available|unavailable|unsupported)$",
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "engine",
+        "package_available",
+        "execution_supported",
+        "status"
+      ],
+      "title": "BgmBeatEngineCapability",
+      "type": "object"
+    },
     "BgmCandidateAnalysis": {
       "additionalProperties": false,
       "properties": {
@@ -29,10 +72,41 @@
           "title": "Beat Analysis Status",
           "type": "string"
         },
+        "beat_count": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Beat Count",
+          "type": "integer"
+        },
         "beat_engine": {
           "minLength": 1,
           "title": "Beat Engine",
           "type": "string"
+        },
+        "beat_grid_fingerprint": {
+          "anyOf": [
+            {
+              "pattern": "^sha256:[0-9a-f]{64}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Beat Grid Fingerprint"
+        },
+        "beat_grid_ref": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Beat Grid Ref"
         },
         "bpm": {
           "anyOf": [
@@ -110,6 +184,20 @@
         "recommended_loop_safe": {
           "title": "Recommended Loop Safe",
           "type": "boolean"
+        },
+        "tempo_confidence": {
+          "anyOf": [
+            {
+              "maximum": 1,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Tempo Confidence"
         },
         "warnings": {
           "items": {
@@ -204,6 +292,13 @@
       "default": false,
       "title": "Automatic Music Selection",
       "type": "boolean"
+    },
+    "beat_engine_capabilities": {
+      "items": {
+        "$ref": "#/$defs/BgmBeatEngineCapability"
+      },
+      "title": "Beat Engine Capabilities",
+      "type": "array"
     },
     "candidates": {
       "items": {

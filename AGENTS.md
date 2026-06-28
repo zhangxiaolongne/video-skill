@@ -3,7 +3,7 @@
 Follow `artist_portrait_editor_revision5_optimized.md` as the governing V0
 engineering-freeze document.
 
-Current gate: V0-018 BGM recommendation review gate.
+Current gate: V0-024 project acceptance gate.
 
 V0-011 uses the active Codex/ChatGPT host Agent as the creative model. Do not
 add paid APIs, API keys, remote provider dependencies, or hidden network calls.
@@ -66,6 +66,50 @@ valid recommendation review artifacts. It must not automatically select or fit
 music, invent candidate IDs, call models from the CLI, access the network, use
 image generation/editing, depend on paid APIs/API keys/remote providers, or
 perform hidden Python-side model calls.
+
+V0-020 may detect mature local beat-engine packages, execute only validated
+local beat-engine adapters, write canonical BGM beat-grid evidence, bind BPM and
+beat-grid fingerprints into BGM analysis and fit plans, and surface beat
+capability in status/doctor/review. If no validated local engine is installed,
+BPM and beat grid must remain null/unavailable. It must not fabricate BPM or
+beats from PCM energy windows, install packages, download models, call models,
+access the network, use image generation/editing, automatically select music,
+perform automatic beat-synced editing, or automatically move edit points to
+beats.
+
+V0-021 may turn an already imported and validated BGM recommendation into a BGM
+fit plan only after explicit user selection by recommendation ID or rank. It
+may write canonical selection review artifacts, validate current recommendation
+and context freshness, trigger deterministic BGM fitting for the selected
+candidate, and invalidate downstream preview/final-export artifacts. It must
+not automatically select the top-ranked recommendation, fit music without an
+explicit user target, call models, access the network, use image
+generation/editing, or change edit timing automatically.
+
+V0-022 may review an explicit BGM recommendation selection against the current
+BGM fit plan, timeline, recommendation context, analysis/beat evidence,
+preview, and final-export readiness. It may write canonical recommendation-fit
+review artifacts and surface stale/missing downstream media state. It must not
+automatically select music, automatically fit music without an explicit target,
+move edit points to beats, render media, call models, access the network, use
+image generation/editing, or depend on paid APIs/API keys/remote providers.
+
+V0-023 may apply explicit user BGM fit controls for fit mode, fades, target
+gain, ducking gain/disablement, and beat-alignment request state when building
+the current BGM fit plan from either `bgm fit` or `bgm select`. It may record
+controls in canonical fit/review artifacts and invalidate downstream media. It
+must not automatically select music, automatically choose top-ranked
+recommendations, move timeline edit points, fabricate BPM/beat grids, render
+media from fit controls, call models, access the network, use image
+generation/editing, or depend on paid APIs/API keys/remote providers.
+
+V0-024 may generate a deterministic project acceptance report from existing
+workspace artifacts and state. It may evaluate core readiness, delivery
+readiness, BGM readiness, preview readiness, final-export readiness, and
+forbidden-capability flags, then write canonical acceptance JSON/Markdown and
+run audit artifacts. It must not generate proposals, select music, change the
+timeline, fit music, render media, call models, access the network, use image
+generation/editing, or depend on paid APIs/API keys/remote providers.
 
 Future BGM work must support direct audio uploads, audio extracted from uploaded
 video, embedded source audio, multiple candidates, and no-file-yet planning.
@@ -297,11 +341,13 @@ Allowed:
 - final export status, doctor diagnostics, review, run audit, and invalidation
 - `bgm analyze`
 - canonical `.artist-portrait/data/bgm_analysis.json`
+- canonical `.artist-portrait/data/bgm_beat_grids/<music_candidate_id>.json`
 - deterministic `output/bgm_analysis_report.md`
 - local BGM candidate RMS/peak energy windows
 - quiet head/tail and high-energy range detection
-- beat-engine capability detection without BPM fabrication
-- BGM fit analysis evidence binding
+- beat-engine capability detection and validated local beat-engine adapter
+  execution when available
+- BGM fit analysis and beat-grid evidence binding
 - BGM analysis status, doctor diagnostics, schema, run audit, and invalidation
 - `bgm recommend`
 - canonical `.artist-portrait/data/bgm_recommendation_context.json`
@@ -310,7 +356,20 @@ Allowed:
 - explicit BGM recommendation candidate quarantine and validation
 - canonical `.artist-portrait/data/bgm_recommendations.json`
 - deterministic `output/bgm_recommendation_review.md`
+- `bgm select --recommendation-id <id>` or `bgm select --rank <n>`
+- canonical `.artist-portrait/data/bgm_recommendation_selection.json`
+- deterministic `output/bgm_recommendation_selection_review.md`
 - `review --scope project`
+- canonical `.artist-portrait/data/bgm_fit_review.json`
+- deterministic `output/bgm_fit_review.md`
+- `bgm review` recommendation-fit audit
+- explicit `bgm fit` and `bgm select` controls for fit mode, fades, target
+  gain, ducking, and beat-alignment request state
+- canonical `BgmFitControls` embedded in `.artist-portrait/data/bgm_fit.json`
+- `acceptance`
+- canonical `.artist-portrait/data/acceptance_report.json`
+- deterministic `output/acceptance_report.md`
+- `ProjectAcceptanceReport` schema
 - `review --scope preview`
 - `review --scope all` as project review plus implemented timeline/preview review when available
 - repository skeleton
@@ -331,7 +390,9 @@ Forbidden before the next gate explicitly opens:
 - visual classification beyond explicit evidence placeholders
 - fake, template, or model-free creative proposals
 - automatic music recommendation or candidate selection
-- fabricated BPM or beat-grid analysis
+- automatic selection of top-ranked recommendations
+- fabricated BPM or beat-grid analysis; completed BPM/beat grids require
+  validated local beat-engine adapter output
 - network search
 - image generation or image editing
 - paid API calls, API keys, remote provider calls, or hidden Python-side model calls

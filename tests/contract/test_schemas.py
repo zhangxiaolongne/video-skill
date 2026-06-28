@@ -1,11 +1,19 @@
 import json
 from pathlib import Path
 
+from artist_portrait_editor.models.acceptance import ProjectAcceptanceReport
 from artist_portrait_editor.models.analysis import AnalysisRecord
-from artist_portrait_editor.models.bgm import BgmAnalysisReport, BgmCandidateLedger, BgmFitPlan
+from artist_portrait_editor.models.bgm import (
+    BgmAnalysisReport,
+    BgmBeatGrid,
+    BgmCandidateLedger,
+    BgmFitPlan,
+)
 from artist_portrait_editor.models.bgm_recommendation import (
     BgmRecommendationContext,
+    BgmRecommendationFitReview,
     BgmRecommendationRequest,
+    BgmRecommendationSelection,
     BgmRecommendationSet,
     BgmRecommendationValidationReport,
 )
@@ -41,9 +49,13 @@ from artist_portrait_editor.models.timeline import TimelineDraft, TimelineValida
 
 def test_schema_generation_from_pydantic_models():
     analysis_schema = AnalysisRecord.model_json_schema()
+    acceptance_schema = ProjectAcceptanceReport.model_json_schema()
     bgm_analysis_schema = BgmAnalysisReport.model_json_schema()
+    bgm_beat_grid_schema = BgmBeatGrid.model_json_schema()
     bgm_recommendation_context_schema = BgmRecommendationContext.model_json_schema()
+    bgm_recommendation_fit_review_schema = BgmRecommendationFitReview.model_json_schema()
     bgm_recommendation_request_schema = BgmRecommendationRequest.model_json_schema()
+    bgm_recommendation_selection_schema = BgmRecommendationSelection.model_json_schema()
     bgm_recommendation_set_schema = BgmRecommendationSet.model_json_schema()
     bgm_recommendation_validation_schema = BgmRecommendationValidationReport.model_json_schema()
     bgm_ledger_schema = BgmCandidateLedger.model_json_schema()
@@ -79,9 +91,13 @@ def test_schema_generation_from_pydantic_models():
     timeline_validation_schema = TimelineValidationReport.model_json_schema()
 
     assert analysis_schema["title"] == "AnalysisRecord"
+    assert acceptance_schema["title"] == "ProjectAcceptanceReport"
     assert bgm_analysis_schema["title"] == "BgmAnalysisReport"
+    assert bgm_beat_grid_schema["title"] == "BgmBeatGrid"
     assert bgm_recommendation_context_schema["title"] == "BgmRecommendationContext"
+    assert bgm_recommendation_fit_review_schema["title"] == "BgmRecommendationFitReview"
     assert bgm_recommendation_request_schema["title"] == "BgmRecommendationRequest"
+    assert bgm_recommendation_selection_schema["title"] == "BgmRecommendationSelection"
     assert bgm_recommendation_set_schema["title"] == "BgmRecommendationSet"
     assert bgm_recommendation_validation_schema["title"] == "BgmRecommendationValidationReport"
     assert bgm_ledger_schema["title"] == "BgmCandidateLedger"
@@ -152,14 +168,26 @@ def test_committed_schemas_match_pydantic_generation():
     committed_analysis = json.loads(
         (schema_dir / "analysis_record.schema.json").read_text(encoding="utf-8")
     )
+    committed_acceptance = json.loads(
+        (schema_dir / "project_acceptance_report.schema.json").read_text(encoding="utf-8")
+    )
     committed_bgm_analysis = json.loads(
         (schema_dir / "bgm_analysis_report.schema.json").read_text(encoding="utf-8")
+    )
+    committed_bgm_beat_grid = json.loads(
+        (schema_dir / "bgm_beat_grid.schema.json").read_text(encoding="utf-8")
     )
     committed_bgm_recommendation_context = json.loads(
         (schema_dir / "bgm_recommendation_context.schema.json").read_text(encoding="utf-8")
     )
+    committed_bgm_recommendation_fit_review = json.loads(
+        (schema_dir / "bgm_recommendation_fit_review.schema.json").read_text(encoding="utf-8")
+    )
     committed_bgm_recommendation_request = json.loads(
         (schema_dir / "bgm_recommendation_request.schema.json").read_text(encoding="utf-8")
+    )
+    committed_bgm_recommendation_selection = json.loads(
+        (schema_dir / "bgm_recommendation_selection.schema.json").read_text(encoding="utf-8")
     )
     committed_bgm_recommendation_set = json.loads(
         (schema_dir / "bgm_recommendation_set.schema.json").read_text(encoding="utf-8")
@@ -296,14 +324,26 @@ def test_committed_schemas_match_pydantic_generation():
     assert committed_analysis == json.loads(
         json.dumps(AnalysisRecord.model_json_schema(), sort_keys=True)
     )
+    assert committed_acceptance == json.loads(
+        json.dumps(ProjectAcceptanceReport.model_json_schema(), sort_keys=True)
+    )
     assert committed_bgm_analysis == json.loads(
         json.dumps(BgmAnalysisReport.model_json_schema(), sort_keys=True)
+    )
+    assert committed_bgm_beat_grid == json.loads(
+        json.dumps(BgmBeatGrid.model_json_schema(), sort_keys=True)
     )
     assert committed_bgm_recommendation_context == json.loads(
         json.dumps(BgmRecommendationContext.model_json_schema(), sort_keys=True)
     )
+    assert committed_bgm_recommendation_fit_review == json.loads(
+        json.dumps(BgmRecommendationFitReview.model_json_schema(), sort_keys=True)
+    )
     assert committed_bgm_recommendation_request == json.loads(
         json.dumps(BgmRecommendationRequest.model_json_schema(), sort_keys=True)
+    )
+    assert committed_bgm_recommendation_selection == json.loads(
+        json.dumps(BgmRecommendationSelection.model_json_schema(), sort_keys=True)
     )
     assert committed_bgm_recommendation_set == json.loads(
         json.dumps(BgmRecommendationSet.model_json_schema(), sort_keys=True)

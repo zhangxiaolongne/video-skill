@@ -101,4 +101,5 @@ def initial_steps() -> dict[str, StepLedgerEntry]:
         "review_project": StepLedgerEntry(),
         "review_proposal": StepLedgerEntry(),
         "review_timeline": StepLedgerEntry(),
+        "acceptance": StepLedgerEntry(),
     }

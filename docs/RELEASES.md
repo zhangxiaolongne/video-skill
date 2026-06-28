@@ -7,37 +7,122 @@ gate-progress, or closeout fragments.
 
 ## Current Release State
 
-- Capability gate: `V0-018`
-- Active release batch: `V0-019 release publication closeout for V0-018 capability release`
+- Capability gate: `V0-024`
+- Active local batch: `V0-024 project acceptance gate`
 - Latest committed local baseline:
   `19fc5abe33c22c52073f16d83a60ec05ad87ab56`
 - Baseline commit date: `2026-06-23`
 - Baseline commit subject: `Add V0-010m execution readiness plan`
-- Completed after baseline: V0-010n through V0-010t, V0-010 foundation
+- Completed in release `v0.24.0`: V0-010n through V0-010t, V0-010 foundation
   consolidation, proposal review hardening, `DEV-GOV-001`, V0-011, V0-012,
-  V0-013, V0-014, V0-015, V0-016, V0-017, and V0-018
-- Working-tree publication state: V0-019 completed for local release candidate;
-  final Git commit, push, and remote hashes are verified during publication
-- Planned capability release tag: `v0.18.0`
-- Remote freshness: verify `main` and `v0.18.0` with `git ls-remote` after push
-- Publication policy: publish only after full validation passes
+  V0-013, V0-014, V0-015, V0-016, V0-017, V0-018, V0-020, V0-021, V0-022,
+  V0-023, and V0-024
+- Working-tree publication state: release closeout prepared for commit, tag,
+  and push as `v0.24.0`
+- Latest published capability release tag: `v0.24.0`
+- Remote freshness: verify `main` and peeled `v0.24.0` after push during
+  release closeout
+- Publication policy: publish V0-024 as the next large functional checkpoint
 
 ## Current Validation
 
 Validation is updated only after the complete current working tree passes.
 
-- Verified: `2026-06-27`
-- Full pytest: `260 passed`
+- Verified: `2026-06-28`
+- Full pytest: `271 passed`
 - Project checks: `.venv/bin/python run_checks.py --skip-pytest` passed
 - Skill validation: passed
 - Schema drift: passed
 - Media workflow: deterministic local workflow, real FFmpeg BGM analysis,
-  BGM recommendation handoff/import, preview/QC flow, and final export flow
-  passed; proposal generation remained correctly blocked without paid API or
-  network access
+  BGM recommendation handoff/import, beat-engine evidence plumbing,
+  recommendation-to-fit selection, recommendation-fit review, BGM fit controls,
+  project acceptance reporting, preview/QC flow, and final export flow
+  passed; proposal generation remained correctly blocked without paid API,
+  API key, remote provider, or hidden network dependency
 - Git diff check: passed
 
 ## Major Version History
+
+### V0-024 Project Acceptance Gate
+
+- Status: completed locally on `2026-06-28`
+- Capability: `artist-portrait acceptance` writes canonical
+  `.artist-portrait/data/acceptance_report.json` and
+  `output/acceptance_report.md`, evaluates core readiness, BGM readiness,
+  preview readiness, final-export readiness, forbidden-capability flags,
+  next actions, state ledger, and run audit
+- Boundary: no automatic repair, no proposal generation, no music selection, no
+  BGM fitting, no timeline mutation, no media rendering, no model calls, no
+  network access, no paid APIs, no remote providers, no fabricated beat grids,
+  and no image generation/editing
+- Validation: `271 passed`; targeted V0-024/gate/schema tests passed with
+  `41 passed`; project checks, Skill validation, schema drift, and diff hygiene
+  passed
+- Git: included in release `v0.24.0`
+
+### V0-023 BGM Fit Controls Gate
+
+- Status: completed locally on `2026-06-28`
+- Capability: explicit `bgm fit` and `bgm select` controls for fit mode,
+  fade-in/out, target gain, ducking gain/disablement, and beat-alignment
+  request state; canonical `BgmFitControls` embedded in `bgm_fit.json`;
+  control-bound fit IDs; recommendation-fit review surfacing of control policy
+  and request state
+- Boundary: no automatic music selection, no automatic top-ranked selection, no
+  fitting without explicit target, no fabricated BPM/beat grids, no automatic
+  edit-point movement, no media rendering from controls, no model calls, no
+  network access, no paid APIs, no remote providers, and no image
+  generation/editing
+- Validation: `269 passed`; targeted V0-023 tests passed with `61 passed`;
+  project checks, Skill validation, schema drift, and diff hygiene passed
+- Git: included in release `v0.24.0`
+
+### V0-022 Recommendation-Fit Review Gate
+
+- Status: completed locally on `2026-06-28`
+- Capability: `artist-portrait bgm review` writes canonical
+  `.artist-portrait/data/bgm_fit_review.json` and `output/bgm_fit_review.md`,
+  validates explicit selection freshness, recommendation identity, current BGM
+  fit binding, timeline binding, analysis/beat evidence freshness, and
+  preview/final-export readiness against the current fit fingerprint
+- Boundary: no automatic music selection, no automatic top-ranked selection, no
+  automatic fitting without explicit target, no review-driven media rendering,
+  no model calls, no network access, no paid APIs, no remote providers, no
+  image generation/editing, and no automatic beat-synced edit timing
+- Validation: `267 passed`; targeted V0-022 tests passed with `49 passed`;
+  project checks, Skill validation, schema drift, and diff hygiene passed
+- Git: included in release `v0.24.0`
+
+### V0-021 Recommendation-To-Fit Selection Gate
+
+- Status: completed locally on `2026-06-28`
+- Capability: explicit `bgm select --recommendation-id <id>` or `--rank <n>`,
+  canonical BGM recommendation selection artifact, deterministic selection
+  review, current recommendation/context validation, BGM fit generation for the
+  selected candidate, status/doctor surfacing, schema, tests, and downstream
+  preview/final-export invalidation
+- Boundary: no automatic top-ranked selection, no fitting without explicit
+  target, no invented candidates, no model calls, no network access, no paid
+  APIs, no remote providers, no image generation/editing, and no automatic
+  beat-synced edit timing
+- Validation: `264 passed`; targeted V0-021 tests passed; project checks,
+  Skill validation, schema drift, and diff hygiene passed
+- Git: included in release `v0.24.0`
+
+### V0-020 Beat-Engine Adapter And Evidence Gate
+
+- Status: completed locally on `2026-06-28`
+- Capability: validated local beat-engine adapter contract, canonical
+  `BgmBeatGrid`, beat-engine capability discovery, BGM analysis/ledger BPM and
+  beat-grid binding, fit-plan beat evidence binding, and unavailable semantics
+  when no validated engine runs
+- Boundary: no package installation, model download, network access, paid APIs,
+  API keys, remote providers, hidden model calls, image generation/editing,
+  automatic music selection, automatic beat-synced editing, source separation,
+  or fabricated BPM/beat grids from energy windows
+- Validation: `261 passed`; V0-020 targeted tests passed; project checks and
+  Skill validation passed
+- Git: local only; not committed, pushed, or tagged
 
 ### V0-019 Release Publication Closeout
 
@@ -65,7 +150,7 @@ Validation is updated only after the complete current working tree passes.
   grids, source separation, CLI-side model calls, image generation/editing,
   paid APIs, API keys, remote providers, and network access remain closed
 - Validation: `260 passed`; project checks and Skill validation passed
-- Git: not committed, pushed, or tagged
+- Git: included in release `v0.24.0`
 
 ### V0-017 Local BGM Technical Intelligence
 

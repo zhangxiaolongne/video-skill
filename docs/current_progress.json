@@ -1,7 +1,7 @@
 {
   "schema_version": "1.4",
-  "capability_gate": "V0-018",
-  "milestone": "V0-019 release publication closeout for V0-018 capability release",
+  "capability_gate": "V0-024",
+  "milestone": "V0-024 project acceptance gate",
   "documentation_system": {
     "master": "artist_portrait_editor_revision5_optimized.md",
     "current_progress": "docs/DEVELOPMENT_PROGRESS.md",
@@ -13,12 +13,12 @@
     "historical_readiness_policy": "consolidated_in_release_ledger"
   },
   "active_batch": {
-    "id": "V0-019",
-    "name": "release publication closeout for V0-018 capability release",
+    "id": "V0-024",
+    "name": "project acceptance gate",
     "status": "completed",
-    "started": "2026-06-27",
-    "capability_gate": "V0-018",
-    "commit_policy": "publish_after_final_validation"
+    "started": "2026-06-28",
+    "capability_gate": "V0-024",
+    "commit_policy": "local_until_large_functional_checkpoint"
   },
   "capability_progress": {
     "media_foundation": "completed",
@@ -32,7 +32,12 @@
     "bgm_ingestion_and_fitting": "completed",
     "bgm_technical_analysis": "completed",
     "final_export": "completed",
-    "bgm_recommendation_review": "completed"
+    "bgm_recommendation_review": "completed",
+    "bgm_beat_engine_evidence": "completed",
+    "bgm_recommendation_to_fit_selection": "completed",
+    "bgm_recommendation_fit_review": "completed",
+    "bgm_fit_controls": "completed",
+    "project_acceptance": "completed"
   },
   "future_bgm_input_contract": {
     "status": "required_for_future_gate",
@@ -100,53 +105,53 @@
   },
   "tasks": [
     {
-      "id": "V019-01",
-      "name": "accumulated V0-011 through V0-018 working-tree scope audit",
+      "id": "V024-01",
+      "name": "project acceptance gate promotion",
       "status": "completed"
     },
     {
-      "id": "V019-02",
-      "name": "capability gate and release batch separation",
+      "id": "V024-02",
+      "name": "canonical acceptance report contract",
       "status": "completed"
     },
     {
-      "id": "V019-03",
-      "name": "publication blocker issue closeout",
+      "id": "V024-03",
+      "name": "core readiness evaluation",
       "status": "completed"
     },
     {
-      "id": "V019-04",
-      "name": "canonical documentation governance validation",
+      "id": "V024-04",
+      "name": "BGM readiness evaluation",
       "status": "completed"
     },
     {
-      "id": "V019-05",
-      "name": "schema package skill and architecture release validation",
+      "id": "V024-05",
+      "name": "preview readiness evaluation",
       "status": "completed"
     },
     {
-      "id": "V019-06",
-      "name": "full Python suite release validation",
+      "id": "V024-06",
+      "name": "final-export readiness evaluation",
       "status": "completed"
     },
     {
-      "id": "V019-07",
-      "name": "diff hygiene release validation",
+      "id": "V024-07",
+      "name": "forbidden-capability flag audit",
       "status": "completed"
     },
     {
-      "id": "V019-08",
-      "name": "atomic release commit creation",
+      "id": "V024-08",
+      "name": "acceptance CLI state and run-audit integration",
       "status": "completed"
     },
     {
-      "id": "V019-09",
-      "name": "capability release tag creation and push",
+      "id": "V024-09",
+      "name": "acceptance schema and regression coverage",
       "status": "completed"
     },
     {
-      "id": "V019-10",
-      "name": "remote branch and tag verification",
+      "id": "V024-10",
+      "name": "V0-024 governance and hard-check alignment",
       "status": "completed"
     }
   ],
@@ -165,6 +170,12 @@
     "preview_rendering": true,
     "final_export": true,
     "image_generation_or_editing": false,
-    "bgm_recommendation_review": true
+    "bgm_recommendation_review": true,
+    "bgm_beat_engine_evidence": true,
+    "bgm_recommendation_to_fit_selection": true,
+    "bgm_recommendation_fit_review": true,
+    "bgm_fit_controls": true,
+    "project_acceptance": true,
+    "automatic_beat_synced_editing": false
   }
 }

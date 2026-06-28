@@ -245,6 +245,106 @@ candidate IDs, fabricated BPM or beat-grid claims, source separation, CLI-side
 model calls, image generation/editing, network access, paid APIs, API keys,
 remote providers, or hidden Python-side model calls.
 
+Current V0-020 implementation scope additionally allows:
+
+- validated local beat-engine adapter capability discovery
+- canonical `.artist-portrait/data/bgm_beat_grids/<music_candidate_id>.json`
+- `BgmBeatGrid` schema with BPM, beat events, confidence, cache fingerprint,
+  and no model/network/fabrication flags
+- BGM analysis binding from successful adapter output into candidate ledgers
+  and analysis reports
+- BGM fit binding to beat-grid reference and fingerprint without automatic
+  edit-point movement
+- status/report surfacing for beat-engine capability, completed beat counts,
+  and unavailable reasons
+- stale beat-grid review diagnostics
+
+V0-020 does not allow package installation, model download, network access,
+paid APIs, API keys, remote providers, hidden model calls, image
+generation/editing, source separation, automatic music selection, automatic
+beat-synced editing, or fabricated BPM/beat grids from PCM energy windows.
+
+Current V0-021 implementation scope additionally allows:
+
+- `bgm select --recommendation-id <id>`
+- `bgm select --rank <n>`
+- canonical `.artist-portrait/data/bgm_recommendation_selection.json`
+- deterministic `output/bgm_recommendation_selection_review.md`
+- current recommendation/context freshness validation before selection
+- explicit user selection binding from recommendation to BGM candidate
+- deterministic `bgm_fit.json` generation for the selected recommendation
+- downstream preview/final-export invalidation after selection changes
+- selection status, doctor diagnostics, schema, run audit, and review surfacing
+
+V0-021 does not allow automatic top-ranked selection, automatic fitting without
+an explicit recommendation target, invented candidates, model calls, network
+access, paid APIs, API keys, remote providers, hidden model calls, image
+generation/editing, source separation, automatic beat-synced editing, or
+automatic edit-point movement.
+
+Current V0-022 implementation scope additionally allows:
+
+- canonical `.artist-portrait/data/bgm_fit_review.json`
+- deterministic `output/bgm_fit_review.md`
+- `BgmRecommendationFitReview` schema
+- `bgm review` recommendation-fit audit after explicit recommendation
+  selection
+- selection/recommendation/context freshness checks
+- selected candidate versus current BGM fit validation
+- BGM fit versus current timeline validation
+- BGM analysis and beat-grid evidence fingerprint checks
+- preview and final-export readiness/staleness checks against the current BGM
+  fit fingerprint
+- run audit, schema, and regression coverage for recommendation-fit review
+
+V0-022 does not allow automatic music selection, automatic fitting without an
+explicit target, automatic top-ranked selection, automatic beat-synced editing,
+automatic edit-point movement, media rendering from review, model calls,
+network access, paid APIs, API keys, remote providers, hidden model calls,
+image generation/editing, source separation, or fabricated BPM/beat grids.
+
+Current V0-023 implementation scope additionally allows:
+
+- explicit `bgm fit` controls: `--fit-mode`, `--fade-in-seconds`,
+  `--fade-out-seconds`, `--target-gain-db`, `--ducking-gain-db`,
+  `--no-ducking`, and `--beat-align`
+- the same explicit controls on `bgm select` after recommendation selection
+- `BgmFitControls` embedded in canonical `.artist-portrait/data/bgm_fit.json`
+- fit ID binding to current timeline, selected candidate, and fit controls
+- deterministic validation of impossible fit-mode choices
+- explicit ducking disablement and ducking gain control
+- explicit fade and target gain control
+- beat-alignment request recording without fabricated BPM or edit-point changes
+- recommendation-fit review surfacing of fit control policy and request state
+- downstream preview/final-export invalidation when controls change the fit plan
+
+V0-023 does not allow automatic music selection, automatic top-ranked
+selection, fitting without an explicit candidate or recommendation target,
+automatic beat-synced editing, automatic edit-point movement, fabricated BPM or
+beat grids, media rendering from controls, model calls, network access, paid
+APIs, API keys, remote providers, hidden model calls, image generation/editing,
+or source separation.
+
+Current V0-024 implementation scope additionally allows:
+
+- `acceptance`
+- canonical `.artist-portrait/data/acceptance_report.json`
+- deterministic `output/acceptance_report.md`
+- `ProjectAcceptanceReport` schema
+- core readiness evaluation for init, source scan, segmentation, analysis,
+  proposal validation, and timeline validation
+- delivery readiness evaluation for BGM fit/review, preview validation, and
+  final-export validation
+- forbidden-capability audit of existing canonical artifacts
+- acceptance run audit and state ledger entry
+- deterministic failed/warning/passed status and next-action guidance
+
+V0-024 does not allow automatic pipeline repair, proposal generation, music
+selection, BGM fitting, timeline mutation, preview/final media rendering, model
+calls, network access, paid APIs, API keys, remote providers, hidden model
+calls, image generation/editing, source separation, or fabricated BPM/beat
+grids.
+
 - `scan`
 - deterministic `sources.jsonl`
 - deterministic `scan_report.md`

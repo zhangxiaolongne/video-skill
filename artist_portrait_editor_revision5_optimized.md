@@ -5,7 +5,7 @@
 > **工作名称**：`artist-portrait-editor`  
 > **中文名称**：人物向剪辑导演 / 艺人肖像剪辑 Skill  
 > **适用范围**：产品愿景、V0 产品规格、V0 工程规格  
-> **当前开发闸门**：V0-018 BGM recommendation review gate。用户可生成 BGM recommendation handoff，使用宿主 Agent、本地模型或第三方工具产出显式 JSON candidate，并由 CLI quarantine、validate、review、promote。不得自动选曲、自动 fit、伪造 BPM/beat grid、接入付费 API、API key、远程 provider、隐藏模型调用、image generation/editing 或网络调用。
+> **当前开发闸门**：V0-024 project acceptance gate。可从现有 workspace artifacts 和 state 生成 deterministic project acceptance report，评估 core readiness、delivery readiness、BGM、preview、final export 与 forbidden-capability flags。不得生成提案、选曲、改 timeline、fit music、渲染媒体、接入付费 API、API key、远程 provider、隐藏模型调用、image generation/editing 或网络调用。
 
 ---
 
@@ -80,7 +80,7 @@ V0 分为两个模式：
 - `core_mode`：不依赖文本生成模型或视觉模型，负责确定性媒体处理、canonical 数据、风险规则和素材结构报告。
 - `creative_mode`：在 `core_mode` 证据基础上，生成三套可回溯创作提案，并在用户选择后生成时间线草案。
 
-阶段 A 至 V0-018 已完成 proposal generation、canonical timeline、multi-source BGM fitting、low-resolution preview rendering、preview QC、controlled local final export、local BGM technical intelligence 与 BGM recommendation review。当前开放 V0-018 BGM recommendation review gate：
+阶段 A 至 V0-024 已完成 proposal generation、canonical timeline、multi-source BGM fitting、low-resolution preview rendering、preview QC、controlled local final export、local BGM technical intelligence、BGM recommendation review、beat-engine adapter evidence gate、recommendation-to-fit selection gate、recommendation-fit review gate、BGM fit controls gate 与 project acceptance gate。当前开放 V0-024 project acceptance gate：
 
 ```text
 project.yaml
@@ -138,13 +138,19 @@ project.yaml
 → timeline_draft.json
 → bgm_candidates.json
 → bgm_analysis.json
+→ bgm_beat_grids/<music_candidate_id>.json（仅验证本地 beat adapter 可用时）
 → bgm_analysis_report.md
 → bgm_recommendation_context.json
 → bgm_recommendation_request.json
 → bgm_recommendation_agent_handoff.json
 → bgm_recommendations.json
 → bgm_recommendation_review.md
+→ bgm_recommendation_selection.json
+→ bgm_recommendation_selection_review.md
 → bgm_fit.json
+→ BgmFitControls
+→ bgm_fit_review.json
+→ bgm_fit_review.md
 → preview_lowres.mp4
 → preview_manifest.json
 → preview_validation.json
@@ -153,11 +159,13 @@ project.yaml
 → final_export_manifest.json
 → final_export_validation.json
 → final_export_review.md
+→ acceptance_report.json
+→ acceptance_report.md
 → risk_report.md
 → doctor/status 诊断
 ```
 
-当前 V0-018 仍禁止实现：
+当前 V0-024 仍禁止实现：
 
 ```text
 OpenCV
@@ -165,6 +173,10 @@ Embedding
 视觉模型
 视觉分类或关键帧语义解读
 BGM 自动选择、自动推荐或节拍伪造
+自动选择推荐第一名或无用户目标自动 fit
+自动根据 fit controls 或 review 结果移动剪辑点或渲染媒体
+acceptance 自动补跑 pipeline、自动生成提案、自动 fit 或自动 export
+从 PCM energy window 推断或伪造 BPM/beat grid
 fake/template/model-free proposals
 联网搜索
 image generation / editing
