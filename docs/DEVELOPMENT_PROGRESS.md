@@ -32,11 +32,11 @@ readiness and gate-progress fragments must not be recreated.
 - Current milestone: `V0-043 phrase-level manual edit guidance gate`
 - Current batch: `V0-043`
 - Batch status: `completed`
-- Current release marker: tag `v0.26.0`
-- Latest published baseline: `v0.26.0`
-- Release publication state: peeled `v0.26.0` verified at
-  `8a482bd74e2f0be1c745f0ea63934c3da74f026f`; annotated tag object
-  `7bde073a1492887ee939294c97ffc75b94e03348`; `main` contains the
+- Current release marker: tag `v0.27.0`
+- Latest published baseline: `v0.27.0`
+- Release publication state: peeled `v0.27.0` verified at
+  `473da7388805cf3ea5c806c031f3822ea7a5ce0f`; annotated tag object
+  `baf4a4ef2ef77bbd127033626c16e367994cb2a9`; `main` contains the
   post-release publication ledger
 - Final usable Skill status: foundation, creative proposals, canonical timeline,
   BGM fitting, and local low-resolution preview rendering are substantial;
@@ -54,7 +54,7 @@ readiness and gate-progress fragments must not be recreated.
   execution evidence review, accumulated workflow/rhythm release hardening,
   workflow repair evidence refresh guidance, BGM rhythm intelligence, and
   phrase-level manual edit guidance are substantial;
-  latest published release is `v0.26.0`; installed-engine BPM extraction and
+  latest published release is `v0.27.0`; installed-engine BPM extraction and
   automatic music selection remain undelivered
 
 ## Capability Dashboard

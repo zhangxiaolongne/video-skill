@@ -22,13 +22,14 @@ gate-progress, or closeout fragments.
 - Completed in release `v0.25.0`: V0-025 through V0-041
 - Completed in release `v0.26.0`: V0-042
 - Completed in release `v0.27.0`: V0-043
-- Working-tree publication state: V0-043 release commit/tag/push in progress
+- Working-tree publication state: V0-043 is included in published `v0.27.0`;
+  post-release publication ledger update complete
 - Governance state: V0-043 completed with pre-implementation countability audit
   passed; V0-030 task accounting issue is resolved as `ISSUE-014`
-- Latest published capability release tag: `v0.26.0`
-- Remote freshness: peeled `v0.26.0` verified at
-  `8a482bd74e2f0be1c745f0ea63934c3da74f026f` after push; annotated tag object
-  `7bde073a1492887ee939294c97ffc75b94e03348`; `main` contains the
+- Latest published capability release tag: `v0.27.0`
+- Remote freshness: peeled `v0.27.0` verified at
+  `473da7388805cf3ea5c806c031f3822ea7a5ce0f` after push; annotated tag object
+  `baf4a4ef2ef77bbd127033626c16e367994cb2a9`; `main` contains the
   post-release publication ledger after tag publication
 - Publication policy: do not publish the next capability release until its
   release candidate has passed full local validation
@@ -79,7 +80,9 @@ Validation is updated only after the complete current working tree passes.
   project checks including generated real-media edit guidance, Skill
   validation, schema drift, and release hardening passed; `git diff --check`
   passed
-- Git: local only; not committed, tagged, or pushed
+- Git: included in release `v0.27.0`; peeled tag verified at
+  `473da7388805cf3ea5c806c031f3822ea7a5ce0f`; `main` contains the
+  post-release publication ledger
 
 ### V0-042 BGM Rhythm Intelligence Gate
 

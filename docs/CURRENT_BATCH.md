@@ -73,7 +73,6 @@ timeline.
 - Accepted boundary: V0-043 remains manual guidance only; automatic timeline
   edits, automatic music selection, source separation, image generation, and
   beat-synced edit mutation remain unopened
-- Release action: no commit, push, or tag until a larger functional checkpoint
-  is accepted
+- Release action: included in published `v0.27.0`
 - Next batch candidate: deeper local beat-engine adapter hardening, or manual
   guidance review/import workflow
