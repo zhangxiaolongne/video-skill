@@ -134,7 +134,7 @@ def test_release_check_writes_hardening_report_without_publication(tmp_path, cap
 
     assert payload["output"] == ".artist-portrait/data/release_hardening_report.json"
     assert payload["report"] == "output/release_hardening_report.md"
-    assert report["capability_gate"] == "V0-042"
+    assert report["capability_gate"] == "V0-043"
     assert report["status"] in {"warning", "ready_for_local_release"}
     assert report["failed_count"] == 0
     assert report["commit_allowed"] is False
@@ -3739,6 +3739,40 @@ def test_rhythm_cli_plans_bgm_edit_rhythm_without_mutating_outputs(tmp_path, cap
     assert (tmp_path / ".artist-portrait" / "data" / "rhythm_plan.json").exists()
     assert (tmp_path / "output" / "rhythm_report.md").exists()
     assert (tmp_path / "output" / "rhythm_agent_handoff.json").exists()
+
+    assert (
+        main(["rhythm", "--project", str(project_path), "--edit-guidance", "--json"])
+        == 1
+    )
+    guidance_payload = json.loads(capsys.readouterr().out)
+    guidance = guidance_payload["edit_guidance"]
+    assert guidance_payload["output"] == ".artist-portrait/data/edit_guidance.json"
+    assert guidance_payload["report"] == "output/edit_guidance.md"
+    assert guidance_payload["handoff"] == "output/edit_guidance_handoff.json"
+    assert guidance["action_count"] >= 10
+    assert guidance["manual_only"] is True
+    assert {action["category"] for action in guidance["actions"]} >= {
+        "subtitle",
+        "transition",
+        "pause",
+        "ducking",
+        "phrase",
+        "cut_review",
+        "ending",
+        "qc_repair",
+        "handoff",
+    }
+    assert all(action["manual_only"] is True for action in guidance["actions"])
+    assert all(action["edits_applied"] is False for action in guidance["actions"])
+    assert guidance["automatic_music_selection"] is False
+    assert guidance["edit_points_moved"] is False
+    assert guidance["timeline_mutated"] is False
+    assert guidance["media_rendered"] is False
+    assert guidance["model_call_performed_by_cli"] is False
+    assert guidance["network_performed"] is False
+    assert (tmp_path / ".artist-portrait" / "data" / "edit_guidance.json").exists()
+    assert (tmp_path / "output" / "edit_guidance.md").exists()
+    assert (tmp_path / "output" / "edit_guidance_handoff.json").exists()
 
     agent_candidate_path = tmp_path / "rhythm_candidate.json"
     agent_candidate_path.write_text(

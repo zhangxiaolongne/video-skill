@@ -28,9 +28,9 @@ readiness and gate-progress fragments must not be recreated.
 - Branch: `main`
 - Remote configured: `zhangxiaolongne/video-skill`
 - Canonical skill: `artist-portrait-editor`
-- Current local gate: V0-042 BGM rhythm intelligence gate
-- Current milestone: `V0-042 BGM rhythm intelligence gate`
-- Current batch: `V0-042`
+- Current local gate: V0-043 phrase-level manual edit guidance gate
+- Current milestone: `V0-043 phrase-level manual edit guidance gate`
+- Current batch: `V0-043`
 - Batch status: `completed`
 - Current release marker: tag `v0.26.0`
 - Latest published baseline: `v0.26.0`
@@ -52,8 +52,8 @@ readiness and gate-progress fragments must not be recreated.
   workflow planning, workflow execution evidence review, workflow evidence
   repair planning, workflow repair approval/dry-run packaging, workflow repair
   execution evidence review, accumulated workflow/rhythm release hardening,
-  workflow repair evidence refresh guidance, and BGM rhythm intelligence are
-  substantial;
+  workflow repair evidence refresh guidance, BGM rhythm intelligence, and
+  phrase-level manual edit guidance are substantial;
   latest published release is `v0.26.0`; installed-engine BPM extraction and
   automatic music selection remain undelivered
 
@@ -98,15 +98,17 @@ readiness and gate-progress fragments must not be recreated.
 | Release hardening | `completed` | Current gate, publication state, schema coverage, forbidden surfaces, artifact chain, and validation evidence can be audited before release |
 | Workflow repair refresh guidance | `completed` | Reviewed repair evidence can be packaged into the next explicit workflow execution-record guidance without workflow mutation |
 | BGM rhythm intelligence | `completed` | Existing BGM candidates and analysis can produce editing-facing beat quality, phrase hints, source-risk guidance, and rhythm-plan freshness binding without selection or edit mutation |
+| Phrase-level manual edit guidance | `completed` | Current rhythm/timeline/BGM/QC evidence can produce manual subtitle, transition, pause, ducking, phrase, cut/cue, ending, source-risk, QC, and handoff prompts without timeline mutation |
 | Preview and rendering | `completed` | Local low-resolution preview rendering from timeline plus optional BGM fit works |
 | Preview quality review | `completed` | Bounded render controls and deterministic QC work before final export opens |
 | Final export | `completed` | Bounded local MP4 final export from canonical timeline, retained audio, optional fitted BGM, manifest, QC, review, status, doctor, audit, and invalidation work |
-| Development governance | `completed` | Six canonical owners and automatic drift checks are active; V0-042 passed pre-implementation countability audit |
+| Development governance | `completed` | Six canonical owners and automatic drift checks are active; V0-043 passed pre-implementation countability audit |
 
 ## Current Hard Boundaries
 
-V0-042 permits deterministic BGM rhythm intelligence from the current BGM
-candidate ledger and BGM analysis report. It does not permit:
+V0-043 permits deterministic phrase-level manual edit guidance from the current
+rhythm plan, current timeline, optional BGM rhythm intelligence, and optional
+rhythm media QC. It does not permit:
 
 - paid API calls, API keys, remote provider execution, or network search
 - Python-side hidden model calls or automatic paid fallback
@@ -115,6 +117,7 @@ candidate ledger and BGM analysis report. It does not permit:
 - automatic top-ranked recommendation selection
 - automatic review-driven fitting or rendering
 - automatic fit-control-driven edit-point movement
+- automatic guidance-driven edit-point movement or timeline mutation
 - automatic acceptance-driven repair or pipeline execution
 - automatic repair-plan execution
 - automatic approval-record execution
@@ -157,6 +160,7 @@ candidate ledger and BGM analysis report. It does not permit:
   calls models from the CLI, accesses the network, or treats readiness as
   acceptance success
 - fabricated BPM/beat analysis when no validated local engine runs
+- treating edit guidance as an execution plan
 - automatic beat-synced edit-point changes
 - automatic final-export profile choice beyond explicit user CLI selection
 - automatic conversion from failed acceptance profile to remediation actions
@@ -226,6 +230,6 @@ Full status and resolution conditions live in `ISSUES.md`.
 
 ## Next Major Decision
 
-V0-042 completed BGM rhythm intelligence. The next major decision is whether
-to prepare a local release with explicit approval, or move to phrase-level
-manual edit guidance and deeper local beat-engine adapter hardening.
+V0-043 completed phrase-level manual edit guidance. The next major decision is
+whether to prepare a local release with explicit approval, harden local
+beat-engine adapters, or add manual guidance review/import workflow.

@@ -93,6 +93,7 @@ def check_schema_drift() -> None:
             "bgm_recommendation_set.schema.json",
             "bgm_recommendation_validation_report.schema.json",
             "clip_record.schema.json",
+            "edit_guidance_report.schema.json",
             "final_export_manifest.schema.json",
             "final_export_validation_report.schema.json",
             "preview_render_manifest.schema.json",
@@ -197,14 +198,14 @@ def check_gate_consistency() -> None:
         "DEVELOPMENT_PROGRESS.md": ROOT / "docs" / "DEVELOPMENT_PROGRESS.md",
     }
     content = {name: path.read_text(encoding="utf-8") for name, path in docs.items()}
-    if "Current gate: V0-042 BGM rhythm intelligence gate." not in content["AGENTS.md"]:
-        raise SystemExit("AGENTS.md current gate is not V0-042 BGM rhythm intelligence")
-    if "V0-042 BGM rhythm intelligence gate" not in content["master"]:
-        raise SystemExit("master document current gate is not V0-042 BGM rhythm intelligence")
-    if "Current V0-042 BGM rhythm intelligence gate work" not in content["README.md"]:
-        raise SystemExit("README current gate is not V0-042 BGM rhythm intelligence")
+    if "Current gate: V0-043 phrase-level manual edit guidance gate." not in content["AGENTS.md"]:
+        raise SystemExit("AGENTS.md current gate is not V0-043 edit guidance")
+    if "V0-043 phrase-level manual edit guidance gate" not in content["master"]:
+        raise SystemExit("master document current gate is not V0-043 edit guidance")
+    if "Current V0-043 phrase-level manual edit guidance gate work" not in content["README.md"]:
+        raise SystemExit("README current gate is not V0-043 edit guidance")
     if (
-        "Current local gate: V0-042 BGM rhythm intelligence gate"
+        "Current local gate: V0-043 phrase-level manual edit guidance gate"
         not in content["DEVELOPMENT_PROGRESS.md"]
     ):
         raise SystemExit("development progress current gate is stale")
@@ -219,7 +220,7 @@ def check_progress_contract() -> None:
     payload = json.loads(path.read_text(encoding="utf-8"))
     if payload.get("schema_version") != "1.4":
         raise SystemExit("progress snapshot schema_version is not 1.4")
-    if payload.get("capability_gate") != "V0-042":
+    if payload.get("capability_gate") != "V0-043":
         raise SystemExit("progress snapshot capability gate is stale")
     documentation_system = payload.get("documentation_system") or {}
     expected_documents = {
@@ -352,6 +353,7 @@ def check_progress_contract() -> None:
             "release_hardening",
             "workflow_repair_refresh_guidance",
             "bgm_rhythm_intelligence",
+            "phrase_level_edit_guidance",
             "preview_rendering",
             "final_export",
         }
@@ -420,6 +422,8 @@ def check_progress_contract() -> None:
         raise SystemExit("progress snapshot workflow repair refresh guidance state is stale")
     if capability_progress.get("bgm_rhythm_intelligence") != "completed":
         raise SystemExit("progress snapshot BGM rhythm intelligence state is stale")
+    if capability_progress.get("phrase_level_edit_guidance") != "completed":
+        raise SystemExit("progress snapshot edit guidance state is stale")
     if capability_progress.get("preview_rendering") != "completed":
         raise SystemExit("progress snapshot preview state is stale")
     if capability_progress.get("preview_quality_review") != "completed":
@@ -1892,6 +1896,30 @@ def check_real_media_acceptance_profiles_if_available() -> None:
             raise SystemExit("real acceptance fixture rhythm timeline profile missing")
         if rhythm_plan.get("bgm_profile", {}).get("domain_id") != "bgm_profile":
             raise SystemExit("real acceptance fixture rhythm BGM profile missing")
+        edit_guidance_payload = run_json(
+            [
+                str(ARTIST_PORTRAIT),
+                "rhythm",
+                "--project",
+                str(project),
+                "--edit-guidance",
+                "--json",
+            ],
+            expect=(0, 1),
+        )
+        edit_guidance = edit_guidance_payload.get("edit_guidance") or {}
+        if edit_guidance.get("action_count", 0) < 10:
+            raise SystemExit("real acceptance fixture edit guidance lacks actions")
+        if edit_guidance.get("manual_only") is not True:
+            raise SystemExit("real acceptance fixture edit guidance is not manual-only")
+        if edit_guidance.get("edit_points_moved") is not False:
+            raise SystemExit("real acceptance fixture edit guidance moved edit points")
+        if edit_guidance.get("timeline_mutated") is not False:
+            raise SystemExit("real acceptance fixture edit guidance mutated timeline")
+        if edit_guidance.get("media_rendered") is not False:
+            raise SystemExit("real acceptance fixture edit guidance rendered media")
+        if edit_guidance.get("automatic_music_selection") is not False:
+            raise SystemExit("real acceptance fixture edit guidance selected music")
         rhythm_repair_before_media = run_json(
             [
                 str(ARTIST_PORTRAIT),

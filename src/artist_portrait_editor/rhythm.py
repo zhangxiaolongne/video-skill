@@ -15,6 +15,8 @@ from artist_portrait_editor.models.acceptance import ProjectAcceptanceReport
 from artist_portrait_editor.models.final_export import FinalExportManifest, FinalExportValidationReport
 from artist_portrait_editor.models.preview import PreviewRenderManifest, PreviewValidationReport
 from artist_portrait_editor.models.rhythm import (
+    EditGuidanceAction,
+    EditGuidanceReport,
     RhythmAgentCandidate,
     RhythmAuditDomain,
     RhythmIntent,
@@ -252,6 +254,64 @@ def build_rhythm_repair_plan(
     return json_path, md_path, handoff_path, repair
 
 
+def build_edit_guidance(
+    *,
+    root: Path,
+    project_id: str,
+) -> tuple[Path, Path, Path, EditGuidanceReport]:
+    plan_path = root / WORKSPACE_DIR / DATA_DIR / "rhythm_plan.json"
+    timeline_path = root / "output" / "timeline_draft.json"
+    if not plan_path.exists():
+        raise RhythmError("edit guidance requires .artist-portrait/data/rhythm_plan.json")
+    if not timeline_path.exists():
+        raise RhythmError("edit guidance requires output/timeline_draft.json")
+    plan = RhythmPlan.model_validate_json(plan_path.read_text(encoding="utf-8"))
+    timeline = TimelineDraft.model_validate_json(timeline_path.read_text(encoding="utf-8"))
+    if plan.project_id != project_id:
+        raise RhythmError("rhythm plan project_id mismatches project")
+    if timeline.project_id != project_id:
+        raise RhythmError("timeline project_id mismatches project")
+    if plan.timeline_id != timeline.timeline_id:
+        raise RhythmError("rhythm plan timeline_id mismatches current timeline")
+    timeline_fingerprint = _fingerprint(timeline_path)
+    if plan.timeline_fingerprint != timeline_fingerprint:
+        raise RhythmError("rhythm plan timeline fingerprint is stale")
+    plan_fingerprint = _fingerprint(plan_path)
+    bgm_rhythm_path = root / WORKSPACE_DIR / DATA_DIR / "bgm_rhythm_intelligence.json"
+    rhythm_qc_path = root / WORKSPACE_DIR / DATA_DIR / "rhythm_media_qc.json"
+    bgm_rhythm = _read_optional(bgm_rhythm_path, BgmRhythmIntelligenceReport)
+    rhythm_qc = _read_optional(rhythm_qc_path, RhythmMediaQcReport)
+    actions = _edit_guidance_actions(plan, timeline, bgm_rhythm, rhythm_qc)
+    high_priority = sum(action.priority == "high" for action in actions)
+    status = "warning" if high_priority else "passed"
+    key = f"{project_id}:{plan.rhythm_plan_id}:{plan_fingerprint}:{len(actions)}:{high_priority}"
+    report = EditGuidanceReport(
+        edit_guidance_id="edit_guidance_" + hashlib.sha256(key.encode()).hexdigest()[:20],
+        project_id=project_id,
+        rhythm_plan_id=plan.rhythm_plan_id,
+        rhythm_plan_fingerprint=plan_fingerprint,
+        timeline_id=timeline.timeline_id,
+        timeline_fingerprint=timeline_fingerprint,
+        bgm_rhythm_intelligence_fingerprint=(
+            _fingerprint(bgm_rhythm_path) if bgm_rhythm_path.exists() else None
+        ),
+        rhythm_media_qc_id=rhythm_qc.rhythm_qc_id if rhythm_qc else None,
+        action_count=len(actions),
+        high_priority_count=high_priority,
+        status=status,
+        actions=actions,
+    )
+    json_path = root / WORKSPACE_DIR / DATA_DIR / "edit_guidance.json"
+    md_path = root / "output" / "edit_guidance.md"
+    handoff_path = root / "output" / "edit_guidance_handoff.json"
+    json_path.parent.mkdir(parents=True, exist_ok=True)
+    md_path.parent.mkdir(parents=True, exist_ok=True)
+    write_json(json_path, report.model_dump(mode="json"))
+    md_path.write_text(render_edit_guidance(report) + "\n", encoding="utf-8")
+    write_json(handoff_path, _edit_guidance_handoff(report))
+    return json_path, md_path, handoff_path, report
+
+
 def render_rhythm_report(plan: RhythmPlan) -> str:
     lines = [
         "# Rhythm Planning Report",
@@ -285,6 +345,41 @@ def render_rhythm_report(plan: RhythmPlan) -> str:
         for issue in domain.issues:
             lines.append(f"- `{issue.severity}` `{issue.issue_id}`: {issue.detail} Next: `{issue.next_action}`")
         lines.append("")
+    return "\n".join(lines)
+
+
+def render_edit_guidance(report: EditGuidanceReport) -> str:
+    lines = [
+        "# Phrase-Level Manual Edit Guidance",
+        "",
+        "This report gives manual editing guidance only. It does not move edit points, select music, render media, call models, or access the network.",
+        "",
+        f"- Status: `{report.status}`",
+        f"- Actions: `{report.action_count}`",
+        f"- High priority: `{report.high_priority_count}`",
+        f"- Rhythm plan: `{report.rhythm_plan_id}`",
+        "",
+    ]
+    for action in report.actions:
+        range_text = (
+            f"{action.timeline_start:.3f}s-{action.timeline_end:.3f}s"
+            if action.timeline_start is not None and action.timeline_end is not None
+            else "project-level"
+        )
+        lines.extend(
+            [
+                f"## `{action.action_id}`",
+                "",
+                f"- Category: `{action.category}`",
+                f"- Priority: `{action.priority}`",
+                f"- Range: `{range_text}`",
+                f"- Recommendation: {action.recommendation}",
+                f"- Rationale: {action.rationale}",
+                f"- Evidence: {', '.join(f'`{ref}`' for ref in action.evidence_refs) or '`none`'}",
+                f"- Manual only: `{str(action.manual_only).lower()}`",
+                "",
+            ]
+        )
     return "\n".join(lines)
 
 
@@ -909,6 +1004,203 @@ def _repair_handoff_payload(plan: RhythmRepairPlan) -> dict:
             "do not move edit points",
             "do not select music",
             "do not fit music automatically",
+            "do not call models from the CLI",
+            "do not access the network",
+        ],
+    }
+
+
+def _edit_guidance_actions(
+    plan: RhythmPlan,
+    timeline: TimelineDraft,
+    bgm_rhythm: BgmRhythmIntelligenceReport | None,
+    rhythm_qc: RhythmMediaQcReport | None,
+) -> list[EditGuidanceAction]:
+    actions: list[EditGuidanceAction] = []
+
+    def add(
+        category: str,
+        recommendation: str,
+        rationale: str,
+        evidence_refs: list[str],
+        *,
+        priority: str = "medium",
+        timeline_start: float | None = None,
+        timeline_end: float | None = None,
+    ) -> None:
+        actions.append(
+            EditGuidanceAction(
+                action_id=f"edit_guidance_{len(actions) + 1:03d}_{category}",
+                order=len(actions) + 1,
+                category=category,
+                timeline_start=timeline_start,
+                timeline_end=timeline_end,
+                priority=priority,
+                recommendation=recommendation,
+                rationale=rationale,
+                evidence_refs=evidence_refs,
+            )
+        )
+
+    first = timeline.segments[0]
+    last = timeline.segments[-1]
+    add(
+        "subtitle",
+        "Manually check subtitle or title entrance near the first spoken/visual beat.",
+        "The opening segment anchors viewer orientation; text timing should be reviewed before any automatic overlay is considered.",
+        ["output/timeline_draft.json", ".artist-portrait/data/rhythm_plan.json"],
+        timeline_start=first.timeline_start,
+        timeline_end=min(first.timeline_end, first.timeline_start + 2.0),
+    )
+    for segment in timeline.segments[1:3]:
+        add(
+            "transition",
+            "Manually review whether the incoming segment needs a hard cut, smooth transition, or no transition.",
+            f"Timeline segment `{segment.segment_id}` starts after an existing cut point and should be judged against the rhythm report before changing transitions.",
+            ["output/timeline_draft.json", ".artist-portrait/data/rhythm_plan.json"],
+            timeline_start=segment.timeline_start,
+            timeline_end=min(segment.timeline_end, segment.timeline_start + 1.5),
+        )
+    if len(timeline.segments) == 1:
+        add(
+            "transition",
+            "Manually verify that the single-segment edit does not need an internal transition or visual reset.",
+            "No timeline cut point exists, so transition guidance is a human review prompt rather than an edit operation.",
+            ["output/timeline_draft.json", ".artist-portrait/data/rhythm_plan.json"],
+            priority="low",
+            timeline_start=first.timeline_start,
+            timeline_end=first.timeline_end,
+        )
+    add(
+        "pause",
+        "Manually inspect whether the middle of the edit needs a breathing pause or retained natural audio.",
+        "Phrase-level pacing often fails when every segment is treated as equally dense; this guidance does not insert silence.",
+        ["output/timeline_draft.json", ".artist-portrait/data/rhythm_plan.json"],
+        timeline_start=round(timeline.actual_duration * 0.45, 3),
+        timeline_end=round(min(timeline.actual_duration, timeline.actual_duration * 0.55), 3),
+    )
+    add(
+        "ducking",
+        "Manually verify music ducking around speech-led material before final delivery.",
+        "The rhythm plan records ducking/silence readiness, but guidance cannot prove intelligibility without human review.",
+        [".artist-portrait/data/rhythm_plan.json"],
+        priority="high" if plan.ducking_silence_audit.status in {"warning", "blocked"} else "medium",
+    )
+    phrase_hint = _first_phrase_hint(bgm_rhythm)
+    if phrase_hint:
+        add(
+            "phrase",
+            f"Use the estimated BGM phrase length of {phrase_hint:.3f}s only as a manual alignment reference.",
+            "Phrase hints are derived from validated BPM evidence; they are not permission to move edit points automatically.",
+            [".artist-portrait/data/bgm_rhythm_intelligence.json"],
+            timeline_start=0,
+            timeline_end=min(timeline.actual_duration, phrase_hint),
+        )
+    else:
+        add(
+            "phrase",
+            "Keep phrase-level BGM alignment conservative because no validated phrase hint is available.",
+            "No mature beat-grid evidence was available for phrase timing, so manual review should avoid claiming BPM-locked cuts.",
+            [".artist-portrait/data/bgm_rhythm_intelligence.json"],
+            priority="high",
+        )
+    if plan.cut_cue_audit.status in {"warning", "blocked", "unavailable"}:
+        add(
+            "cut_review",
+            "Manually review cut-to-cue alignment before changing any cut point.",
+            "The rhythm plan reports cut/cue limitations or warnings; this command records guidance only.",
+            [".artist-portrait/data/rhythm_plan.json"],
+            priority="high" if plan.cut_cue_audit.status == "blocked" else "medium",
+        )
+    else:
+        add(
+            "cut_review",
+            "Use cut-to-cue evidence as a manual review aid, not as an automatic edit instruction.",
+            "Cut/cue audit passed, but V0 guidance still cannot move edit points.",
+            [".artist-portrait/data/rhythm_plan.json"],
+            priority="low",
+        )
+    add(
+        "ending",
+        "Manually check whether the ending should stop cleanly, fade, or leave an open loop.",
+        "Ending style affects perceived polish and should be judged against the current BGM fit and final-export intent.",
+        ["output/timeline_draft.json", ".artist-portrait/data/rhythm_plan.json"],
+        timeline_start=max(0.0, last.timeline_end - 2.0),
+        timeline_end=last.timeline_end,
+    )
+    if _has_high_source_risk(bgm_rhythm):
+        source_recommendation = "Do not treat extracted video/source mix as clean BGM during manual edit review."
+        source_rationale = "BGM rhythm intelligence marks at least one candidate as high source-risk or mixed audio."
+        source_priority = "high"
+    else:
+        source_recommendation = "Keep BGM source provenance attached to the manual edit review."
+        source_rationale = "Even low-risk BGM evidence should preserve candidate/source binding for later review."
+        source_priority = "low"
+    add(
+        "source_risk",
+        source_recommendation,
+        source_rationale,
+        [".artist-portrait/data/bgm_rhythm_intelligence.json"],
+        priority=source_priority,
+    )
+    if rhythm_qc and rhythm_qc.status != "passed":
+        add(
+            "qc_repair",
+            "Resolve rhythm media QC warnings manually before relying on preview or delivery timing.",
+            "Existing rhythm QC is not fully passed; guidance remains advisory until media evidence is current.",
+            [".artist-portrait/data/rhythm_media_qc.json"],
+            priority="high",
+        )
+    else:
+        add(
+            "qc_repair",
+            "Keep rhythm QC evidence attached when handing the edit to a human reviewer.",
+            "QC evidence lets the reviewer distinguish timing advice from rendered-media proof.",
+            [".artist-portrait/data/rhythm_media_qc.json"],
+            priority="low",
+        )
+    add(
+        "handoff",
+        "Hand these guidance items to the editor as manual review prompts, not as an execution plan.",
+        "The artifact intentionally avoids timeline mutation, render commands, automatic music selection, and model execution.",
+        [".artist-portrait/data/edit_guidance.json", "output/edit_guidance.md"],
+        priority="low",
+    )
+    return actions
+
+
+def _first_phrase_hint(bgm_rhythm: BgmRhythmIntelligenceReport | None) -> float | None:
+    if not bgm_rhythm:
+        return None
+    for candidate in bgm_rhythm.candidates:
+        if candidate.estimated_phrase_seconds:
+            return candidate.estimated_phrase_seconds
+    return None
+
+
+def _has_high_source_risk(bgm_rhythm: BgmRhythmIntelligenceReport | None) -> bool:
+    if not bgm_rhythm:
+        return False
+    return any(
+        candidate.source_risk_status == "high" or candidate.mixed_audio
+        for candidate in bgm_rhythm.candidates
+    )
+
+
+def _edit_guidance_handoff(report: EditGuidanceReport) -> dict:
+    return {
+        "schema_version": report.schema_version,
+        "handoff_id": f"edit_guidance_handoff_{report.edit_guidance_id}",
+        "project_id": report.project_id,
+        "edit_guidance_id": report.edit_guidance_id,
+        "rhythm_plan_id": report.rhythm_plan_id,
+        "task": "Review phrase-level manual edit guidance only.",
+        "actions": [action.model_dump(mode="json") for action in report.actions],
+        "forbidden": [
+            "do not move edit points",
+            "do not select music",
+            "do not fit music automatically",
+            "do not render media",
             "do not call models from the CLI",
             "do not access the network",
         ],

@@ -173,3 +173,51 @@ class RhythmRepairPlan(BaseModel):
     automatic_music_selection: bool = False
     model_call_performed_by_cli: bool = False
     network_performed: bool = False
+
+
+class EditGuidanceAction(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    action_id: str = Field(min_length=1)
+    order: int = Field(ge=1)
+    category: str = Field(
+        pattern=(
+            r"^(subtitle|transition|pause|ducking|phrase|cut_review|ending|"
+            r"source_risk|qc_repair|handoff)$"
+        )
+    )
+    timeline_start: float | None = Field(default=None, ge=0)
+    timeline_end: float | None = Field(default=None, ge=0)
+    priority: str = Field(pattern=r"^(low|medium|high)$")
+    recommendation: str = Field(min_length=1)
+    rationale: str = Field(min_length=1)
+    evidence_refs: list[str] = Field(default_factory=list)
+    manual_only: bool = True
+    edits_applied: bool = False
+
+
+class EditGuidanceReport(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    schema_version: str = SCHEMA_VERSION
+    edit_guidance_id: str = Field(min_length=1)
+    project_id: str = Field(min_length=1)
+    rhythm_plan_id: str = Field(min_length=1)
+    rhythm_plan_fingerprint: str = Field(pattern=r"^sha256:[0-9a-f]{64}$")
+    timeline_id: str = Field(min_length=1)
+    timeline_fingerprint: str = Field(pattern=r"^sha256:[0-9a-f]{64}$")
+    bgm_rhythm_intelligence_fingerprint: str | None = Field(
+        default=None, pattern=r"^sha256:[0-9a-f]{64}$"
+    )
+    rhythm_media_qc_id: str | None = None
+    action_count: int = Field(ge=0)
+    high_priority_count: int = Field(ge=0)
+    manual_only: bool = True
+    status: str = Field(pattern=r"^(passed|warning|blocked)$")
+    actions: list[EditGuidanceAction] = Field(default_factory=list)
+    automatic_music_selection: bool = False
+    edit_points_moved: bool = False
+    timeline_mutated: bool = False
+    media_rendered: bool = False
+    model_call_performed_by_cli: bool = False
+    network_performed: bool = False

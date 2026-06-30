@@ -54,6 +54,7 @@ from artist_portrait_editor.models.release import ReleaseHardeningReport
 from artist_portrait_editor.models.source import SourceRecord
 from artist_portrait_editor.models.state import ProjectState
 from artist_portrait_editor.models.rhythm import (
+    EditGuidanceReport,
     RhythmAgentCandidate,
     RhythmIntent,
     RhythmMediaQcReport,
@@ -127,6 +128,7 @@ def test_schema_generation_from_pydantic_models():
     provider_call_dry_run_schema = ProposalProviderCallDryRun.model_json_schema()
     provider_result_schema = ProposalProviderResultEnvelope.model_json_schema()
     release_hardening_schema = ReleaseHardeningReport.model_json_schema()
+    edit_guidance_schema = EditGuidanceReport.model_json_schema()
     source_schema = SourceRecord.model_json_schema()
     transcript_schema = TranscriptRecord.model_json_schema()
     timeline_schema = TimelineDraft.model_json_schema()
@@ -192,6 +194,7 @@ def test_schema_generation_from_pydantic_models():
     assert provider_call_dry_run_schema["title"] == "ProposalProviderCallDryRun"
     assert provider_result_schema["title"] == "ProposalProviderResultEnvelope"
     assert release_hardening_schema["title"] == "ReleaseHardeningReport"
+    assert edit_guidance_schema["title"] == "EditGuidanceReport"
     assert source_schema["title"] == "SourceRecord"
     assert transcript_schema["title"] == "TranscriptRecord"
     assert timeline_schema["title"] == "TimelineDraft"
@@ -318,6 +321,9 @@ def test_committed_schemas_match_pydantic_generation():
     )
     committed_release_hardening = json.loads(
         (schema_dir / "release_hardening_report.schema.json").read_text(encoding="utf-8")
+    )
+    committed_edit_guidance = json.loads(
+        (schema_dir / "edit_guidance_report.schema.json").read_text(encoding="utf-8")
     )
     committed_rhythm_agent = json.loads(
         (schema_dir / "rhythm_agent_candidate.schema.json").read_text(encoding="utf-8")
@@ -551,6 +557,9 @@ def test_committed_schemas_match_pydantic_generation():
     )
     assert committed_release_hardening == json.loads(
         json.dumps(ReleaseHardeningReport.model_json_schema(), sort_keys=True)
+    )
+    assert committed_edit_guidance == json.loads(
+        json.dumps(EditGuidanceReport.model_json_schema(), sort_keys=True)
     )
     assert committed_rhythm_agent == json.loads(
         json.dumps(RhythmAgentCandidate.model_json_schema(), sort_keys=True)

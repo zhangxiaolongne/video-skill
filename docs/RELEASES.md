@@ -7,23 +7,23 @@ gate-progress, or closeout fragments.
 
 ## Current Release State
 
-- Capability gate: `V0-042`
-- Active local batch: `V0-042 BGM rhythm intelligence gate`
-- Current release marker: tag `v0.26.0`
+- Capability gate: `V0-043`
+- Active local batch: `V0-043 phrase-level manual edit guidance gate`
+- Current release marker: tag `v0.27.0`
 - Release date: `2026-06-30`
-- Release commit subject: `Release artist portrait editor v0.26.0`
+- Release commit subject: `Release artist portrait editor v0.27.0`
 - Previous published baseline:
   `d7dcab6430db4f0a6845079cebcd22cfbb85e74e`
 - Completed in release `v0.24.0`: V0-010n through V0-010t, V0-010 foundation
   consolidation, proposal review hardening, `DEV-GOV-001`, V0-011, V0-012,
   V0-013, V0-014, V0-015, V0-016, V0-017, V0-018, V0-020, V0-021, V0-022,
   V0-023, and V0-024
-- Release target: `v0.26.0`
+- Release target: `v0.27.0`
 - Completed in release `v0.25.0`: V0-025 through V0-041
 - Completed in release `v0.26.0`: V0-042
-- Working-tree publication state: V0-042 is included in published `v0.26.0`;
-  post-release publication ledger update complete
-- Governance state: V0-042 completed with pre-implementation countability audit
+- Completed in release `v0.27.0`: V0-043
+- Working-tree publication state: V0-043 release commit/tag/push in progress
+- Governance state: V0-043 completed with pre-implementation countability audit
   passed; V0-030 task accounting issue is resolved as `ISSUE-014`
 - Latest published capability release tag: `v0.26.0`
 - Remote freshness: peeled `v0.26.0` verified at
@@ -37,8 +37,8 @@ gate-progress, or closeout fragments.
 
 Validation is updated only after the complete current working tree passes.
 
-- Verified: V0-042 local validation passed on `2026-06-30`
-- Full pytest: `288 passed`
+- Verified: V0-043 local validation passed on `2026-06-30`
+- Full pytest: `289 passed`
 - Project checks: `run_checks.py --skip-pytest` passed
 - Skill validation: passed
 - Schema drift: passed
@@ -51,13 +51,35 @@ Validation is updated only after the complete current working tree passes.
   workflow execution evidence review, workflow evidence repair planning,
   workflow repair approval/dry-run packaging, workflow repair execution
   evidence review, accumulated workflow/rhythm release hardening, and workflow
-  repair evidence refresh guidance, plus V0-042 BGM rhythm intelligence
-  generation and rhythm-plan/rhythm-QC binding
+  repair evidence refresh guidance, V0-042 BGM rhythm intelligence generation
+  and rhythm-plan/rhythm-QC binding, plus V0-043 phrase-level manual edit
+  guidance
   passed; proposal generation remained correctly blocked without paid API,
   API key, remote provider, or hidden network dependency
 - Git diff check: `git diff --check` passed
 
 ## Major Version History
+
+### V0-043 Phrase-Level Manual Edit Guidance Gate
+
+- Status: completed locally on `2026-06-30`
+- Capability: `artist-portrait rhythm --project <project.yaml> --edit-guidance`
+  writes canonical `.artist-portrait/data/edit_guidance.json`,
+  `output/edit_guidance.md`, and `output/edit_guidance_handoff.json`,
+  converting current rhythm plan, timeline, optional BGM rhythm intelligence,
+  and optional rhythm media QC into manual subtitle, transition, pause,
+  ducking, phrase, cut/cue, ending, source-risk, QC, and handoff guidance
+- Boundary: no automatic music selection, no edit-point movement, no timeline
+  mutation, no automatic BGM fitting, no media rendering, no fabricated BPM or
+  beat grids, no CLI model calls, no network access, no paid APIs, no remote
+  providers, no image generation/editing, and no treating guidance as an
+  execution plan
+- Validation: targeted V0-043 edit-guidance/schema/gate/progress/release-check
+  tests passed with `17 passed`; full pytest passed with `289 passed`;
+  project checks including generated real-media edit guidance, Skill
+  validation, schema drift, and release hardening passed; `git diff --check`
+  passed
+- Git: local only; not committed, tagged, or pushed
 
 ### V0-042 BGM Rhythm Intelligence Gate
 

@@ -18,6 +18,7 @@ REQUIRED_SCHEMA_FILES = [
     "acceptance_repair_execution_record.schema.json",
     "acceptance_repair_plan.schema.json",
     "bgm_rhythm_intelligence_report.schema.json",
+    "edit_guidance_report.schema.json",
     "release_hardening_report.schema.json",
     "rhythm_agent_candidate.schema.json",
     "rhythm_intent.schema.json",
@@ -50,6 +51,7 @@ REQUIRED_ARTIFACT_TOKENS = [
     "workflow_repair_execution_review.json",
     "workflow_repair_refresh_plan.json",
     "bgm_rhythm_intelligence.json",
+    "edit_guidance.json",
 ]
 
 

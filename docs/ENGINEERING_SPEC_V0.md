@@ -719,6 +719,30 @@ APIs/API keys/remote providers, use hidden model calls, use image
 generation/editing, perform source separation, or treat rhythm intelligence as
 acceptance success.
 
+Current V0-043 implementation scope additionally allows:
+
+- `rhythm --edit-guidance`
+- canonical `.artist-portrait/data/edit_guidance.json`
+- deterministic `output/edit_guidance.md`
+- deterministic `output/edit_guidance_handoff.json`
+- phrase-level manual edit guidance derived only from current rhythm plan,
+  current timeline, optional BGM rhythm intelligence, and optional rhythm media
+  QC
+- ordered manual prompts for subtitle entrance, transition review,
+  pause/breathing room, ducking review, BGM phrase reference, cut-to-cue
+  review, ending style, source risk, QC repair, and editor handoff
+- fingerprint binding to the current rhythm plan and current timeline
+- explicit `manual_only`, `edits_applied=false`, `edit_points_moved=false`,
+  `timeline_mutated=false`, `media_rendered=false`, `model_call=false`, and
+  `network=false` evidence
+
+V0-043 does not allow edit guidance to move edit points, mutate timelines,
+select or recommend music, fit music automatically, render media, fabricate BPM
+or beat grids, call models from the CLI, access the network, depend on paid
+APIs/API keys/remote providers, use hidden model calls, use image
+generation/editing, perform source separation, or treat guidance as an
+execution plan.
+
 - `scan`
 - deterministic `sources.jsonl`
 - deterministic `scan_report.md`

@@ -63,6 +63,7 @@ from artist_portrait_editor.models.release import ReleaseHardeningReport
 from artist_portrait_editor.models.source import SourceRecord
 from artist_portrait_editor.models.state import ProjectState
 from artist_portrait_editor.models.rhythm import (
+    EditGuidanceReport,
     RhythmAgentCandidate,
     RhythmIntent,
     RhythmMediaQcReport,
@@ -130,6 +131,7 @@ def write_schema_files(output_dir: Path) -> None:
         "preview_render_manifest.schema.json": PreviewRenderManifest.model_json_schema(),
         "preview_validation_report.schema.json": PreviewValidationReport.model_json_schema(),
         "release_hardening_report.schema.json": ReleaseHardeningReport.model_json_schema(),
+        "edit_guidance_report.schema.json": EditGuidanceReport.model_json_schema(),
         "rhythm_agent_candidate.schema.json": RhythmAgentCandidate.model_json_schema(),
         "rhythm_intent.schema.json": RhythmIntent.model_json_schema(),
         "rhythm_media_qc_report.schema.json": RhythmMediaQcReport.model_json_schema(),

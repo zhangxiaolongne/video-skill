@@ -13,7 +13,7 @@ from artist_portrait_editor.bgm import (
     import_candidate,
     review_bgm,
 )
-from artist_portrait_editor.rhythm import build_rhythm_plan
+from artist_portrait_editor.rhythm import build_edit_guidance, build_rhythm_plan
 from artist_portrait_editor.models.bgm import BgmBeatEvent, BgmBeatGrid, BgmInputMode
 from artist_portrait_editor.models.source import (
     Assertion,
@@ -539,6 +539,88 @@ def test_rhythm_plan_consumes_bgm_rhythm_intelligence_without_mutation(tmp_path,
     assert plan.edit_points_moved is False
     assert plan.automatic_music_selection is False
     assert plan.media_rendered is False
+
+
+def test_edit_guidance_turns_rhythm_evidence_into_manual_actions(tmp_path, monkeypatch):
+    make_audio(tmp_path / "media" / "music.wav", duration=2.0)
+    _ledger, candidate = import_candidate(
+        root=tmp_path,
+        project_id="project-test",
+        file_ref="media/music.wav",
+        source_id=None,
+        extract_in=0,
+        extract_out=None,
+        stream_index=0,
+        rights_status=RightsStatus.owned,
+        user_intent="manual edit guidance",
+    )
+
+    def fake_capabilities():
+        return [
+            bgm_module.BgmBeatEngineCapability(
+                engine="librosa",
+                package_available=True,
+                execution_supported=True,
+                status="available",
+                reason="fake engine",
+            )
+        ]
+
+    def fake_run_beat_engine(**kwargs):
+        return BgmBeatGrid(
+            project_id="project-test",
+            music_candidate_id=candidate.music_candidate_id,
+            cache_ref=candidate.cache_ref,
+            cache_fingerprint=bgm_module.hash_file(kwargs["cache_path"]),
+            beat_engine="librosa",
+            bpm=120.0,
+            tempo_confidence=0.8,
+            beat_count=8,
+            beat_times=[
+                BgmBeatEvent(index=index, time=round(index * 0.25, 3), confidence=0.8)
+                for index in range(8)
+            ],
+        )
+
+    monkeypatch.setattr(bgm_module, "detect_beat_engine_capabilities", fake_capabilities)
+    monkeypatch.setattr(bgm_module, "run_beat_engine_if_available", fake_run_beat_engine)
+    analyze_candidates(root=tmp_path, project_id="project-test", window_seconds=0.5)
+    build_bgm_rhythm_intelligence(root=tmp_path, project_id="project-test")
+    write_timeline(tmp_path, duration=2.0)
+    build_fit_plan(root=tmp_path, project_id="project-test", candidate_id=candidate.music_candidate_id)
+    build_rhythm_plan(root=tmp_path, project_id="project-test")
+
+    json_path, md_path, handoff_path, guidance = build_edit_guidance(
+        root=tmp_path,
+        project_id="project-test",
+    )
+
+    assert json_path == tmp_path / ".artist-portrait" / "data" / "edit_guidance.json"
+    assert md_path == tmp_path / "output" / "edit_guidance.md"
+    assert handoff_path == tmp_path / "output" / "edit_guidance_handoff.json"
+    assert guidance.action_count >= 10
+    categories = {action.category for action in guidance.actions}
+    assert {
+        "subtitle",
+        "transition",
+        "pause",
+        "ducking",
+        "phrase",
+        "cut_review",
+        "ending",
+        "qc_repair",
+        "handoff",
+    }.issubset(categories)
+    assert guidance.bgm_rhythm_intelligence_fingerprint is not None
+    assert guidance.manual_only is True
+    assert all(action.manual_only is True for action in guidance.actions)
+    assert all(action.edits_applied is False for action in guidance.actions)
+    assert guidance.automatic_music_selection is False
+    assert guidance.edit_points_moved is False
+    assert guidance.timeline_mutated is False
+    assert guidance.media_rendered is False
+    assert guidance.model_call_performed_by_cli is False
+    assert guidance.network_performed is False
 
 
 def test_bgm_rhythm_intelligence_keeps_no_engine_and_mixed_audio_guidance(tmp_path):

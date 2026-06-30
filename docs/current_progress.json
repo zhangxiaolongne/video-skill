@@ -1,7 +1,7 @@
 {
   "schema_version": "1.4",
-  "capability_gate": "V0-042",
-  "milestone": "V0-042 BGM rhythm intelligence gate",
+  "capability_gate": "V0-043",
+  "milestone": "V0-043 phrase-level manual edit guidance gate",
   "documentation_system": {
     "master": "artist_portrait_editor_revision5_optimized.md",
     "current_progress": "docs/DEVELOPMENT_PROGRESS.md",
@@ -13,17 +13,17 @@
     "historical_readiness_policy": "consolidated_in_release_ledger"
   },
   "active_batch": {
-    "id": "V0-042",
-    "name": "BGM rhythm intelligence gate",
+    "id": "V0-043",
+    "name": "Phrase-level manual edit guidance gate",
     "status": "completed",
     "started": "2026-06-30",
-    "capability_gate": "V0-042",
+    "capability_gate": "V0-043",
     "commit_policy": "local_until_large_functional_checkpoint"
   },
   "batch_contract_audit": {
     "status": "passed",
     "issue": "ISSUE-014",
-    "reason": "V0-042 tasks were audited before implementation and each task maps to user-visible BGM rhythm intelligence and rhythm-planning evidence use, not to isolated fields, schemas, tests, or docs.",
+    "reason": "V0-043 tasks were audited before implementation and each task maps to user-visible phrase-level manual edit guidance, not to isolated fields, schemas, tests, or docs.",
     "required_next_batch_rule": "Before editing, list at least ten proposed countable version outcomes with explicit countability rationale; if fewer than ten survive audit, stop and request gate promotion."
   },
   "capability_progress": {
@@ -61,7 +61,8 @@
     "workflow_repair_execution_review": "completed",
     "release_hardening": "completed",
     "workflow_repair_refresh_guidance": "completed",
-    "bgm_rhythm_intelligence": "completed"
+    "bgm_rhythm_intelligence": "completed",
+    "phrase_level_edit_guidance": "completed"
   },
   "future_bgm_input_contract": {
     "status": "required_for_future_gate",
@@ -129,53 +130,53 @@
   },
   "tasks": [
     {
-      "id": "V042-01",
-      "name": "BGM rhythm intelligence CLI",
+      "id": "V043-01",
+      "name": "manual edit guidance CLI",
       "status": "completed"
     },
     {
-      "id": "V042-02",
-      "name": "validated beat quality scoring",
+      "id": "V043-02",
+      "name": "subtitle entrance guidance",
       "status": "completed"
     },
     {
-      "id": "V042-03",
-      "name": "phrase and bar timing hints",
+      "id": "V043-03",
+      "name": "transition review guidance",
       "status": "completed"
     },
     {
-      "id": "V042-04",
-      "name": "BGM source provenance rhythm risk",
+      "id": "V043-04",
+      "name": "pause and breathing-room guidance",
       "status": "completed"
     },
     {
-      "id": "V042-05",
-      "name": "no-engine conservative guidance",
+      "id": "V043-05",
+      "name": "ducking review guidance",
       "status": "completed"
     },
     {
-      "id": "V042-06",
-      "name": "mixed video audio contamination guidance",
+      "id": "V043-06",
+      "name": "BGM phrase reference guidance",
       "status": "completed"
     },
     {
-      "id": "V042-07",
-      "name": "rhythm plan BGM intelligence binding",
+      "id": "V043-07",
+      "name": "cut-to-cue manual review guidance",
       "status": "completed"
     },
     {
-      "id": "V042-08",
-      "name": "rhythm media QC freshness binding",
+      "id": "V043-08",
+      "name": "ending style guidance",
       "status": "completed"
     },
     {
-      "id": "V042-09",
-      "name": "no selection mutation audit",
+      "id": "V043-09",
+      "name": "source risk and QC repair guidance",
       "status": "completed"
     },
     {
-      "id": "V042-10",
-      "name": "real-media BGM rhythm checks",
+      "id": "V043-10",
+      "name": "manual handoff and no-mutation audit",
       "status": "completed"
     }
   ],
@@ -218,6 +219,7 @@
     "release_hardening": true,
     "workflow_repair_refresh_guidance": true,
     "bgm_rhythm_intelligence": true,
+    "phrase_level_edit_guidance": true,
     "automatic_beat_synced_editing": false
   }
 }

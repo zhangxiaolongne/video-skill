@@ -1,6 +1,6 @@
 ---
 name: artist-portrait-editor
-description: Artist portrait video workflow. Use when Codex needs deterministic media ledgers, evidence analysis, analysis-led material map, Codex/ChatGPT host Agent proposals quarantined, validated, reviewed, and atomically promoted, explicit timeline generation, multi-source BGM fitting, BGM rhythm intelligence, preview/final export, acceptance reporting, repair handoff/evidence intake, BGM/edit rhythm planning, rhythm QC, guided workflow plans, workflow execution evidence review, workflow evidence repair planning, workflow repair approval/dry-run packaging, workflow repair execution evidence review, workflow repair evidence refresh guidance, or release hardening audits, all without paid APIs, API keys, or network calls. Covers validation, review/doctor, and boundaries before automatic music selection, beat-synced editing, vision, image tools, automatic repair execution, or rhythm-triggered edit mutation.
+description: Artist portrait video workflow. Use when Codex needs deterministic media ledgers, evidence analysis, analysis-led material map, Codex/ChatGPT host Agent proposals quarantined, validated, reviewed, and atomically promoted, explicit timeline generation, multi-source BGM fitting, BGM rhythm intelligence, phrase-level manual edit guidance, preview/final export, acceptance reporting, repair handoff/evidence intake, BGM/edit rhythm planning, rhythm QC, guided workflow plans, workflow execution evidence review, workflow evidence repair planning, workflow repair approval/dry-run packaging, workflow repair execution evidence review, workflow repair evidence refresh guidance, or release hardening audits, all without paid APIs, API keys, or network calls. Covers validation, review/doctor, and boundaries before automatic music selection, beat-synced editing, vision, image tools, automatic repair execution, or rhythm-triggered edit mutation.
 ---
 
 # Artist Portrait Editor
@@ -304,6 +304,14 @@ turns validated beat evidence into editing-facing beat quality, bar/phrase
 hints, source-risk guidance, no-engine next actions, and mixed-video-audio
 warnings. It does not select music, move edit points, fit music, render media,
 call models, access the network, or fabricate BPM/beat grids.
+
+`rhythm --edit-guidance` requires the current rhythm plan and current timeline.
+It writes `.artist-portrait/data/edit_guidance.json`,
+`output/edit_guidance.md`, and `output/edit_guidance_handoff.json`, covering
+manual subtitle, transition, pause, ducking, phrase, cut/cue, ending,
+source-risk, QC-repair, and handoff guidance. It does not mutate the timeline,
+move edit points, select music, fit music, render media, call models, access
+the network, or use image generation/editing.
 
 `bgm review` writes `.artist-portrait/data/bgm_fit_review.json` and
 `output/bgm_fit_review.md` when a recommendation-driven fit exists. It checks

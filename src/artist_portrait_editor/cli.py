@@ -60,6 +60,7 @@ from artist_portrait_editor.run_records import (
 )
 from artist_portrait_editor.rhythm import (
     RhythmError,
+    build_edit_guidance,
     build_rhythm_media_qc,
     build_rhythm_plan,
     build_rhythm_repair_plan,
@@ -285,6 +286,7 @@ def build_parser() -> argparse.ArgumentParser:
     rhythm_sub.add_argument("--agent-output")
     rhythm_sub.add_argument("--qc", action="store_true")
     rhythm_sub.add_argument("--repair-plan", action="store_true")
+    rhythm_sub.add_argument("--edit-guidance", action="store_true")
     rhythm_sub.add_argument(
         "--acceptance-profile",
         choices=("standard", "core", "preview", "delivery"),
@@ -898,8 +900,9 @@ def cmd_workflow(args: argparse.Namespace) -> int:
 def cmd_rhythm(args: argparse.Namespace) -> int:
     if error := _validate_common_flags(args):
         return int(error)
-    if args.qc and args.repair_plan:
-        print("rhythm --qc and --repair-plan are mutually exclusive", file=sys.stderr)
+    selected_modes = sum(bool(item) for item in (args.qc, args.repair_plan, args.edit_guidance))
+    if selected_modes > 1:
+        print("rhythm --qc, --repair-plan, and --edit-guidance are mutually exclusive", file=sys.stderr)
         return int(ExitCode.invalid_cli_usage)
     project_path = Path(args.project)
     try:
@@ -914,6 +917,11 @@ def cmd_rhythm(args: argparse.Namespace) -> int:
                 root=root,
                 project_id=config.project.id,
                 acceptance_profile=args.acceptance_profile,
+            )
+        elif args.edit_guidance:
+            json_path, md_path, handoff_path, result = build_edit_guidance(
+                root=root,
+                project_id=config.project.id,
             )
         elif args.qc:
             json_path, md_path, handoff_path, result = build_rhythm_media_qc(
@@ -944,6 +952,13 @@ def cmd_rhythm(args: argparse.Namespace) -> int:
                 for action in result.actions
                 if action.severity == "required"
             ]
+        elif args.edit_guidance:
+            warnings = [
+                action.rationale
+                for action in result.actions
+                if action.priority == "high"
+            ]
+            errors = []
         else:
             domains = (
                 [
@@ -983,7 +998,12 @@ def cmd_rhythm(args: argparse.Namespace) -> int:
                 for issue in domain.issues
                 if issue.severity == "error"
             ]
-        if not args.qc and not args.repair_plan and result.agent_candidate_audit:
+        if (
+            not args.qc
+            and not args.repair_plan
+            and not args.edit_guidance
+            and result.agent_candidate_audit
+        ):
             warnings.extend(
                 issue.detail
                 for issue in result.agent_candidate_audit.issues
@@ -1024,6 +1044,7 @@ def cmd_rhythm(args: argparse.Namespace) -> int:
                 "agent_output": str(args.agent_output) if args.agent_output else None,
                 "qc": bool(args.qc),
                 "repair_plan": bool(args.repair_plan),
+                "edit_guidance": bool(args.edit_guidance),
                 "acceptance_profile": args.acceptance_profile,
             },
         )
@@ -1056,6 +1077,8 @@ def cmd_rhythm(args: argparse.Namespace) -> int:
         payload["rhythm_media_qc"] = result.model_dump(mode="json")
     elif args.repair_plan:
         payload["rhythm_repair_plan"] = result.model_dump(mode="json")
+    elif args.edit_guidance:
+        payload["edit_guidance"] = result.model_dump(mode="json")
     else:
         payload["rhythm_plan"] = result.model_dump(mode="json")
     if args.json:
