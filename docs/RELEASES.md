@@ -24,9 +24,10 @@ gate-progress, or closeout fragments.
 - Governance state: V0-041 completed with pre-implementation countability audit
   passed; V0-030 task accounting issue is resolved as `ISSUE-014`
 - Latest published capability release tag: `v0.25.0`
-- Remote freshness: `main` and peeled `v0.25.0` both verified at
+- Remote freshness: peeled `v0.25.0` verified at
   `2920369ec4a6217d224cb061b8c84477c38355a2` after push; annotated tag object
-  `e0b6a734b055ea7b3da32819de1d926c4e39e79c`
+  `e0b6a734b055ea7b3da32819de1d926c4e39e79c`; `main` contains the
+  post-release publication ledger after tag publication
 - Publication policy: do not publish the next capability release until its
   release candidate has passed full local validation
 
@@ -75,8 +76,9 @@ Validation is updated only after the complete current working tree passes.
   gate/progress tests passed with `17 passed`; project checks including
   generated real-media workflow repair refresh guidance, Skill validation, and
   schema drift passed; `git diff --check` passed
-- Git: included in release `v0.25.0`; `main` and peeled tag verified at
-  `2920369ec4a6217d224cb061b8c84477c38355a2`
+- Git: included in release `v0.25.0`; peeled tag verified at
+  `2920369ec4a6217d224cb061b8c84477c38355a2`; `main` contains the
+  post-release publication ledger
 
 ### V0-040 Accumulated Workflow/Rhythm Release Hardening Gate
 

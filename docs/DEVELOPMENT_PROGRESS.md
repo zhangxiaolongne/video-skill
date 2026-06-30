@@ -34,8 +34,9 @@ readiness and gate-progress fragments must not be recreated.
 - Batch status: `completed`
 - Current release marker: tag `v0.25.0`
 - Latest published baseline: `v0.25.0`
-- Release publication state: `main` and peeled `v0.25.0` verified at
-  `2920369ec4a6217d224cb061b8c84477c38355a2`
+- Release publication state: peeled `v0.25.0` verified at
+  `2920369ec4a6217d224cb061b8c84477c38355a2`; `main` contains the
+  post-release publication ledger
 - Final usable Skill status: foundation, creative proposals, canonical timeline,
   BGM fitting, and local low-resolution preview rendering are substantial;
   preview quality review, render controls, controlled local final export, and
