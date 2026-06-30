@@ -73,7 +73,6 @@ counted.
   mutation
 - Accepted boundary: BGM rhythm intelligence is review evidence only; actual
   cut movement, music selection, and beat-synced editing remain unopened
-- Release action: no commit, push, or tag until a larger functional checkpoint
-  is accepted
+- Release action: included in published `v0.26.0`
 - Next batch candidate: phrase-level manual edit guidance, or local beat-engine
   adapter hardening if the user wants deeper music intelligence

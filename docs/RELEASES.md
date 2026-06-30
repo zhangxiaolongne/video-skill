@@ -21,13 +21,14 @@ gate-progress, or closeout fragments.
 - Release target: `v0.26.0`
 - Completed in release `v0.25.0`: V0-025 through V0-041
 - Completed in release `v0.26.0`: V0-042
-- Working-tree publication state: V0-042 release commit/tag/push in progress
+- Working-tree publication state: V0-042 is included in published `v0.26.0`;
+  post-release publication ledger update complete
 - Governance state: V0-042 completed with pre-implementation countability audit
   passed; V0-030 task accounting issue is resolved as `ISSUE-014`
-- Latest published capability release tag: `v0.25.0`
-- Remote freshness before v0.26.0 publication: peeled `v0.25.0` verified at
-  `2920369ec4a6217d224cb061b8c84477c38355a2` after push; annotated tag object
-  `e0b6a734b055ea7b3da32819de1d926c4e39e79c`; `main` contains the
+- Latest published capability release tag: `v0.26.0`
+- Remote freshness: peeled `v0.26.0` verified at
+  `8a482bd74e2f0be1c745f0ea63934c3da74f026f` after push; annotated tag object
+  `7bde073a1492887ee939294c97ffc75b94e03348`; `main` contains the
   post-release publication ledger after tag publication
 - Publication policy: do not publish the next capability release until its
   release candidate has passed full local validation
@@ -77,7 +78,9 @@ Validation is updated only after the complete current working tree passes.
   project checks including generated real-media BGM rhythm intelligence, Skill
   validation, schema drift, and release hardening passed; `git diff --check`
   passed
-- Git: local only; not committed, tagged, or pushed
+- Git: included in release `v0.26.0`; peeled tag verified at
+  `8a482bd74e2f0be1c745f0ea63934c3da74f026f`; `main` contains the
+  post-release publication ledger
 
 ### V0-041 Workflow Repair Evidence Refresh Guidance Gate
 

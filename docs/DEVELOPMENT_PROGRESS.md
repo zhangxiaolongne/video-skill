@@ -33,10 +33,11 @@ readiness and gate-progress fragments must not be recreated.
 - Current batch: `V0-042`
 - Batch status: `completed`
 - Current release marker: tag `v0.26.0`
-- Latest published baseline: `v0.25.0`
-- Release publication state: `v0.26.0` release commit/tag/push in progress;
-  previous peeled `v0.25.0` verified at
-  `2920369ec4a6217d224cb061b8c84477c38355a2`
+- Latest published baseline: `v0.26.0`
+- Release publication state: peeled `v0.26.0` verified at
+  `8a482bd74e2f0be1c745f0ea63934c3da74f026f`; annotated tag object
+  `7bde073a1492887ee939294c97ffc75b94e03348`; `main` contains the
+  post-release publication ledger
 - Final usable Skill status: foundation, creative proposals, canonical timeline,
   BGM fitting, and local low-resolution preview rendering are substantial;
   preview quality review, render controls, controlled local final export, and
@@ -53,7 +54,7 @@ readiness and gate-progress fragments must not be recreated.
   execution evidence review, accumulated workflow/rhythm release hardening,
   workflow repair evidence refresh guidance, and BGM rhythm intelligence are
   substantial;
-  current release target is `v0.26.0`; installed-engine BPM extraction and
+  latest published release is `v0.26.0`; installed-engine BPM extraction and
   automatic music selection remain undelivered
 
 ## Capability Dashboard
