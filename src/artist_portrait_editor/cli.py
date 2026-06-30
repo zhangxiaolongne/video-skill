@@ -18,6 +18,7 @@ from artist_portrait_editor.capabilities import detect_capabilities
 from artist_portrait_editor.bgm import (
     BgmError,
     analyze_candidates,
+    build_bgm_rhythm_intelligence,
     build_fit_plan,
     import_candidate,
     load_ledger,
@@ -230,7 +231,7 @@ def build_parser() -> argparse.ArgumentParser:
     timeline_sub.add_argument("--verbose", action="store_true")
 
     bgm_sub = subparsers.add_parser("bgm")
-    bgm_sub.add_argument("action", choices=("import", "list", "analyze", "recommend", "select", "fit", "review"))
+    bgm_sub.add_argument("action", choices=("import", "list", "analyze", "rhythm", "recommend", "select", "fit", "review"))
     bgm_sub.add_argument("--project", required=True)
     bgm_sub.add_argument("--file")
     bgm_sub.add_argument("--source-id")
@@ -1995,6 +1996,50 @@ def cmd_bgm(args: argparse.Namespace) -> int:
                         output_refs=existing.output_refs,
                         last_run_id=existing.last_run_id,
                         warnings=[*existing.warnings, "BGM analysis changed"],
+                        )
+        elif args.action == "rhythm":
+            json_path, md_path, handoff_path, report = build_bgm_rhythm_intelligence(
+                root=root,
+                project_id=config.project.id,
+            )
+            payload = {
+                "bgm_rhythm_intelligence": report.model_dump(mode="json"),
+                "output": json_path.relative_to(root).as_posix(),
+                "report": md_path.relative_to(root).as_posix(),
+                "handoff": handoff_path.relative_to(root).as_posix(),
+                "status": report.status,
+            }
+            step_name = "bgm_rhythm"
+            output_refs = [
+                json_path.relative_to(root).as_posix(),
+                md_path.relative_to(root).as_posix(),
+                handoff_path.relative_to(root).as_posix(),
+            ]
+            warnings = [
+                warning
+                for candidate in report.candidates
+                for warning in candidate.warnings
+            ]
+            for dependent in (
+                "rhythm",
+                "rhythm_qc",
+                "rhythm_repair_plan",
+                "preview",
+                "review_preview",
+                "final_export",
+                "review_final_export",
+            ):
+                existing = state.steps.get(dependent)
+                if existing and existing.status in {
+                    StepStatus.completed,
+                    StepStatus.completed_with_warnings,
+                }:
+                    state.steps[dependent] = StepLedgerEntry(
+                        status=StepStatus.invalidated,
+                        input_fingerprint=existing.input_fingerprint,
+                        output_refs=existing.output_refs,
+                        last_run_id=existing.last_run_id,
+                        warnings=[*existing.warnings, "BGM rhythm intelligence changed"],
                     )
         elif args.action == "recommend":
             if args.agent_output:

@@ -158,6 +158,58 @@ class BgmAnalysisReport(BaseModel):
     candidates: list[BgmCandidateAnalysis] = Field(default_factory=list)
 
 
+class BgmRhythmCandidateInsight(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    music_candidate_id: str = Field(min_length=1)
+    input_mode: BgmInputMode
+    source_ref: str = Field(min_length=1)
+    mixed_audio: bool
+    beat_analysis_status: str = Field(pattern=r"^(unavailable|completed)$")
+    bpm: float | None = Field(default=None, gt=0)
+    beat_count: int = Field(ge=0)
+    beat_grid_ref: str | None = None
+    beat_grid_fingerprint: str | None = Field(
+        default=None,
+        pattern=r"^sha256:[0-9a-f]{64}$",
+    )
+    tempo_confidence: float | None = Field(default=None, ge=0, le=1)
+    beat_quality_status: str = Field(pattern=r"^(unavailable|weak|usable|strong)$")
+    beat_quality_score: float = Field(ge=0, le=1)
+    phrase_hint_status: str = Field(pattern=r"^(unavailable|estimated)$")
+    estimated_bar_seconds: float | None = Field(default=None, gt=0)
+    estimated_phrase_seconds: float | None = Field(default=None, gt=0)
+    source_risk_status: str = Field(pattern=r"^(low|medium|high)$")
+    warnings: list[str] = Field(default_factory=list)
+    next_actions: list[str] = Field(default_factory=list)
+
+
+class BgmRhythmIntelligenceReport(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    schema_version: str = SCHEMA_VERSION
+    bgm_rhythm_intelligence_id: str = Field(min_length=1)
+    project_id: str = Field(min_length=1)
+    candidate_ledger_ref: str = ".artist-portrait/data/bgm_candidates.json"
+    candidate_ledger_fingerprint: str = Field(pattern=r"^sha256:[0-9a-f]{64}$")
+    bgm_analysis_ref: str = ".artist-portrait/data/bgm_analysis.json"
+    bgm_analysis_fingerprint: str = Field(pattern=r"^sha256:[0-9a-f]{64}$")
+    candidate_count: int = Field(ge=0)
+    beat_completed_count: int = Field(ge=0)
+    usable_beat_candidate_count: int = Field(ge=0)
+    mixed_audio_candidate_count: int = Field(ge=0)
+    source_modes_present: list[BgmInputMode] = Field(default_factory=list)
+    status: str = Field(pattern=r"^(passed|warning|blocked)$")
+    summary: str = Field(min_length=1)
+    candidates: list[BgmRhythmCandidateInsight] = Field(default_factory=list)
+    automatic_music_selection: bool = False
+    edit_points_moved: bool = False
+    media_rendered: bool = False
+    model_call_performed_by_cli: bool = False
+    network_performed: bool = False
+    fabricated_bpm_or_beats: bool = False
+
+
 class BgmFitSegment(BaseModel):
     model_config = ConfigDict(extra="forbid")
 

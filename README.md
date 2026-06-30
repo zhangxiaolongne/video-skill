@@ -22,7 +22,7 @@ Historical version outcomes are consolidated in `docs/RELEASES.md`.
 
 ## Current Gate
 
-Current V0-041 workflow repair evidence refresh guidance gate work allows deterministic project
+Current V0-042 BGM rhythm intelligence gate work allows deterministic project
 setup, local media scanning, fixed-window clip segmentation, optional
 PySceneDetect video scene segmentation, local-only faster-whisper transcription
 when available, ffmpeg midpoint keyframe extraction for video clips,
@@ -51,7 +51,8 @@ execution bundles, explicit execution record imports, BGM/edit rhythm planning,
 rhythm media QC, rhythm manual repair planning, guided workflow planning,
 workflow execution evidence review, workflow evidence repair planning, workflow
 repair approval/dry-run packaging, workflow repair execution evidence review,
-release hardening audit, and workflow repair evidence refresh guidance:
+release hardening audit, workflow repair evidence refresh guidance, and BGM
+rhythm intelligence:
 
 The V0-010 proposal foundation is now consolidated around one artifact registry.
 `status` and `doctor` validate cross-artifact references, project identity,
@@ -113,6 +114,7 @@ project.yaml
 -> bgm_candidates.json and bgm_fit.json
 -> bgm_analysis.json and bgm_analysis_report.md
 -> bgm_beat_grids/<music_candidate_id>.json when a validated local beat adapter succeeds
+-> bgm_rhythm_intelligence.json, bgm_rhythm_intelligence.md, and bgm_rhythm_handoff.json
 -> bgm_recommendation_context.json, bgm_recommendation_request.json, and bgm_recommendation_agent_handoff.json
 -> bgm_recommendations.json and bgm_recommendation_review.md
 -> bgm_recommendation_selection.json and bgm_recommendation_selection_review.md

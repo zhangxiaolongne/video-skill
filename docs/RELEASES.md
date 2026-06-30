@@ -7,24 +7,25 @@ gate-progress, or closeout fragments.
 
 ## Current Release State
 
-- Capability gate: `V0-041`
-- Active local batch: `V0-041 workflow repair evidence refresh guidance gate`
-- Current release marker: tag `v0.25.0`
+- Capability gate: `V0-042`
+- Active local batch: `V0-042 BGM rhythm intelligence gate`
+- Current release marker: tag `v0.26.0`
 - Release date: `2026-06-30`
-- Release commit subject: `Release artist portrait editor v0.25.0`
+- Release commit subject: `Release artist portrait editor v0.26.0`
 - Previous published baseline:
   `d7dcab6430db4f0a6845079cebcd22cfbb85e74e`
 - Completed in release `v0.24.0`: V0-010n through V0-010t, V0-010 foundation
   consolidation, proposal review hardening, `DEV-GOV-001`, V0-011, V0-012,
   V0-013, V0-014, V0-015, V0-016, V0-017, V0-018, V0-020, V0-021, V0-022,
   V0-023, and V0-024
-- Release target: `v0.25.0`
+- Release target: `v0.26.0`
 - Completed in release `v0.25.0`: V0-025 through V0-041
-- Working-tree publication state: `v0.25.0` committed, tagged, and pushed
-- Governance state: V0-041 completed with pre-implementation countability audit
+- Completed in release `v0.26.0`: V0-042
+- Working-tree publication state: V0-042 release commit/tag/push in progress
+- Governance state: V0-042 completed with pre-implementation countability audit
   passed; V0-030 task accounting issue is resolved as `ISSUE-014`
 - Latest published capability release tag: `v0.25.0`
-- Remote freshness: peeled `v0.25.0` verified at
+- Remote freshness before v0.26.0 publication: peeled `v0.25.0` verified at
   `2920369ec4a6217d224cb061b8c84477c38355a2` after push; annotated tag object
   `e0b6a734b055ea7b3da32819de1d926c4e39e79c`; `main` contains the
   post-release publication ledger after tag publication
@@ -35,9 +36,8 @@ gate-progress, or closeout fragments.
 
 Validation is updated only after the complete current working tree passes.
 
-- Verified: `v0.25.0` release validation and remote publication completed on
-  `2026-06-30`
-- Full pytest: `285 passed`
+- Verified: V0-042 local validation passed on `2026-06-30`
+- Full pytest: `288 passed`
 - Project checks: `run_checks.py --skip-pytest` passed
 - Skill validation: passed
 - Schema drift: passed
@@ -50,12 +50,34 @@ Validation is updated only after the complete current working tree passes.
   workflow execution evidence review, workflow evidence repair planning,
   workflow repair approval/dry-run packaging, workflow repair execution
   evidence review, accumulated workflow/rhythm release hardening, and workflow
-  repair evidence refresh guidance
+  repair evidence refresh guidance, plus V0-042 BGM rhythm intelligence
+  generation and rhythm-plan/rhythm-QC binding
   passed; proposal generation remained correctly blocked without paid API,
   API key, remote provider, or hidden network dependency
-- Git diff check: passed
+- Git diff check: `git diff --check` passed
 
 ## Major Version History
+
+### V0-042 BGM Rhythm Intelligence Gate
+
+- Status: completed locally on `2026-06-30`
+- Capability: `artist-portrait bgm rhythm --project <project.yaml>` writes
+  canonical `.artist-portrait/data/bgm_rhythm_intelligence.json`,
+  `output/bgm_rhythm_intelligence.md`, and `output/bgm_rhythm_handoff.json`,
+  converting current BGM candidate and analysis evidence into beat-quality
+  scoring, bar/phrase timing hints, source-provenance rhythm risk, no-engine
+  guidance, and mixed-video-audio contamination warnings
+- Boundary: no automatic music selection, no edit-point movement, no automatic
+  BGM fitting, no media rendering, no fabricated BPM or beat grids, no deriving
+  BPM from PCM energy windows, no CLI model calls, no network access, no paid
+  APIs, no remote providers, no image generation/editing, and no treating
+  extracted video mixes as clean BGM
+- Validation: targeted V0-042 BGM rhythm/schema/gate/progress/release-check
+  tests passed with `31 passed`; full pytest passed with `288 passed`;
+  project checks including generated real-media BGM rhythm intelligence, Skill
+  validation, schema drift, and release hardening passed; `git diff --check`
+  passed
+- Git: local only; not committed, tagged, or pushed
 
 ### V0-041 Workflow Repair Evidence Refresh Guidance Gate
 

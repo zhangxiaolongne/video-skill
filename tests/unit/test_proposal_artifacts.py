@@ -110,9 +110,9 @@ def test_progress_snapshot_is_machine_readable_and_paid_gate_closed():
         (root / "docs" / "current_progress.json").read_text(encoding="utf-8")
     )
 
-    assert payload["capability_gate"] == "V0-041"
-    assert payload["milestone"] == "V0-041 workflow repair evidence refresh guidance gate"
-    assert payload["active_batch"]["id"] == "V0-041"
+    assert payload["capability_gate"] == "V0-042"
+    assert payload["milestone"] == "V0-042 BGM rhythm intelligence gate"
+    assert payload["active_batch"]["id"] == "V0-042"
     assert payload["active_batch"]["capability_gate"] == payload["capability_gate"]
     assert len(payload["tasks"]) == 10
     assert {task["status"] for task in payload["tasks"]}.issubset(
@@ -155,6 +155,7 @@ def test_progress_snapshot_is_machine_readable_and_paid_gate_closed():
             "workflow_repair_execution_review",
             "release_hardening",
             "workflow_repair_refresh_guidance",
+            "bgm_rhythm_intelligence",
             "preview_rendering",
             "final_export",
         }

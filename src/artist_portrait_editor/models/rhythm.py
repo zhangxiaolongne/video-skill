@@ -81,6 +81,7 @@ class RhythmPlan(BaseModel):
     bgm_fit_id: str | None = None
     bgm_fit_fingerprint: str | None = Field(default=None, pattern=r"^sha256:[0-9a-f]{64}$")
     bgm_analysis_fingerprint: str | None = Field(default=None, pattern=r"^sha256:[0-9a-f]{64}$")
+    bgm_rhythm_intelligence_fingerprint: str | None = Field(default=None, pattern=r"^sha256:[0-9a-f]{64}$")
     intent: RhythmIntent
     timeline_profile: RhythmAuditDomain
     bgm_profile: RhythmAuditDomain

@@ -8,10 +8,12 @@ import artist_portrait_editor.bgm as bgm_module
 from artist_portrait_editor.bgm import (
     BgmError,
     analyze_candidates,
+    build_bgm_rhythm_intelligence,
     build_fit_plan,
     import_candidate,
     review_bgm,
 )
+from artist_portrait_editor.rhythm import build_rhythm_plan
 from artist_portrait_editor.models.bgm import BgmBeatEvent, BgmBeatGrid, BgmInputMode
 from artist_portrait_editor.models.source import (
     Assertion,
@@ -359,12 +361,10 @@ def test_validated_beat_grid_is_bound_to_analysis_candidate_and_fit(tmp_path, mo
             beat_engine="librosa",
             bpm=120.0,
             tempo_confidence=0.8,
-            beat_count=4,
+            beat_count=8,
             beat_times=[
-                BgmBeatEvent(index=0, time=0.0, confidence=0.8),
-                BgmBeatEvent(index=1, time=0.5, confidence=0.8),
-                BgmBeatEvent(index=2, time=1.0, confidence=0.8),
-                BgmBeatEvent(index=3, time=1.5, confidence=0.8),
+                BgmBeatEvent(index=index, time=round(index * 0.25, 3), confidence=0.8)
+                for index in range(8)
             ],
         )
 
@@ -383,7 +383,7 @@ def test_validated_beat_grid_is_bound_to_analysis_candidate_and_fit(tmp_path, mo
     assert analysis.bpm == 120.0
     assert analysis.beat_grid_ref
     assert analysis.beat_grid_fingerprint
-    assert analysis.beat_count == 4
+    assert analysis.beat_count == 8
     assert (tmp_path / analysis.beat_grid_ref).exists()
     assert ledger_payload["candidates"][0]["bpm"] == 120.0
     assert ledger_payload["candidates"][0]["beat_grid_ref"] == analysis.beat_grid_ref
@@ -405,6 +405,171 @@ def test_validated_beat_grid_is_bound_to_analysis_candidate_and_fit(tmp_path, mo
     payload["bpm"] = 90
     beat_grid_path.write_text(json.dumps(payload), encoding="utf-8")
     assert "BGM fit beat grid fingerprint is stale" in review_bgm(tmp_path, "project-test")
+
+
+def test_bgm_rhythm_intelligence_scores_beat_quality_and_phrase_hints(tmp_path, monkeypatch):
+    make_audio(tmp_path / "media" / "beat.wav", duration=2)
+    _, candidate = import_candidate(
+        root=tmp_path,
+        project_id="project-test",
+        file_ref="media/beat.wav",
+        source_id=None,
+        extract_in=0,
+        extract_out=None,
+        stream_index=0,
+        rights_status=RightsStatus.owned,
+        user_intent="beat fit",
+    )
+
+    def fake_capabilities():
+        from artist_portrait_editor.models.bgm import BgmBeatEngineCapability
+
+        return [
+            BgmBeatEngineCapability(
+                engine="librosa",
+                package_available=True,
+                execution_supported=True,
+                status="available",
+            )
+        ]
+
+    def fake_run_beat_engine(**kwargs):
+        return BgmBeatGrid(
+            project_id="project-test",
+            music_candidate_id=candidate.music_candidate_id,
+            cache_ref=candidate.cache_ref,
+            cache_fingerprint=bgm_module.hash_file(kwargs["cache_path"]),
+            beat_engine="librosa",
+            bpm=120.0,
+            tempo_confidence=0.8,
+            beat_count=8,
+            beat_times=[
+                BgmBeatEvent(index=index, time=round(index * 0.25, 3), confidence=0.8)
+                for index in range(8)
+            ],
+        )
+
+    monkeypatch.setattr(bgm_module, "detect_beat_engine_capabilities", fake_capabilities)
+    monkeypatch.setattr(bgm_module, "run_beat_engine_if_available", fake_run_beat_engine)
+    analyze_candidates(root=tmp_path, project_id="project-test", window_seconds=0.5)
+
+    json_path, md_path, handoff_path, report = build_bgm_rhythm_intelligence(
+        root=tmp_path,
+        project_id="project-test",
+    )
+
+    assert json_path == tmp_path / ".artist-portrait" / "data" / "bgm_rhythm_intelligence.json"
+    assert md_path.exists()
+    assert handoff_path.exists()
+    assert report.status == "passed"
+    assert report.usable_beat_candidate_count == 1
+    assert report.fabricated_bpm_or_beats is False
+    insight = report.candidates[0]
+    assert insight.beat_quality_status == "strong"
+    assert insight.beat_quality_score == pytest.approx(0.8, abs=0.001)
+    assert insight.estimated_bar_seconds == pytest.approx(2.0)
+    assert insight.estimated_phrase_seconds == pytest.approx(8.0)
+    assert insight.source_risk_status == "low"
+
+
+def test_rhythm_plan_consumes_bgm_rhythm_intelligence_without_mutation(tmp_path, monkeypatch):
+    make_audio(tmp_path / "media" / "beat.wav", duration=2)
+    _, candidate = import_candidate(
+        root=tmp_path,
+        project_id="project-test",
+        file_ref="media/beat.wav",
+        source_id=None,
+        extract_in=0,
+        extract_out=None,
+        stream_index=0,
+        rights_status=RightsStatus.owned,
+        user_intent="beat fit",
+    )
+
+    def fake_capabilities():
+        from artist_portrait_editor.models.bgm import BgmBeatEngineCapability
+
+        return [
+            BgmBeatEngineCapability(
+                engine="librosa",
+                package_available=True,
+                execution_supported=True,
+                status="available",
+            )
+        ]
+
+    def fake_run_beat_engine(**kwargs):
+        return BgmBeatGrid(
+            project_id="project-test",
+            music_candidate_id=candidate.music_candidate_id,
+            cache_ref=candidate.cache_ref,
+            cache_fingerprint=bgm_module.hash_file(kwargs["cache_path"]),
+            beat_engine="librosa",
+            bpm=120.0,
+            tempo_confidence=0.8,
+            beat_count=8,
+            beat_times=[
+                BgmBeatEvent(index=index, time=round(index * 0.25, 3), confidence=0.8)
+                for index in range(8)
+            ],
+        )
+
+    monkeypatch.setattr(bgm_module, "detect_beat_engine_capabilities", fake_capabilities)
+    monkeypatch.setattr(bgm_module, "run_beat_engine_if_available", fake_run_beat_engine)
+    analyze_candidates(root=tmp_path, project_id="project-test", window_seconds=0.5)
+    build_bgm_rhythm_intelligence(root=tmp_path, project_id="project-test")
+    write_timeline(tmp_path, duration=2.0)
+    build_fit_plan(
+        root=tmp_path,
+        project_id="project-test",
+        candidate_id=candidate.music_candidate_id,
+        beat_alignment_requested=True,
+    )
+
+    _json_path, _md_path, _handoff_path, plan = build_rhythm_plan(
+        root=tmp_path,
+        project_id="project-test",
+    )
+
+    metrics = {metric.metric_id: metric for metric in plan.bgm_profile.metrics}
+    assert plan.bgm_rhythm_intelligence_fingerprint is not None
+    assert metrics["bgm_rhythm_status"].value == "passed"
+    assert metrics["beat_quality_status"].value == "strong"
+    assert metrics["estimated_phrase_seconds"].value == pytest.approx(8.0)
+    assert plan.edit_points_moved is False
+    assert plan.automatic_music_selection is False
+    assert plan.media_rendered is False
+
+
+def test_bgm_rhythm_intelligence_keeps_no_engine_and_mixed_audio_guidance(tmp_path):
+    make_video(tmp_path / "media" / "music-source.mp4", duration=1.5)
+    _, candidate = import_candidate(
+        root=tmp_path,
+        project_id="project-test",
+        file_ref="media/music-source.mp4",
+        source_id=None,
+        extract_in=0,
+        extract_out=None,
+        stream_index=0,
+        rights_status=RightsStatus.publicly_available,
+        user_intent="analyze video audio",
+    )
+    analyze_candidates(root=tmp_path, project_id="project-test", window_seconds=0.5)
+
+    _json_path, _md_path, _handoff_path, report = build_bgm_rhythm_intelligence(
+        root=tmp_path,
+        project_id="project-test",
+    )
+
+    assert candidate.mixed_audio is True
+    assert report.status == "warning"
+    assert report.usable_beat_candidate_count == 0
+    insight = report.candidates[0]
+    assert insight.beat_quality_status == "unavailable"
+    assert insight.phrase_hint_status == "unavailable"
+    assert insight.source_risk_status == "high"
+    assert any("video or source mix" in warning for warning in insight.warnings)
+    assert any("validated local beat engine" in action for action in insight.next_actions)
 
 
 def test_bgm_fit_accepts_explicit_controls_without_moving_edit_points(tmp_path):

@@ -12,6 +12,25 @@ it. Do not use this file as a task list.
 
 ## Active Decisions
 
+### DEC-042: BGM rhythm intelligence is review evidence, not automatic editing
+
+- Recorded: `2026-06-30`
+- Status: `active`
+- Decision: V0-042 adds `bgm rhythm` to turn existing BGM candidate and BGM
+  analysis evidence into canonical editing-facing rhythm intelligence:
+  beat-quality status, bar/phrase hints derived only from validated BPM,
+  source-provenance rhythm risk, no-engine next actions, and mixed-video-audio
+  contamination warnings
+- Rationale: BGM, text, video rhythm, transitions, and cuts have to cooperate,
+  but automatic beat-synced editing is unsafe without explicit user control and
+  strong beat evidence
+- Consequence: rhythm plans and rhythm media QC may bind to BGM rhythm
+  intelligence freshness, while the CLI still does not select music, move edit
+  points, render media, call models, access the network, or fabricate BPM/beat
+  grids
+- Revisit when: a later gate opens explicit manual phrase-level edit guidance
+  or user-approved beat-grid-guided edit mutation
+
 ### DEC-001: Separate strategy from execution records
 
 - Recorded: `2026-06-25`

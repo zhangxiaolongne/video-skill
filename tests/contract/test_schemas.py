@@ -16,6 +16,7 @@ from artist_portrait_editor.models.bgm import (
     BgmBeatGrid,
     BgmCandidateLedger,
     BgmFitPlan,
+    BgmRhythmIntelligenceReport,
 )
 from artist_portrait_editor.models.bgm_recommendation import (
     BgmRecommendationContext,
@@ -94,6 +95,7 @@ def test_schema_generation_from_pydantic_models():
     bgm_recommendation_validation_schema = BgmRecommendationValidationReport.model_json_schema()
     bgm_ledger_schema = BgmCandidateLedger.model_json_schema()
     bgm_fit_schema = BgmFitPlan.model_json_schema()
+    bgm_rhythm_schema = BgmRhythmIntelligenceReport.model_json_schema()
     config_schema = ProjectConfig.model_json_schema()
     clip_schema = ClipRecord.model_json_schema()
     keyframe_schema = KeyframeRecord.model_json_schema()
@@ -158,6 +160,7 @@ def test_schema_generation_from_pydantic_models():
     assert bgm_recommendation_validation_schema["title"] == "BgmRecommendationValidationReport"
     assert bgm_ledger_schema["title"] == "BgmCandidateLedger"
     assert bgm_fit_schema["title"] == "BgmFitPlan"
+    assert bgm_rhythm_schema["title"] == "BgmRhythmIntelligenceReport"
     assert config_schema["title"] == "ProjectConfig"
     assert clip_schema["title"] == "ClipRecord"
     assert keyframe_schema["title"] == "KeyframeRecord"
@@ -330,6 +333,11 @@ def test_committed_schemas_match_pydantic_generation():
     )
     committed_rhythm_repair = json.loads(
         (schema_dir / "rhythm_repair_plan.schema.json").read_text(encoding="utf-8")
+    )
+    committed_bgm_rhythm = json.loads(
+        (schema_dir / "bgm_rhythm_intelligence_report.schema.json").read_text(
+            encoding="utf-8"
+        )
     )
     committed_workflow = json.loads(
         (schema_dir / "workflow_plan.schema.json").read_text(encoding="utf-8")
@@ -558,6 +566,9 @@ def test_committed_schemas_match_pydantic_generation():
     )
     assert committed_rhythm_repair == json.loads(
         json.dumps(RhythmRepairPlan.model_json_schema(), sort_keys=True)
+    )
+    assert committed_bgm_rhythm == json.loads(
+        json.dumps(BgmRhythmIntelligenceReport.model_json_schema(), sort_keys=True)
     )
     assert committed_workflow == json.loads(
         json.dumps(WorkflowPlan.model_json_schema(), sort_keys=True)

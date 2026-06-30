@@ -28,15 +28,15 @@ readiness and gate-progress fragments must not be recreated.
 - Branch: `main`
 - Remote configured: `zhangxiaolongne/video-skill`
 - Canonical skill: `artist-portrait-editor`
-- Current local gate: V0-041 workflow repair evidence refresh guidance gate
-- Current milestone: `V0-041 workflow repair evidence refresh guidance gate`
-- Current batch: `V0-041`
+- Current local gate: V0-042 BGM rhythm intelligence gate
+- Current milestone: `V0-042 BGM rhythm intelligence gate`
+- Current batch: `V0-042`
 - Batch status: `completed`
-- Current release marker: tag `v0.25.0`
+- Current release marker: tag `v0.26.0`
 - Latest published baseline: `v0.25.0`
-- Release publication state: peeled `v0.25.0` verified at
-  `2920369ec4a6217d224cb061b8c84477c38355a2`; `main` contains the
-  post-release publication ledger
+- Release publication state: `v0.26.0` release commit/tag/push in progress;
+  previous peeled `v0.25.0` verified at
+  `2920369ec4a6217d224cb061b8c84477c38355a2`
 - Final usable Skill status: foundation, creative proposals, canonical timeline,
   BGM fitting, and local low-resolution preview rendering are substantial;
   preview quality review, render controls, controlled local final export, and
@@ -50,10 +50,10 @@ readiness and gate-progress fragments must not be recreated.
   rhythm-aware acceptance integration, rhythm manual repair planning, guided
   workflow planning, workflow execution evidence review, workflow evidence
   repair planning, workflow repair approval/dry-run packaging, workflow repair
-  execution evidence review, accumulated workflow/rhythm release hardening, and
-  workflow repair evidence refresh guidance are
+  execution evidence review, accumulated workflow/rhythm release hardening,
+  workflow repair evidence refresh guidance, and BGM rhythm intelligence are
   substantial;
-  latest published release is `v0.25.0`; installed-engine BPM extraction and
+  current release target is `v0.26.0`; installed-engine BPM extraction and
   automatic music selection remain undelivered
 
 ## Capability Dashboard
@@ -96,15 +96,16 @@ readiness and gate-progress fragments must not be recreated.
 | Workflow repair execution review | `completed` | Explicit external repair execution records can be quarantined and reviewed against dry-run action, command, and artifact evidence without CLI execution |
 | Release hardening | `completed` | Current gate, publication state, schema coverage, forbidden surfaces, artifact chain, and validation evidence can be audited before release |
 | Workflow repair refresh guidance | `completed` | Reviewed repair evidence can be packaged into the next explicit workflow execution-record guidance without workflow mutation |
+| BGM rhythm intelligence | `completed` | Existing BGM candidates and analysis can produce editing-facing beat quality, phrase hints, source-risk guidance, and rhythm-plan freshness binding without selection or edit mutation |
 | Preview and rendering | `completed` | Local low-resolution preview rendering from timeline plus optional BGM fit works |
 | Preview quality review | `completed` | Bounded render controls and deterministic QC work before final export opens |
 | Final export | `completed` | Bounded local MP4 final export from canonical timeline, retained audio, optional fitted BGM, manifest, QC, review, status, doctor, audit, and invalidation work |
-| Development governance | `completed` | Six canonical owners and automatic drift checks are active; V0-041 passed pre-implementation countability audit |
+| Development governance | `completed` | Six canonical owners and automatic drift checks are active; V0-042 passed pre-implementation countability audit |
 
 ## Current Hard Boundaries
 
-V0-041 permits deterministic workflow repair evidence refresh guidance from the
-current workflow repair execution review. It does not permit:
+V0-042 permits deterministic BGM rhythm intelligence from the current BGM
+candidate ledger and BGM analysis report. It does not permit:
 
 - paid API calls, API keys, remote provider execution, or network search
 - Python-side hidden model calls or automatic paid fallback
@@ -224,6 +225,6 @@ Full status and resolution conditions live in `ISSUES.md`.
 
 ## Next Major Decision
 
-V0-041 completed workflow repair evidence refresh guidance. The next major
-decision is whether to prepare a local release with explicit approval, or move
-to the next media intelligence gate.
+V0-042 completed BGM rhythm intelligence. The next major decision is whether
+to prepare a local release with explicit approval, or move to phrase-level
+manual edit guidance and deeper local beat-engine adapter hardening.

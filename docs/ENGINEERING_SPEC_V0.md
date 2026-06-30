@@ -43,7 +43,12 @@ bgm import
 bgm list
 bgm fit
 bgm review
+bgm analyze
+bgm rhythm
 preview
+export
+acceptance
+release-check
 review --scope project|proposal|timeline|preview|all
 ```
 
@@ -687,6 +692,32 @@ automatically select music, automatically fit music, fabricate BPM or beat
 grids, call models, access the network, depend on paid APIs/API keys/remote
 providers, use hidden model calls, use image generation/editing, perform source
 separation, or treat refreshed evidence as acceptance success.
+
+Current V0-042 implementation scope additionally allows:
+
+- `bgm rhythm`
+- canonical `.artist-portrait/data/bgm_rhythm_intelligence.json`
+- deterministic `output/bgm_rhythm_intelligence.md`
+- deterministic `output/bgm_rhythm_handoff.json`
+- BGM rhythm intelligence derived only from the current BGM candidate ledger
+  and current BGM analysis report
+- validated beat-quality scoring from existing beat-engine evidence without
+  creating new beats
+- deterministic bar and phrase timing hints when validated BPM is available
+- source provenance rhythm-risk classification for direct audio, embedded
+  source audio, and video-extracted mixed audio
+- no-engine conservative guidance when BPM or beat grids are unavailable
+- mixed-video-audio contamination guidance that never labels extraction alone
+  as clean BGM
+- binding BGM rhythm intelligence fingerprints into rhythm plans and rhythm
+  media QC freshness checks
+
+V0-042 does not allow BGM rhythm intelligence to select or recommend music,
+auto-fit music, move timeline edit points, render media, fabricate BPM or beat
+grids from PCM energy windows, call models, access the network, depend on paid
+APIs/API keys/remote providers, use hidden model calls, use image
+generation/editing, perform source separation, or treat rhythm intelligence as
+acceptance success.
 
 - `scan`
 - deterministic `sources.jsonl`

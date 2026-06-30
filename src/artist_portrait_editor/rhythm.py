@@ -5,7 +5,12 @@ import json
 from pathlib import Path
 
 from artist_portrait_editor.constants import DATA_DIR, WORKSPACE_DIR
-from artist_portrait_editor.models.bgm import BgmAnalysisReport, BgmBeatGrid, BgmFitPlan
+from artist_portrait_editor.models.bgm import (
+    BgmAnalysisReport,
+    BgmBeatGrid,
+    BgmFitPlan,
+    BgmRhythmIntelligenceReport,
+)
 from artist_portrait_editor.models.acceptance import ProjectAcceptanceReport
 from artist_portrait_editor.models.final_export import FinalExportManifest, FinalExportValidationReport
 from artist_portrait_editor.models.preview import PreviewRenderManifest, PreviewValidationReport
@@ -55,6 +60,7 @@ def build_rhythm_plan(
     timeline_fingerprint = _fingerprint(timeline_path)
     fit_path = root / WORKSPACE_DIR / DATA_DIR / "bgm_fit.json"
     analysis_path = root / WORKSPACE_DIR / DATA_DIR / "bgm_analysis.json"
+    bgm_rhythm_path = root / WORKSPACE_DIR / DATA_DIR / "bgm_rhythm_intelligence.json"
     fit = (
         BgmFitPlan.model_validate_json(fit_path.read_text(encoding="utf-8"))
         if fit_path.exists()
@@ -65,15 +71,21 @@ def build_rhythm_plan(
         if analysis_path.exists()
         else None
     )
+    bgm_rhythm = (
+        BgmRhythmIntelligenceReport.model_validate_json(bgm_rhythm_path.read_text(encoding="utf-8"))
+        if bgm_rhythm_path.exists()
+        else None
+    )
     intent = _read_intent(intent_path) if intent_path else DEFAULT_INTENT
     candidate = _read_candidate(agent_output_path) if agent_output_path else None
-    domains = _build_domains(root, timeline, timeline_fingerprint, fit, analysis, intent, candidate)
+    domains = _build_domains(root, timeline, timeline_fingerprint, fit, analysis, bgm_rhythm, intent, candidate)
     issues = [issue for domain in domains for issue in domain.issues]
     warnings = sum(issue.severity == "warning" for issue in issues)
     errors = sum(issue.severity == "error" for issue in issues)
     status = "blocked" if errors else "warning" if warnings else "passed"
     fit_fingerprint = _fingerprint(fit_path) if fit_path.exists() else None
     analysis_fingerprint = _fingerprint(analysis_path) if analysis_path.exists() else None
+    bgm_rhythm_fingerprint = _fingerprint(bgm_rhythm_path) if bgm_rhythm_path.exists() else None
     key = f"{project_id}:{timeline.timeline_id}:{timeline_fingerprint}:{intent.intent_id}:{fit.fit_id if fit else 'none'}:{len(issues)}"
     plan = RhythmPlan(
         rhythm_plan_id="rhythm_" + hashlib.sha256(key.encode()).hexdigest()[:20],
@@ -83,6 +95,7 @@ def build_rhythm_plan(
         bgm_fit_id=fit.fit_id if fit else None,
         bgm_fit_fingerprint=fit_fingerprint,
         bgm_analysis_fingerprint=analysis_fingerprint,
+        bgm_rhythm_intelligence_fingerprint=bgm_rhythm_fingerprint,
         intent=intent,
         timeline_profile=domains[0],
         bgm_profile=domains[1],
@@ -124,6 +137,7 @@ def build_rhythm_media_qc(
     plan_fingerprint = _fingerprint(plan_path)
     timeline_path = root / "output" / "timeline_draft.json"
     fit_path = root / WORKSPACE_DIR / DATA_DIR / "bgm_fit.json"
+    bgm_rhythm_path = root / WORKSPACE_DIR / DATA_DIR / "bgm_rhythm_intelligence.json"
     preview_manifest = _read_optional(root / WORKSPACE_DIR / DATA_DIR / "preview_manifest.json", PreviewRenderManifest)
     preview_validation = _read_optional(root / WORKSPACE_DIR / DATA_DIR / "preview_validation.json", PreviewValidationReport)
     final_manifest = _read_optional(root / WORKSPACE_DIR / DATA_DIR / "final_export_manifest.json", FinalExportManifest)
@@ -132,7 +146,7 @@ def build_rhythm_media_qc(
         _preview_binding_qc(plan, preview_manifest, preview_validation),
         _final_binding_qc(plan, final_manifest, final_validation),
         _timeline_freshness_qc(plan, timeline_path),
-        _bgm_freshness_qc(plan, fit_path),
+        _bgm_freshness_qc(plan, fit_path, bgm_rhythm_path),
         _duration_qc("preview_duration_qc", "preview", plan, preview_manifest, preview_validation),
         _duration_qc("final_duration_qc", "final_export", plan, final_manifest, final_validation),
         _audio_expectation_qc(plan, preview_manifest, preview_validation, final_manifest, final_validation),
@@ -349,14 +363,15 @@ def _build_domains(
     timeline_fingerprint: str,
     fit: BgmFitPlan | None,
     analysis: BgmAnalysisReport | None,
+    bgm_rhythm: BgmRhythmIntelligenceReport | None,
     intent: RhythmIntent,
     candidate: RhythmAgentCandidate | None,
 ) -> list[RhythmAuditDomain]:
     timeline_profile = _timeline_profile(timeline)
-    bgm_profile = _bgm_profile(fit, analysis)
-    compatibility = _compatibility_audit(timeline, fit, analysis)
+    bgm_profile = _bgm_profile(fit, analysis, bgm_rhythm)
+    compatibility = _compatibility_audit(timeline, fit, analysis, bgm_rhythm)
     intent_audit = _intent_audit(intent, timeline)
-    cut_cue = _cut_cue_audit(root, timeline, fit)
+    cut_cue = _cut_cue_audit(root, timeline, fit, bgm_rhythm)
     transition = _transition_audit(timeline, intent)
     text = _text_audit(root, intent)
     ducking_silence = _ducking_silence_audit(fit, analysis)
@@ -405,7 +420,11 @@ def _timeline_profile(timeline: TimelineDraft) -> RhythmAuditDomain:
     )
 
 
-def _bgm_profile(fit: BgmFitPlan | None, analysis: BgmAnalysisReport | None) -> RhythmAuditDomain:
+def _bgm_profile(
+    fit: BgmFitPlan | None,
+    analysis: BgmAnalysisReport | None,
+    bgm_rhythm: BgmRhythmIntelligenceReport | None,
+) -> RhythmAuditDomain:
     if fit is None:
         return _domain("bgm_profile", "unavailable", "No current BGM fit plan is available.", [], [_issue("bgm_fit_missing", "bgm", "warning", "Rhythm planning has no fitted BGM.", "Run explicit BGM import/fit or keep no-music planning.")])
     candidate = next((item for item in (analysis.candidates if analysis else []) if item.music_candidate_id == fit.music_candidate_id), None)
@@ -420,20 +439,78 @@ def _bgm_profile(fit: BgmFitPlan | None, analysis: BgmAnalysisReport | None) -> 
             _metric("quiet_tail_seconds", "Quiet tail seconds", candidate.quiet_tail_seconds, "available", "Technical BGM analysis quiet tail."),
             _metric("high_energy_start", "High energy start", candidate.high_energy_start, "available" if candidate.high_energy_start is not None else "unavailable", "High-energy range from local analysis."),
         ])
+    rhythm_candidate = None
+    if fit and bgm_rhythm:
+        rhythm_candidate = next(
+            (item for item in bgm_rhythm.candidates if item.music_candidate_id == fit.music_candidate_id),
+            None,
+        )
+    if bgm_rhythm:
+        metrics.extend(
+            [
+                _metric("bgm_rhythm_status", "BGM rhythm intelligence status", bgm_rhythm.status, "available", "Current BGM rhythm intelligence report status."),
+                _metric("usable_beat_candidate_count", "Usable beat candidate count", bgm_rhythm.usable_beat_candidate_count, "available", "Candidates with usable/strong beat evidence."),
+                _metric("mixed_audio_candidate_count", "Mixed audio candidate count", bgm_rhythm.mixed_audio_candidate_count, "available", "Candidates that may contain speech/effects/environment."),
+            ]
+        )
+    else:
+        metrics.append(_metric("bgm_rhythm_status", "BGM rhythm intelligence status", None, "unavailable", "Run bgm rhythm after bgm analyze for editing-facing BGM rhythm evidence."))
+    if rhythm_candidate:
+        metrics.extend(
+            [
+                _metric("beat_quality_status", "Beat quality status", rhythm_candidate.beat_quality_status, "available", "Editing-facing beat evidence quality."),
+                _metric("beat_quality_score", "Beat quality score", rhythm_candidate.beat_quality_score, "available", "Tempo confidence and beat-count score."),
+                _metric("estimated_phrase_seconds", "Estimated phrase seconds", rhythm_candidate.estimated_phrase_seconds, "available" if rhythm_candidate.estimated_phrase_seconds else "unavailable", "Phrase-length hint estimated from validated BPM only."),
+                _metric("source_risk_status", "Source rhythm risk", rhythm_candidate.source_risk_status, "available", "Risk from BGM source mode and mixed-audio provenance."),
+            ]
+        )
     issues = []
     if fit.beat_alignment_status == "unavailable" and fit.controls.beat_alignment_requested:
         issues.append(_issue("beat_alignment_unavailable", "bgm", "warning", "Beat alignment was requested but no validated beat grid is available.", "Keep edit points unchanged or install a validated local beat engine."))
-    return _domain("bgm_profile", "warning" if issues else "passed", "BGM rhythm profile was derived from current fit and analysis evidence.", metrics, issues)
+    if fit and bgm_rhythm is None:
+        issues.append(_issue("bgm_rhythm_intelligence_missing", "bgm", "warning", "BGM fit exists but editing-facing BGM rhythm intelligence is missing.", "Run bgm rhythm after bgm analyze."))
+    if rhythm_candidate and rhythm_candidate.beat_quality_status in {"unavailable", "weak"}:
+        severity = "warning" if rhythm_candidate.beat_quality_status == "weak" else "info"
+        issues.append(_issue("bgm_beat_quality_not_usable", "bgm", severity, "Current fitted BGM lacks usable beat-quality evidence.", "Keep rhythm planning conservative or rerun bgm analyze with a validated beat engine."))
+    if rhythm_candidate and rhythm_candidate.source_risk_status == "high":
+        issues.append(_issue("bgm_source_rhythm_high_risk", "bgm", "warning", "Current fitted BGM comes from mixed video/source audio.", "Do not treat extracted video mix as clean BGM without separation or analysis evidence."))
+    bgm_status = (
+        "blocked"
+        if any(item.severity == "error" for item in issues)
+        else "warning"
+        if any(item.severity == "warning" for item in issues)
+        else "passed"
+    )
+    return _domain("bgm_profile", bgm_status, "BGM rhythm profile was derived from current fit and analysis evidence.", metrics, issues)
 
 
-def _compatibility_audit(timeline: TimelineDraft, fit: BgmFitPlan | None, analysis: BgmAnalysisReport | None) -> RhythmAuditDomain:
+def _compatibility_audit(
+    timeline: TimelineDraft,
+    fit: BgmFitPlan | None,
+    analysis: BgmAnalysisReport | None,
+    bgm_rhythm: BgmRhythmIntelligenceReport | None,
+) -> RhythmAuditDomain:
     issues = []
     if fit is None:
         issues.append(_issue("compatibility_no_bgm", "compatibility", "warning", "No fitted BGM exists for compatibility scoring.", "Run explicit BGM fit or keep no-music rhythm planning."))
     elif abs(fit.target_duration - timeline.actual_duration) > 0.25:
         issues.append(_issue("duration_mismatch", "compatibility", "error", "BGM fit duration and timeline duration diverge.", "Rebuild BGM fit from the current timeline."))
+    if fit and bgm_rhythm:
+        fitted = next((item for item in bgm_rhythm.candidates if item.music_candidate_id == fit.music_candidate_id), None)
+        if fitted and fitted.phrase_hint_status == "estimated" and fitted.estimated_phrase_seconds:
+            if timeline.actual_duration < fitted.estimated_phrase_seconds * 0.5:
+                issues.append(_issue("timeline_shorter_than_phrase_hint", "compatibility", "warning", "Timeline is shorter than a useful BGM phrase-length hint.", "Review whether the selected BGM phrase suits the short edit."))
+        if fitted and fitted.beat_quality_status == "unavailable":
+            issues.append(_issue("compatibility_no_usable_beat_evidence", "compatibility", "info", "Timeline/BGM compatibility lacks usable beat evidence.", "Run bgm rhythm after validated beat analysis or keep planning conservative."))
     score = 1.0 - min(len(issues) * 0.25, 1.0)
-    return _domain("compatibility_audit", "blocked" if any(i.severity == "error" for i in issues) else "warning" if issues else "passed", "Timeline and BGM compatibility was checked without changing either artifact.", [_metric("compatibility_score", "Compatibility score", round(score, 3), "available", "Deterministic readiness score from blocking issues.")], issues)
+    compatibility_status = (
+        "blocked"
+        if any(item.severity == "error" for item in issues)
+        else "warning"
+        if any(item.severity == "warning" for item in issues)
+        else "passed"
+    )
+    return _domain("compatibility_audit", compatibility_status, "Timeline and BGM compatibility was checked without changing either artifact.", [_metric("compatibility_score", "Compatibility score", round(score, 3), "available", "Deterministic readiness score from blocking issues.")], issues)
 
 
 def _intent_audit(intent: RhythmIntent, timeline: TimelineDraft) -> RhythmAuditDomain:
@@ -446,9 +523,19 @@ def _intent_audit(intent: RhythmIntent, timeline: TimelineDraft) -> RhythmAuditD
     return _domain("intent_audit", "warning" if issues else "passed", "Explicit rhythm intent was checked against timeline evidence.", [_metric("intent_mode", "Intent mode", intent.mode, "available", "User-provided or default rhythm intent."), _metric("intent_pacing", "Intent pacing", intent.pacing, "available", "User-provided or default pacing intent.")], issues)
 
 
-def _cut_cue_audit(root: Path, timeline: TimelineDraft, fit: BgmFitPlan | None) -> RhythmAuditDomain:
+def _cut_cue_audit(
+    root: Path,
+    timeline: TimelineDraft,
+    fit: BgmFitPlan | None,
+    bgm_rhythm: BgmRhythmIntelligenceReport | None,
+) -> RhythmAuditDomain:
     if fit is None or not fit.beat_grid_ref:
         return _domain("cut_cue_audit", "unavailable", "Cut/cue alignment requires a validated beat grid; none is available.", [_metric("edit_points_moved", "Edit points moved", False, "available", "Rhythm planning never moves edit points.")], [])
+    rhythm_candidate = (
+        next((item for item in bgm_rhythm.candidates if item.music_candidate_id == fit.music_candidate_id), None)
+        if bgm_rhythm
+        else None
+    )
     grid = BgmBeatGrid.model_validate_json((root / fit.beat_grid_ref).read_text(encoding="utf-8"))
     beat_times = [beat.time for beat in grid.beat_times]
     distances = []
@@ -456,9 +543,17 @@ def _cut_cue_audit(root: Path, timeline: TimelineDraft, fit: BgmFitPlan | None) 
         distances.append(min((abs(segment.timeline_start - beat) for beat in beat_times), default=999.0))
     avg_distance = round(sum(distances) / len(distances), 3) if distances else 0.0
     issues = []
+    if rhythm_candidate and rhythm_candidate.beat_quality_status == "weak":
+        issues.append(_issue("cut_cue_weak_beat_quality", "cut_cue", "warning", "Cut/cue proximity uses weak beat-quality evidence.", "Review beat grid manually before making edit decisions."))
     if avg_distance > 0.2:
         issues.append(_issue("cuts_far_from_beats", "cut_cue", "warning", "Average cut distance from beat grid is high.", "Consider manual edit review; do not auto-move edit points."))
-    return _domain("cut_cue_audit", "warning" if issues else "passed", "Cut/cue proximity was measured against validated beat evidence.", [_metric("average_cut_to_beat_seconds", "Average cut-to-beat distance", avg_distance, "available", "Nearest beat distance for each non-first segment start."), _metric("edit_points_moved", "Edit points moved", False, "available", "Rhythm planning never moves edit points.")], issues)
+    metrics = [
+        _metric("average_cut_to_beat_seconds", "Average cut-to-beat distance", avg_distance, "available", "Nearest beat distance for each non-first segment start."),
+        _metric("beat_quality_status", "Beat quality status", rhythm_candidate.beat_quality_status if rhythm_candidate else None, "available" if rhythm_candidate else "unavailable", "Editing-facing beat quality from BGM rhythm intelligence."),
+        _metric("estimated_phrase_seconds", "Estimated phrase seconds", rhythm_candidate.estimated_phrase_seconds if rhythm_candidate else None, "available" if rhythm_candidate and rhythm_candidate.estimated_phrase_seconds else "unavailable", "Phrase hint derived only from validated BPM."),
+        _metric("edit_points_moved", "Edit points moved", False, "available", "Rhythm planning never moves edit points."),
+    ]
+    return _domain("cut_cue_audit", "warning" if issues else "passed", "Cut/cue proximity was measured against validated beat evidence.", metrics, issues)
 
 
 def _transition_audit(timeline: TimelineDraft, intent: RhythmIntent) -> RhythmAuditDomain:
@@ -558,13 +653,29 @@ def _timeline_freshness_qc(plan: RhythmPlan, timeline_path: Path) -> RhythmAudit
     return _domain("timeline_freshness", "blocked" if issues else "passed", "Rhythm plan timeline freshness was checked.", [_metric("timeline_fingerprint_matches", "Timeline fingerprint matches", not issues, "available", "Current timeline hash compared with rhythm plan.")], issues)
 
 
-def _bgm_freshness_qc(plan: RhythmPlan, fit_path: Path) -> RhythmAuditDomain:
+def _bgm_freshness_qc(plan: RhythmPlan, fit_path: Path, bgm_rhythm_path: Path) -> RhythmAuditDomain:
     issues = []
     if plan.bgm_fit_fingerprint and not fit_path.exists():
         issues.append(_issue("bgm_fit_missing", "bgm", "error", "Rhythm plan references a BGM fit but current fit is missing.", "Regenerate BGM fit or rhythm plan."))
     elif plan.bgm_fit_fingerprint and _fingerprint(fit_path) != plan.bgm_fit_fingerprint:
         issues.append(_issue("rhythm_plan_bgm_fit_stale", "bgm", "error", "Rhythm plan is stale against current BGM fit.", "Regenerate rhythm plan."))
-    return _domain("bgm_freshness", "blocked" if issues else "passed", "Rhythm plan BGM freshness was checked.", [_metric("bgm_fit_fingerprint_matches", "BGM fit fingerprint matches", not issues, "available", "Current BGM fit hash compared with rhythm plan when applicable.")], issues)
+    rhythm_matches = True
+    if plan.bgm_rhythm_intelligence_fingerprint and not bgm_rhythm_path.exists():
+        rhythm_matches = False
+        issues.append(_issue("bgm_rhythm_intelligence_missing", "bgm", "error", "Rhythm plan references BGM rhythm intelligence but current artifact is missing.", "Regenerate bgm rhythm and rhythm plan."))
+    elif plan.bgm_rhythm_intelligence_fingerprint and _fingerprint(bgm_rhythm_path) != plan.bgm_rhythm_intelligence_fingerprint:
+        rhythm_matches = False
+        issues.append(_issue("rhythm_plan_bgm_rhythm_stale", "bgm", "error", "Rhythm plan is stale against current BGM rhythm intelligence.", "Regenerate rhythm plan after bgm rhythm."))
+    return _domain(
+        "bgm_freshness",
+        "blocked" if issues else "passed",
+        "Rhythm plan BGM freshness was checked.",
+        [
+            _metric("bgm_fit_fingerprint_matches", "BGM fit fingerprint matches", not any(issue.issue_id in {"bgm_fit_missing", "rhythm_plan_bgm_fit_stale"} for issue in issues), "available", "Current BGM fit hash compared with rhythm plan when applicable."),
+            _metric("bgm_rhythm_intelligence_fingerprint_matches", "BGM rhythm intelligence fingerprint matches", rhythm_matches, "available" if plan.bgm_rhythm_intelligence_fingerprint else "unavailable", "Current BGM rhythm intelligence hash compared with rhythm plan when applicable."),
+        ],
+        issues,
+    )
 
 
 def _duration_qc(domain_id: str, label: str, plan: RhythmPlan, manifest, validation) -> RhythmAuditDomain:

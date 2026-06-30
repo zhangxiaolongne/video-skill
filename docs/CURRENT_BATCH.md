@@ -2,74 +2,78 @@
 
 ## Batch Header
 
-- Batch ID: `V0-041`
-- Name: workflow repair evidence refresh guidance gate
-- Type: major workflow repair evidence refresh guidance capability
+- Batch ID: `V0-042`
+- Name: BGM rhythm intelligence gate
+- Type: major BGM/edit rhythm intelligence capability
 - Status: `completed`
-- Capability gate: `V0-041`
+- Capability gate: `V0-042`
 - Started: `2026-06-30`
 - Commit/push policy: local until the next large functional release is ready
 
 ## Version Outcome
 
-Before this batch, workflow repair execution reviews could validate manually
-executed repair evidence, but they did not produce a dedicated next-step plan
-for resubmitting repaired evidence into the workflow execution review loop.
-After this batch, `workflow --repair-refresh-plan` writes canonical guidance
-that maps accepted, rejected, missing, and skipped repair execution evidence
-into the next explicit workflow evidence refresh action.
+Before this batch, validated beat-grid evidence could be bound into BGM
+analysis and fit plans, and rhythm planning could inspect that evidence. It did
+not produce a dedicated editing-facing BGM rhythm intelligence artifact that
+summarized beat quality, phrase hints, source provenance risk, no-engine
+guidance, mixed-video-audio contamination risk, and freshness binding for
+rhythm planning.
 
-The command does not execute workflow commands, mutate workflow plans, render
-media, call models, access the network, move edit points, select music, fit
-music, or treat refreshed evidence as acceptance success.
+After this batch, `bgm rhythm` writes canonical BGM rhythm intelligence JSON,
+Markdown, and handoff artifacts from existing BGM candidates and BGM analysis.
+`rhythm` and rhythm media QC can bind to this evidence and surface stale or
+missing BGM rhythm intelligence without selecting music, moving edit points, or
+rendering media.
 
 ## Countability Audit Before Implementation
 
-Audit status: `passed`. Each task below is a user-visible workflow repair
-evidence refresh capability or release-level workflow safety outcome. Schemas,
-tests, docs, and incidental fixes are support work inside these outcomes, not
-separately counted.
+Audit status: `passed`. Each task below is a user-visible BGM rhythm
+intelligence or release-level rhythm safety outcome. Schemas, tests, docs, and
+incidental fixes are support work inside these outcomes, not separately
+counted.
 
 | ID | Countable version outcome | Why it counts | Status |
 |---|---|---|---|
-| `V041-01` | Workflow repair refresh plan CLI | Adds explicit refresh guidance after repair execution review. | `completed` |
-| `V041-02` | Repair execution review binding | Requires a current repair execution review before refresh planning. | `completed` |
-| `V041-03` | Accepted repair action mapping | Maps accepted repair actions to ready-to-resubmit workflow evidence. | `completed` |
-| `V041-04` | Failed repair action mapping | Keeps rejected repair actions blocked for another repair pass. | `completed` |
-| `V041-05` | Missing/skipped repair action mapping | Preserves missing and skipped repair evidence gaps. | `completed` |
-| `V041-06` | Evidence resubmission package | Carries evidence refs and missing refs into the refresh plan. | `completed` |
-| `V041-07` | Current workflow refresh command | Provides the explicit next workflow execution-record command. | `completed` |
-| `V041-08` | Repair refresh handoff | Writes Agent/user handoff for the refresh plan. | `completed` |
-| `V041-09` | No mutation audit | Records no command execution, no workflow mutation, and no acceptance promotion. | `completed` |
-| `V041-10` | Real-media repair refresh checks | Generated real-media checks prove refresh guidance in the end-to-end workflow. | `completed` |
+| `V042-01` | BGM rhythm intelligence CLI | Adds a runnable `bgm rhythm` capability. | `completed` |
+| `V042-02` | Validated beat quality scoring | Turns beat-grid evidence into editing-facing quality status. | `completed` |
+| `V042-03` | Phrase and bar timing hints | Derives bar/phrase hints only from validated BPM. | `completed` |
+| `V042-04` | BGM source provenance rhythm risk | Distinguishes direct audio, embedded audio, and extracted video audio risk. | `completed` |
+| `V042-05` | No-engine conservative guidance | Gives explicit next actions when beat engines are unavailable. | `completed` |
+| `V042-06` | Mixed video audio contamination guidance | Prevents extracted video mixes from being treated as clean BGM. | `completed` |
+| `V042-07` | Rhythm plan BGM intelligence binding | Makes rhythm plans consume BGM rhythm intelligence evidence. | `completed` |
+| `V042-08` | Rhythm media QC freshness binding | Detects stale/missing BGM rhythm intelligence in rhythm QC. | `completed` |
+| `V042-09` | No selection mutation audit | Records no music selection, edit mutation, rendering, model, or network use. | `completed` |
+| `V042-10` | Real-media BGM rhythm checks | Generated real-media checks prove the BGM rhythm intelligence path. | `completed` |
 
 ## Batch Acceptance Criteria
 
-- `workflow --repair-refresh-plan` must write canonical JSON, Markdown, and
-  handoff artifacts.
-- The refresh plan must require the current workflow repair execution review.
-- Accepted repair action evidence must become `ready_to_resubmit`.
-- Rejected, missing, and skipped repair action evidence must remain explicit
-  gaps rather than being silently accepted.
-- The plan must include evidence refs, missing refs, and the next explicit
-  workflow execution-record command.
-- The command must not execute commands, mutate workflow plans, render media,
-  call models, access the network, or treat refreshed evidence as acceptance
-  success.
+- `bgm rhythm` must require existing BGM analysis and must not auto-run upstream
+  analysis.
+- It must write `.artist-portrait/data/bgm_rhythm_intelligence.json`,
+  `output/bgm_rhythm_intelligence.md`, and `output/bgm_rhythm_handoff.json`.
+- Beat quality and phrase hints may use only validated beat-grid/BPM evidence.
+- No-engine states must remain conservative and must not fabricate BPM or beat
+  grids from PCM energy windows.
+- Extracted video/source mixes must carry explicit contamination guidance.
+- Rhythm plans and rhythm media QC must bind to BGM rhythm intelligence
+  freshness.
+- The command must not select music, move edit points, fit music, render media,
+  call models, access the network, or treat mixed extracted video audio as clean
+  BGM.
 
 ## Closeout
 
 - Finished: `2026-06-30`
 - Final status: `completed`
-- Validation: targeted V0-041 workflow repair refresh/schema/gate/progress
-  tests passed with `17 passed`; full pytest passed with `285 passed`;
-  project checks passed with `run_checks.py --skip-pytest`
-- Final-goal delta: workflow repair now has a non-executing loop from failed
-  workflow evidence through repair execution review into explicit evidence
-  refresh guidance
-- Accepted boundary: refresh planning is guidance only; workflow evidence must
-  still be explicitly submitted through `workflow --execution-record`
+- Validation: targeted V0-042 BGM rhythm/schema/gate/progress/release-check
+  tests passed with `31 passed`; full pytest passed with `288 passed`;
+  `run_checks.py --skip-pytest` passed; `git diff --check` passed
+- Final-goal delta: BGM evidence now has an editing-facing rhythm intelligence
+  layer that can guide text/video/BGM/transition rhythm review without automatic
+  mutation
+- Accepted boundary: BGM rhythm intelligence is review evidence only; actual
+  cut movement, music selection, and beat-synced editing remain unopened
 - Release action: no commit, push, or tag until a larger functional checkpoint
   is accepted
-- Next batch candidate: release preparation if approved, or BGM/beat-engine
-  local adapter integration if the user wants to move beyond workflow hardening
+- Next batch candidate: phrase-level manual edit guidance, or local beat-engine
+  adapter hardening if the user wants deeper music intelligence

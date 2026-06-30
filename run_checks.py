@@ -85,6 +85,7 @@ def check_schema_drift() -> None:
             "bgm_beat_grid.schema.json",
             "bgm_candidate_ledger.schema.json",
             "bgm_fit_plan.schema.json",
+            "bgm_rhythm_intelligence_report.schema.json",
             "bgm_recommendation_context.schema.json",
             "bgm_recommendation_fit_review.schema.json",
             "bgm_recommendation_request.schema.json",
@@ -196,14 +197,14 @@ def check_gate_consistency() -> None:
         "DEVELOPMENT_PROGRESS.md": ROOT / "docs" / "DEVELOPMENT_PROGRESS.md",
     }
     content = {name: path.read_text(encoding="utf-8") for name, path in docs.items()}
-    if "Current gate: V0-041 workflow repair evidence refresh guidance gate." not in content["AGENTS.md"]:
-        raise SystemExit("AGENTS.md current gate is not V0-041 workflow repair refresh")
-    if "V0-041 workflow repair evidence refresh guidance gate" not in content["master"]:
-        raise SystemExit("master document current gate is not V0-041 workflow repair refresh")
-    if "Current V0-041 workflow repair evidence refresh guidance gate work" not in content["README.md"]:
-        raise SystemExit("README current gate is not V0-041 workflow repair refresh")
+    if "Current gate: V0-042 BGM rhythm intelligence gate." not in content["AGENTS.md"]:
+        raise SystemExit("AGENTS.md current gate is not V0-042 BGM rhythm intelligence")
+    if "V0-042 BGM rhythm intelligence gate" not in content["master"]:
+        raise SystemExit("master document current gate is not V0-042 BGM rhythm intelligence")
+    if "Current V0-042 BGM rhythm intelligence gate work" not in content["README.md"]:
+        raise SystemExit("README current gate is not V0-042 BGM rhythm intelligence")
     if (
-        "Current local gate: V0-041 workflow repair evidence refresh guidance gate"
+        "Current local gate: V0-042 BGM rhythm intelligence gate"
         not in content["DEVELOPMENT_PROGRESS.md"]
     ):
         raise SystemExit("development progress current gate is stale")
@@ -218,7 +219,7 @@ def check_progress_contract() -> None:
     payload = json.loads(path.read_text(encoding="utf-8"))
     if payload.get("schema_version") != "1.4":
         raise SystemExit("progress snapshot schema_version is not 1.4")
-    if payload.get("capability_gate") != "V0-041":
+    if payload.get("capability_gate") != "V0-042":
         raise SystemExit("progress snapshot capability gate is stale")
     documentation_system = payload.get("documentation_system") or {}
     expected_documents = {
@@ -350,6 +351,7 @@ def check_progress_contract() -> None:
             "workflow_repair_execution_review",
             "release_hardening",
             "workflow_repair_refresh_guidance",
+            "bgm_rhythm_intelligence",
             "preview_rendering",
             "final_export",
         }
@@ -416,6 +418,8 @@ def check_progress_contract() -> None:
         raise SystemExit("progress snapshot release hardening state is stale")
     if capability_progress.get("workflow_repair_refresh_guidance") != "completed":
         raise SystemExit("progress snapshot workflow repair refresh guidance state is stale")
+    if capability_progress.get("bgm_rhythm_intelligence") != "completed":
+        raise SystemExit("progress snapshot BGM rhythm intelligence state is stale")
     if capability_progress.get("preview_rendering") != "completed":
         raise SystemExit("progress snapshot preview state is stale")
     if capability_progress.get("preview_quality_review") != "completed":
@@ -1782,6 +1786,39 @@ def check_real_media_acceptance_profiles_if_available() -> None:
             expect=(0, 1),
         )
         candidate_id = bgm_import["candidate"]["music_candidate_id"]
+        bgm_analysis = run_json(
+            [
+                str(ARTIST_PORTRAIT),
+                "bgm",
+                "analyze",
+                "--project",
+                str(project),
+                "--json",
+            ],
+            expect=(0, 1),
+        )
+        if (bgm_analysis.get("analysis") or {}).get("automatic_music_selection") is not False:
+            raise SystemExit("real acceptance fixture BGM analysis selected music")
+        bgm_rhythm = run_json(
+            [
+                str(ARTIST_PORTRAIT),
+                "bgm",
+                "rhythm",
+                "--project",
+                str(project),
+                "--json",
+            ],
+            expect=(0, 1),
+        )
+        bgm_rhythm_report = bgm_rhythm.get("bgm_rhythm_intelligence") or {}
+        if bgm_rhythm_report.get("automatic_music_selection") is not False:
+            raise SystemExit("real acceptance fixture BGM rhythm selected music")
+        if bgm_rhythm_report.get("edit_points_moved") is not False:
+            raise SystemExit("real acceptance fixture BGM rhythm moved edit points")
+        if bgm_rhythm_report.get("media_rendered") is not False:
+            raise SystemExit("real acceptance fixture BGM rhythm rendered media")
+        if bgm_rhythm_report.get("fabricated_bpm_or_beats") is not False:
+            raise SystemExit("real acceptance fixture BGM rhythm fabricated BPM or beats")
         run(
             [
                 str(ARTIST_PORTRAIT),
@@ -1849,6 +1886,8 @@ def check_real_media_acceptance_profiles_if_available() -> None:
             raise SystemExit("real acceptance fixture rhythm selected music")
         if rhythm_plan.get("media_rendered") is not False:
             raise SystemExit("real acceptance fixture rhythm rendered media")
+        if not rhythm_plan.get("bgm_rhythm_intelligence_fingerprint"):
+            raise SystemExit("real acceptance fixture rhythm did not bind BGM rhythm intelligence")
         if rhythm_plan.get("timeline_profile", {}).get("domain_id") != "timeline_profile":
             raise SystemExit("real acceptance fixture rhythm timeline profile missing")
         if rhythm_plan.get("bgm_profile", {}).get("domain_id") != "bgm_profile":

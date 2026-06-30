@@ -1,3 +1,3 @@
-"""Artist Portrait Editor Stage A package."""
+"""Artist Portrait Editor package."""
 
-__version__ = "0.1.0"
+__version__ = "0.26.0"

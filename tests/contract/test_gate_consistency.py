@@ -12,7 +12,7 @@ def test_current_gate_is_consistent_across_primary_docs():
     readme = (ROOT / "README.md").read_text(encoding="utf-8")
     progress = (ROOT / "docs" / "DEVELOPMENT_PROGRESS.md").read_text(encoding="utf-8")
 
-    gate = "V0-041 workflow repair evidence refresh guidance gate"
+    gate = "V0-042 BGM rhythm intelligence gate"
     assert f"Current gate: {gate}." in agents
     assert gate in master
     assert f"Current {gate} work" in readme
@@ -61,5 +61,7 @@ def test_current_gate_preserves_remaining_boundaries():
     assert "workflow repair approval" in docs
     assert "workflow repair execution" in docs
     assert "workflow repair refresh" in docs
+    assert "BGM rhythm intelligence" in docs
+    assert "bgm_rhythm_intelligence" in docs
     assert "release hardening" in docs
     assert "auto-run pipeline" in docs or "auto-run" in docs

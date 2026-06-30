@@ -258,6 +258,19 @@
     "bgm_profile": {
       "$ref": "#/$defs/RhythmAuditDomain"
     },
+    "bgm_rhythm_intelligence_fingerprint": {
+      "anyOf": [
+        {
+          "pattern": "^sha256:[0-9a-f]{64}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Bgm Rhythm Intelligence Fingerprint"
+    },
     "compatibility_audit": {
       "$ref": "#/$defs/RhythmAuditDomain"
     },

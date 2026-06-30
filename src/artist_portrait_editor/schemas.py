@@ -18,6 +18,7 @@ from artist_portrait_editor.models.bgm import (
     BgmBeatGrid,
     BgmCandidateLedger,
     BgmFitPlan,
+    BgmRhythmIntelligenceReport,
 )
 from artist_portrait_editor.models.bgm_recommendation import (
     BgmRecommendationContext,
@@ -109,6 +110,9 @@ def write_schema_files(output_dir: Path) -> None:
         "bgm_beat_grid.schema.json": BgmBeatGrid.model_json_schema(),
         "bgm_candidate_ledger.schema.json": BgmCandidateLedger.model_json_schema(),
         "bgm_fit_plan.schema.json": BgmFitPlan.model_json_schema(),
+        "bgm_rhythm_intelligence_report.schema.json": (
+            BgmRhythmIntelligenceReport.model_json_schema()
+        ),
         "bgm_recommendation_context.schema.json": BgmRecommendationContext.model_json_schema(),
         "bgm_recommendation_fit_review.schema.json": BgmRecommendationFitReview.model_json_schema(),
         "bgm_recommendation_request.schema.json": BgmRecommendationRequest.model_json_schema(),

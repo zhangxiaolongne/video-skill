@@ -3,7 +3,7 @@
 Follow `artist_portrait_editor_revision5_optimized.md` as the governing V0
 engineering-freeze document.
 
-Current gate: V0-041 workflow repair evidence refresh guidance gate.
+Current gate: V0-042 BGM rhythm intelligence gate.
 
 V0-011 uses the active Codex/ChatGPT host Agent as the creative model. Do not
 add paid APIs, API keys, remote provider dependencies, or hidden network calls.
@@ -277,6 +277,17 @@ network, use image generation/editing, fabricate BPM/beat grids, depend on paid
 APIs/API keys/remote providers, or treat refreshed evidence as acceptance
 success.
 
+V0-042 may generate deterministic BGM rhythm intelligence from the current BGM
+candidate ledger and BGM analysis report. It may write canonical JSON,
+Markdown, and handoff artifacts for beat-quality scoring, source-provenance
+rhythm risk, no-engine guidance, mixed-video-audio contamination warnings,
+bar/phrase timing hints derived only from validated BPM, and rhythm-plan/QC
+freshness binding. It must not select music, move edit points, fit music
+automatically, render media, fabricate BPM or beat grids, infer BPM from PCM
+energy windows, call models from the CLI, access the network, use image
+generation/editing, depend on paid APIs/API keys/remote providers, or treat
+mixed extracted video audio as clean BGM.
+
 Future BGM work must support direct audio uploads, audio extracted from uploaded
 video, embedded source audio, multiple candidates, and no-file-yet planning.
 Never treat an extracted video mix as clean BGM without explicit separation or
@@ -514,6 +525,11 @@ Allowed:
 - beat-engine capability detection and validated local beat-engine adapter
   execution when available
 - BGM fit analysis and beat-grid evidence binding
+- `bgm rhythm`
+- canonical `.artist-portrait/data/bgm_rhythm_intelligence.json`
+- deterministic `output/bgm_rhythm_intelligence.md`
+- deterministic `output/bgm_rhythm_handoff.json`
+- BGM rhythm intelligence binding into rhythm plans and rhythm media QC
 - BGM analysis status, doctor diagnostics, schema, run audit, and invalidation
 - `bgm recommend`
 - canonical `.artist-portrait/data/bgm_recommendation_context.json`

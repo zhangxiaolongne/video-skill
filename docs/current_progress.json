@@ -1,7 +1,7 @@
 {
   "schema_version": "1.4",
-  "capability_gate": "V0-041",
-  "milestone": "V0-041 workflow repair evidence refresh guidance gate",
+  "capability_gate": "V0-042",
+  "milestone": "V0-042 BGM rhythm intelligence gate",
   "documentation_system": {
     "master": "artist_portrait_editor_revision5_optimized.md",
     "current_progress": "docs/DEVELOPMENT_PROGRESS.md",
@@ -13,17 +13,17 @@
     "historical_readiness_policy": "consolidated_in_release_ledger"
   },
   "active_batch": {
-    "id": "V0-041",
-    "name": "workflow repair evidence refresh guidance gate",
+    "id": "V0-042",
+    "name": "BGM rhythm intelligence gate",
     "status": "completed",
     "started": "2026-06-30",
-    "capability_gate": "V0-041",
+    "capability_gate": "V0-042",
     "commit_policy": "local_until_large_functional_checkpoint"
   },
   "batch_contract_audit": {
     "status": "passed",
     "issue": "ISSUE-014",
-    "reason": "V0-041 tasks were audited before implementation and each task maps to user-visible workflow repair evidence refresh guidance, not to isolated fields, schemas, tests, or docs.",
+    "reason": "V0-042 tasks were audited before implementation and each task maps to user-visible BGM rhythm intelligence and rhythm-planning evidence use, not to isolated fields, schemas, tests, or docs.",
     "required_next_batch_rule": "Before editing, list at least ten proposed countable version outcomes with explicit countability rationale; if fewer than ten survive audit, stop and request gate promotion."
   },
   "capability_progress": {
@@ -60,7 +60,8 @@
     "workflow_repair_approval_dry_run": "completed",
     "workflow_repair_execution_review": "completed",
     "release_hardening": "completed",
-    "workflow_repair_refresh_guidance": "completed"
+    "workflow_repair_refresh_guidance": "completed",
+    "bgm_rhythm_intelligence": "completed"
   },
   "future_bgm_input_contract": {
     "status": "required_for_future_gate",
@@ -128,53 +129,53 @@
   },
   "tasks": [
     {
-      "id": "V041-01",
-      "name": "workflow repair refresh plan CLI",
+      "id": "V042-01",
+      "name": "BGM rhythm intelligence CLI",
       "status": "completed"
     },
     {
-      "id": "V041-02",
-      "name": "repair execution review binding",
+      "id": "V042-02",
+      "name": "validated beat quality scoring",
       "status": "completed"
     },
     {
-      "id": "V041-03",
-      "name": "accepted repair action mapping",
+      "id": "V042-03",
+      "name": "phrase and bar timing hints",
       "status": "completed"
     },
     {
-      "id": "V041-04",
-      "name": "failed repair action mapping",
+      "id": "V042-04",
+      "name": "BGM source provenance rhythm risk",
       "status": "completed"
     },
     {
-      "id": "V041-05",
-      "name": "missing skipped repair action mapping",
+      "id": "V042-05",
+      "name": "no-engine conservative guidance",
       "status": "completed"
     },
     {
-      "id": "V041-06",
-      "name": "evidence resubmission package",
+      "id": "V042-06",
+      "name": "mixed video audio contamination guidance",
       "status": "completed"
     },
     {
-      "id": "V041-07",
-      "name": "current workflow refresh command",
+      "id": "V042-07",
+      "name": "rhythm plan BGM intelligence binding",
       "status": "completed"
     },
     {
-      "id": "V041-08",
-      "name": "repair refresh handoff",
+      "id": "V042-08",
+      "name": "rhythm media QC freshness binding",
       "status": "completed"
     },
     {
-      "id": "V041-09",
-      "name": "no mutation audit",
+      "id": "V042-09",
+      "name": "no selection mutation audit",
       "status": "completed"
     },
     {
-      "id": "V041-10",
-      "name": "real-media repair refresh checks",
+      "id": "V042-10",
+      "name": "real-media BGM rhythm checks",
       "status": "completed"
     }
   ],
@@ -216,6 +217,7 @@
     "workflow_repair_execution_review": true,
     "release_hardening": true,
     "workflow_repair_refresh_guidance": true,
+    "bgm_rhythm_intelligence": true,
     "automatic_beat_synced_editing": false
   }
 }

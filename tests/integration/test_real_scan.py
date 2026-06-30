@@ -219,6 +219,15 @@ def test_real_media_acceptance_profiles_reach_delivery(tmp_path, capsys):
         in (0, 1)
     )
     candidate_id = json.loads(capsys.readouterr().out)["candidate"]["music_candidate_id"]
+    assert main(["bgm", "analyze", "--project", str(project_path), "--json"]) in (0, 1)
+    bgm_analysis = json.loads(capsys.readouterr().out)["analysis"]
+    assert bgm_analysis["automatic_music_selection"] is False
+    assert main(["bgm", "rhythm", "--project", str(project_path), "--json"]) in (0, 1)
+    bgm_rhythm = json.loads(capsys.readouterr().out)["bgm_rhythm_intelligence"]
+    assert bgm_rhythm["candidate_count"] == 1
+    assert bgm_rhythm["automatic_music_selection"] is False
+    assert bgm_rhythm["edit_points_moved"] is False
+    assert bgm_rhythm["media_rendered"] is False
     assert (
         main(
             [

@@ -1,6 +1,6 @@
 ---
 name: artist-portrait-editor
-description: Artist portrait video workflow. Use when Codex needs deterministic media ledgers, evidence analysis, analysis-led material map, Codex/ChatGPT host Agent proposals quarantined, validated, reviewed, and atomically promoted, explicit timeline generation, multi-source BGM fitting, preview/final export, acceptance reporting, repair handoff/evidence intake, BGM/edit rhythm planning, rhythm QC, guided workflow plans, workflow execution evidence review, workflow evidence repair planning, workflow repair approval/dry-run packaging, workflow repair execution evidence review, workflow repair evidence refresh guidance, or release hardening audits, all without paid APIs, API keys, or network calls. Covers validation, review/doctor, and boundaries before automatic music selection, beat-synced editing, vision, image tools, automatic repair execution, or rhythm-triggered edit mutation.
+description: Artist portrait video workflow. Use when Codex needs deterministic media ledgers, evidence analysis, analysis-led material map, Codex/ChatGPT host Agent proposals quarantined, validated, reviewed, and atomically promoted, explicit timeline generation, multi-source BGM fitting, BGM rhythm intelligence, preview/final export, acceptance reporting, repair handoff/evidence intake, BGM/edit rhythm planning, rhythm QC, guided workflow plans, workflow execution evidence review, workflow evidence repair planning, workflow repair approval/dry-run packaging, workflow repair execution evidence review, workflow repair evidence refresh guidance, or release hardening audits, all without paid APIs, API keys, or network calls. Covers validation, review/doctor, and boundaries before automatic music selection, beat-synced editing, vision, image tools, automatic repair execution, or rhythm-triggered edit mutation.
 ---
 
 # Artist Portrait Editor
@@ -278,6 +278,7 @@ artist-portrait bgm import --project ./project.yaml \
 artist-portrait bgm import --project ./project.yaml --source-id <source-id>
 artist-portrait bgm list --project ./project.yaml
 artist-portrait bgm recommend --project ./project.yaml
+artist-portrait bgm rhythm --project ./project.yaml
 artist-portrait bgm select --project ./project.yaml --recommendation-id <id>
 artist-portrait bgm fit --project ./project.yaml --candidate <candidate-id> \
   --fit-mode auto --fade-in-seconds 0.5 --fade-out-seconds 1.0 \
@@ -295,6 +296,14 @@ media.
 `--ducking-gain-db`, `--no-ducking`, and `--beat-align`. These controls are
 recorded in `BgmFitControls` inside `.artist-portrait/data/bgm_fit.json`; they
 do not move timeline edit points or fabricate beat grids.
+
+`bgm rhythm` requires existing `.artist-portrait/data/bgm_analysis.json` and
+writes `.artist-portrait/data/bgm_rhythm_intelligence.json`,
+`output/bgm_rhythm_intelligence.md`, and `output/bgm_rhythm_handoff.json`. It
+turns validated beat evidence into editing-facing beat quality, bar/phrase
+hints, source-risk guidance, no-engine next actions, and mixed-video-audio
+warnings. It does not select music, move edit points, fit music, render media,
+call models, access the network, or fabricate BPM/beat grids.
 
 `bgm review` writes `.artist-portrait/data/bgm_fit_review.json` and
 `output/bgm_fit_review.md` when a recommendation-driven fit exists. It checks

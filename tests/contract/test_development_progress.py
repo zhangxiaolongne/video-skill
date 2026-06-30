@@ -196,7 +196,7 @@ def test_machine_readable_progress_matches_current_dashboard():
     payload = snapshot()
 
     assert payload["schema_version"] == "1.4"
-    assert payload["capability_gate"] == "V0-041"
+    assert payload["capability_gate"] == "V0-042"
     assert payload["milestone"] in progress
     assert payload["active_batch"]["id"] in progress
     assert payload["capability_progress"]["proposal_generation"] == "completed"
@@ -235,6 +235,7 @@ def test_machine_readable_progress_matches_current_dashboard():
     assert payload["capability_progress"]["workflow_repair_execution_review"] == "completed"
     assert payload["capability_progress"]["release_hardening"] == "completed"
     assert payload["capability_progress"]["workflow_repair_refresh_guidance"] == "completed"
+    assert payload["capability_progress"]["bgm_rhythm_intelligence"] == "completed"
 
 
 def test_version_progress_batch_contract_is_hard_enforced():

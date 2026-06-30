@@ -27,6 +27,8 @@ from artist_portrait_editor.models.bgm import (
     BgmFitPlan,
     BgmFitSegment,
     BgmInputMode,
+    BgmRhythmCandidateInsight,
+    BgmRhythmIntelligenceReport,
 )
 from artist_portrait_editor.models.source import MediaKind, RightsStatus
 from artist_portrait_editor.models.timeline import MusicSlotStatus, TimelineDraft
@@ -406,6 +408,215 @@ def load_analysis_report(path: Path, project_id: str) -> BgmAnalysisReport | Non
     if report.project_id != project_id:
         raise BgmError("BGM analysis report project_id mismatch")
     return report
+
+
+def build_bgm_rhythm_intelligence(
+    *,
+    root: Path,
+    project_id: str,
+) -> tuple[Path, Path, Path, BgmRhythmIntelligenceReport]:
+    ledger_path = root / ".artist-portrait" / "data" / "bgm_candidates.json"
+    analysis_path = root / ".artist-portrait" / "data" / "bgm_analysis.json"
+    ledger = load_ledger(ledger_path, project_id)
+    if not ledger.candidates:
+        raise BgmError("BGM rhythm intelligence requires at least one candidate")
+    analysis = load_analysis_report(analysis_path, project_id)
+    if analysis is None:
+        raise BgmError("BGM rhythm intelligence requires .artist-portrait/data/bgm_analysis.json; run bgm analyze first")
+    analysis_by_id = {item.music_candidate_id: item for item in analysis.candidates}
+    insights = [
+        build_bgm_rhythm_candidate_insight(candidate, analysis_by_id.get(candidate.music_candidate_id))
+        for candidate in ledger.candidates
+    ]
+    missing_analysis = [item.music_candidate_id for item in ledger.candidates if item.music_candidate_id not in analysis_by_id]
+    for insight in insights:
+        if insight.music_candidate_id in missing_analysis:
+            insight.warnings.append("candidate is missing from current BGM analysis report")
+            insight.next_actions.append("Run bgm analyze again before relying on rhythm intelligence.")
+    usable = sum(item.beat_quality_status in {"usable", "strong"} for item in insights)
+    beat_completed = sum(item.beat_analysis_status == "completed" for item in insights)
+    mixed = sum(item.mixed_audio for item in insights)
+    warnings = sum(1 for item in insights if item.warnings or item.next_actions)
+    status = "warning" if warnings or usable == 0 else "passed"
+    key = (
+        f"{project_id}:{hash_file(ledger_path)}:{hash_file(analysis_path)}:"
+        f"{beat_completed}:{usable}:{mixed}:{warnings}"
+    )
+    report = BgmRhythmIntelligenceReport(
+        bgm_rhythm_intelligence_id="bgm_rhythm_" + hashlib.sha256(key.encode()).hexdigest()[:20],
+        project_id=project_id,
+        candidate_ledger_fingerprint=hash_file(ledger_path),
+        bgm_analysis_fingerprint=hash_file(analysis_path),
+        candidate_count=len(insights),
+        beat_completed_count=beat_completed,
+        usable_beat_candidate_count=usable,
+        mixed_audio_candidate_count=mixed,
+        source_modes_present=sorted({item.input_mode for item in ledger.candidates}, key=lambda value: value.value),
+        status=status,
+        summary=bgm_rhythm_summary(insights, usable, mixed),
+        candidates=insights,
+    )
+    json_path = root / ".artist-portrait" / "data" / "bgm_rhythm_intelligence.json"
+    md_path = root / "output" / "bgm_rhythm_intelligence.md"
+    handoff_path = root / "output" / "bgm_rhythm_handoff.json"
+    atomic_json(json_path, report.model_dump(mode="json"))
+    md_path.parent.mkdir(parents=True, exist_ok=True)
+    md_path.write_text(render_bgm_rhythm_intelligence(report) + "\n", encoding="utf-8")
+    atomic_json(handoff_path, bgm_rhythm_handoff(report))
+    return json_path, md_path, handoff_path, report
+
+
+def build_bgm_rhythm_candidate_insight(
+    candidate: BgmCandidate,
+    analysis: BgmCandidateAnalysis | None,
+) -> BgmRhythmCandidateInsight:
+    warnings: list[str] = []
+    next_actions: list[str] = []
+    if analysis is None:
+        return BgmRhythmCandidateInsight(
+            music_candidate_id=candidate.music_candidate_id,
+            input_mode=candidate.input_mode,
+            source_ref=candidate.source_ref,
+            mixed_audio=candidate.mixed_audio,
+            beat_analysis_status="unavailable",
+            bpm=None,
+            beat_count=0,
+            tempo_confidence=None,
+            beat_quality_status="unavailable",
+            beat_quality_score=0.0,
+            phrase_hint_status="unavailable",
+            source_risk_status=source_rhythm_risk(candidate),
+            warnings=["candidate has no current BGM analysis evidence"],
+            next_actions=["Run bgm analyze before rhythm intelligence review."],
+        )
+    beat_quality, score = beat_quality_from_analysis(analysis)
+    bar_seconds = None
+    phrase_seconds = None
+    phrase_status = "unavailable"
+    if analysis.bpm:
+        bar_seconds = round((60.0 / analysis.bpm) * 4, 3)
+        phrase_seconds = round(bar_seconds * 4, 3)
+        phrase_status = "estimated"
+    if analysis.beat_analysis_status != "completed":
+        warnings.append(analysis.beat_analysis_reason or "validated beat-grid evidence is unavailable")
+        next_actions.append("Install/use a validated local beat engine, then rerun bgm analyze.")
+    if candidate.mixed_audio:
+        warnings.append("candidate audio is a video or source mix and may contain speech, effects, or environment sound")
+        next_actions.append("Use direct clean audio or explicit separation evidence before treating this as clean BGM.")
+    if beat_quality == "weak":
+        warnings.append("validated beat grid exists but beat confidence/count is weak")
+        next_actions.append("Review beat grid manually before using it for cut/cue decisions.")
+    return BgmRhythmCandidateInsight(
+        music_candidate_id=candidate.music_candidate_id,
+        input_mode=candidate.input_mode,
+        source_ref=candidate.source_ref,
+        mixed_audio=candidate.mixed_audio,
+        beat_analysis_status=analysis.beat_analysis_status,
+        bpm=analysis.bpm,
+        beat_count=analysis.beat_count,
+        beat_grid_ref=analysis.beat_grid_ref,
+        beat_grid_fingerprint=analysis.beat_grid_fingerprint,
+        tempo_confidence=analysis.tempo_confidence,
+        beat_quality_status=beat_quality,
+        beat_quality_score=score,
+        phrase_hint_status=phrase_status,
+        estimated_bar_seconds=bar_seconds,
+        estimated_phrase_seconds=phrase_seconds,
+        source_risk_status=source_rhythm_risk(candidate),
+        warnings=warnings,
+        next_actions=next_actions,
+    )
+
+
+def beat_quality_from_analysis(analysis: BgmCandidateAnalysis) -> tuple[str, float]:
+    if analysis.beat_analysis_status != "completed" or analysis.bpm is None:
+        return "unavailable", 0.0
+    confidence = analysis.tempo_confidence or 0.0
+    count_score = min(1.0, analysis.beat_count / 8)
+    score = round(confidence * count_score, 3)
+    if score >= 0.75:
+        return "strong", score
+    if score >= 0.5:
+        return "usable", score
+    return "weak", score
+
+
+def source_rhythm_risk(candidate: BgmCandidate) -> str:
+    if candidate.mixed_audio:
+        return "high"
+    if candidate.input_mode == BgmInputMode.source_embedded_audio:
+        return "medium"
+    return "low"
+
+
+def bgm_rhythm_summary(
+    insights: list[BgmRhythmCandidateInsight],
+    usable_count: int,
+    mixed_count: int,
+) -> str:
+    if usable_count == 0:
+        return "No candidate has usable validated beat evidence; rhythm planning must stay conservative."
+    if mixed_count:
+        return "Usable beat evidence exists, but mixed-audio candidates require provenance caution."
+    return "Usable local beat evidence is available for rhythm review without automatic edit mutation."
+
+
+def render_bgm_rhythm_intelligence(report: BgmRhythmIntelligenceReport) -> str:
+    lines = [
+        "# BGM Rhythm Intelligence Report",
+        "",
+        "This report reviews local BGM rhythm evidence for editing decisions. It does not select music, move edit points, render media, call models, access the network, or fabricate BPM.",
+        "",
+        f"- Status: `{report.status}`",
+        f"- Summary: {report.summary}",
+        f"- Candidates: `{report.candidate_count}`",
+        f"- Beat completed: `{report.beat_completed_count}`",
+        f"- Usable beat candidates: `{report.usable_beat_candidate_count}`",
+        f"- Mixed-audio candidates: `{report.mixed_audio_candidate_count}`",
+        "",
+    ]
+    for candidate in report.candidates:
+        lines.extend(
+            [
+                f"## `{candidate.music_candidate_id}`",
+                "",
+                f"- Input mode: `{candidate.input_mode.value}`",
+                f"- Source risk: `{candidate.source_risk_status}`",
+                f"- Beat status: `{candidate.beat_analysis_status}`",
+                f"- Beat quality: `{candidate.beat_quality_status}` / `{candidate.beat_quality_score}`",
+                f"- BPM: `{candidate.bpm}`",
+                f"- Beat count: `{candidate.beat_count}`",
+                f"- Bar seconds: `{candidate.estimated_bar_seconds}`",
+                f"- Phrase seconds: `{candidate.estimated_phrase_seconds}`",
+                f"- Beat grid: `{candidate.beat_grid_ref or 'None'}`",
+            ]
+        )
+        for warning in candidate.warnings:
+            lines.append(f"- Warning: {warning}")
+        for action in candidate.next_actions:
+            lines.append(f"- Next action: {action}")
+        lines.append("")
+    return "\n".join(lines)
+
+
+def bgm_rhythm_handoff(report: BgmRhythmIntelligenceReport) -> dict:
+    return {
+        "schema_version": report.schema_version,
+        "handoff_id": f"bgm_rhythm_handoff_{report.bgm_rhythm_intelligence_id}",
+        "project_id": report.project_id,
+        "bgm_rhythm_intelligence_id": report.bgm_rhythm_intelligence_id,
+        "status": report.status,
+        "summary": report.summary,
+        "task": "Review BGM rhythm evidence and propose textual editing guidance only.",
+        "forbidden": [
+            "do not select music",
+            "do not move edit points",
+            "do not render media",
+            "do not fabricate BPM or beat grids",
+            "do not call models from the CLI",
+            "do not access the network",
+        ],
+    }
 
 
 def analyze_candidate_audio(

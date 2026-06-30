@@ -134,7 +134,7 @@ def test_release_check_writes_hardening_report_without_publication(tmp_path, cap
 
     assert payload["output"] == ".artist-portrait/data/release_hardening_report.json"
     assert payload["report"] == "output/release_hardening_report.md"
-    assert report["capability_gate"] == "V0-041"
+    assert report["capability_gate"] == "V0-042"
     assert report["status"] in {"warning", "ready_for_local_release"}
     assert report["failed_count"] == 0
     assert report["commit_allowed"] is False
@@ -3645,6 +3645,22 @@ def test_rhythm_cli_plans_bgm_edit_rhythm_without_mutating_outputs(tmp_path, cap
     )
     capsys.readouterr()
     assert (
+        main(["bgm", "rhythm", "--project", str(project_path), "--json"])
+        == 1
+    )
+    bgm_rhythm_payload = json.loads(capsys.readouterr().out)
+    bgm_rhythm = bgm_rhythm_payload["bgm_rhythm_intelligence"]
+    assert bgm_rhythm_payload["output"] == ".artist-portrait/data/bgm_rhythm_intelligence.json"
+    assert bgm_rhythm_payload["report"] == "output/bgm_rhythm_intelligence.md"
+    assert bgm_rhythm_payload["handoff"] == "output/bgm_rhythm_handoff.json"
+    assert bgm_rhythm["automatic_music_selection"] is False
+    assert bgm_rhythm["edit_points_moved"] is False
+    assert bgm_rhythm["media_rendered"] is False
+    assert bgm_rhythm["network_performed"] is False
+    assert bgm_rhythm["fabricated_bpm_or_beats"] is False
+    assert bgm_rhythm["candidate_count"] == 1
+    assert bgm_rhythm["usable_beat_candidate_count"] == 0
+    assert (
         main(
             [
                 "bgm", "fit", "--project", str(project_path),
@@ -3700,8 +3716,15 @@ def test_rhythm_cli_plans_bgm_edit_rhythm_without_mutating_outputs(tmp_path, cap
     assert payload["report"] == "output/rhythm_report.md"
     assert payload["handoff"] == "output/rhythm_agent_handoff.json"
     assert plan["intent"]["mode"] == "speech_first"
+    assert plan["bgm_rhythm_intelligence_fingerprint"]
     assert plan["timeline_profile"]["metrics"]
     assert plan["bgm_profile"]["metrics"]
+    bgm_metrics = {
+        metric["metric_id"]: metric
+        for metric in plan["bgm_profile"]["metrics"]
+    }
+    assert bgm_metrics["bgm_rhythm_status"]["value"] == "warning"
+    assert bgm_metrics["usable_beat_candidate_count"]["value"] == 0
     assert plan["compatibility_audit"]["domain_id"] == "compatibility_audit"
     assert plan["cut_cue_audit"]["status"] == "unavailable"
     assert plan["transition_audit"]["domain_id"] == "transition_audit"

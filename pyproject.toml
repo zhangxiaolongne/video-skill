@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "artist-portrait-editor"
-version = "0.1.0"
-description = "Local V0 foundation for the artist portrait editor skill."
+version = "0.26.0"
+description = "Local deterministic artist portrait video editing skill."
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
