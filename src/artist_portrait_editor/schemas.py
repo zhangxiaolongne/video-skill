@@ -3,7 +3,15 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from artist_portrait_editor.models.acceptance import ProjectAcceptanceReport
+from artist_portrait_editor.models.acceptance import (
+    AcceptanceRepairApprovalRecord,
+    AcceptanceRepairApprovalRequest,
+    AcceptanceRepairExecutionBundle,
+    AcceptanceRepairExecutionDryRun,
+    AcceptanceRepairExecutionRecord,
+    AcceptanceRepairPlan,
+    ProjectAcceptanceReport,
+)
 from artist_portrait_editor.models.analysis import AnalysisRecord
 from artist_portrait_editor.models.bgm import (
     BgmAnalysisReport,
@@ -50,16 +58,52 @@ from artist_portrait_editor.models.proposal_context import ProposalContext
 from artist_portrait_editor.models.proposal_request import ProposalRequestPacket
 from artist_portrait_editor.models.proposal_validation import ProposalValidationReport
 from artist_portrait_editor.models.preview import PreviewRenderManifest, PreviewValidationReport
+from artist_portrait_editor.models.release import ReleaseHardeningReport
 from artist_portrait_editor.models.source import SourceRecord
 from artist_portrait_editor.models.state import ProjectState
+from artist_portrait_editor.models.rhythm import (
+    RhythmAgentCandidate,
+    RhythmIntent,
+    RhythmMediaQcReport,
+    RhythmPlan,
+    RhythmRepairPlan,
+)
 from artist_portrait_editor.models.transcript import TranscriptRecord
 from artist_portrait_editor.models.timeline import TimelineDraft, TimelineValidationReport
+from artist_portrait_editor.models.workflow import (
+    WorkflowExecutionRecord,
+    WorkflowExecutionReview,
+    WorkflowPlan,
+    WorkflowRepairApprovalRecord,
+    WorkflowRepairApprovalRequest,
+    WorkflowRepairDryRun,
+    WorkflowRepairExecutionRecord,
+    WorkflowRepairExecutionReview,
+    WorkflowRepairRefreshPlan,
+    WorkflowRepairPlan,
+)
 
 
 def write_schema_files(output_dir: Path) -> None:
     output_dir.mkdir(parents=True, exist_ok=True)
     schemas = {
         "analysis_record.schema.json": AnalysisRecord.model_json_schema(),
+        "acceptance_repair_plan.schema.json": AcceptanceRepairPlan.model_json_schema(),
+        "acceptance_repair_approval_record.schema.json": (
+            AcceptanceRepairApprovalRecord.model_json_schema()
+        ),
+        "acceptance_repair_approval_request.schema.json": (
+            AcceptanceRepairApprovalRequest.model_json_schema()
+        ),
+        "acceptance_repair_execution_dry_run.schema.json": (
+            AcceptanceRepairExecutionDryRun.model_json_schema()
+        ),
+        "acceptance_repair_execution_bundle.schema.json": (
+            AcceptanceRepairExecutionBundle.model_json_schema()
+        ),
+        "acceptance_repair_execution_record.schema.json": (
+            AcceptanceRepairExecutionRecord.model_json_schema()
+        ),
         "project_acceptance_report.schema.json": ProjectAcceptanceReport.model_json_schema(),
         "bgm_analysis_report.schema.json": BgmAnalysisReport.model_json_schema(),
         "bgm_beat_grid.schema.json": BgmBeatGrid.model_json_schema(),
@@ -81,6 +125,12 @@ def write_schema_files(output_dir: Path) -> None:
         "project_state.schema.json": ProjectState.model_json_schema(),
         "preview_render_manifest.schema.json": PreviewRenderManifest.model_json_schema(),
         "preview_validation_report.schema.json": PreviewValidationReport.model_json_schema(),
+        "release_hardening_report.schema.json": ReleaseHardeningReport.model_json_schema(),
+        "rhythm_agent_candidate.schema.json": RhythmAgentCandidate.model_json_schema(),
+        "rhythm_intent.schema.json": RhythmIntent.model_json_schema(),
+        "rhythm_media_qc_report.schema.json": RhythmMediaQcReport.model_json_schema(),
+        "rhythm_plan.schema.json": RhythmPlan.model_json_schema(),
+        "rhythm_repair_plan.schema.json": RhythmRepairPlan.model_json_schema(),
         "proposal_adapter_check.schema.json": ProposalAdapterCheck.model_json_schema(),
         "proposal_canonical_write_transaction_plan.schema.json": (
             ProposalCanonicalWriteTransactionPlan.model_json_schema()
@@ -136,6 +186,26 @@ def write_schema_files(output_dir: Path) -> None:
         "text_model_gate.schema.json": TextModelGate.model_json_schema(),
         "timeline_draft.schema.json": TimelineDraft.model_json_schema(),
         "timeline_validation_report.schema.json": TimelineValidationReport.model_json_schema(),
+        "workflow_plan.schema.json": WorkflowPlan.model_json_schema(),
+        "workflow_execution_record.schema.json": WorkflowExecutionRecord.model_json_schema(),
+        "workflow_execution_review.schema.json": WorkflowExecutionReview.model_json_schema(),
+        "workflow_repair_approval_record.schema.json": (
+            WorkflowRepairApprovalRecord.model_json_schema()
+        ),
+        "workflow_repair_approval_request.schema.json": (
+            WorkflowRepairApprovalRequest.model_json_schema()
+        ),
+        "workflow_repair_dry_run.schema.json": WorkflowRepairDryRun.model_json_schema(),
+        "workflow_repair_execution_record.schema.json": (
+            WorkflowRepairExecutionRecord.model_json_schema()
+        ),
+        "workflow_repair_execution_review.schema.json": (
+            WorkflowRepairExecutionReview.model_json_schema()
+        ),
+        "workflow_repair_refresh_plan.schema.json": (
+            WorkflowRepairRefreshPlan.model_json_schema()
+        ),
+        "workflow_repair_plan.schema.json": WorkflowRepairPlan.model_json_schema(),
     }
     for filename, schema in schemas.items():
         (output_dir / filename).write_text(

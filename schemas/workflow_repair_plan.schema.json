@@ -1,0 +1,188 @@
+{
+  "$defs": {
+    "WorkflowRepairAction": {
+      "additionalProperties": false,
+      "properties": {
+        "action_id": {
+          "minLength": 1,
+          "title": "Action Id",
+          "type": "string"
+        },
+        "command": {
+          "minLength": 1,
+          "title": "Command",
+          "type": "string"
+        },
+        "evidence_to_resubmit": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Evidence To Resubmit",
+          "type": "array"
+        },
+        "executes_automatically": {
+          "default": false,
+          "title": "Executes Automatically",
+          "type": "boolean"
+        },
+        "expected_artifacts": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Expected Artifacts",
+          "type": "array"
+        },
+        "order": {
+          "minimum": 1,
+          "title": "Order",
+          "type": "integer"
+        },
+        "rationale": {
+          "minLength": 1,
+          "title": "Rationale",
+          "type": "string"
+        },
+        "reason": {
+          "pattern": "^(rejected|missing|skipped)$",
+          "title": "Reason",
+          "type": "string"
+        },
+        "severity": {
+          "pattern": "^(required|optional)$",
+          "title": "Severity",
+          "type": "string"
+        },
+        "step_id": {
+          "minLength": 1,
+          "title": "Step Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "action_id",
+        "step_id",
+        "order",
+        "severity",
+        "reason",
+        "command",
+        "rationale"
+      ],
+      "title": "WorkflowRepairAction",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "acceptance_success_promoted": {
+      "default": false,
+      "title": "Acceptance Success Promoted",
+      "type": "boolean"
+    },
+    "actions": {
+      "items": {
+        "$ref": "#/$defs/WorkflowRepairAction"
+      },
+      "title": "Actions",
+      "type": "array"
+    },
+    "automatic_music_selection": {
+      "default": false,
+      "title": "Automatic Music Selection",
+      "type": "boolean"
+    },
+    "commands_executed": {
+      "default": false,
+      "title": "Commands Executed",
+      "type": "boolean"
+    },
+    "edit_points_moved": {
+      "default": false,
+      "title": "Edit Points Moved",
+      "type": "boolean"
+    },
+    "first_required_command": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "First Required Command"
+    },
+    "media_rendered": {
+      "default": false,
+      "title": "Media Rendered",
+      "type": "boolean"
+    },
+    "model_call_performed_by_cli": {
+      "default": false,
+      "title": "Model Call Performed By Cli",
+      "type": "boolean"
+    },
+    "network_performed": {
+      "default": false,
+      "title": "Network Performed",
+      "type": "boolean"
+    },
+    "optional_action_count": {
+      "minimum": 0,
+      "title": "Optional Action Count",
+      "type": "integer"
+    },
+    "project_id": {
+      "minLength": 1,
+      "title": "Project Id",
+      "type": "string"
+    },
+    "required_action_count": {
+      "minimum": 0,
+      "title": "Required Action Count",
+      "type": "integer"
+    },
+    "schema_version": {
+      "default": "0.3",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "status": {
+      "pattern": "^(ready|blocked|no_actions)$",
+      "title": "Status",
+      "type": "string"
+    },
+    "target": {
+      "pattern": "^(core|preview|delivery)$",
+      "title": "Target",
+      "type": "string"
+    },
+    "workflow_execution_review_id": {
+      "minLength": 1,
+      "title": "Workflow Execution Review Id",
+      "type": "string"
+    },
+    "workflow_plan_id": {
+      "minLength": 1,
+      "title": "Workflow Plan Id",
+      "type": "string"
+    },
+    "workflow_repair_plan_id": {
+      "minLength": 1,
+      "title": "Workflow Repair Plan Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "workflow_repair_plan_id",
+    "project_id",
+    "workflow_plan_id",
+    "workflow_execution_review_id",
+    "target",
+    "status",
+    "required_action_count",
+    "optional_action_count"
+  ],
+  "title": "WorkflowRepairPlan",
+  "type": "object"
+}

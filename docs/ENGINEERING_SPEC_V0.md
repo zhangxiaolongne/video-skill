@@ -345,6 +345,349 @@ calls, network access, paid APIs, API keys, remote providers, hidden model
 calls, image generation/editing, source separation, or fabricated BPM/beat
 grids.
 
+Current V0-025 implementation scope additionally allows:
+
+- `acceptance --profile standard|core|preview|delivery`
+- profile-specific required-stage evaluation
+- profile pass/fail fields in `ProjectAcceptanceReport`
+- required-stage IDs in canonical JSON/Markdown acceptance reports
+- profile-aware acceptance exit codes
+- acceptance state/run audit recording of the selected profile
+
+V0-025 does not allow automatic pipeline repair, proposal generation, music
+selection, BGM fitting, timeline mutation, preview/final media rendering, model
+calls, network access, paid APIs, API keys, remote providers, hidden model
+calls, image generation/editing, source separation, fabricated BPM/beat grids,
+or automatic conversion from failed profile to remediation actions.
+
+Current V0-026 implementation scope additionally allows:
+
+- deterministic real-media acceptance fixture generation in tests and
+  `run_checks.py`
+- locally generated temporary MP4 video and WAV BGM audio
+- fixture execution through scan, segment, keyframes, analyze, map, proposal
+  handoff, candidate quarantine/import, timeline, BGM import/fit/review,
+  preview, final export, and acceptance profiles
+- fixture assertions for core, preview, and delivery acceptance profile success
+- fixture assertions that BGM readiness and forbidden-capability audit remain
+  grounded in local artifacts
+
+V0-026 does not allow downloaded media, network access, remote search,
+CLI-side model calls, automatic music selection, automatic top-ranked
+recommendation selection, fabricated BPM or beat grids, automatic edit timing
+changes, paid APIs, API keys, remote providers, hidden model calls, image
+generation/editing, source separation, or durable binary fixture media.
+
+Current V0-027 implementation scope additionally allows:
+
+- `acceptance --repair-plan`
+- canonical `.artist-portrait/data/acceptance_repair_plan.json`
+- deterministic `output/acceptance_repair_plan.md`
+- `AcceptanceRepairPlan` schema
+- required versus optional repair action classification by acceptance profile
+- deterministic command ordering from existing acceptance next actions
+- repair-plan state/run audit refs and no-execution flags
+
+V0-027 does not allow automatic repair execution, automatic pipeline reruns,
+proposal generation by CLI, music selection, automatic BGM fitting, timeline
+mutation, preview/final media rendering, model calls, network access, paid
+APIs, API keys, remote providers, hidden model calls, image generation/editing,
+source separation, fabricated BPM/beat grids, or automatic conversion from a
+repair plan into performed actions.
+
+Current V0-028 implementation scope additionally allows:
+
+- `acceptance --approval-request`
+- `acceptance --approval-record <json>`
+- canonical `.artist-portrait/data/acceptance_repair_approval_request.json`
+- deterministic `output/acceptance_repair_approval_request.md`
+- canonical `.artist-portrait/data/acceptance_repair_approval_record.json`
+- deterministic `output/acceptance_repair_approval_record.md`
+- `AcceptanceRepairApprovalRequest` and `AcceptanceRepairApprovalRecord`
+  schemas
+- deterministic validation of project, profile, repair-plan, action, command,
+  duplicate, pending-decision, and missing-required-action bindings
+
+V0-028 does not allow executing approved actions, automatic repair execution,
+automatic pipeline reruns, proposal generation by CLI, music selection,
+automatic BGM fitting, timeline mutation, preview/final media rendering, model
+calls, network access, paid APIs, API keys, remote providers, hidden model
+calls, image generation/editing, source separation, fabricated BPM/beat grids,
+or automatic conversion from approval records into performed actions.
+
+Current V0-029 implementation scope additionally allows:
+
+- `acceptance --execution-dry-run`
+- canonical `.artist-portrait/data/acceptance_repair_execution_dry_run.json`
+- deterministic `output/acceptance_repair_execution_dry_run.md`
+- `AcceptanceRepairExecutionDryRun` schema
+- dry-run enumeration of approved and rejected repair actions from a valid
+  approval record
+- command ordering, blocked reason, `would_execute=false`, and
+  `commands_executed=false` evidence
+
+V0-029 does not allow executing dry-run commands, automatic repair execution,
+automatic pipeline reruns, proposal generation by CLI, music selection,
+automatic BGM fitting, timeline mutation, preview/final media rendering, model
+calls, network access, paid APIs, API keys, remote providers, hidden model
+calls, image generation/editing, source separation, fabricated BPM/beat grids,
+or automatic conversion from dry-run manifests into performed actions.
+
+Current V0-030 implementation scope additionally allows:
+
+- `acceptance --execution-bundle`
+- `acceptance --execution-record <json>`
+- canonical `.artist-portrait/data/acceptance_repair_execution_bundle.json`
+- deterministic `output/acceptance_repair_execution_bundle.md`
+- canonical `.artist-portrait/data/acceptance_repair_execution_record.json`
+- deterministic `output/acceptance_repair_execution_record.md`
+- `AcceptanceRepairExecutionBundle` and `AcceptanceRepairExecutionRecord`
+  schemas
+- manual execution handoff commands derived only from approved dry-run steps
+- explicit external execution evidence intake with project, profile,
+  repair-plan, approval-record, dry-run, step, action, and command binding
+  validation
+- succeeded, failed, and skipped evidence classification without changing
+  acceptance readiness
+
+V0-030 does not allow command execution by the CLI, automatic repair execution,
+automatic pipeline reruns, trusting execution evidence as acceptance success,
+proposal generation by CLI, music selection, automatic BGM fitting, timeline
+mutation, preview/final media rendering, model calls, network access, paid
+APIs, API keys, remote providers, hidden model calls, image generation/editing,
+source separation, fabricated BPM/beat grids, or automatic conversion from
+execution records into repaired project state.
+
+Current V0-031 implementation scope additionally allows:
+
+- `rhythm`
+- `rhythm --intent <json>`
+- `rhythm --agent-output <json>`
+- canonical `.artist-portrait/data/rhythm_plan.json`
+- deterministic `output/rhythm_report.md`
+- deterministic `output/rhythm_agent_handoff.json`
+- `RhythmPlan`, `RhythmIntent`, and `RhythmAgentCandidate` schemas
+- deterministic timeline rhythm profile, BGM rhythm profile, compatibility
+  audit, explicit intent audit, cut/cue audit, transition audit, text readiness
+  audit, ducking/silence audit, ending audit, and external rhythm candidate
+  validation
+
+V0-031 does not allow moving edit points, automatic beat-synced editing,
+automatic music selection, automatic BGM fitting, timeline mutation,
+preview/final media rendering, fabricated BPM or beat grids, model calls,
+network access, paid APIs, API keys, remote providers, hidden model calls,
+image generation/editing, or source separation.
+
+Current V0-032 implementation scope additionally allows:
+
+- `rhythm --qc`
+- canonical `.artist-portrait/data/rhythm_media_qc.json`
+- deterministic `output/rhythm_media_qc.md`
+- deterministic `output/rhythm_media_qc_handoff.json`
+- `RhythmMediaQcReport` schema
+- deterministic preview binding, final export binding, timeline freshness, BGM
+  freshness, preview duration, final duration, audio expectation, ducking
+  render, ending render, and media-QC summary checks over existing artifacts
+
+V0-032 does not allow rendering preview/final media, moving edit points,
+automatic beat-synced editing, automatic music selection, automatic BGM
+fitting, timeline mutation, fabricated BPM or beat grids, model calls, network
+access, paid APIs, API keys, remote providers, hidden model calls, image
+generation/editing, source separation, or automatic repair of rhythm/QC issues.
+
+Current V0-033 implementation scope additionally allows:
+
+- acceptance `rhythm_plan` stage over existing
+  `.artist-portrait/data/rhythm_plan.json`
+- acceptance `rhythm_media_qc` stage over existing
+  `.artist-portrait/data/rhythm_media_qc.json`
+- preview profile required stages for existing rhythm plan, preview, and rhythm
+  media QC evidence
+- delivery profile required stages for existing rhythm plan, preview, final
+  export, and rhythm media QC evidence
+- standard and core profile non-blocking rhythm/QC warnings when rhythm evidence
+  has not yet been produced
+- repair plans, approval requests, dry-run manifests, manual execution bundles,
+  and execution-record intake that carry rhythm-specific next commands without
+  executing them
+- generated real-media acceptance checks that explicitly run rhythm and rhythm
+  QC before preview/delivery acceptance evaluation
+
+V0-033 does not allow acceptance to auto-run rhythm, auto-run rhythm QC,
+auto-render preview/final media, execute repair commands, auto-generate missing
+pipeline artifacts, move edit points, automatically select music,
+automatically fit music, fabricate BPM or beat grids, call models, access the
+network, depend on paid APIs/API keys/remote providers, use hidden model calls,
+use image generation/editing, perform source separation, or treat external
+execution records as acceptance success.
+
+Current V0-034 implementation scope additionally allows:
+
+- `rhythm --repair-plan`
+- `rhythm --repair-plan --acceptance-profile standard|core|preview|delivery`
+- canonical `.artist-portrait/data/rhythm_repair_plan.json`
+- deterministic `output/rhythm_repair_plan.md`
+- deterministic `output/rhythm_repair_handoff.json`
+- `RhythmRepairPlan` and `RhythmRepairAction` schemas
+- profile-aware manual next-command ordering for missing/stale rhythm plan,
+  preview, final export, BGM, and rhythm-QC evidence
+- generated real-media checks that prove rhythm repair plans list commands
+  without executing them
+
+V0-034 does not allow rhythm repair plans to execute commands, auto-run rhythm
+or rhythm QC, render preview/final media, auto-generate missing artifacts, move
+edit points, automatically select music, automatically fit music, fabricate BPM
+or beat grids, call models, access the network, depend on paid APIs/API
+keys/remote providers, use hidden model calls, use image generation/editing,
+perform source separation, or treat repair guidance as acceptance success.
+
+Current V0-035 implementation scope additionally allows:
+
+- `workflow --target core|preview|delivery`
+- canonical `.artist-portrait/data/workflow_plan.json`
+- deterministic `output/workflow_plan.md`
+- deterministic `output/workflow_agent_handoff.json`
+- `WorkflowPlan` and `WorkflowStep` schemas
+- deterministic next-command selection from existing project state and
+  artifacts
+- integration of acceptance and rhythm repair guidance as blocked/optional
+  workflow steps
+- preservation of existing rhythm acceptance and rhythm-aware acceptance
+  boundaries while planning workflow next commands
+
+V0-035 does not allow workflow planning to execute commands, auto-run pipeline
+stages, render media, generate proposals, import candidates, move edit points,
+automatically select music, automatically fit music, fabricate BPM or beat
+grids, call models, access the network, depend on paid APIs/API keys/remote
+providers, use hidden model calls, use image generation/editing, perform source
+separation, or treat workflow guidance as acceptance success.
+
+Current V0-036 implementation scope additionally allows:
+
+- `workflow --execution-record <candidate.json>`
+- byte-exact quarantine to
+  `.artist-portrait/data/workflow_execution_record_quarantine.json`
+- canonical `.artist-portrait/data/workflow_execution_review.json`
+- deterministic `output/workflow_execution_review.md`
+- deterministic `output/workflow_execution_handoff.json`
+- `WorkflowExecutionRecord`, `WorkflowExecutionStepRecord`,
+  `WorkflowExecutionReview`, and `WorkflowExecutionStepReview` schemas
+- validation of project, target, workflow-plan, step, command, and artifact
+  evidence bindings
+- accepted, rejected, missing, and skipped step evidence classification
+- generated real-media workflow execution evidence review checks
+
+V0-036 does not allow workflow execution review to execute commands, auto-run
+workflow or pipeline stages, render media, generate proposals, import proposal
+or rhythm candidates, move edit points, automatically select music,
+automatically fit music, fabricate BPM or beat grids, call models, access the
+network, depend on paid APIs/API keys/remote providers, use hidden model calls,
+use image generation/editing, perform source separation, or treat execution
+evidence as acceptance success.
+
+Current V0-037 implementation scope additionally allows:
+
+- `workflow --repair-plan`
+- canonical `.artist-portrait/data/workflow_repair_plan.json`
+- deterministic `output/workflow_repair_plan.md`
+- deterministic `output/workflow_repair_handoff.json`
+- `WorkflowRepairPlan` and `WorkflowRepairAction` schemas
+- conversion of rejected, missing, and skipped workflow execution evidence into
+  required or optional manual repair actions
+- workflow-order repair action ordering and first-required-command surfacing
+- generated real-media workflow evidence repair planning checks
+
+V0-037 does not allow workflow repair planning to execute commands, auto-run
+workflow or pipeline stages, render media, generate proposals, import proposal
+or rhythm candidates, move edit points, automatically select music,
+automatically fit music, fabricate BPM or beat grids, call models, access the
+network, depend on paid APIs/API keys/remote providers, use hidden model calls,
+use image generation/editing, perform source separation, or treat repair
+guidance as acceptance success.
+
+Current V0-038 implementation scope additionally allows:
+
+- `workflow --approval-request`
+- `workflow --approval-record <candidate.json>`
+- `workflow --repair-dry-run`
+- canonical workflow repair approval request, approval record, and dry-run
+  JSON/Markdown artifacts
+- byte-exact approval record quarantine
+- validation of repair-plan, workflow-plan, execution-review, target, and
+  action-id bindings
+- approved and rejected manual repair action enumeration without execution
+
+V0-038 does not allow workflow repair approval or dry-run packaging to execute
+commands, auto-run workflow or pipeline stages, render media, generate
+proposals, import proposal or rhythm candidates, move edit points,
+automatically select music, automatically fit music, fabricate BPM or beat
+grids, call models, access the network, depend on paid APIs/API keys/remote
+providers, use hidden model calls, use image generation/editing, perform source
+separation, or treat approval/dry-run artifacts as acceptance success.
+
+Current V0-039 implementation scope additionally allows:
+
+- `workflow --repair-execution-record <candidate.json>`
+- canonical `.artist-portrait/data/workflow_repair_execution_record_quarantine.json`
+- canonical `.artist-portrait/data/workflow_repair_execution_review.json`
+- deterministic `output/workflow_repair_execution_review.md`
+- deterministic `output/workflow_repair_execution_handoff.json`
+- byte-exact workflow repair execution record quarantine
+- validation of repair-plan, approval-record, dry-run, target, action-id,
+  command, and expected-artifact bindings
+- classification of repair execution action evidence as accepted, rejected,
+  missing, or skipped without execution
+
+V0-039 does not allow workflow repair execution review to execute commands,
+auto-run workflow or pipeline stages, render media, generate proposals, import
+proposal or rhythm candidates, move edit points, automatically select music,
+automatically fit music, fabricate BPM or beat grids, call models, access the
+network, depend on paid APIs/API keys/remote providers, use hidden model calls,
+use image generation/editing, perform source separation, or treat repair
+execution evidence as acceptance success.
+
+Current V0-040 implementation scope additionally allows:
+
+- `release-check --project <project.yaml>`
+- canonical `.artist-portrait/data/release_hardening_report.json`
+- deterministic `output/release_hardening_report.md`
+- current-gate documentation consistency audit
+- local git publication-state audit without commit, push, or tag
+- release-critical schema coverage audit
+- forbidden paid/network provider source-surface audit
+- workflow/rhythm artifact chain documentation audit
+- current validation evidence audit
+- readiness classification as `ready_for_local_release`, `warning`, or
+  `blocked`
+
+V0-040 does not allow release hardening to commit, push, tag, execute repair
+commands, auto-run workflow or pipeline stages, render media, generate
+proposals, import proposal or rhythm candidates, move edit points,
+automatically select music, automatically fit music, fabricate BPM or beat
+grids, call models, access the network, depend on paid APIs/API keys/remote
+providers, use hidden model calls, use image generation/editing, perform source
+separation, or treat release readiness as acceptance success.
+
+Current V0-041 implementation scope additionally allows:
+
+- `workflow --repair-refresh-plan`
+- canonical `.artist-portrait/data/workflow_repair_refresh_plan.json`
+- deterministic `output/workflow_repair_refresh_plan.md`
+- deterministic `output/workflow_repair_refresh_handoff.json`
+- mapping accepted workflow repair execution evidence to
+  `ready_to_resubmit`
+- preserving rejected, missing, and skipped repair execution evidence as
+  explicit gaps
+- next explicit workflow execution-record command guidance without execution
+
+V0-041 does not allow workflow repair refresh planning to execute commands,
+mutate workflow plans, auto-run workflow or pipeline stages, render media,
+generate proposals, import proposal or rhythm candidates, move edit points,
+automatically select music, automatically fit music, fabricate BPM or beat
+grids, call models, access the network, depend on paid APIs/API keys/remote
+providers, use hidden model calls, use image generation/editing, perform source
+separation, or treat refreshed evidence as acceptance success.
+
 - `scan`
 - deterministic `sources.jsonl`
 - deterministic `scan_report.md`

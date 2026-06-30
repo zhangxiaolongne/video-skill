@@ -1,0 +1,196 @@
+{
+  "$defs": {
+    "WorkflowExecutionStepReview": {
+      "additionalProperties": false,
+      "properties": {
+        "command_matched": {
+          "default": false,
+          "title": "Command Matched",
+          "type": "boolean"
+        },
+        "detail": {
+          "minLength": 1,
+          "title": "Detail",
+          "type": "string"
+        },
+        "evidence_refs": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Evidence Refs",
+          "type": "array"
+        },
+        "missing_refs": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Missing Refs",
+          "type": "array"
+        },
+        "planned_status": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Planned Status"
+        },
+        "review_status": {
+          "pattern": "^(accepted|rejected|missing|skipped)$",
+          "title": "Review Status",
+          "type": "string"
+        },
+        "step_id": {
+          "minLength": 1,
+          "title": "Step Id",
+          "type": "string"
+        },
+        "submitted_status": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Submitted Status"
+        }
+      },
+      "required": [
+        "step_id",
+        "review_status",
+        "detail"
+      ],
+      "title": "WorkflowExecutionStepReview",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "accepted_step_count": {
+      "minimum": 0,
+      "title": "Accepted Step Count",
+      "type": "integer"
+    },
+    "automatic_music_selection_by_cli": {
+      "default": false,
+      "title": "Automatic Music Selection By Cli",
+      "type": "boolean"
+    },
+    "candidate_bytes": {
+      "minimum": 0,
+      "title": "Candidate Bytes",
+      "type": "integer"
+    },
+    "candidate_sha256": {
+      "maxLength": 64,
+      "minLength": 64,
+      "title": "Candidate Sha256",
+      "type": "string"
+    },
+    "commands_executed_by_cli": {
+      "default": false,
+      "title": "Commands Executed By Cli",
+      "type": "boolean"
+    },
+    "edit_points_moved_by_cli": {
+      "default": false,
+      "title": "Edit Points Moved By Cli",
+      "type": "boolean"
+    },
+    "media_rendered_by_cli": {
+      "default": false,
+      "title": "Media Rendered By Cli",
+      "type": "boolean"
+    },
+    "missing_step_count": {
+      "minimum": 0,
+      "title": "Missing Step Count",
+      "type": "integer"
+    },
+    "model_call_performed_by_cli": {
+      "default": false,
+      "title": "Model Call Performed By Cli",
+      "type": "boolean"
+    },
+    "network_performed_by_cli": {
+      "default": false,
+      "title": "Network Performed By Cli",
+      "type": "boolean"
+    },
+    "project_id": {
+      "minLength": 1,
+      "title": "Project Id",
+      "type": "string"
+    },
+    "quarantine_ref": {
+      "minLength": 1,
+      "title": "Quarantine Ref",
+      "type": "string"
+    },
+    "rejected_step_count": {
+      "minimum": 0,
+      "title": "Rejected Step Count",
+      "type": "integer"
+    },
+    "schema_version": {
+      "default": "0.3",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "skipped_step_count": {
+      "minimum": 0,
+      "title": "Skipped Step Count",
+      "type": "integer"
+    },
+    "status": {
+      "pattern": "^(passed|warning|failed)$",
+      "title": "Status",
+      "type": "string"
+    },
+    "step_reviews": {
+      "items": {
+        "$ref": "#/$defs/WorkflowExecutionStepReview"
+      },
+      "title": "Step Reviews",
+      "type": "array"
+    },
+    "target": {
+      "pattern": "^(core|preview|delivery)$",
+      "title": "Target",
+      "type": "string"
+    },
+    "workflow_execution_review_id": {
+      "minLength": 1,
+      "title": "Workflow Execution Review Id",
+      "type": "string"
+    },
+    "workflow_plan_id": {
+      "minLength": 1,
+      "title": "Workflow Plan Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "workflow_execution_review_id",
+    "project_id",
+    "workflow_plan_id",
+    "target",
+    "status",
+    "quarantine_ref",
+    "candidate_sha256",
+    "candidate_bytes",
+    "accepted_step_count",
+    "rejected_step_count",
+    "missing_step_count",
+    "skipped_step_count"
+  ],
+  "title": "WorkflowExecutionReview",
+  "type": "object"
+}

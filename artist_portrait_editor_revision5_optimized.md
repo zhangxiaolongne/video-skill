@@ -5,7 +5,7 @@
 > **工作名称**：`artist-portrait-editor`  
 > **中文名称**：人物向剪辑导演 / 艺人肖像剪辑 Skill  
 > **适用范围**：产品愿景、V0 产品规格、V0 工程规格  
-> **当前开发闸门**：V0-024 project acceptance gate。可从现有 workspace artifacts 和 state 生成 deterministic project acceptance report，评估 core readiness、delivery readiness、BGM、preview、final export 与 forbidden-capability flags。不得生成提案、选曲、改 timeline、fit music、渲染媒体、接入付费 API、API key、远程 provider、隐藏模型调用、image generation/editing 或网络调用。
+> **当前开发闸门**：V0-041 workflow repair evidence refresh guidance gate。可从 current workflow repair execution review 生成 deterministic refresh plan，把 accepted repair evidence 转为 ready-to-resubmit workflow evidence，同时保留 rejected/missing/skipped repair evidence gaps。不得执行 workflow commands、mutate workflow plans、自动补跑 workflow/pipeline、渲染媒体、移动剪辑点、自动选曲、自动 fit music、联网、从 CLI 调模型、伪造 BPM/beat grid、接入付费 API、API key、远程 provider、隐藏模型调用、image generation/editing，或把 refreshed evidence 当作 acceptance success。
 
 ---
 
@@ -80,7 +80,7 @@ V0 分为两个模式：
 - `core_mode`：不依赖文本生成模型或视觉模型，负责确定性媒体处理、canonical 数据、风险规则和素材结构报告。
 - `creative_mode`：在 `core_mode` 证据基础上，生成三套可回溯创作提案，并在用户选择后生成时间线草案。
 
-阶段 A 至 V0-024 已完成 proposal generation、canonical timeline、multi-source BGM fitting、low-resolution preview rendering、preview QC、controlled local final export、local BGM technical intelligence、BGM recommendation review、beat-engine adapter evidence gate、recommendation-to-fit selection gate、recommendation-fit review gate、BGM fit controls gate 与 project acceptance gate。当前开放 V0-024 project acceptance gate：
+阶段 A 至 V0-041 已完成 proposal generation、canonical timeline、multi-source BGM fitting、low-resolution preview rendering、preview QC、controlled local final export、local BGM technical intelligence、BGM recommendation review、beat-engine adapter evidence gate、recommendation-to-fit selection gate、recommendation-fit review gate、BGM fit controls gate、project acceptance gate、acceptance profile gate、real-media acceptance fixture gate、acceptance repair-plan gate、acceptance repair approval gate、repair execution dry-run gate、repair execution handoff gate、BGM/edit rhythm planning gate、rhythm media QC gate、rhythm acceptance integration gate、rhythm manual repair planning gate、guided workflow planning gate、workflow execution evidence review gate、workflow evidence repair planning gate、workflow repair approval dry-run gate、workflow repair execution review gate、accumulated workflow/rhythm release hardening gate 与 workflow repair evidence refresh guidance gate。当前开放 V0-041 workflow repair evidence refresh guidance gate：
 
 ```text
 project.yaml
@@ -161,11 +161,55 @@ project.yaml
 → final_export_review.md
 → acceptance_report.json
 → acceptance_report.md
+→ acceptance_repair_plan.json
+→ acceptance_repair_plan.md
+→ acceptance_repair_approval_request.json
+→ acceptance_repair_approval_request.md
+→ acceptance_repair_approval_record.json
+→ acceptance_repair_approval_record.md
+→ acceptance_repair_execution_dry_run.json
+→ acceptance_repair_execution_dry_run.md
+→ acceptance_repair_execution_bundle.json
+→ acceptance_repair_execution_bundle.md
+→ acceptance_repair_execution_record.json
+→ acceptance_repair_execution_record.md
+→ rhythm_plan.json
+→ rhythm_report.md
+→ rhythm_agent_handoff.json
+→ rhythm_media_qc.json
+→ rhythm_media_qc.md
+→ rhythm_media_qc_handoff.json
+→ acceptance profiles with rhythm_plan / rhythm_media_qc required stages
+→ rhythm_repair_plan.json
+→ rhythm_repair_plan.md
+→ rhythm_repair_handoff.json
+→ workflow_plan.json
+→ workflow_plan.md
+→ workflow_agent_handoff.json
+→ workflow_execution_record_quarantine.json
+→ workflow_execution_review.json
+→ workflow_execution_review.md
+→ workflow_execution_handoff.json
+→ workflow_repair_plan.json
+→ workflow_repair_plan.md
+→ workflow_repair_handoff.json
+→ workflow_repair_approval_request.json
+→ workflow_repair_approval_record.json
+→ workflow_repair_dry_run.json
+→ workflow_repair_execution_record_quarantine.json
+→ workflow_repair_execution_review.json
+→ workflow_repair_execution_review.md
+→ workflow_repair_execution_handoff.json
+→ workflow_repair_refresh_plan.json
+→ workflow_repair_refresh_plan.md
+→ workflow_repair_refresh_handoff.json
+→ release_hardening_report.json
+→ release_hardening_report.md
 → risk_report.md
 → doctor/status 诊断
 ```
 
-当前 V0-024 仍禁止实现：
+当前 V0-041 仍禁止实现：
 
 ```text
 OpenCV
@@ -176,6 +220,18 @@ BGM 自动选择、自动推荐或节拍伪造
 自动选择推荐第一名或无用户目标自动 fit
 自动根据 fit controls 或 review 结果移动剪辑点或渲染媒体
 acceptance 自动补跑 pipeline、自动生成提案、自动 fit 或自动 export
+acceptance 自动执行 repair commands 或把外部 execution record 直接判定为验收通过
+workflow 自动执行 commands、自动补跑 pipeline 或把 workflow execution evidence 直接判定为验收通过
+workflow repair planning 自动执行 repair commands、自动补跑 pipeline 或把 repair guidance 直接判定为验收通过
+workflow repair approval/dry-run 自动执行 repair commands、自动补跑 pipeline 或把 approval/dry-run 直接判定为验收通过
+workflow repair execution review 自动执行 repair commands、自动补跑 pipeline 或把 repair execution evidence 直接判定为验收通过
+workflow repair refresh planning 自动执行 workflow commands、mutate workflow plans、自动补跑 pipeline 或把 refreshed evidence 直接判定为验收通过
+release hardening 自动 commit、push、tag、执行 repair commands、补跑 pipeline 或把 release readiness 直接判定为验收通过
+rhythm planning 自动移动剪辑点、自动选曲、自动 fit、自动渲染或自动卡点
+rhythm media QC 自动渲染 preview/final、自动修复节奏问题或自动改变 timeline/BGM
+acceptance 自动运行 rhythm/rhythm QC、自动补齐节奏证据或自动修复 rhythm-QC 问题
+rhythm repair plan 自动执行命令、自动渲染、自动改 timeline/BGM 或自动修复项目
+workflow 自动执行命令、自动补跑 pipeline、自动渲染或自动修复项目
 从 PCM energy window 推断或伪造 BPM/beat grid
 fake/template/model-free proposals
 联网搜索

@@ -355,6 +355,293 @@ it. Do not use this file as a task list.
 - Revisit when: a later gate opens explicit guided repair with user-selected
   actions
 
+### DEC-025: Acceptance profiles define planning, preview, and delivery gates
+
+- Recorded: `2026-06-28`
+- Status: `active`
+- Decision: V0-025 keeps the default comprehensive acceptance report as
+  `standard`, then adds explicit `core`, `preview`, and `delivery` profiles
+  whose required stages drive report status and CLI exit codes
+- Rationale: one global readiness status is too blunt once the project has
+  separate planning, preview, and final export modes; release automation needs
+  to know which level is being asserted
+- Consequence: `acceptance --profile core` can pass before media preview
+  exists, while `preview` and `delivery` profiles fail until their required
+  validation artifacts are present and valid
+- Revisit when: guided repair opens and profile failures can be converted into
+  explicit user-approved remediation plans
+
+### DEC-026: Real-media acceptance fixtures are generated, not stored
+
+- Recorded: `2026-06-28`
+- Status: `active`
+- Decision: V0-026 proves acceptance profiles with locally generated temporary
+  video and BGM media in tests and `run_checks.py`, rather than storing durable
+  binary fixture media in the repository
+- Rationale: the project needs release evidence against real FFmpeg/ffprobe
+  artifacts, but durable media files would create unnecessary repository weight
+  and provenance/copyright noise
+- Consequence: full checks can exercise scan, render, export, BGM, and
+  acceptance profile behavior end to end while keeping the repo lightweight and
+  network-free
+- Revisit when: curated public-domain sample media becomes necessary to test
+  non-generated editorial phenomena that synthetic sources cannot represent
+
+### DEC-027: Repair plans guide but never execute remediation
+
+- Recorded: `2026-06-28`
+- Status: `active`
+- Decision: V0-027 acceptance repair plans are deterministic guidance artifacts
+  generated from the current acceptance report; they must not execute any
+  command or mutate creative/media outputs
+- Rationale: failed readiness gates need concrete next-command guidance, but
+  automatic repair would hide user choices about proposals, music, timeline,
+  preview, and export
+- Consequence: `acceptance --repair-plan` writes canonical JSON/Markdown with
+  required versus optional actions, first required command, blocked stages, and
+  no-execution flags
+- Revisit when: a later gate introduces explicit user-approved repair execution
+  records with command-by-command authorization
+
+### DEC-028: Approval records authorize intent, not execution
+
+- Recorded: `2026-06-28`
+- Status: `active`
+- Decision: V0-028 approval requests and approval records are canonical audit
+  artifacts for repair-plan intent; importing a valid approval record must not
+  execute any approved action
+- Rationale: future guided repair execution needs a durable approval layer, but
+  executing commands immediately would collapse planning, approval, and
+  mutation into one unsafe step
+- Consequence: approval imports validate project/profile/plan/action/command
+  bindings and missing required actions, then write canonical records with
+  no-execution flags
+- Revisit when: a later gate introduces dry-run execution manifests and
+  command-by-command approval consumption
+
+### DEC-029: Execution dry-runs enumerate commands without running them
+
+- Recorded: `2026-06-28`
+- Status: `active`
+- Decision: V0-029 execution dry-runs list approved and rejected repair actions
+  from a valid approval record, but every step must remain non-executing
+- Rationale: before any guided repair execution gate, the project needs a
+  reviewable manifest of exactly which commands would be consumed and in what
+  order
+- Consequence: dry-run manifests record `would_execute=false`,
+  `commands_executed=false`, and `automatic_repair_performed=false` while
+  preserving command strings and blocked reasons
+- Revisit when: a later gate opens command-by-command execution records with
+  explicit user confirmation for each performed command
+
+### DEC-030: Execution handoffs audit external repair evidence
+
+- Recorded: `2026-06-28`
+- Status: `active`
+- Decision: V0-030 execution bundles package approved dry-run commands for
+  manual execution, and execution records validate explicit external evidence
+  without allowing the CLI to execute commands or mark acceptance passed
+- Rationale: the project needs a durable bridge between repair planning and
+  real-world remediation evidence, but automatic repair would still collapse
+  user judgment, command execution, and readiness validation into one unsafe
+  operation
+- Consequence: bundle commands are manual-only, execution records validate
+  project/profile/plan/approval/dry-run/step/action/command bindings, and
+  evidence is classified as succeeded, failed, or skipped without mutating
+  canonical acceptance results
+- Revisit when: a later gate reconciles valid execution records with a refreshed
+  acceptance report or introduces narrowly scoped user-confirmed command
+  execution
+
+### DEC-031: Rhythm planning audits BGM/edit fit without mutation
+
+- Recorded: `2026-06-28`
+- Status: `active`
+- Decision: V0-031 adds deterministic BGM/edit rhythm planning as an audit and
+  handoff layer, not as an automatic edit or music-selection engine
+- Rationale: BGM, text, video rhythm, cuts, transitions, ducking, silence, and
+  endings need to be evaluated together before preview/final review, but moving
+  edit points or selecting music automatically would cross the current gate
+- Consequence: `rhythm` writes canonical rhythm plan, report, and host-Agent
+  handoff artifacts; explicit rhythm candidates are validated as review text
+  only, and forbidden claims such as edit-point movement, music selection,
+  rendering, CLI model calls, or network access are rejected
+- Revisit when: validated beat-grid evidence and preview/final QC can be used
+  for tighter phrase-level rhythm review without automatic mutation
+
+### DEC-032: Rhythm media QC checks rendered evidence without rendering
+
+- Recorded: `2026-06-29`
+- Status: `active`
+- Decision: V0-032 adds rhythm media QC over existing preview and final export
+  artifacts, but QC itself must not render media or mutate timeline/music state
+- Rationale: rhythm planning is useful only if preview/final artifacts remain
+  fresh and technically aligned with the plan; however, QC-triggered rendering
+  would hide an expensive mutation behind an audit command
+- Consequence: `rhythm --qc` writes canonical JSON/Markdown/handoff artifacts
+  for binding, freshness, duration, audio, ducking, ending, and summary checks,
+  while `preview_rendered_by_qc=false` and `final_export_rendered_by_qc=false`
+  remain hard evidence
+- Revisit when: rhythm QC is promoted into acceptance profiles or a later gate
+  opens explicit user-approved render remediation
+
+### DEC-033: Acceptance requires rhythm evidence without executing it
+
+- Recorded: `2026-06-29`
+- Status: `active`
+- Decision: V0-033 promotes existing rhythm plan and rhythm media QC artifacts
+  into acceptance stages and profile requirements, but acceptance must not
+  generate missing rhythm evidence itself
+- Rationale: preview and delivery readiness are incomplete if rhythm planning
+  and rendered-media QC are disconnected from acceptance; however, making
+  acceptance auto-run rhythm, render media, or execute repair commands would
+  collapse audit, planning, and mutation into one unsafe command
+- Consequence: `acceptance --profile preview|delivery` can fail on missing or
+  stale rhythm evidence and repair plans can name rhythm-specific next commands,
+  while all execution remains explicit and user-visible
+- Revisit when: a later gate introduces user-approved manual rhythm repair
+  loops or validated phrase-level rhythm review
+
+### DEC-034: Rhythm repair planning lists commands without running them
+
+- Recorded: `2026-06-29`
+- Status: `active`
+- Decision: V0-034 adds `rhythm --repair-plan` as a deterministic manual
+  planning layer over existing rhythm, rhythm-QC, acceptance, preview,
+  final-export, and BGM evidence
+- Rationale: once rhythm-aware acceptance can fail, users need a concrete
+  profile-aware repair path instead of reading several reports and guessing the
+  next command; however, repair planning must remain separate from execution
+- Consequence: rhythm repair plans can order manual next commands and handoff
+  guidance, while `commands_executed=false`, `media_rendered=false`, and
+  `edit_points_moved=false` remain hard evidence
+- Revisit when: a later gate validates explicit external rhythm repair
+  execution evidence or opens tightly scoped user-approved repair automation
+
+### DEC-035: Workflow planning guides commands without executing them
+
+- Recorded: `2026-06-29`
+- Status: `active`
+- Decision: V0-035 adds `workflow --target core|preview|delivery` as a
+  deterministic planning layer that derives next-command guidance from current
+  project state, canonical artifacts, acceptance reports, and rhythm repair
+  plans
+- Rationale: the project now has enough validated gates that a user needs a
+  single route to core, preview, or delivery readiness; however, hiding command
+  execution behind a workflow planner would erase the explicit-approval model
+  used throughout the Skill
+- Consequence: workflow plans can mark steps done, next, pending, blocked, or
+  optional and write JSON/Markdown/handoff artifacts, while
+  `commands_executed=false`, `media_rendered=false`, and
+  `edit_points_moved=false` remain hard evidence
+- Revisit when: a later gate validates explicit external workflow execution
+  evidence or opens a user-approved guided repair loop
+
+### DEC-036: Workflow execution evidence is reviewed but not trusted as execution authority
+
+- Recorded: `2026-06-29`
+- Status: `active`
+- Decision: V0-036 adds `workflow --execution-record` to quarantine and review
+  explicit external workflow execution records against the current workflow
+  plan, but the CLI still must not execute commands or convert evidence into
+  acceptance success
+- Rationale: guided workflows need a proof loop after the user runs commands;
+  without evidence review, the workflow planner is advisory only, but if the
+  CLI starts executing or blindly trusting records, it breaks the explicit
+  approval and deterministic artifact model
+- Consequence: workflow execution reviews can accept, reject, mark missing, or
+  mark skipped step evidence and write JSON/Markdown/handoff artifacts, while
+  `commands_executed_by_cli=false`, `media_rendered_by_cli=false`, and
+  `network_performed_by_cli=false` remain hard evidence
+- Revisit when: a later gate generates guided manual repair plans from rejected
+  or missing workflow evidence without executing the repair commands
+
+### DEC-037: Workflow evidence repair planning stays manual
+
+- Recorded: `2026-06-29`
+- Status: `active`
+- Decision: V0-037 adds `workflow --repair-plan` to convert rejected, missing,
+  and skipped workflow execution evidence into ordered required or optional
+  manual repair actions
+- Rationale: workflow execution review can identify bad evidence, but users
+  need the next concrete manual command and evidence refs without the CLI
+  silently becoming a repair executor
+- Consequence: workflow repair plans can name first required commands, expected
+  artifacts, evidence refs to resubmit, and handoff guidance, while
+  `commands_executed=false`, `media_rendered=false`, and
+  `acceptance_success_promoted=false` remain hard evidence
+- Revisit when: a later gate packages explicit workflow repair approvals or
+  dry-runs without executing the repair commands
+
+### DEC-038: Workflow repair approval and dry-run packaging do not execute repairs
+
+- Recorded: `2026-06-30`
+- Status: `active`
+- Decision: V0-038 adds workflow repair approval requests, explicit approval
+  record import, and dry-run manifests for approved/rejected repair actions
+- Rationale: after a repair plan exists, users need an explicit approval and
+  packaging step before manual execution; however, approval and dry-run
+  artifacts must not become hidden repair execution
+- Consequence: workflow repair approval and dry-run artifacts can enumerate
+  approved and rejected commands, while `commands_executed=false`,
+  `media_rendered=false`, and `acceptance_success_promoted=false` remain hard
+  evidence
+- Revisit when: a later gate validates explicit external workflow repair
+  execution records without executing the commands
+
+### DEC-039: Workflow repair execution evidence is reviewed against dry-run scope
+
+- Recorded: `2026-06-30`
+- Status: `active`
+- Decision: V0-039 adds `workflow --repair-execution-record` to quarantine and
+  review explicit external repair execution records against the current
+  workflow repair dry-run, approval record, repair plan, target, action,
+  command, and expected artifact evidence
+- Rationale: after a dry-run, users need to submit proof of manually executed
+  repair actions; the CLI can validate that proof without becoming the executor
+  or promoting acceptance success
+- Consequence: workflow repair execution reviews can accept, reject, mark
+  missing, or mark skipped action evidence, while
+  `commands_executed_by_cli=false`, `media_rendered_by_cli=false`, and
+  `acceptance_success_promoted_by_cli=false` remain hard evidence
+- Revisit when: a later gate refreshes workflow plans or acceptance reports
+  from reviewed repair evidence without auto-running commands
+
+### DEC-040: Release hardening audits readiness without publishing
+
+- Recorded: `2026-06-30`
+- Status: `active`
+- Decision: V0-040 adds `release-check` to generate canonical release
+  hardening reports for current-gate consistency, local publication state,
+  schema coverage, forbidden source surfaces, workflow/rhythm artifact chain,
+  and validation evidence
+- Rationale: V0-031 through V0-039 created a broad local workflow/rhythm
+  surface; before another release, the project needs a deterministic readiness
+  audit that does not silently become a publish command
+- Consequence: release hardening can return `ready_for_local_release`,
+  `warning`, or `blocked`, while `commit_allowed=false`, `push_allowed=false`,
+  `tag_allowed=false`, `network_performed=false`, and
+  `model_call_performed_by_cli=false` remain hard evidence
+- Revisit when: the user explicitly approves a local release, commit, tag, and
+  push
+
+### DEC-041: Workflow repair refresh guidance does not mutate workflow state
+
+- Recorded: `2026-06-30`
+- Status: `active`
+- Decision: V0-041 adds `workflow --repair-refresh-plan` to convert reviewed
+  repair execution evidence into explicit guidance for the next workflow
+  execution-record submission
+- Rationale: after repair execution evidence is accepted, users need a clear
+  path back into the workflow evidence loop; silently mutating workflow plans or
+  treating refreshed evidence as acceptance success would hide the validation
+  boundary
+- Consequence: repair refresh plans can mark evidence as ready to resubmit or
+  still blocked, while `commands_executed=false`, `workflow_plan_mutated=false`,
+  and `acceptance_success_promoted=false` remain hard evidence
+- Revisit when: a later gate intentionally refreshes workflow plan status from
+  explicit workflow execution-review results
+
 ## New Decision Template
 
 ```markdown

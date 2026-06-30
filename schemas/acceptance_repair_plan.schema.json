@@ -1,0 +1,188 @@
+{
+  "$defs": {
+    "AcceptanceRepairAction": {
+      "additionalProperties": false,
+      "properties": {
+        "action_id": {
+          "minLength": 1,
+          "title": "Action Id",
+          "type": "string"
+        },
+        "command": {
+          "minLength": 1,
+          "title": "Command",
+          "type": "string"
+        },
+        "executes_automatically": {
+          "default": false,
+          "title": "Executes Automatically",
+          "type": "boolean"
+        },
+        "expected_artifacts": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Expected Artifacts",
+          "type": "array"
+        },
+        "issue_code": {
+          "minLength": 1,
+          "title": "Issue Code",
+          "type": "string"
+        },
+        "order": {
+          "minimum": 1,
+          "title": "Order",
+          "type": "integer"
+        },
+        "reason": {
+          "minLength": 1,
+          "title": "Reason",
+          "type": "string"
+        },
+        "required_for_profile": {
+          "title": "Required For Profile",
+          "type": "boolean"
+        },
+        "severity": {
+          "pattern": "^(error|warning)$",
+          "title": "Severity",
+          "type": "string"
+        },
+        "stage_id": {
+          "minLength": 1,
+          "title": "Stage Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "action_id",
+        "order",
+        "stage_id",
+        "issue_code",
+        "severity",
+        "required_for_profile",
+        "command",
+        "reason"
+      ],
+      "title": "AcceptanceRepairAction",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "acceptance_id": {
+      "minLength": 1,
+      "title": "Acceptance Id",
+      "type": "string"
+    },
+    "acceptance_profile": {
+      "pattern": "^(standard|core|preview|delivery)$",
+      "title": "Acceptance Profile",
+      "type": "string"
+    },
+    "acceptance_status": {
+      "pattern": "^(passed|warning|failed)$",
+      "title": "Acceptance Status",
+      "type": "string"
+    },
+    "action_count": {
+      "minimum": 0,
+      "title": "Action Count",
+      "type": "integer"
+    },
+    "actions": {
+      "items": {
+        "$ref": "#/$defs/AcceptanceRepairAction"
+      },
+      "title": "Actions",
+      "type": "array"
+    },
+    "automatic_music_selection": {
+      "default": false,
+      "title": "Automatic Music Selection",
+      "type": "boolean"
+    },
+    "automatic_repair_performed": {
+      "default": false,
+      "title": "Automatic Repair Performed",
+      "type": "boolean"
+    },
+    "blocked_stage_ids": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Blocked Stage Ids",
+      "type": "array"
+    },
+    "first_required_command": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "First Required Command"
+    },
+    "media_rendered": {
+      "default": false,
+      "title": "Media Rendered",
+      "type": "boolean"
+    },
+    "model_call_performed_by_cli": {
+      "default": false,
+      "title": "Model Call Performed By Cli",
+      "type": "boolean"
+    },
+    "network_performed": {
+      "default": false,
+      "title": "Network Performed",
+      "type": "boolean"
+    },
+    "optional_action_count": {
+      "minimum": 0,
+      "title": "Optional Action Count",
+      "type": "integer"
+    },
+    "profile_passed": {
+      "title": "Profile Passed",
+      "type": "boolean"
+    },
+    "project_id": {
+      "minLength": 1,
+      "title": "Project Id",
+      "type": "string"
+    },
+    "repair_plan_id": {
+      "minLength": 1,
+      "title": "Repair Plan Id",
+      "type": "string"
+    },
+    "required_action_count": {
+      "minimum": 0,
+      "title": "Required Action Count",
+      "type": "integer"
+    },
+    "schema_version": {
+      "default": "0.3",
+      "title": "Schema Version",
+      "type": "string"
+    }
+  },
+  "required": [
+    "repair_plan_id",
+    "project_id",
+    "acceptance_id",
+    "acceptance_profile",
+    "acceptance_status",
+    "profile_passed",
+    "action_count",
+    "required_action_count",
+    "optional_action_count"
+  ],
+  "title": "AcceptanceRepairPlan",
+  "type": "object"
+}

@@ -188,7 +188,7 @@ def test_issue_decision_and_release_ledgers_have_required_contracts():
     assert "Current Release State" in releases
     assert "Current Validation" in releases
     assert "Do not recreate per-version readiness" in releases
-    assert "19fc5abe33c22c52073f16d83a60ec05ad87ab56" in releases
+    assert "d7dcab6430db4f0a6845079cebcd22cfbb85e74e" in releases
 
 
 def test_machine_readable_progress_matches_current_dashboard():
@@ -196,7 +196,7 @@ def test_machine_readable_progress_matches_current_dashboard():
     payload = snapshot()
 
     assert payload["schema_version"] == "1.4"
-    assert payload["capability_gate"] == "V0-024"
+    assert payload["capability_gate"] == "V0-041"
     assert payload["milestone"] in progress
     assert payload["active_batch"]["id"] in progress
     assert payload["capability_progress"]["proposal_generation"] == "completed"
@@ -215,6 +215,26 @@ def test_machine_readable_progress_matches_current_dashboard():
     assert payload["capability_progress"]["preview_rendering"] == "completed"
     assert payload["capability_progress"]["preview_quality_review"] == "completed"
     assert payload["capability_progress"]["final_export"] == "completed"
+    assert payload["capability_progress"]["acceptance_profiles"] in {
+        "in_progress",
+        "completed",
+    }
+    assert payload["capability_progress"]["real_media_acceptance_fixtures"] == "completed"
+    assert payload["capability_progress"]["acceptance_repair_plans"] == "completed"
+    assert payload["capability_progress"]["acceptance_repair_approvals"] == "completed"
+    assert payload["capability_progress"]["repair_execution_dry_runs"] == "completed"
+    assert payload["capability_progress"]["repair_execution_handoffs"] == "completed"
+    assert payload["capability_progress"]["rhythm_planning"] == "completed"
+    assert payload["capability_progress"]["rhythm_media_qc"] == "completed"
+    assert payload["capability_progress"]["rhythm_acceptance_integration"] == "completed"
+    assert payload["capability_progress"]["rhythm_manual_repair_planning"] == "completed"
+    assert payload["capability_progress"]["guided_workflow_planning"] == "completed"
+    assert payload["capability_progress"]["workflow_execution_evidence_review"] == "completed"
+    assert payload["capability_progress"]["workflow_evidence_repair_planning"] == "completed"
+    assert payload["capability_progress"]["workflow_repair_approval_dry_run"] == "completed"
+    assert payload["capability_progress"]["workflow_repair_execution_review"] == "completed"
+    assert payload["capability_progress"]["release_hardening"] == "completed"
+    assert payload["capability_progress"]["workflow_repair_refresh_guidance"] == "completed"
 
 
 def test_version_progress_batch_contract_is_hard_enforced():

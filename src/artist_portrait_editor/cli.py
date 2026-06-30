@@ -5,7 +5,15 @@ import json
 import sys
 from pathlib import Path
 
-from artist_portrait_editor.acceptance import build_project_acceptance_report
+from artist_portrait_editor.acceptance import (
+    build_acceptance_repair_approval_request,
+    build_acceptance_repair_execution_bundle,
+    build_acceptance_repair_execution_dry_run,
+    build_acceptance_repair_plan,
+    build_project_acceptance_report,
+    import_acceptance_repair_approval_record,
+    import_acceptance_repair_execution_record,
+)
 from artist_portrait_editor.capabilities import detect_capabilities
 from artist_portrait_editor.bgm import (
     BgmError,
@@ -30,16 +38,30 @@ from artist_portrait_editor.final_export_workspace import (
     review_final_export_workspace,
 )
 from artist_portrait_editor.models.source import RightsStatus
+from artist_portrait_editor.models.acceptance import (
+    AcceptanceRepairApprovalRecord,
+    AcceptanceRepairExecutionDryRun,
+)
 from artist_portrait_editor.models.state import OverallStatus, StepLedgerEntry, StepStatus
 from artist_portrait_editor.preview_workspace import (
     preview_workspace,
     review_preview_workspace,
+)
+from artist_portrait_editor.release_hardening import (
+    ReleaseHardeningError,
+    build_release_hardening_report,
 )
 from artist_portrait_editor.run_records import (
     environment_snapshot,
     new_run_id,
     utc_now,
     write_json,
+)
+from artist_portrait_editor.rhythm import (
+    RhythmError,
+    build_rhythm_media_qc,
+    build_rhythm_plan,
+    build_rhythm_repair_plan,
 )
 from artist_portrait_editor.media.scanner import ScanError, SourceLedgerError
 from artist_portrait_editor.schemas import write_schema_files
@@ -72,6 +94,17 @@ from artist_portrait_editor.workspace import (
     timeline_workspace,
     write_run_report,
 )
+from artist_portrait_editor.workflow import (
+    WorkflowExecutionReviewError,
+    build_workflow_plan,
+    build_workflow_repair_approval_request,
+    build_workflow_repair_dry_run,
+    build_workflow_repair_refresh_plan,
+    build_workflow_repair_plan,
+    import_workflow_repair_execution_record,
+    import_workflow_repair_approval_record,
+    import_workflow_execution_record,
+)
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -91,11 +124,42 @@ def build_parser() -> argparse.ArgumentParser:
     schema_sub = subparsers.add_parser("generate-schema")
     schema_sub.add_argument("--output-dir", default="schemas")
 
+    release_sub = subparsers.add_parser("release-check")
+    release_sub.add_argument("--project", required=True)
+    release_sub.add_argument("--json", action="store_true")
+    release_sub.add_argument("--quiet", action="store_true")
+    release_sub.add_argument("--verbose", action="store_true")
+
+    workflow_sub = subparsers.add_parser("workflow")
+    workflow_sub.add_argument("--project", required=True)
+    workflow_sub.add_argument("--target", choices=("core", "preview", "delivery"), default="delivery")
+    workflow_sub.add_argument("--execution-record")
+    workflow_sub.add_argument("--repair-plan", action="store_true")
+    workflow_sub.add_argument("--approval-request", action="store_true")
+    workflow_sub.add_argument("--approval-record")
+    workflow_sub.add_argument("--repair-dry-run", action="store_true")
+    workflow_sub.add_argument("--repair-execution-record")
+    workflow_sub.add_argument("--repair-refresh-plan", action="store_true")
+    workflow_sub.add_argument("--json", action="store_true")
+    workflow_sub.add_argument("--quiet", action="store_true")
+    workflow_sub.add_argument("--verbose", action="store_true")
+
     acceptance_sub = subparsers.add_parser("acceptance")
     acceptance_sub.add_argument("--project", required=True)
+    acceptance_sub.add_argument(
+        "--profile",
+        choices=("standard", "core", "preview", "delivery"),
+        default="standard",
+    )
     acceptance_sub.add_argument("--json", action="store_true")
     acceptance_sub.add_argument("--quiet", action="store_true")
     acceptance_sub.add_argument("--verbose", action="store_true")
+    acceptance_sub.add_argument("--repair-plan", action="store_true")
+    acceptance_sub.add_argument("--approval-request", action="store_true")
+    acceptance_sub.add_argument("--approval-record")
+    acceptance_sub.add_argument("--execution-dry-run", action="store_true")
+    acceptance_sub.add_argument("--execution-bundle", action="store_true")
+    acceptance_sub.add_argument("--execution-record")
 
     scan_sub = subparsers.add_parser("scan")
     scan_sub.add_argument("--project", required=True)
@@ -214,6 +278,21 @@ def build_parser() -> argparse.ArgumentParser:
     export_sub.add_argument("--quiet", action="store_true")
     export_sub.add_argument("--verbose", action="store_true")
 
+    rhythm_sub = subparsers.add_parser("rhythm")
+    rhythm_sub.add_argument("--project", required=True)
+    rhythm_sub.add_argument("--intent")
+    rhythm_sub.add_argument("--agent-output")
+    rhythm_sub.add_argument("--qc", action="store_true")
+    rhythm_sub.add_argument("--repair-plan", action="store_true")
+    rhythm_sub.add_argument(
+        "--acceptance-profile",
+        choices=("standard", "core", "preview", "delivery"),
+        default="delivery",
+    )
+    rhythm_sub.add_argument("--json", action="store_true")
+    rhythm_sub.add_argument("--quiet", action="store_true")
+    rhythm_sub.add_argument("--verbose", action="store_true")
+
     for command in ("relate", "run"):
         sub = subparsers.add_parser(command)
         sub.add_argument("--project", required=True)
@@ -304,6 +383,691 @@ def cmd_generate_schema(args: argparse.Namespace) -> int:
     return int(ExitCode.success)
 
 
+def cmd_release_check(args: argparse.Namespace) -> int:
+    if error := _validate_common_flags(args):
+        return int(error)
+    project_path = Path(args.project)
+    try:
+        config = load_project_config(project_path)
+    except ConfigLoadError as exc:
+        print(str(exc), file=sys.stderr)
+        return int(ExitCode.invalid_project_config)
+    root = project_root(project_path)
+    repo_root = Path(__file__).resolve().parents[2]
+    try:
+        json_path, md_path, report = build_release_hardening_report(
+            project_root=root,
+            project_id=config.project.id,
+            repo_root=repo_root,
+        )
+    except ReleaseHardeningError as exc:
+        print(str(exc), file=sys.stderr)
+        return int(ExitCode.output_or_reference_validation_failed)
+    payload = {
+        "output": json_path.relative_to(root).as_posix(),
+        "report": md_path.relative_to(root).as_posix(),
+        "status": report.status,
+        "release_hardening_report": report.model_dump(mode="json"),
+    }
+    if args.json:
+        print(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True))
+    elif not args.quiet:
+        print(f"release-check {report.status}")
+        print(f"wrote {payload['report']}")
+    return int(
+        ExitCode.success
+        if report.status == "ready_for_local_release"
+        else ExitCode.success_with_warnings
+        if report.status == "warning"
+        else ExitCode.output_or_reference_validation_failed
+    )
+
+
+def cmd_workflow(args: argparse.Namespace) -> int:
+    if error := _validate_common_flags(args):
+        return int(error)
+    project_path = Path(args.project)
+    try:
+        config = load_project_config(project_path)
+    except ConfigLoadError as exc:
+        print(str(exc), file=sys.stderr)
+        return int(ExitCode.invalid_project_config)
+    root = project_root(project_path)
+    state = load_state(root)
+    mode_count = sum(
+        bool(value)
+        for value in (
+            args.execution_record,
+            args.repair_plan,
+            args.approval_request,
+            args.approval_record,
+            args.repair_dry_run,
+            args.repair_execution_record,
+            args.repair_refresh_plan,
+        )
+    )
+    if mode_count > 1:
+        print("workflow mutation/review modes are mutually exclusive", file=sys.stderr)
+        return int(ExitCode.invalid_cli_usage)
+    if args.approval_request:
+        try:
+            json_path, md_path, handoff_path, request = build_workflow_repair_approval_request(
+                root=root,
+                project_id=config.project.id,
+                target=args.target,
+            )
+        except WorkflowExecutionReviewError as exc:
+            print(str(exc), file=sys.stderr)
+            return int(ExitCode.output_or_reference_validation_failed)
+        payload = {
+            "output": json_path.relative_to(root).as_posix(),
+            "report": md_path.relative_to(root).as_posix(),
+            "handoff": handoff_path.relative_to(root).as_posix(),
+            "workflow_repair_approval_request": request.model_dump(mode="json"),
+        }
+        if args.json:
+            print(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True))
+        elif not args.quiet:
+            print(f"wrote {payload['report']}")
+        return int(ExitCode.success_with_warnings)
+    if args.approval_record:
+        try:
+            json_path, md_path, record = import_workflow_repair_approval_record(
+                root=root,
+                project_id=config.project.id,
+                target=args.target,
+                candidate_path=Path(args.approval_record),
+            )
+        except WorkflowExecutionReviewError as exc:
+            print(str(exc), file=sys.stderr)
+            return int(ExitCode.output_or_reference_validation_failed)
+        payload = {
+            "output": json_path.relative_to(root).as_posix(),
+            "report": md_path.relative_to(root).as_posix(),
+            "status": record.status,
+            "workflow_repair_approval_record": record.model_dump(mode="json"),
+        }
+        if args.json:
+            print(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True))
+        elif not args.quiet:
+            print(f"workflow repair approval record {record.status}")
+            print(f"wrote {payload['report']}")
+        return int(ExitCode.success if record.status == "passed" else ExitCode.success_with_warnings)
+    if args.repair_dry_run:
+        try:
+            json_path, md_path, handoff_path, dry_run = build_workflow_repair_dry_run(
+                root=root,
+                project_id=config.project.id,
+                target=args.target,
+            )
+        except WorkflowExecutionReviewError as exc:
+            print(str(exc), file=sys.stderr)
+            return int(ExitCode.output_or_reference_validation_failed)
+        payload = {
+            "output": json_path.relative_to(root).as_posix(),
+            "report": md_path.relative_to(root).as_posix(),
+            "handoff": handoff_path.relative_to(root).as_posix(),
+            "workflow_repair_dry_run": dry_run.model_dump(mode="json"),
+        }
+        if args.json:
+            print(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True))
+        elif not args.quiet:
+            print(f"workflow repair dry run {dry_run.approved_step_count} approved")
+            print(f"wrote {payload['report']}")
+        return int(ExitCode.success_with_warnings if dry_run.rejected_step_count else ExitCode.success)
+    if args.repair_execution_record:
+        try:
+            json_path, md_path, handoff_path, review = import_workflow_repair_execution_record(
+                root=root,
+                project_id=config.project.id,
+                target=args.target,
+                candidate_path=Path(args.repair_execution_record),
+            )
+        except WorkflowExecutionReviewError as exc:
+            print(str(exc), file=sys.stderr)
+            return int(ExitCode.output_or_reference_validation_failed)
+        if state is not None:
+            run_id = new_run_id()
+            status = (
+                StepStatus.completed
+                if review.status == "passed"
+                else StepStatus.completed_with_warnings
+                if review.status == "warning"
+                else StepStatus.failed
+            )
+            state.steps["workflow_repair_execution_review"] = StepLedgerEntry(
+                status=status,
+                output_refs=[
+                    json_path.relative_to(root).as_posix(),
+                    md_path.relative_to(root).as_posix(),
+                    handoff_path.relative_to(root).as_posix(),
+                ],
+                last_run_id=run_id,
+                warnings=[action.detail for action in review.action_reviews if action.review_status != "accepted"],
+            )
+            state.latest_run_id = run_id
+            state.updated_at = utc_now()
+            runs_dir = root / ".artist-portrait" / "runs" / run_id
+            runs_dir.mkdir(parents=True, exist_ok=True)
+            write_json(
+                runs_dir / "command.json",
+                {
+                    "command": "workflow",
+                    "project": str(project_path),
+                    "target": args.target,
+                    "repair_execution_record": str(args.repair_execution_record),
+                },
+            )
+            write_json(runs_dir / "environment.json", environment_snapshot())
+            write_json(
+                runs_dir / "step_result.json",
+                {
+                    "step": "workflow_repair_execution_review",
+                    "status": status.value,
+                    "output_refs": state.steps["workflow_repair_execution_review"].output_refs,
+                    "commands_executed": False,
+                    "media_rendered": False,
+                    "edit_points_moved": False,
+                    "automatic_music_selection": False,
+                    "model_call_performed": False,
+                    "network_performed": False,
+                    "acceptance_success_promoted": False,
+                },
+            )
+            save_state(root, state)
+            write_run_report(root / config.paths.output_dir, state, [])
+        payload = {
+            "output": json_path.relative_to(root).as_posix(),
+            "report": md_path.relative_to(root).as_posix(),
+            "handoff": handoff_path.relative_to(root).as_posix(),
+            "status": review.status,
+            "workflow_repair_execution_review": review.model_dump(mode="json"),
+        }
+        if args.json:
+            print(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True))
+        elif not args.quiet:
+            print(f"workflow repair execution review {review.status}")
+            print(f"wrote {payload['report']}")
+        return int(
+            ExitCode.success
+            if review.status == "passed"
+            else ExitCode.success_with_warnings
+            if review.status == "warning"
+            else ExitCode.output_or_reference_validation_failed
+        )
+    if args.repair_refresh_plan:
+        try:
+            json_path, md_path, handoff_path, refresh_plan = build_workflow_repair_refresh_plan(
+                root=root,
+                project_id=config.project.id,
+                target=args.target,
+            )
+        except WorkflowExecutionReviewError as exc:
+            print(str(exc), file=sys.stderr)
+            return int(ExitCode.output_or_reference_validation_failed)
+        if state is not None:
+            run_id = new_run_id()
+            status = (
+                StepStatus.completed
+                if refresh_plan.status == "ready"
+                else StepStatus.completed_with_warnings
+                if refresh_plan.status == "no_actions"
+                else StepStatus.failed
+            )
+            state.steps["workflow_repair_refresh_plan"] = StepLedgerEntry(
+                status=status,
+                output_refs=[
+                    json_path.relative_to(root).as_posix(),
+                    md_path.relative_to(root).as_posix(),
+                    handoff_path.relative_to(root).as_posix(),
+                ],
+                last_run_id=run_id,
+                warnings=[step.rationale for step in refresh_plan.steps if step.refresh_status != "ready_to_resubmit"],
+            )
+            state.latest_run_id = run_id
+            state.updated_at = utc_now()
+            runs_dir = root / ".artist-portrait" / "runs" / run_id
+            runs_dir.mkdir(parents=True, exist_ok=True)
+            write_json(
+                runs_dir / "command.json",
+                {
+                    "command": "workflow",
+                    "project": str(project_path),
+                    "target": args.target,
+                    "repair_refresh_plan": True,
+                },
+            )
+            write_json(runs_dir / "environment.json", environment_snapshot())
+            write_json(
+                runs_dir / "step_result.json",
+                {
+                    "step": "workflow_repair_refresh_plan",
+                    "status": status.value,
+                    "output_refs": state.steps["workflow_repair_refresh_plan"].output_refs,
+                    "commands_executed": False,
+                    "media_rendered": False,
+                    "workflow_plan_mutated": False,
+                    "acceptance_success_promoted": False,
+                },
+            )
+            save_state(root, state)
+            write_run_report(root / config.paths.output_dir, state, [])
+        payload = {
+            "output": json_path.relative_to(root).as_posix(),
+            "report": md_path.relative_to(root).as_posix(),
+            "handoff": handoff_path.relative_to(root).as_posix(),
+            "status": refresh_plan.status,
+            "workflow_repair_refresh_plan": refresh_plan.model_dump(mode="json"),
+        }
+        if args.json:
+            print(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True))
+        elif not args.quiet:
+            print(f"workflow repair refresh plan {refresh_plan.status}")
+            print(f"wrote {payload['report']}")
+        return int(
+            ExitCode.success
+            if refresh_plan.status == "ready"
+            else ExitCode.success_with_warnings
+            if refresh_plan.status == "no_actions"
+            else ExitCode.output_or_reference_validation_failed
+        )
+    if args.repair_plan:
+        try:
+            json_path, md_path, handoff_path, repair_plan = build_workflow_repair_plan(
+                root=root,
+                project_id=config.project.id,
+                target=args.target,
+                state=state,
+            )
+        except WorkflowExecutionReviewError as exc:
+            print(str(exc), file=sys.stderr)
+            return int(ExitCode.output_or_reference_validation_failed)
+        if state is not None:
+            run_id = new_run_id()
+            status = (
+                StepStatus.completed
+                if repair_plan.status == "no_actions"
+                else StepStatus.completed_with_warnings
+                if repair_plan.status == "ready"
+                else StepStatus.failed
+            )
+            state.steps["workflow_repair_plan"] = StepLedgerEntry(
+                status=status,
+                output_refs=[
+                    json_path.relative_to(root).as_posix(),
+                    md_path.relative_to(root).as_posix(),
+                    handoff_path.relative_to(root).as_posix(),
+                ],
+                last_run_id=run_id,
+                warnings=[action.rationale for action in repair_plan.actions],
+            )
+            state.latest_run_id = run_id
+            state.updated_at = utc_now()
+            runs_dir = root / ".artist-portrait" / "runs" / run_id
+            runs_dir.mkdir(parents=True, exist_ok=True)
+            write_json(
+                runs_dir / "command.json",
+                {
+                    "command": "workflow",
+                    "project": str(project_path),
+                    "target": args.target,
+                    "repair_plan": True,
+                },
+            )
+            write_json(runs_dir / "environment.json", environment_snapshot())
+            write_json(
+                runs_dir / "step_result.json",
+                {
+                    "step": "workflow_repair_plan",
+                    "status": status.value,
+                    "output_refs": state.steps["workflow_repair_plan"].output_refs,
+                    "commands_executed": False,
+                    "media_rendered": False,
+                    "edit_points_moved": False,
+                    "automatic_music_selection": False,
+                    "model_call_performed": False,
+                    "network_performed": False,
+                    "acceptance_success_promoted": False,
+                },
+            )
+            save_state(root, state)
+            write_run_report(root / config.paths.output_dir, state, [])
+        payload = {
+            "output": json_path.relative_to(root).as_posix(),
+            "report": md_path.relative_to(root).as_posix(),
+            "handoff": handoff_path.relative_to(root).as_posix(),
+            "status": repair_plan.status,
+            "workflow_repair_plan": repair_plan.model_dump(mode="json"),
+        }
+        if args.json:
+            print(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True))
+        elif not args.quiet:
+            print(f"workflow repair plan {repair_plan.status}")
+            print(f"next {repair_plan.first_required_command or 'none'}")
+            print(f"wrote {payload['report']}")
+        return int(
+            ExitCode.success
+            if repair_plan.status == "no_actions"
+            else ExitCode.success_with_warnings
+        )
+    if args.execution_record:
+        try:
+            json_path, md_path, handoff_path, review = import_workflow_execution_record(
+                root=root,
+                project_id=config.project.id,
+                target=args.target,
+                candidate_path=Path(args.execution_record),
+                state=state,
+            )
+        except WorkflowExecutionReviewError as exc:
+            print(str(exc), file=sys.stderr)
+            return int(ExitCode.output_or_reference_validation_failed)
+        if state is not None:
+            run_id = new_run_id()
+            status = (
+                StepStatus.completed
+                if review.status == "passed"
+                else StepStatus.completed_with_warnings
+                if review.status == "warning"
+                else StepStatus.failed
+            )
+            state.steps["workflow_execution_review"] = StepLedgerEntry(
+                status=status,
+                output_refs=[
+                    json_path.relative_to(root).as_posix(),
+                    md_path.relative_to(root).as_posix(),
+                    handoff_path.relative_to(root).as_posix(),
+                    review.quarantine_ref,
+                ],
+                last_run_id=run_id,
+                warnings=[
+                    step.detail
+                    for step in review.step_reviews
+                    if step.review_status in {"rejected", "missing", "skipped"}
+                ],
+            )
+            state.latest_run_id = run_id
+            state.updated_at = utc_now()
+            runs_dir = root / ".artist-portrait" / "runs" / run_id
+            runs_dir.mkdir(parents=True, exist_ok=True)
+            write_json(
+                runs_dir / "command.json",
+                {
+                    "command": "workflow",
+                    "project": str(project_path),
+                    "target": args.target,
+                    "execution_record": str(args.execution_record),
+                },
+            )
+            write_json(runs_dir / "environment.json", environment_snapshot())
+            write_json(
+                runs_dir / "step_result.json",
+                {
+                    "step": "workflow_execution_review",
+                    "status": status.value,
+                    "output_refs": state.steps["workflow_execution_review"].output_refs,
+                    "commands_executed": False,
+                    "media_rendered": False,
+                    "edit_points_moved": False,
+                    "automatic_music_selection": False,
+                    "model_call_performed": False,
+                    "network_performed": False,
+                },
+            )
+            save_state(root, state)
+            write_run_report(root / config.paths.output_dir, state, [])
+        payload = {
+            "output": json_path.relative_to(root).as_posix(),
+            "report": md_path.relative_to(root).as_posix(),
+            "handoff": handoff_path.relative_to(root).as_posix(),
+            "quarantine": review.quarantine_ref,
+            "status": review.status,
+            "workflow_execution_review": review.model_dump(mode="json"),
+        }
+        if args.json:
+            print(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True))
+        elif not args.quiet:
+            print(f"workflow execution review {review.status}")
+            print(f"wrote {payload['report']}")
+        return int(ExitCode.success if review.status == "passed" else ExitCode.success_with_warnings)
+    json_path, md_path, handoff_path, plan = build_workflow_plan(
+        root=root,
+        project_id=config.project.id,
+        target=args.target,
+        state=state,
+    )
+    if state is not None:
+        run_id = new_run_id()
+        status = (
+            StepStatus.completed
+            if plan.status == "ready"
+            else StepStatus.completed_with_warnings
+            if plan.status == "in_progress"
+            else StepStatus.failed
+        )
+        state.steps["workflow"] = StepLedgerEntry(
+            status=status,
+            output_refs=[
+                json_path.relative_to(root).as_posix(),
+                md_path.relative_to(root).as_posix(),
+                handoff_path.relative_to(root).as_posix(),
+            ],
+            last_run_id=run_id,
+            warnings=[step.rationale for step in plan.steps if step.status in {"next", "blocked"}],
+        )
+        state.latest_run_id = run_id
+        state.updated_at = utc_now()
+        runs_dir = root / ".artist-portrait" / "runs" / run_id
+        runs_dir.mkdir(parents=True, exist_ok=True)
+        write_json(runs_dir / "command.json", {"command": "workflow", "project": str(project_path), "target": args.target})
+        write_json(runs_dir / "environment.json", environment_snapshot())
+        write_json(
+            runs_dir / "step_result.json",
+            {
+                "step": "workflow",
+                "status": status.value,
+                "output_refs": state.steps["workflow"].output_refs,
+                "commands_executed": False,
+                "media_rendered": False,
+                "edit_points_moved": False,
+                "automatic_music_selection": False,
+                "model_call_performed": False,
+                "network_performed": False,
+            },
+        )
+        save_state(root, state)
+        write_run_report(root / config.paths.output_dir, state, [])
+    payload = {
+        "output": json_path.relative_to(root).as_posix(),
+        "report": md_path.relative_to(root).as_posix(),
+        "handoff": handoff_path.relative_to(root).as_posix(),
+        "status": plan.status,
+        "next_command": plan.next_command,
+        "workflow_plan": plan.model_dump(mode="json"),
+    }
+    if args.json:
+        print(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True))
+    elif not args.quiet:
+        print(f"workflow {plan.status}")
+        print(f"next {plan.next_command or 'none'}")
+        print(f"wrote {payload['report']}")
+    return int(ExitCode.success if plan.status == "ready" else ExitCode.success_with_warnings)
+
+
+def cmd_rhythm(args: argparse.Namespace) -> int:
+    if error := _validate_common_flags(args):
+        return int(error)
+    if args.qc and args.repair_plan:
+        print("rhythm --qc and --repair-plan are mutually exclusive", file=sys.stderr)
+        return int(ExitCode.invalid_cli_usage)
+    project_path = Path(args.project)
+    try:
+        config = load_project_config(project_path)
+    except ConfigLoadError as exc:
+        print(str(exc), file=sys.stderr)
+        return int(ExitCode.invalid_project_config)
+    root = project_root(project_path)
+    try:
+        if args.repair_plan:
+            json_path, md_path, handoff_path, result = build_rhythm_repair_plan(
+                root=root,
+                project_id=config.project.id,
+                acceptance_profile=args.acceptance_profile,
+            )
+        elif args.qc:
+            json_path, md_path, handoff_path, result = build_rhythm_media_qc(
+                root=root,
+                project_id=config.project.id,
+            )
+        else:
+            json_path, md_path, handoff_path, result = build_rhythm_plan(
+                root=root,
+                project_id=config.project.id,
+                intent_path=Path(args.intent) if args.intent else None,
+                agent_output_path=Path(args.agent_output) if args.agent_output else None,
+            )
+    except (RhythmError, ValueError) as exc:
+        print(str(exc), file=sys.stderr)
+        return int(ExitCode.output_or_reference_validation_failed)
+    state = load_state(root)
+    if state is not None:
+        run_id = new_run_id()
+        if args.repair_plan:
+            warnings = [
+                action.rationale
+                for action in result.actions
+                if action.severity == "optional"
+            ]
+            errors = [
+                action.rationale
+                for action in result.actions
+                if action.severity == "required"
+            ]
+        else:
+            domains = (
+                [
+                    result.preview_binding,
+                    result.final_export_binding,
+                    result.timeline_freshness,
+                    result.bgm_freshness,
+                    result.preview_duration_qc,
+                    result.final_duration_qc,
+                    result.audio_expectation_qc,
+                    result.ducking_render_qc,
+                    result.ending_render_qc,
+                    result.media_qc_summary,
+                ]
+                if args.qc
+                else [
+                    result.timeline_profile,
+                    result.bgm_profile,
+                    result.compatibility_audit,
+                    result.intent_audit,
+                    result.cut_cue_audit,
+                    result.transition_audit,
+                    result.text_audit,
+                    result.ducking_silence_audit,
+                    result.ending_audit,
+                ]
+            )
+            warnings = [
+                issue.detail
+                for domain in domains
+                for issue in domain.issues
+                if issue.severity == "warning"
+            ]
+            errors = [
+                issue.detail
+                for domain in domains
+                for issue in domain.issues
+                if issue.severity == "error"
+            ]
+        if not args.qc and not args.repair_plan and result.agent_candidate_audit:
+            warnings.extend(
+                issue.detail
+                for issue in result.agent_candidate_audit.issues
+                if issue.severity == "warning"
+            )
+            errors.extend(
+                issue.detail
+                for issue in result.agent_candidate_audit.issues
+                if issue.severity == "error"
+            )
+        status = (
+            StepStatus.failed
+            if result.status == "blocked"
+            else StepStatus.completed_with_warnings
+            if result.status == "warning"
+            else StepStatus.completed
+        )
+        state.steps["rhythm"] = StepLedgerEntry(
+            status=status,
+            output_refs=[
+                json_path.relative_to(root).as_posix(),
+                md_path.relative_to(root).as_posix(),
+                handoff_path.relative_to(root).as_posix(),
+            ],
+            last_run_id=run_id,
+            warnings=warnings,
+        )
+        state.latest_run_id = run_id
+        state.updated_at = utc_now()
+        runs_dir = root / ".artist-portrait" / "runs" / run_id
+        runs_dir.mkdir(parents=True, exist_ok=True)
+        write_json(
+            runs_dir / "command.json",
+            {
+                "command": "rhythm",
+                "project": str(project_path),
+                "intent": str(args.intent) if args.intent else None,
+                "agent_output": str(args.agent_output) if args.agent_output else None,
+                "qc": bool(args.qc),
+                "repair_plan": bool(args.repair_plan),
+                "acceptance_profile": args.acceptance_profile,
+            },
+        )
+        write_json(runs_dir / "environment.json", environment_snapshot())
+        write_json(
+            runs_dir / "step_result.json",
+            {
+                "step": "rhythm",
+                "status": status.value,
+                "output_refs": state.steps["rhythm"].output_refs,
+                "edit_points_moved": False,
+                "automatic_music_selection": False,
+                "media_rendered": False,
+                "model_call_performed": False,
+                "network_performed": False,
+                "commands_executed": False,
+            },
+        )
+        write_json(runs_dir / "warnings.json", warnings)
+        write_json(runs_dir / "errors.json", errors)
+        save_state(root, state)
+        write_run_report(root / config.paths.output_dir, state, warnings)
+    payload = {
+        "output": json_path.relative_to(root).as_posix(),
+        "report": md_path.relative_to(root).as_posix(),
+        "handoff": handoff_path.relative_to(root).as_posix(),
+        "status": result.status,
+    }
+    if args.qc:
+        payload["rhythm_media_qc"] = result.model_dump(mode="json")
+    elif args.repair_plan:
+        payload["rhythm_repair_plan"] = result.model_dump(mode="json")
+    else:
+        payload["rhythm_plan"] = result.model_dump(mode="json")
+    if args.json:
+        print(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True))
+    elif not args.quiet:
+        print(f"rhythm {result.status}")
+        print(f"wrote {payload['report']}")
+        print(f"wrote {payload['handoff']}")
+    if result.status == "blocked":
+        return int(ExitCode.output_or_reference_validation_failed)
+    return int(ExitCode.success_with_warnings if result.status == "warning" else ExitCode.success)
+
+
 def cmd_acceptance(args: argparse.Namespace) -> int:
     if error := _validate_common_flags(args):
         return int(error)
@@ -319,7 +1083,109 @@ def cmd_acceptance(args: argparse.Namespace) -> int:
         root=root,
         project_id=config.project.id,
         state=state,
+        profile=args.profile,
     )
+    repair_json_path = None
+    repair_md_path = None
+    repair_plan = None
+    approval_request_json_path = None
+    approval_request_md_path = None
+    approval_request = None
+    approval_record_json_path = None
+    approval_record_md_path = None
+    approval_record = None
+    dry_run_json_path = None
+    dry_run_md_path = None
+    dry_run = None
+    bundle_json_path = None
+    bundle_md_path = None
+    bundle = None
+    execution_record_json_path = None
+    execution_record_md_path = None
+    execution_record = None
+    if (
+        args.repair_plan
+        or args.approval_request
+        or args.approval_record
+        or args.execution_dry_run
+        or args.execution_bundle
+        or args.execution_record
+    ):
+        repair_json_path, repair_md_path, repair_plan = build_acceptance_repair_plan(
+            root=root,
+            report=report,
+        )
+    if args.approval_request and repair_plan:
+        (
+            approval_request_json_path,
+            approval_request_md_path,
+            approval_request,
+        ) = build_acceptance_repair_approval_request(root=root, plan=repair_plan)
+    if args.approval_record and repair_plan:
+        try:
+            (
+                approval_record_json_path,
+                approval_record_md_path,
+                approval_record,
+            ) = import_acceptance_repair_approval_record(
+                root=root,
+                plan=repair_plan,
+                candidate_path=Path(args.approval_record),
+            )
+        except Exception as exc:
+            print(str(exc), file=sys.stderr)
+            return int(ExitCode.output_or_reference_validation_failed)
+    if args.execution_dry_run and repair_plan:
+        if approval_record is None:
+            record_path = root / ".artist-portrait" / "data" / "acceptance_repair_approval_record.json"
+            if not record_path.exists():
+                print("execution dry-run requires a current acceptance repair approval record", file=sys.stderr)
+                return int(ExitCode.output_or_reference_validation_failed)
+            try:
+                approval_record = AcceptanceRepairApprovalRecord.model_validate_json(
+                    record_path.read_text(encoding="utf-8")
+                )
+            except Exception as exc:
+                print(str(exc), file=sys.stderr)
+                return int(ExitCode.output_or_reference_validation_failed)
+        dry_run_json_path, dry_run_md_path, dry_run = build_acceptance_repair_execution_dry_run(
+            root=root,
+            plan=repair_plan,
+            approval_record=approval_record,
+        )
+    if (args.execution_bundle or args.execution_record) and repair_plan:
+        if dry_run is None:
+            dry_run_path = root / ".artist-portrait" / "data" / "acceptance_repair_execution_dry_run.json"
+            if not dry_run_path.exists():
+                print("execution bundle/record requires a current acceptance repair execution dry-run", file=sys.stderr)
+                return int(ExitCode.output_or_reference_validation_failed)
+            try:
+                dry_run = AcceptanceRepairExecutionDryRun.model_validate_json(
+                    dry_run_path.read_text(encoding="utf-8")
+                )
+            except Exception as exc:
+                print(str(exc), file=sys.stderr)
+                return int(ExitCode.output_or_reference_validation_failed)
+    if args.execution_bundle and repair_plan and dry_run:
+        bundle_json_path, bundle_md_path, bundle = build_acceptance_repair_execution_bundle(
+            root=root,
+            plan=repair_plan,
+            dry_run=dry_run,
+        )
+    if args.execution_record and dry_run:
+        try:
+            (
+                execution_record_json_path,
+                execution_record_md_path,
+                execution_record,
+            ) = import_acceptance_repair_execution_record(
+                root=root,
+                dry_run=dry_run,
+                candidate_path=Path(args.execution_record),
+            )
+        except Exception as exc:
+            print(str(exc), file=sys.stderr)
+            return int(ExitCode.output_or_reference_validation_failed)
     if state is not None:
         run_id = new_run_id()
         warnings = [
@@ -346,6 +1212,54 @@ def cmd_acceptance(args: argparse.Namespace) -> int:
             output_refs=[
                 json_path.relative_to(root).as_posix(),
                 md_path.relative_to(root).as_posix(),
+                *(
+                    [
+                        repair_json_path.relative_to(root).as_posix(),
+                        repair_md_path.relative_to(root).as_posix(),
+                    ]
+                    if repair_json_path and repair_md_path
+                    else []
+                ),
+                *(
+                    [
+                        approval_request_json_path.relative_to(root).as_posix(),
+                        approval_request_md_path.relative_to(root).as_posix(),
+                    ]
+                    if approval_request_json_path and approval_request_md_path
+                    else []
+                ),
+                *(
+                    [
+                        approval_record_json_path.relative_to(root).as_posix(),
+                        approval_record_md_path.relative_to(root).as_posix(),
+                    ]
+                    if approval_record_json_path and approval_record_md_path
+                    else []
+                ),
+                *(
+                    [
+                        dry_run_json_path.relative_to(root).as_posix(),
+                        dry_run_md_path.relative_to(root).as_posix(),
+                    ]
+                    if dry_run_json_path and dry_run_md_path
+                    else []
+                ),
+                *(
+                    [
+                        bundle_json_path.relative_to(root).as_posix(),
+                        bundle_md_path.relative_to(root).as_posix(),
+                    ]
+                    if bundle_json_path and bundle_md_path
+                    else []
+                ),
+                *(
+                    [
+                        execution_record_json_path.relative_to(root).as_posix(),
+                        execution_record_md_path.relative_to(root).as_posix(),
+                    ]
+                    if execution_record_json_path and execution_record_md_path
+                    else []
+                ),
             ],
             last_run_id=run_id,
             warnings=warnings,
@@ -363,7 +1277,17 @@ def cmd_acceptance(args: argparse.Namespace) -> int:
         runs_dir.mkdir(parents=True, exist_ok=True)
         write_json(
             runs_dir / "command.json",
-            {"command": "acceptance", "project": str(project_path)},
+            {
+                "command": "acceptance",
+                "project": str(project_path),
+                "profile": args.profile,
+                "repair_plan": bool(args.repair_plan),
+                "approval_request": bool(args.approval_request),
+                "approval_record": str(args.approval_record) if args.approval_record else None,
+                "execution_dry_run": bool(args.execution_dry_run),
+                "execution_bundle": bool(args.execution_bundle),
+                "execution_record": str(args.execution_record) if args.execution_record else None,
+            },
         )
         write_json(runs_dir / "environment.json", environment_snapshot())
         write_json(
@@ -375,6 +1299,11 @@ def cmd_acceptance(args: argparse.Namespace) -> int:
                 "network_performed": False,
                 "model_call_performed": False,
                 "media_rendered": False,
+                "automatic_repair_performed": False,
+                "approval_record_valid": approval_record.valid if approval_record else None,
+                "commands_executed": False,
+                "execution_bundle_blocked": bundle.blocked if bundle else None,
+                "execution_record_valid": execution_record.valid if execution_record else None,
             },
         )
         write_json(runs_dir / "warnings.json", warnings)
@@ -385,16 +1314,55 @@ def cmd_acceptance(args: argparse.Namespace) -> int:
         "output": json_path.relative_to(root).as_posix(),
         "report": md_path.relative_to(root).as_posix(),
         "status": report.status,
+        "profile": report.acceptance_profile,
+        "profile_passed": report.profile_passed,
+        "required_stage_ids": report.required_stage_ids,
         "core_ready": report.core_ready,
         "preview_ready": report.preview_ready,
         "final_export_ready": report.final_export_ready,
         "acceptance": report.model_dump(mode="json"),
     }
+    if repair_json_path and repair_md_path and repair_plan:
+        payload["repair_plan_output"] = repair_json_path.relative_to(root).as_posix()
+        payload["repair_plan_report"] = repair_md_path.relative_to(root).as_posix()
+        payload["repair_plan"] = repair_plan.model_dump(mode="json")
+    if approval_request_json_path and approval_request_md_path and approval_request:
+        payload["approval_request_output"] = approval_request_json_path.relative_to(root).as_posix()
+        payload["approval_request_report"] = approval_request_md_path.relative_to(root).as_posix()
+        payload["approval_request"] = approval_request.model_dump(mode="json")
+    if approval_record_json_path and approval_record_md_path and approval_record:
+        payload["approval_record_output"] = approval_record_json_path.relative_to(root).as_posix()
+        payload["approval_record_report"] = approval_record_md_path.relative_to(root).as_posix()
+        payload["approval_record"] = approval_record.model_dump(mode="json")
+    if dry_run_json_path and dry_run_md_path and dry_run:
+        payload["execution_dry_run_output"] = dry_run_json_path.relative_to(root).as_posix()
+        payload["execution_dry_run_report"] = dry_run_md_path.relative_to(root).as_posix()
+        payload["execution_dry_run"] = dry_run.model_dump(mode="json")
+    if bundle_json_path and bundle_md_path and bundle:
+        payload["execution_bundle_output"] = bundle_json_path.relative_to(root).as_posix()
+        payload["execution_bundle_report"] = bundle_md_path.relative_to(root).as_posix()
+        payload["execution_bundle"] = bundle.model_dump(mode="json")
+    if execution_record_json_path and execution_record_md_path and execution_record:
+        payload["execution_record_output"] = execution_record_json_path.relative_to(root).as_posix()
+        payload["execution_record_report"] = execution_record_md_path.relative_to(root).as_posix()
+        payload["execution_record"] = execution_record.model_dump(mode="json")
     if args.json:
         print(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True))
     elif not args.quiet:
-        print(f"acceptance {report.status}")
+        print(f"acceptance {report.acceptance_profile} {report.status}")
         print(f"wrote {payload['report']}")
+        if repair_json_path and repair_md_path:
+            print(f"wrote {repair_md_path.relative_to(root).as_posix()}")
+        if approval_request_md_path:
+            print(f"wrote {approval_request_md_path.relative_to(root).as_posix()}")
+        if approval_record_md_path:
+            print(f"wrote {approval_record_md_path.relative_to(root).as_posix()}")
+        if dry_run_md_path:
+            print(f"wrote {dry_run_md_path.relative_to(root).as_posix()}")
+        if bundle_md_path:
+            print(f"wrote {bundle_md_path.relative_to(root).as_posix()}")
+        if execution_record_md_path:
+            print(f"wrote {execution_record_md_path.relative_to(root).as_posix()}")
     if report.status == "failed":
         return int(ExitCode.output_or_reference_validation_failed)
     return int(ExitCode.success_with_warnings if report.status == "warning" else ExitCode.success)
@@ -1406,6 +2374,8 @@ def main(argv: list[str] | None = None) -> int:
         "status": cmd_status,
         "doctor": cmd_doctor,
         "generate-schema": cmd_generate_schema,
+        "release-check": cmd_release_check,
+        "workflow": cmd_workflow,
         "acceptance": cmd_acceptance,
         "scan": cmd_scan,
         "segment": cmd_segment,
@@ -1418,6 +2388,7 @@ def main(argv: list[str] | None = None) -> int:
         "timeline": cmd_timeline,
         "preview": cmd_preview,
         "export": cmd_export,
+        "rhythm": cmd_rhythm,
         "bgm": cmd_bgm,
     }
     handler = handlers.get(args.command, blocked_stage_a_command)

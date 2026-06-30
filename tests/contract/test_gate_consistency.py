@@ -12,7 +12,7 @@ def test_current_gate_is_consistent_across_primary_docs():
     readme = (ROOT / "README.md").read_text(encoding="utf-8")
     progress = (ROOT / "docs" / "DEVELOPMENT_PROGRESS.md").read_text(encoding="utf-8")
 
-    gate = "V0-024 project acceptance gate"
+    gate = "V0-041 workflow repair evidence refresh guidance gate"
     assert f"Current gate: {gate}." in agents
     assert gate in master
     assert f"Current {gate} work" in readme
@@ -43,3 +43,23 @@ def test_current_gate_preserves_remaining_boundaries():
     assert "render media" in docs or "media rendering" in docs
     assert "fit controls" in docs
     assert "acceptance" in docs
+    assert "acceptance profiles" in docs or "acceptance profile" in docs
+    assert "real-media acceptance" in docs
+    assert "repair-plan" in docs
+    assert "approval" in docs
+    assert "dry-run" in docs
+    assert "execution bundle" in docs
+    assert "execution record" in docs
+    assert "rhythm" in docs
+    assert "edit points" in docs
+    assert "media QC" in docs or "media-QC" in docs
+    assert "rhythm-aware acceptance" in docs or "rhythm acceptance" in docs
+    assert "repair planning" in docs
+    assert "workflow planning" in docs
+    assert "workflow execution evidence" in docs
+    assert "workflow evidence repair" in docs
+    assert "workflow repair approval" in docs
+    assert "workflow repair execution" in docs
+    assert "workflow repair refresh" in docs
+    assert "release hardening" in docs
+    assert "auto-run pipeline" in docs or "auto-run" in docs

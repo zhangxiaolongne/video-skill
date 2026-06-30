@@ -110,11 +110,9 @@ def test_progress_snapshot_is_machine_readable_and_paid_gate_closed():
         (root / "docs" / "current_progress.json").read_text(encoding="utf-8")
     )
 
-    assert payload["capability_gate"] == "V0-024"
-    assert payload["milestone"] == (
-        "V0-024 project acceptance gate"
-    )
-    assert payload["active_batch"]["id"] == "V0-024"
+    assert payload["capability_gate"] == "V0-041"
+    assert payload["milestone"] == "V0-041 workflow repair evidence refresh guidance gate"
+    assert payload["active_batch"]["id"] == "V0-041"
     assert payload["active_batch"]["capability_gate"] == payload["capability_gate"]
     assert len(payload["tasks"]) == 10
     assert {task["status"] for task in payload["tasks"]}.issubset(
@@ -140,6 +138,23 @@ def test_progress_snapshot_is_machine_readable_and_paid_gate_closed():
             "bgm_recommendation_fit_review",
             "bgm_fit_controls",
             "project_acceptance",
+            "acceptance_profiles",
+            "real_media_acceptance_fixtures",
+            "acceptance_repair_plans",
+            "acceptance_repair_approvals",
+            "repair_execution_dry_runs",
+            "repair_execution_handoffs",
+            "rhythm_planning",
+            "rhythm_media_qc",
+            "rhythm_acceptance_integration",
+            "rhythm_manual_repair_planning",
+            "guided_workflow_planning",
+            "workflow_execution_evidence_review",
+            "workflow_evidence_repair_planning",
+            "workflow_repair_approval_dry_run",
+            "workflow_repair_execution_review",
+            "release_hardening",
+            "workflow_repair_refresh_guidance",
             "preview_rendering",
             "final_export",
         }

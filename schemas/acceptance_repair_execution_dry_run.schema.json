@@ -1,0 +1,168 @@
+{
+  "$defs": {
+    "AcceptanceRepairExecutionStep": {
+      "additionalProperties": false,
+      "properties": {
+        "action_id": {
+          "minLength": 1,
+          "title": "Action Id",
+          "type": "string"
+        },
+        "approval_decision": {
+          "pattern": "^(approved|rejected)$",
+          "title": "Approval Decision",
+          "type": "string"
+        },
+        "blocked_reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Blocked Reason"
+        },
+        "command": {
+          "minLength": 1,
+          "title": "Command",
+          "type": "string"
+        },
+        "order": {
+          "minimum": 1,
+          "title": "Order",
+          "type": "integer"
+        },
+        "required_for_profile": {
+          "title": "Required For Profile",
+          "type": "boolean"
+        },
+        "step_id": {
+          "minLength": 1,
+          "title": "Step Id",
+          "type": "string"
+        },
+        "would_execute": {
+          "default": false,
+          "title": "Would Execute",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "step_id",
+        "order",
+        "action_id",
+        "command",
+        "required_for_profile",
+        "approval_decision"
+      ],
+      "title": "AcceptanceRepairExecutionStep",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "acceptance_profile": {
+      "pattern": "^(standard|core|preview|delivery)$",
+      "title": "Acceptance Profile",
+      "type": "string"
+    },
+    "approval_record_id": {
+      "minLength": 1,
+      "title": "Approval Record Id",
+      "type": "string"
+    },
+    "approval_record_valid": {
+      "title": "Approval Record Valid",
+      "type": "boolean"
+    },
+    "approved_step_count": {
+      "minimum": 0,
+      "title": "Approved Step Count",
+      "type": "integer"
+    },
+    "automatic_repair_performed": {
+      "default": false,
+      "title": "Automatic Repair Performed",
+      "type": "boolean"
+    },
+    "blocked": {
+      "title": "Blocked",
+      "type": "boolean"
+    },
+    "commands_executed": {
+      "default": false,
+      "title": "Commands Executed",
+      "type": "boolean"
+    },
+    "dry_run_id": {
+      "minLength": 1,
+      "title": "Dry Run Id",
+      "type": "string"
+    },
+    "issues": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Issues",
+      "type": "array"
+    },
+    "media_rendered": {
+      "default": false,
+      "title": "Media Rendered",
+      "type": "boolean"
+    },
+    "model_call_performed_by_cli": {
+      "default": false,
+      "title": "Model Call Performed By Cli",
+      "type": "boolean"
+    },
+    "network_performed": {
+      "default": false,
+      "title": "Network Performed",
+      "type": "boolean"
+    },
+    "project_id": {
+      "minLength": 1,
+      "title": "Project Id",
+      "type": "string"
+    },
+    "rejected_step_count": {
+      "minimum": 0,
+      "title": "Rejected Step Count",
+      "type": "integer"
+    },
+    "repair_plan_id": {
+      "minLength": 1,
+      "title": "Repair Plan Id",
+      "type": "string"
+    },
+    "schema_version": {
+      "default": "0.3",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "steps": {
+      "items": {
+        "$ref": "#/$defs/AcceptanceRepairExecutionStep"
+      },
+      "title": "Steps",
+      "type": "array"
+    }
+  },
+  "required": [
+    "dry_run_id",
+    "project_id",
+    "repair_plan_id",
+    "approval_record_id",
+    "acceptance_profile",
+    "approval_record_valid",
+    "approved_step_count",
+    "rejected_step_count",
+    "blocked"
+  ],
+  "title": "AcceptanceRepairExecutionDryRun",
+  "type": "object"
+}

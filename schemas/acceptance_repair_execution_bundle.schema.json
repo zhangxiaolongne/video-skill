@@ -1,0 +1,168 @@
+{
+  "$defs": {
+    "AcceptanceRepairExecutionBundleCommand": {
+      "additionalProperties": false,
+      "properties": {
+        "action_id": {
+          "minLength": 1,
+          "title": "Action Id",
+          "type": "string"
+        },
+        "command": {
+          "minLength": 1,
+          "title": "Command",
+          "type": "string"
+        },
+        "command_id": {
+          "minLength": 1,
+          "title": "Command Id",
+          "type": "string"
+        },
+        "executable_by_cli": {
+          "default": false,
+          "title": "Executable By Cli",
+          "type": "boolean"
+        },
+        "expected_artifacts": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Expected Artifacts",
+          "type": "array"
+        },
+        "manual_execution_required": {
+          "default": true,
+          "title": "Manual Execution Required",
+          "type": "boolean"
+        },
+        "order": {
+          "minimum": 1,
+          "title": "Order",
+          "type": "integer"
+        },
+        "required_for_profile": {
+          "title": "Required For Profile",
+          "type": "boolean"
+        },
+        "step_id": {
+          "minLength": 1,
+          "title": "Step Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "command_id",
+        "order",
+        "step_id",
+        "action_id",
+        "command",
+        "required_for_profile"
+      ],
+      "title": "AcceptanceRepairExecutionBundleCommand",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "acceptance_profile": {
+      "pattern": "^(standard|core|preview|delivery)$",
+      "title": "Acceptance Profile",
+      "type": "string"
+    },
+    "approval_record_id": {
+      "minLength": 1,
+      "title": "Approval Record Id",
+      "type": "string"
+    },
+    "automatic_repair_performed": {
+      "default": false,
+      "title": "Automatic Repair Performed",
+      "type": "boolean"
+    },
+    "blocked": {
+      "title": "Blocked",
+      "type": "boolean"
+    },
+    "command_count": {
+      "minimum": 0,
+      "title": "Command Count",
+      "type": "integer"
+    },
+    "commands": {
+      "items": {
+        "$ref": "#/$defs/AcceptanceRepairExecutionBundleCommand"
+      },
+      "title": "Commands",
+      "type": "array"
+    },
+    "commands_executed_by_cli": {
+      "default": false,
+      "title": "Commands Executed By Cli",
+      "type": "boolean"
+    },
+    "dry_run_id": {
+      "minLength": 1,
+      "title": "Dry Run Id",
+      "type": "string"
+    },
+    "dry_run_valid": {
+      "title": "Dry Run Valid",
+      "type": "boolean"
+    },
+    "execution_bundle_id": {
+      "minLength": 1,
+      "title": "Execution Bundle Id",
+      "type": "string"
+    },
+    "issues": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Issues",
+      "type": "array"
+    },
+    "media_rendered": {
+      "default": false,
+      "title": "Media Rendered",
+      "type": "boolean"
+    },
+    "model_call_performed_by_cli": {
+      "default": false,
+      "title": "Model Call Performed By Cli",
+      "type": "boolean"
+    },
+    "network_performed": {
+      "default": false,
+      "title": "Network Performed",
+      "type": "boolean"
+    },
+    "project_id": {
+      "minLength": 1,
+      "title": "Project Id",
+      "type": "string"
+    },
+    "repair_plan_id": {
+      "minLength": 1,
+      "title": "Repair Plan Id",
+      "type": "string"
+    },
+    "schema_version": {
+      "default": "0.3",
+      "title": "Schema Version",
+      "type": "string"
+    }
+  },
+  "required": [
+    "execution_bundle_id",
+    "project_id",
+    "repair_plan_id",
+    "approval_record_id",
+    "dry_run_id",
+    "acceptance_profile",
+    "dry_run_valid",
+    "command_count",
+    "blocked"
+  ],
+  "title": "AcceptanceRepairExecutionBundle",
+  "type": "object"
+}

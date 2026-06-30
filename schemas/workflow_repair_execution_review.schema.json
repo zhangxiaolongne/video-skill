@@ -1,0 +1,221 @@
+{
+  "$defs": {
+    "WorkflowRepairExecutionActionReview": {
+      "additionalProperties": false,
+      "properties": {
+        "action_id": {
+          "minLength": 1,
+          "title": "Action Id",
+          "type": "string"
+        },
+        "command_matched": {
+          "default": false,
+          "title": "Command Matched",
+          "type": "boolean"
+        },
+        "detail": {
+          "minLength": 1,
+          "title": "Detail",
+          "type": "string"
+        },
+        "dry_run_status": {
+          "anyOf": [
+            {
+              "pattern": "^(approved|rejected)$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Dry Run Status"
+        },
+        "evidence_refs": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Evidence Refs",
+          "type": "array"
+        },
+        "missing_refs": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Missing Refs",
+          "type": "array"
+        },
+        "review_status": {
+          "pattern": "^(accepted|rejected|missing|skipped)$",
+          "title": "Review Status",
+          "type": "string"
+        },
+        "step_id": {
+          "minLength": 1,
+          "title": "Step Id",
+          "type": "string"
+        },
+        "submitted_status": {
+          "anyOf": [
+            {
+              "pattern": "^(succeeded|failed|skipped)$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Submitted Status"
+        }
+      },
+      "required": [
+        "action_id",
+        "step_id",
+        "review_status",
+        "detail"
+      ],
+      "title": "WorkflowRepairExecutionActionReview",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "acceptance_success_promoted_by_cli": {
+      "default": false,
+      "title": "Acceptance Success Promoted By Cli",
+      "type": "boolean"
+    },
+    "accepted_action_count": {
+      "minimum": 0,
+      "title": "Accepted Action Count",
+      "type": "integer"
+    },
+    "action_reviews": {
+      "items": {
+        "$ref": "#/$defs/WorkflowRepairExecutionActionReview"
+      },
+      "title": "Action Reviews",
+      "type": "array"
+    },
+    "approval_record_id": {
+      "minLength": 1,
+      "title": "Approval Record Id",
+      "type": "string"
+    },
+    "automatic_music_selection_by_cli": {
+      "default": false,
+      "title": "Automatic Music Selection By Cli",
+      "type": "boolean"
+    },
+    "candidate_bytes": {
+      "minimum": 0,
+      "title": "Candidate Bytes",
+      "type": "integer"
+    },
+    "candidate_sha256": {
+      "maxLength": 64,
+      "minLength": 64,
+      "title": "Candidate Sha256",
+      "type": "string"
+    },
+    "commands_executed_by_cli": {
+      "default": false,
+      "title": "Commands Executed By Cli",
+      "type": "boolean"
+    },
+    "dry_run_id": {
+      "minLength": 1,
+      "title": "Dry Run Id",
+      "type": "string"
+    },
+    "edit_points_moved_by_cli": {
+      "default": false,
+      "title": "Edit Points Moved By Cli",
+      "type": "boolean"
+    },
+    "media_rendered_by_cli": {
+      "default": false,
+      "title": "Media Rendered By Cli",
+      "type": "boolean"
+    },
+    "missing_action_count": {
+      "minimum": 0,
+      "title": "Missing Action Count",
+      "type": "integer"
+    },
+    "model_call_performed_by_cli": {
+      "default": false,
+      "title": "Model Call Performed By Cli",
+      "type": "boolean"
+    },
+    "network_performed_by_cli": {
+      "default": false,
+      "title": "Network Performed By Cli",
+      "type": "boolean"
+    },
+    "project_id": {
+      "minLength": 1,
+      "title": "Project Id",
+      "type": "string"
+    },
+    "quarantine_ref": {
+      "minLength": 1,
+      "title": "Quarantine Ref",
+      "type": "string"
+    },
+    "rejected_action_count": {
+      "minimum": 0,
+      "title": "Rejected Action Count",
+      "type": "integer"
+    },
+    "schema_version": {
+      "default": "0.3",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "skipped_action_count": {
+      "minimum": 0,
+      "title": "Skipped Action Count",
+      "type": "integer"
+    },
+    "status": {
+      "pattern": "^(passed|warning|failed)$",
+      "title": "Status",
+      "type": "string"
+    },
+    "target": {
+      "pattern": "^(core|preview|delivery)$",
+      "title": "Target",
+      "type": "string"
+    },
+    "workflow_repair_execution_review_id": {
+      "minLength": 1,
+      "title": "Workflow Repair Execution Review Id",
+      "type": "string"
+    },
+    "workflow_repair_plan_id": {
+      "minLength": 1,
+      "title": "Workflow Repair Plan Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "workflow_repair_execution_review_id",
+    "project_id",
+    "workflow_repair_plan_id",
+    "approval_record_id",
+    "dry_run_id",
+    "target",
+    "status",
+    "quarantine_ref",
+    "candidate_sha256",
+    "candidate_bytes",
+    "accepted_action_count",
+    "rejected_action_count",
+    "missing_action_count",
+    "skipped_action_count"
+  ],
+  "title": "WorkflowRepairExecutionReview",
+  "type": "object"
+}

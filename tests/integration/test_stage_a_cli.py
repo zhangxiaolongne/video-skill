@@ -122,6 +122,32 @@ def project_fixture_with_remote_text_model_allowed() -> str:
     )
 
 
+def test_release_check_writes_hardening_report_without_publication(tmp_path, capsys):
+    project_path = tmp_path / "project.yaml"
+    project_path.write_text(project_fixture_with_scene_detection("off"), encoding="utf-8")
+    assert main(["init", "--project", str(project_path), "--quiet"]) in (0, 1)
+    capsys.readouterr()
+
+    assert main(["release-check", "--project", str(project_path), "--json"]) in (0, 1)
+    payload = json.loads(capsys.readouterr().out)
+    report = payload["release_hardening_report"]
+
+    assert payload["output"] == ".artist-portrait/data/release_hardening_report.json"
+    assert payload["report"] == "output/release_hardening_report.md"
+    assert report["capability_gate"] == "V0-041"
+    assert report["status"] in {"warning", "ready_for_local_release"}
+    assert report["failed_count"] == 0
+    assert report["commit_allowed"] is False
+    assert report["push_allowed"] is False
+    assert report["tag_allowed"] is False
+    assert report["network_performed"] is False
+    assert report["model_call_performed_by_cli"] is False
+    checks = {check["check_id"]: check for check in report["checks"]}
+    assert checks["gate_doc_consistency"]["status"] == "passed"
+    assert checks["schema_coverage"]["status"] == "passed"
+    assert checks["forbidden_source_surface"]["status"] == "passed"
+
+
 def write_proposals_from_context(root: Path, *, unknown_clip: bool = False, bgm: bool = True) -> None:
     context = json.loads(
         (root / ".artist-portrait" / "data" / "proposal_context.json").read_text(
@@ -3575,6 +3601,280 @@ def test_bgm_cli_import_list_fit_and_status(tmp_path, capsys):
     assert status["summaries"]["bgm_candidates"]["count"] == 1
     assert status["summaries"]["bgm_analysis"]["candidate_count"] == 1
     assert status["summaries"]["bgm_analysis"]["beat_completed_count"] == 0
+
+
+def test_rhythm_cli_plans_bgm_edit_rhythm_without_mutating_outputs(tmp_path, capsys):
+    project_path = build_valid_proposal_project(tmp_path, capsys)
+    assert (
+        main(
+            [
+                "timeline",
+                "--project",
+                str(project_path),
+                "--proposal",
+                "proposal_safe",
+                "--quiet",
+            ]
+        )
+        in (0, 1)
+    )
+    capsys.readouterr()
+    audio = tmp_path / "media" / "rhythm_bgm.wav"
+    audio.parent.mkdir(parents=True, exist_ok=True)
+    subprocess.run(
+        [
+            "ffmpeg", "-y", "-hide_banner", "-loglevel", "error",
+            "-f", "lavfi", "-i", "sine=frequency=330:duration=2",
+            str(audio),
+        ],
+        check=True,
+    )
+    assert (
+        main(
+            [
+                "bgm", "import", "--project", str(project_path),
+                "--file", "media/rhythm_bgm.wav", "--rights-status", "owned", "--json",
+            ]
+        )
+        == 1
+    )
+    candidate_id = json.loads(capsys.readouterr().out)["candidate"]["music_candidate_id"]
+    assert (
+        main(["bgm", "analyze", "--project", str(project_path), "--json"])
+        == 1
+    )
+    capsys.readouterr()
+    assert (
+        main(
+            [
+                "bgm", "fit", "--project", str(project_path),
+                "--candidate", candidate_id,
+                "--fit-mode", "loop",
+                "--fade-in-seconds", "0.2",
+                "--fade-out-seconds", "0.3",
+                "--ducking-gain-db", "-10",
+                "--beat-align",
+                "--json",
+            ]
+        )
+        == 1
+    )
+    capsys.readouterr()
+    intent_path = tmp_path / "rhythm_intent.json"
+    intent_path.write_text(
+        json.dumps(
+            {
+                "intent_id": "speech_first_medium_text",
+                "mode": "speech_first",
+                "pacing": "medium",
+                "text_density": "medium",
+                "transition_style": "smooth",
+                "ending_style": "fade_out",
+                "notes": "test explicit rhythm intent",
+                "model_call_performed_by_cli": False,
+                "network_performed": False,
+            },
+            ensure_ascii=False,
+            indent=2,
+            sort_keys=True,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    assert (
+        main(
+            [
+                "rhythm",
+                "--project",
+                str(project_path),
+                "--intent",
+                str(intent_path),
+                "--json",
+            ]
+        )
+        == 1
+    )
+    payload = json.loads(capsys.readouterr().out)
+    plan = payload["rhythm_plan"]
+    assert payload["output"] == ".artist-portrait/data/rhythm_plan.json"
+    assert payload["report"] == "output/rhythm_report.md"
+    assert payload["handoff"] == "output/rhythm_agent_handoff.json"
+    assert plan["intent"]["mode"] == "speech_first"
+    assert plan["timeline_profile"]["metrics"]
+    assert plan["bgm_profile"]["metrics"]
+    assert plan["compatibility_audit"]["domain_id"] == "compatibility_audit"
+    assert plan["cut_cue_audit"]["status"] == "unavailable"
+    assert plan["transition_audit"]["domain_id"] == "transition_audit"
+    assert plan["text_audit"]["domain_id"] == "text_audit"
+    assert plan["ducking_silence_audit"]["domain_id"] == "ducking_silence_audit"
+    assert plan["ending_audit"]["domain_id"] == "ending_audit"
+    assert plan["edit_points_moved"] is False
+    assert plan["automatic_music_selection"] is False
+    assert plan["media_rendered"] is False
+    assert plan["model_call_performed_by_cli"] is False
+    assert plan["network_performed"] is False
+    assert (tmp_path / ".artist-portrait" / "data" / "rhythm_plan.json").exists()
+    assert (tmp_path / "output" / "rhythm_report.md").exists()
+    assert (tmp_path / "output" / "rhythm_agent_handoff.json").exists()
+
+    agent_candidate_path = tmp_path / "rhythm_candidate.json"
+    agent_candidate_path.write_text(
+        json.dumps(
+            {
+                "candidate_id": "rhythm_candidate_safe",
+                "project_id": plan["project_id"],
+                "timeline_id": plan["timeline_id"],
+                "rhythm_plan_id": plan["rhythm_plan_id"],
+                "recommendations": ["Keep speech-first pacing and avoid moving cuts."],
+                "rejected_automatic_actions": ["move edit points", "select music"],
+                "model_call_performed_by_cli": False,
+                "network_performed": False,
+                "edit_points_moved": False,
+                "music_selected": False,
+                "media_rendered": False,
+            },
+            ensure_ascii=False,
+            indent=2,
+            sort_keys=True,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    assert (
+        main(
+            [
+                "rhythm",
+                "--project",
+                str(project_path),
+                "--intent",
+                str(intent_path),
+                "--agent-output",
+                str(agent_candidate_path),
+                "--json",
+            ]
+        )
+        == 1
+    )
+    imported = json.loads(capsys.readouterr().out)["rhythm_plan"]
+    assert imported["agent_candidate_audit"]["status"] == "passed"
+    assert imported["agent_candidate_audit"]["metrics"][0]["metric_id"] == "recommendation_count"
+    assert (
+        main(
+            [
+                "rhythm",
+                "--project",
+                str(project_path),
+                "--repair-plan",
+                "--acceptance-profile",
+                "delivery",
+                "--json",
+            ]
+        )
+        == 9
+    )
+    repair_payload = json.loads(capsys.readouterr().out)
+    repair = repair_payload["rhythm_repair_plan"]
+    assert repair_payload["output"] == ".artist-portrait/data/rhythm_repair_plan.json"
+    assert repair_payload["report"] == "output/rhythm_repair_plan.md"
+    assert repair_payload["handoff"] == "output/rhythm_repair_handoff.json"
+    assert repair["commands_executed"] is False
+    assert repair["media_rendered"] is False
+    assert repair["edit_points_moved"] is False
+    assert repair["automatic_music_selection"] is False
+    assert repair["model_call_performed_by_cli"] is False
+    assert repair["network_performed"] is False
+    assert repair["required_action_count"] >= 3
+    assert repair["first_required_command"] == "artist-portrait preview --project <project.yaml>"
+    assert {
+        action["category"]
+        for action in repair["actions"]
+        if action["severity"] == "required"
+    } >= {"preview", "final_export", "rhythm_qc"}
+    subprocess.run(
+        [
+            "ffmpeg", "-y", "-hide_banner", "-loglevel", "error",
+            "-f", "lavfi", "-i", "testsrc=size=64x64:rate=24:duration=2",
+            "-f", "lavfi", "-i", "sine=frequency=220:duration=2",
+            "-shortest", "-c:v", "libx264", "-pix_fmt", "yuv420p", "-c:a", "aac",
+            str(tmp_path / "media" / "clean.mp4"),
+        ],
+        check=True,
+    )
+    assert (
+        main(
+            [
+                "preview",
+                "--project",
+                str(project_path),
+                "--width",
+                "320",
+                "--fps",
+                "10",
+                "--quiet",
+            ]
+        )
+        in (0, 1)
+    )
+    capsys.readouterr()
+    assert (
+        main(
+            [
+                "export",
+                "--project",
+                str(project_path),
+                "--profile",
+                "review_720p",
+                "--quiet",
+            ]
+        )
+        in (0, 1)
+    )
+    capsys.readouterr()
+    assert main(["rhythm", "--project", str(project_path), "--qc", "--json"]) in (0, 1)
+    qc = json.loads(capsys.readouterr().out)["rhythm_media_qc"]
+    assert qc["preview_binding"]["domain_id"] == "preview_binding"
+    assert qc["final_export_binding"]["domain_id"] == "final_export_binding"
+    assert qc["timeline_freshness"]["domain_id"] == "timeline_freshness"
+    assert qc["bgm_freshness"]["domain_id"] == "bgm_freshness"
+    assert qc["preview_duration_qc"]["domain_id"] == "preview_duration_qc"
+    assert qc["final_duration_qc"]["domain_id"] == "final_duration_qc"
+    assert qc["audio_expectation_qc"]["domain_id"] == "audio_expectation_qc"
+    assert qc["ducking_render_qc"]["domain_id"] == "ducking_render_qc"
+    assert qc["ending_render_qc"]["domain_id"] == "ending_render_qc"
+    assert qc["media_qc_summary"]["domain_id"] == "media_qc_summary"
+    assert qc["preview_rendered_by_qc"] is False
+    assert qc["final_export_rendered_by_qc"] is False
+    assert qc["edit_points_moved"] is False
+    assert qc["automatic_music_selection"] is False
+    assert qc["model_call_performed_by_cli"] is False
+    assert qc["network_performed"] is False
+    assert (tmp_path / ".artist-portrait" / "data" / "rhythm_media_qc.json").exists()
+    assert (tmp_path / "output" / "rhythm_media_qc.md").exists()
+    assert (tmp_path / "output" / "rhythm_media_qc_handoff.json").exists()
+    assert (
+        main(
+            [
+                "rhythm",
+                "--project",
+                str(project_path),
+                "--repair-plan",
+                "--acceptance-profile",
+                "delivery",
+                "--json",
+            ]
+        )
+        in (0, 1, 9)
+    )
+    completed_repair = json.loads(capsys.readouterr().out)["rhythm_repair_plan"]
+    assert completed_repair["commands_executed"] is False
+    assert completed_repair["media_rendered"] is False
+    assert completed_repair["edit_points_moved"] is False
+    assert completed_repair["automatic_music_selection"] is False
+    assert (tmp_path / ".artist-portrait" / "data" / "rhythm_repair_plan.json").exists()
+    assert (tmp_path / "output" / "rhythm_repair_plan.md").exists()
+    assert (tmp_path / "output" / "rhythm_repair_handoff.json").exists()
+    assert main(["status", "--project", str(project_path), "--json"]) == 0
+    status = json.loads(capsys.readouterr().out)
     assert status["summaries"]["bgm_analysis"]["bpm_candidate_count"] == 0
     assert status["summaries"]["bgm_fit"]["candidate_id"] == candidate_id
 
@@ -3834,16 +4134,662 @@ def test_acceptance_cli_reports_core_ready_with_delivery_gaps(tmp_path, capsys):
     assert accepted["output"] == ".artist-portrait/data/acceptance_report.json"
     assert accepted["report"] == "output/acceptance_report.md"
     assert accepted["status"] == "warning"
+    assert accepted["profile"] == "standard"
+    assert accepted["profile_passed"] is True
+    assert "preview" not in accepted["required_stage_ids"]
     assert accepted["core_ready"] is True
     assert accepted["preview_ready"] is False
     assert accepted["final_export_ready"] is False
     stages = {stage["stage_id"]: stage for stage in accepted["acceptance"]["stages"]}
     assert stages["proposal"]["status"] == "passed"
     assert stages["timeline"]["status"] == "passed"
+    assert stages["rhythm_plan"]["status"] == "warning"
     assert stages["preview"]["status"] == "warning"
     assert stages["final_export"]["status"] == "warning"
+    assert stages["rhythm_media_qc"]["status"] == "warning"
     assert (tmp_path / ".artist-portrait" / "data" / "acceptance_report.json").exists()
     assert (tmp_path / "output" / "acceptance_report.md").exists()
+
+
+def test_acceptance_core_profile_passes_when_delivery_artifacts_are_missing(tmp_path, capsys):
+    project_path = build_valid_proposal_project(tmp_path, capsys)
+    assert (
+        main(
+            [
+                "timeline",
+                "--project",
+                str(project_path),
+                "--proposal",
+                "proposal_safe",
+                "--quiet",
+            ]
+        )
+        in (0, 1)
+    )
+    capsys.readouterr()
+
+    assert main(["acceptance", "--project", str(project_path), "--profile", "core", "--json"]) == 0
+    accepted = json.loads(capsys.readouterr().out)
+
+    assert accepted["status"] == "passed"
+    assert accepted["profile"] == "core"
+    assert accepted["profile_passed"] is True
+    assert "timeline" in accepted["required_stage_ids"]
+    assert "preview" not in accepted["required_stage_ids"]
+    assert "final_export" not in accepted["required_stage_ids"]
+    assert "rhythm_plan" not in accepted["required_stage_ids"]
+    assert "rhythm_media_qc" not in accepted["required_stage_ids"]
+    stages = {stage["stage_id"]: stage for stage in accepted["acceptance"]["stages"]}
+    assert stages["rhythm_plan"]["status"] == "warning"
+    assert stages["preview"]["status"] == "warning"
+    assert stages["final_export"]["status"] == "warning"
+    assert stages["rhythm_media_qc"]["status"] == "warning"
+
+
+def test_acceptance_preview_profile_fails_when_preview_is_missing(tmp_path, capsys):
+    project_path = build_valid_proposal_project(tmp_path, capsys)
+    assert (
+        main(
+            [
+                "timeline",
+                "--project",
+                str(project_path),
+                "--proposal",
+                "proposal_safe",
+                "--quiet",
+            ]
+        )
+        in (0, 1)
+    )
+    capsys.readouterr()
+
+    assert main(["acceptance", "--project", str(project_path), "--profile", "preview", "--json"]) == 9
+    accepted = json.loads(capsys.readouterr().out)
+
+    assert accepted["status"] == "failed"
+    assert accepted["profile"] == "preview"
+    assert accepted["profile_passed"] is False
+    assert "rhythm_plan" in accepted["required_stage_ids"]
+    assert "preview" in accepted["required_stage_ids"]
+    assert "rhythm_media_qc" in accepted["required_stage_ids"]
+    assert "final_export" not in accepted["required_stage_ids"]
+
+
+def test_acceptance_repair_plan_orders_required_profile_actions(tmp_path, capsys):
+    project_path = build_valid_proposal_project(tmp_path, capsys)
+    assert (
+        main(
+            [
+                "timeline",
+                "--project",
+                str(project_path),
+                "--proposal",
+                "proposal_safe",
+                "--quiet",
+            ]
+        )
+        in (0, 1)
+    )
+    capsys.readouterr()
+
+    assert (
+        main(
+            [
+                "acceptance",
+                "--project",
+                str(project_path),
+                "--profile",
+                "preview",
+                "--repair-plan",
+                "--json",
+            ]
+        )
+        == 9
+    )
+    accepted = json.loads(capsys.readouterr().out)
+
+    plan = accepted["repair_plan"]
+    assert accepted["repair_plan_output"] == ".artist-portrait/data/acceptance_repair_plan.json"
+    assert accepted["repair_plan_report"] == "output/acceptance_repair_plan.md"
+    assert plan["automatic_repair_performed"] is False
+    assert plan["media_rendered"] is False
+    assert plan["model_call_performed_by_cli"] is False
+    assert plan["required_action_count"] == 3
+    assert plan["blocked_stage_ids"] == ["preview", "rhythm_media_qc", "rhythm_plan"]
+    assert plan["first_required_command"] == "artist-portrait rhythm --project <project.yaml>"
+    required_actions = [action for action in plan["actions"] if action["required_for_profile"]]
+    assert [action["stage_id"] for action in required_actions] == [
+        "rhythm_plan",
+        "preview",
+        "rhythm_media_qc",
+    ]
+    assert [action["command"] for action in required_actions] == [
+        "artist-portrait rhythm --project <project.yaml>",
+        "artist-portrait preview --project <project.yaml>",
+        "artist-portrait rhythm --project <project.yaml> --qc",
+    ]
+    assert (tmp_path / ".artist-portrait" / "data" / "acceptance_repair_plan.json").exists()
+    assert (tmp_path / "output" / "acceptance_repair_plan.md").exists()
+
+
+def test_acceptance_repair_plan_keeps_delivery_gaps_optional_for_core_profile(tmp_path, capsys):
+    project_path = build_valid_proposal_project(tmp_path, capsys)
+    assert (
+        main(
+            [
+                "timeline",
+                "--project",
+                str(project_path),
+                "--proposal",
+                "proposal_safe",
+                "--quiet",
+            ]
+        )
+        in (0, 1)
+    )
+    capsys.readouterr()
+
+    assert (
+        main(
+            [
+                "acceptance",
+                "--project",
+                str(project_path),
+                "--profile",
+                "core",
+                "--repair-plan",
+                "--json",
+            ]
+        )
+        == 0
+    )
+    accepted = json.loads(capsys.readouterr().out)
+
+    plan = accepted["repair_plan"]
+    assert accepted["status"] == "passed"
+    assert plan["profile_passed"] is True
+    assert plan["required_action_count"] == 0
+    assert plan["optional_action_count"] >= 4
+    assert plan["first_required_command"] is None
+    assert all(action["required_for_profile"] is False for action in plan["actions"])
+
+
+def test_acceptance_repair_approval_request_and_record_import(tmp_path, capsys):
+    project_path = build_valid_proposal_project(tmp_path, capsys)
+    assert (
+        main(
+            [
+                "timeline",
+                "--project",
+                str(project_path),
+                "--proposal",
+                "proposal_safe",
+                "--quiet",
+            ]
+        )
+        in (0, 1)
+    )
+    capsys.readouterr()
+
+    assert (
+        main(
+            [
+                "acceptance",
+                "--project",
+                str(project_path),
+                "--profile",
+                "preview",
+                "--approval-request",
+                "--json",
+            ]
+        )
+        == 9
+    )
+    accepted = json.loads(capsys.readouterr().out)
+    request = accepted["approval_request"]
+    plan = accepted["repair_plan"]
+    assert accepted["approval_request_output"] == ".artist-portrait/data/acceptance_repair_approval_request.json"
+    assert request["repair_plan_id"] == plan["repair_plan_id"]
+    assert request["actions"][0]["decision"] == "pending"
+
+    record_candidate = tmp_path / "approval_record_candidate.json"
+    record_candidate.write_text(
+        json.dumps(
+            {
+                "schema_version": "0.3",
+                "approval_record_id": "candidate_record",
+                "project_id": request["project_id"],
+                "repair_plan_id": request["repair_plan_id"],
+                "acceptance_profile": request["acceptance_profile"],
+                "valid": False,
+                "approved_action_ids": [],
+                "rejected_action_ids": [],
+                "issue_count": 0,
+                "issues": [],
+                "actions": [
+                    {
+                        **action,
+                        "decision": "approved",
+                        "rationale": "approve preview render for test",
+                    }
+                    for action in request["actions"]
+                    if action["required_for_profile"]
+                ],
+                "network_performed": False,
+                "model_call_performed_by_cli": False,
+                "media_rendered": False,
+                "automatic_repair_performed": False,
+            },
+            ensure_ascii=False,
+            indent=2,
+            sort_keys=True,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    assert (
+        main(
+            [
+                "acceptance",
+                "--project",
+                str(project_path),
+                "--profile",
+                "preview",
+                "--approval-record",
+                str(record_candidate),
+                "--json",
+            ]
+        )
+        == 9
+    )
+    imported = json.loads(capsys.readouterr().out)
+    record = imported["approval_record"]
+    assert imported["approval_record_output"] == ".artist-portrait/data/acceptance_repair_approval_record.json"
+    assert record["valid"] is True
+    assert record["issue_count"] == 0
+    required_action_ids = [
+        action["action_id"]
+        for action in request["actions"]
+        if action["required_for_profile"]
+    ]
+    assert record["approved_action_ids"] == required_action_ids
+    assert record["automatic_repair_performed"] is False
+    assert record["media_rendered"] is False
+    assert (tmp_path / ".artist-portrait" / "data" / "acceptance_repair_approval_record.json").exists()
+    assert (tmp_path / "output" / "acceptance_repair_approval_record.md").exists()
+
+
+def test_acceptance_repair_approval_record_rejects_missing_required_action(tmp_path, capsys):
+    project_path = build_valid_proposal_project(tmp_path, capsys)
+    assert (
+        main(
+            [
+                "timeline",
+                "--project",
+                str(project_path),
+                "--proposal",
+                "proposal_safe",
+                "--quiet",
+            ]
+        )
+        in (0, 1)
+    )
+    capsys.readouterr()
+    assert (
+        main(
+            [
+                "acceptance",
+                "--project",
+                str(project_path),
+                "--profile",
+                "preview",
+                "--approval-request",
+                "--json",
+            ]
+        )
+        == 9
+    )
+    request = json.loads(capsys.readouterr().out)["approval_request"]
+    record_candidate = tmp_path / "approval_record_missing.json"
+    record_candidate.write_text(
+        json.dumps(
+            {
+                "schema_version": "0.3",
+                "approval_record_id": "candidate_record_missing",
+                "project_id": request["project_id"],
+                "repair_plan_id": request["repair_plan_id"],
+                "acceptance_profile": request["acceptance_profile"],
+                "valid": False,
+                "approved_action_ids": [],
+                "rejected_action_ids": [],
+                "issue_count": 0,
+                "issues": [],
+                "actions": [],
+                "network_performed": False,
+                "model_call_performed_by_cli": False,
+                "media_rendered": False,
+                "automatic_repair_performed": False,
+            },
+            ensure_ascii=False,
+            indent=2,
+            sort_keys=True,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    assert (
+        main(
+            [
+                "acceptance",
+                "--project",
+                str(project_path),
+                "--profile",
+                "preview",
+                "--approval-record",
+                str(record_candidate),
+                "--json",
+            ]
+        )
+        == 9
+    )
+    record = json.loads(capsys.readouterr().out)["approval_record"]
+    assert record["valid"] is False
+    assert record["issue_count"] == 3
+    assert all(issue.startswith("missing_required_action:") for issue in record["issues"])
+
+
+def test_acceptance_repair_execution_dry_run_never_executes_approved_actions(tmp_path, capsys):
+    project_path = build_valid_proposal_project(tmp_path, capsys)
+    assert (
+        main(
+            [
+                "timeline",
+                "--project",
+                str(project_path),
+                "--proposal",
+                "proposal_safe",
+                "--quiet",
+            ]
+        )
+        in (0, 1)
+    )
+    capsys.readouterr()
+    assert (
+        main(
+            [
+                "acceptance",
+                "--project",
+                str(project_path),
+                "--profile",
+                "preview",
+                "--approval-request",
+                "--json",
+            ]
+        )
+        == 9
+    )
+    request = json.loads(capsys.readouterr().out)["approval_request"]
+    record_candidate = tmp_path / "approval_record_for_dry_run.json"
+    record_candidate.write_text(
+        json.dumps(
+            {
+                "schema_version": "0.3",
+                "approval_record_id": "candidate_record_for_dry_run",
+                "project_id": request["project_id"],
+                "repair_plan_id": request["repair_plan_id"],
+                "acceptance_profile": request["acceptance_profile"],
+                "valid": False,
+                "approved_action_ids": [],
+                "rejected_action_ids": [],
+                "issue_count": 0,
+                "issues": [],
+                "actions": [
+                    {
+                        **action,
+                        "decision": "approved",
+                        "rationale": "dry run only",
+                    }
+                    for action in request["actions"]
+                    if action["required_for_profile"]
+                ],
+                "network_performed": False,
+                "model_call_performed_by_cli": False,
+                "media_rendered": False,
+                "automatic_repair_performed": False,
+            },
+            ensure_ascii=False,
+            indent=2,
+            sort_keys=True,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    assert (
+        main(
+            [
+                "acceptance",
+                "--project",
+                str(project_path),
+                "--profile",
+                "preview",
+                "--approval-record",
+                str(record_candidate),
+                "--execution-dry-run",
+                "--json",
+            ]
+        )
+        == 9
+    )
+    payload = json.loads(capsys.readouterr().out)
+    dry_run = payload["execution_dry_run"]
+    assert payload["execution_dry_run_output"] == ".artist-portrait/data/acceptance_repair_execution_dry_run.json"
+    assert dry_run["approval_record_valid"] is True
+    assert dry_run["approved_step_count"] == 3
+    assert dry_run["commands_executed"] is False
+    assert dry_run["automatic_repair_performed"] is False
+    assert all(step["would_execute"] is False for step in dry_run["steps"])
+    assert all(
+        step["blocked_reason"] == "dry_run_only_no_commands_executed"
+        for step in dry_run["steps"]
+    )
+    assert (tmp_path / ".artist-portrait" / "data" / "acceptance_repair_execution_dry_run.json").exists()
+    assert (tmp_path / "output" / "acceptance_repair_execution_dry_run.md").exists()
+
+
+def test_acceptance_repair_execution_bundle_and_record_validate_external_evidence(tmp_path, capsys):
+    project_path = build_valid_proposal_project(tmp_path, capsys)
+    assert (
+        main(
+            [
+                "timeline",
+                "--project",
+                str(project_path),
+                "--proposal",
+                "proposal_safe",
+                "--quiet",
+            ]
+        )
+        in (0, 1)
+    )
+    capsys.readouterr()
+    assert (
+        main(
+            [
+                "acceptance",
+                "--project",
+                str(project_path),
+                "--profile",
+                "preview",
+                "--approval-request",
+                "--json",
+            ]
+        )
+        == 9
+    )
+    request = json.loads(capsys.readouterr().out)["approval_request"]
+    record_candidate = tmp_path / "approval_record_for_execution_bundle.json"
+    record_candidate.write_text(
+        json.dumps(
+            {
+                "schema_version": "0.3",
+                "approval_record_id": "candidate_record_for_execution_bundle",
+                "project_id": request["project_id"],
+                "repair_plan_id": request["repair_plan_id"],
+                "acceptance_profile": request["acceptance_profile"],
+                "valid": False,
+                "approved_action_ids": [],
+                "rejected_action_ids": [],
+                "issue_count": 0,
+                "issues": [],
+                "actions": [
+                    {
+                        **action,
+                        "decision": "approved",
+                        "rationale": "manual execution handoff",
+                    }
+                    for action in request["actions"]
+                    if action["required_for_profile"]
+                ],
+                "network_performed": False,
+                "model_call_performed_by_cli": False,
+                "media_rendered": False,
+                "automatic_repair_performed": False,
+            },
+            ensure_ascii=False,
+            indent=2,
+            sort_keys=True,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    assert (
+        main(
+            [
+                "acceptance",
+                "--project",
+                str(project_path),
+                "--profile",
+                "preview",
+                "--approval-record",
+                str(record_candidate),
+                "--execution-dry-run",
+                "--execution-bundle",
+                "--json",
+            ]
+        )
+        == 9
+    )
+    payload = json.loads(capsys.readouterr().out)
+    dry_run = payload["execution_dry_run"]
+    bundle = payload["execution_bundle"]
+    assert bundle["command_count"] == 3
+    assert bundle["commands_executed_by_cli"] is False
+    assert all(command["manual_execution_required"] is True for command in bundle["commands"])
+    assert all(command["executable_by_cli"] is False for command in bundle["commands"])
+
+    execution_record_candidate = tmp_path / "execution_record_candidate.json"
+    execution_record_candidate.write_text(
+        json.dumps(
+            {
+                "schema_version": "0.3",
+                "execution_record_id": "candidate_execution_record",
+                "project_id": bundle["project_id"],
+                "repair_plan_id": bundle["repair_plan_id"],
+                "approval_record_id": bundle["approval_record_id"],
+                "dry_run_id": bundle["dry_run_id"],
+                "execution_bundle_id": bundle["execution_bundle_id"],
+                "acceptance_profile": bundle["acceptance_profile"],
+                "valid": False,
+                "completed_action_ids": [],
+                "failed_action_ids": [],
+                "skipped_action_ids": [],
+                "issue_count": 0,
+                "issues": [],
+                "actions": [
+                    {
+                        "action_id": command["action_id"],
+                        "step_id": command["step_id"],
+                        "command": command["command"],
+                        "status": "succeeded",
+                        "exit_code": 0,
+                        "artifact_refs": command["expected_artifacts"],
+                        "notes": "external manual execution evidence",
+                    }
+                    for command in bundle["commands"]
+                ],
+                "network_performed": False,
+                "model_call_performed_by_cli": False,
+                "media_rendered": False,
+                "automatic_repair_performed": False,
+                "commands_executed_by_cli": False,
+            },
+            ensure_ascii=False,
+            indent=2,
+            sort_keys=True,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    assert (
+        main(
+            [
+                "acceptance",
+                "--project",
+                str(project_path),
+                "--profile",
+                "preview",
+                "--execution-record",
+                str(execution_record_candidate),
+                "--json",
+            ]
+        )
+        == 9
+    )
+    record_payload = json.loads(capsys.readouterr().out)
+    execution_record = record_payload["execution_record"]
+    assert execution_record["valid"] is True
+    assert execution_record["completed_action_ids"] == [
+        command["action_id"] for command in bundle["commands"]
+    ]
+    assert execution_record["commands_executed_by_cli"] is False
+    assert execution_record["automatic_repair_performed"] is False
+    assert dry_run["commands_executed"] is False
+    assert (tmp_path / ".artist-portrait" / "data" / "acceptance_repair_execution_bundle.json").exists()
+    assert (tmp_path / "output" / "acceptance_repair_execution_bundle.md").exists()
+    assert (tmp_path / ".artist-portrait" / "data" / "acceptance_repair_execution_record.json").exists()
+    assert (tmp_path / "output" / "acceptance_repair_execution_record.md").exists()
+
+
+def test_acceptance_delivery_profile_requires_preview_and_final_export(tmp_path, capsys):
+    project_path = build_valid_proposal_project(tmp_path, capsys)
+    assert (
+        main(
+            [
+                "timeline",
+                "--project",
+                str(project_path),
+                "--proposal",
+                "proposal_safe",
+                "--quiet",
+            ]
+        )
+        in (0, 1)
+    )
+    capsys.readouterr()
+
+    assert main(["acceptance", "--project", str(project_path), "--profile", "delivery", "--json"]) == 9
+    accepted = json.loads(capsys.readouterr().out)
+
+    assert accepted["status"] == "failed"
+    assert accepted["profile"] == "delivery"
+    assert accepted["profile_passed"] is False
+    assert accepted["required_stage_ids"][-4:] == [
+        "rhythm_plan",
+        "preview",
+        "final_export",
+        "rhythm_media_qc",
+    ]
 
 
 def test_acceptance_cli_fails_when_core_pipeline_is_missing(tmp_path, capsys):
@@ -3862,6 +4808,412 @@ def test_acceptance_cli_fails_when_core_pipeline_is_missing(tmp_path, capsys):
     assert accepted["core_ready"] is False
     stages = {stage["stage_id"]: stage for stage in accepted["acceptance"]["stages"]}
     assert stages["source_scan"]["status"] == "failed"
+
+
+def test_workflow_cli_guides_next_delivery_commands_without_execution(tmp_path, capsys):
+    project_path = tmp_path / "project.yaml"
+    project_path.write_text(
+        project_fixture_with_scene_detection("off"),
+        encoding="utf-8",
+    )
+    assert main(["init", "--project", str(project_path), "--quiet"]) in (0, 1)
+    capsys.readouterr()
+
+    assert main(["workflow", "--project", str(project_path), "--target", "delivery", "--json"]) == 1
+    payload = json.loads(capsys.readouterr().out)
+    plan = payload["workflow_plan"]
+    assert payload["output"] == ".artist-portrait/data/workflow_plan.json"
+    assert payload["report"] == "output/workflow_plan.md"
+    assert payload["handoff"] == "output/workflow_agent_handoff.json"
+    assert plan["target"] == "delivery"
+    assert plan["status"] == "in_progress"
+    assert plan["next_command"] == "artist-portrait scan --project <project.yaml>"
+    assert plan["commands_executed"] is False
+    assert plan["media_rendered"] is False
+    assert plan["edit_points_moved"] is False
+    assert plan["automatic_music_selection"] is False
+    steps = {step["step_id"]: step for step in plan["steps"]}
+    assert steps["init"]["status"] == "done"
+    assert steps["scan"]["status"] == "next"
+    assert steps["final_export"]["status"] == "pending"
+    assert (tmp_path / ".artist-portrait" / "data" / "workflow_plan.json").exists()
+    assert (tmp_path / "output" / "workflow_plan.md").exists()
+    assert (tmp_path / "output" / "workflow_agent_handoff.json").exists()
+
+
+def test_workflow_execution_record_review_quarantines_and_validates_evidence(tmp_path, capsys):
+    project_path = tmp_path / "project.yaml"
+    project_path.write_text(
+        project_fixture_with_scene_detection("off"),
+        encoding="utf-8",
+    )
+    assert main(["init", "--project", str(project_path), "--quiet"]) in (0, 1)
+    capsys.readouterr()
+
+    assert main(["workflow", "--project", str(project_path), "--target", "core", "--json"]) == 1
+    workflow_payload = json.loads(capsys.readouterr().out)
+    plan = workflow_payload["workflow_plan"]
+
+    record_path = tmp_path / "workflow_execution_record.json"
+    record_path.write_text(
+        json.dumps(
+            {
+                "execution_record_id": "record_init_only",
+                "project_id": plan["project_id"],
+                "workflow_plan_id": plan["workflow_plan_id"],
+                "target": "core",
+                "executed_by": "external-human",
+                "steps": [
+                    {
+                        "step_id": "init",
+                        "command": "artist-portrait init --project <project.yaml>",
+                        "status": "succeeded",
+                        "exit_code": 0,
+                        "output_refs": [".artist-portrait/state.json"],
+                    }
+                ],
+            },
+            ensure_ascii=False,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    code = main(
+        [
+            "workflow",
+            "--project",
+            str(project_path),
+            "--target",
+            "core",
+            "--execution-record",
+            str(record_path),
+            "--json",
+        ]
+    )
+    reviewed = json.loads(capsys.readouterr().out)
+    review = reviewed["workflow_execution_review"]
+
+    assert code == 1
+    assert reviewed["output"] == ".artist-portrait/data/workflow_execution_review.json"
+    assert reviewed["report"] == "output/workflow_execution_review.md"
+    assert reviewed["handoff"] == "output/workflow_execution_handoff.json"
+    assert reviewed["quarantine"] == ".artist-portrait/data/workflow_execution_record_quarantine.json"
+    assert review["status"] == "warning"
+    assert review["accepted_step_count"] == 1
+    assert review["missing_step_count"] > 0
+    assert review["commands_executed_by_cli"] is False
+    assert review["media_rendered_by_cli"] is False
+    assert review["edit_points_moved_by_cli"] is False
+    step_reviews = {step["step_id"]: step for step in review["step_reviews"]}
+    assert step_reviews["init"]["review_status"] == "accepted"
+    assert step_reviews["scan"]["review_status"] == "missing"
+    assert (
+        tmp_path / ".artist-portrait" / "data" / "workflow_execution_record_quarantine.json"
+    ).read_text(encoding="utf-8") == record_path.read_text(encoding="utf-8")
+
+    bad_record = tmp_path / "workflow_execution_record_bad.json"
+    bad_record.write_text(
+        json.dumps(
+            {
+                "execution_record_id": "record_missing_scan_evidence",
+                "project_id": plan["project_id"],
+                "workflow_plan_id": plan["workflow_plan_id"],
+                "target": "core",
+                "executed_by": "external-human",
+                "steps": [
+                    {
+                        "step_id": "init",
+                        "command": "artist-portrait init --project <project.yaml>",
+                        "status": "succeeded",
+                        "exit_code": 0,
+                        "output_refs": [".artist-portrait/state.json"],
+                    },
+                    {
+                        "step_id": "scan",
+                        "command": "artist-portrait scan --project <project.yaml>",
+                        "status": "succeeded",
+                        "exit_code": 0,
+                        "output_refs": [".artist-portrait/data/sources.jsonl"],
+                    }
+                ],
+            },
+            ensure_ascii=False,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    assert (
+        main(
+            [
+                "workflow",
+                "--project",
+                str(project_path),
+                "--target",
+                "core",
+                "--execution-record",
+                str(bad_record),
+                "--json",
+            ]
+        )
+        == 1
+    )
+    rejected = json.loads(capsys.readouterr().out)["workflow_execution_review"]
+    rejected_steps = {step["step_id"]: step for step in rejected["step_reviews"]}
+    assert rejected["status"] == "failed"
+    assert rejected_steps["scan"]["review_status"] == "rejected"
+    assert rejected_steps["scan"]["missing_refs"] == [".artist-portrait/data/sources.jsonl"]
+
+    assert (
+        main(
+            [
+                "workflow",
+                "--project",
+                str(project_path),
+                "--target",
+                "core",
+                "--repair-plan",
+                "--json",
+            ]
+        )
+        == 1
+    )
+    repair_payload = json.loads(capsys.readouterr().out)
+    repair = repair_payload["workflow_repair_plan"]
+    assert repair_payload["output"] == ".artist-portrait/data/workflow_repair_plan.json"
+    assert repair_payload["report"] == "output/workflow_repair_plan.md"
+    assert repair_payload["handoff"] == "output/workflow_repair_handoff.json"
+    assert repair["status"] == "blocked"
+    assert repair["required_action_count"] >= 1
+    assert repair["first_required_command"] == "artist-portrait scan --project <project.yaml>"
+    assert repair["commands_executed"] is False
+    assert repair["media_rendered"] is False
+    assert repair["acceptance_success_promoted"] is False
+    actions = {action["step_id"]: action for action in repair["actions"]}
+    assert actions["scan"]["severity"] == "required"
+    assert actions["scan"]["reason"] == "rejected"
+    assert actions["scan"]["evidence_to_resubmit"] == [".artist-portrait/data/sources.jsonl"]
+    assert (tmp_path / "output" / "workflow_repair_plan.md").exists()
+
+    assert (
+        main(
+            [
+                "workflow",
+                "--project",
+                str(project_path),
+                "--target",
+                "core",
+                "--approval-request",
+                "--json",
+            ]
+        )
+        == 1
+    )
+    approval_request_payload = json.loads(capsys.readouterr().out)
+    approval_request = approval_request_payload["workflow_repair_approval_request"]
+    assert approval_request_payload["output"] == ".artist-portrait/data/workflow_repair_approval_request.json"
+    assert approval_request["workflow_repair_plan_id"] == repair["workflow_repair_plan_id"]
+    assert "workflow_repair_001_scan" in approval_request["required_action_ids"]
+    assert approval_request["commands_executed"] is False
+
+    approval_record_candidate = tmp_path / "workflow_repair_approval_record.json"
+    approval_record_candidate.write_text(
+        json.dumps(
+            {
+                "approval_record_id": "workflow_repair_approval_record_001",
+                "project_id": repair["project_id"],
+                "workflow_repair_plan_id": repair["workflow_repair_plan_id"],
+                "workflow_plan_id": repair["workflow_plan_id"],
+                "workflow_execution_review_id": repair["workflow_execution_review_id"],
+                "target": "core",
+                "approved_by": "external-human",
+                "approved_action_ids": ["workflow_repair_001_scan"],
+                "rejected_action_ids": [],
+                "status": "passed",
+            },
+            ensure_ascii=False,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    assert (
+        main(
+            [
+                "workflow",
+                "--project",
+                str(project_path),
+                "--target",
+                "core",
+                "--approval-record",
+                str(approval_record_candidate),
+                "--json",
+            ]
+        )
+        == 0
+    )
+    approval_record = json.loads(capsys.readouterr().out)["workflow_repair_approval_record"]
+    assert approval_record["status"] == "passed"
+    assert approval_record["commands_executed_by_cli"] is False
+    assert approval_record["quarantine_ref"] == ".artist-portrait/data/workflow_repair_approval_record_quarantine.json"
+
+    assert (
+        main(
+            [
+                "workflow",
+                "--project",
+                str(project_path),
+                "--target",
+                "core",
+                "--repair-dry-run",
+                "--json",
+            ]
+        )
+        == 1
+    )
+    dry_run = json.loads(capsys.readouterr().out)["workflow_repair_dry_run"]
+    assert dry_run["approved_step_count"] == 1
+    assert dry_run["commands_executed"] is False
+    assert dry_run["acceptance_success_promoted"] is False
+    dry_run_steps = {step["action_id"]: step for step in dry_run["steps"]}
+    assert dry_run_steps["workflow_repair_001_scan"]["status"] == "approved"
+    assert dry_run_steps["workflow_repair_001_scan"]["command"] == "artist-portrait scan --project <project.yaml>"
+
+    source_ledger = tmp_path / ".artist-portrait" / "data" / "sources.jsonl"
+    source_ledger.parent.mkdir(parents=True, exist_ok=True)
+    source_ledger.write_text('{"source_id":"manual_scan"}\n', encoding="utf-8")
+    scan_report = tmp_path / "output" / "scan_report.md"
+    scan_report.parent.mkdir(parents=True, exist_ok=True)
+    scan_report.write_text("# Manual Scan Report\n", encoding="utf-8")
+    repair_execution_candidate = tmp_path / "workflow_repair_execution_record.json"
+    repair_execution_candidate.write_text(
+        json.dumps(
+            {
+                "execution_record_id": "workflow_repair_execution_record_001",
+                "project_id": dry_run["project_id"],
+                "workflow_repair_plan_id": dry_run["workflow_repair_plan_id"],
+                "approval_record_id": dry_run["approval_record_id"],
+                "dry_run_id": dry_run["dry_run_id"],
+                "target": "core",
+                "executed_by": "external-human",
+                "actions": [
+                    {
+                        "action_id": "workflow_repair_001_scan",
+                        "step_id": "scan",
+                        "command": "artist-portrait scan --project <project.yaml>",
+                        "status": "succeeded",
+                        "exit_code": 0,
+                        "output_refs": [
+                            ".artist-portrait/data/sources.jsonl",
+                            "output/scan_report.md",
+                        ],
+                    }
+                ],
+            },
+            ensure_ascii=False,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    assert (
+        main(
+            [
+                "workflow",
+                "--project",
+                str(project_path),
+                "--target",
+                "core",
+                "--repair-execution-record",
+                str(repair_execution_candidate),
+                "--json",
+            ]
+        )
+        == 0
+    )
+    repair_execution = json.loads(capsys.readouterr().out)["workflow_repair_execution_review"]
+    assert repair_execution["status"] == "passed"
+    assert repair_execution["accepted_action_count"] == 1
+    assert repair_execution["commands_executed_by_cli"] is False
+    assert repair_execution["acceptance_success_promoted_by_cli"] is False
+    assert repair_execution["quarantine_ref"] == ".artist-portrait/data/workflow_repair_execution_record_quarantine.json"
+
+    assert (
+        main(
+            [
+                "workflow",
+                "--project",
+                str(project_path),
+                "--target",
+                "core",
+                "--repair-refresh-plan",
+                "--json",
+            ]
+        )
+        == 0
+    )
+    refresh_plan = json.loads(capsys.readouterr().out)["workflow_repair_refresh_plan"]
+    assert refresh_plan["status"] == "ready"
+    assert refresh_plan["ready_step_count"] == 1
+    assert refresh_plan["blocked_step_count"] == 0
+    assert refresh_plan["commands_executed"] is False
+    assert refresh_plan["workflow_plan_mutated"] is False
+    assert refresh_plan["acceptance_success_promoted"] is False
+    refresh_steps = {step["action_id"]: step for step in refresh_plan["steps"]}
+    assert refresh_steps["workflow_repair_001_scan"]["refresh_status"] == "ready_to_resubmit"
+    assert ".artist-portrait/data/sources.jsonl" in refresh_steps["workflow_repair_001_scan"]["evidence_refs"]
+
+    rejected_action_id = next(
+        step["action_id"] for step in dry_run["steps"] if step["status"] == "rejected"
+    )
+    rejected_step = dry_run_steps[rejected_action_id]
+    bad_repair_execution_candidate = tmp_path / "workflow_repair_execution_record_bad.json"
+    bad_repair_execution_candidate.write_text(
+        json.dumps(
+            {
+                "execution_record_id": "workflow_repair_execution_record_bad",
+                "project_id": dry_run["project_id"],
+                "workflow_repair_plan_id": dry_run["workflow_repair_plan_id"],
+                "approval_record_id": dry_run["approval_record_id"],
+                "dry_run_id": dry_run["dry_run_id"],
+                "target": "core",
+                "executed_by": "external-human",
+                "actions": [
+                    {
+                        "action_id": rejected_action_id,
+                        "step_id": rejected_step["step_id"],
+                        "command": rejected_step["command"],
+                        "status": "succeeded",
+                        "exit_code": 0,
+                        "output_refs": rejected_step["expected_artifacts"],
+                    }
+                ],
+            },
+            ensure_ascii=False,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    assert (
+        main(
+            [
+                "workflow",
+                "--project",
+                str(project_path),
+                "--target",
+                "core",
+                "--repair-execution-record",
+                str(bad_repair_execution_candidate),
+                "--json",
+            ]
+        )
+        == 9
+    )
+    bad_repair_execution = json.loads(capsys.readouterr().out)["workflow_repair_execution_review"]
+    assert bad_repair_execution["status"] == "failed"
+    bad_action_reviews = {
+        action["action_id"]: action for action in bad_repair_execution["action_reviews"]
+    }
+    assert bad_action_reviews[rejected_action_id]["review_status"] == "rejected"
+    assert "not approved" in bad_action_reviews[rejected_action_id]["detail"]
 
 
 def test_review_proposal_validates_existing_proposals(tmp_path, monkeypatch, capsys):

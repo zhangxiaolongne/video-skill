@@ -22,7 +22,7 @@ Historical version outcomes are consolidated in `docs/RELEASES.md`.
 
 ## Current Gate
 
-Current V0-024 project acceptance gate work allows deterministic project
+Current V0-041 workflow repair evidence refresh guidance gate work allows deterministic project
 setup, local media scanning, fixed-window clip segmentation, optional
 PySceneDetect video scene segmentation, local-only faster-whisper transcription
 when available, ffmpeg midpoint keyframe extraction for video clips,
@@ -30,8 +30,28 @@ source/clip/transcript/keyframe/analysis ledger operations, rebuildable
 keyframe cache, analysis-led material maps, deterministic proposal context
 packets, text-model gate packets, deterministic proposal request packets,
 proposal adapter preflight packets, provider registry packets, local mock
-adapter handshake packets, execution approval request packets, execution approval record packets, execution readiness plan packets, execution input bundle packets, provider call dry-run packets, execution authorization packets, provider response intake plan packets, provider output
-quarantine packets, provider response validation plan packets, promotion authorization/validation packets, canonical write transaction plan packets, provider result envelope packets, a local host-Agent handoff, quarantined candidate import, atomic canonical proposal promotion, proposal contract validation, deterministic proposal review, explicit timeline generation, multi-source BGM fitting, explicit BGM fit controls, local BGM technical analysis, validated local beat-engine evidence when an adapter is available, BGM recommendation review, explicit recommendation-to-fit selection, recommendation-fit review, low-resolution preview rendering, preview render controls, preview QC, controlled local final MP4 export, and project acceptance reporting:
+adapter handshake packets, execution approval request packets, execution
+approval record packets, execution readiness plan packets, execution input
+bundle packets, provider call dry-run packets, execution authorization packets,
+provider response intake plan packets, provider output quarantine packets,
+provider response validation plan packets, promotion authorization/validation
+packets, canonical write transaction plan packets, provider result envelope
+packets, a local host-Agent handoff, quarantined candidate import, atomic
+canonical proposal promotion, proposal contract validation, deterministic
+proposal review, explicit timeline generation, multi-source BGM fitting,
+explicit BGM fit controls, local BGM technical analysis, validated local
+beat-engine evidence when an adapter is available, BGM recommendation review,
+explicit recommendation-to-fit selection, recommendation-fit review,
+low-resolution preview rendering, preview render controls, preview QC,
+controlled local final MP4 export, project acceptance reporting,
+profile-specific acceptance gates, generated real-media fixture acceptance
+checks, deterministic acceptance repair plans, explicit repair approval
+request/record artifacts, repair execution dry-run manifests, manual repair
+execution bundles, explicit execution record imports, BGM/edit rhythm planning,
+rhythm media QC, rhythm manual repair planning, guided workflow planning,
+workflow execution evidence review, workflow evidence repair planning, workflow
+repair approval/dry-run packaging, workflow repair execution evidence review,
+release hardening audit, and workflow repair evidence refresh guidance:
 
 The V0-010 proposal foundation is now consolidated around one artifact registry.
 `status` and `doctor` validate cross-artifact references, project identity,
@@ -105,6 +125,29 @@ project.yaml
 -> final_export_manifest.json and final_export_validation.json
 -> final_export_review.md
 -> acceptance_report.json and acceptance_report.md
+-> acceptance --profile standard|core|preview|delivery
+-> acceptance_repair_plan.json and acceptance_repair_plan.md
+-> acceptance_repair_approval_request.json and acceptance_repair_approval_request.md
+-> acceptance_repair_approval_record.json and acceptance_repair_approval_record.md
+-> acceptance_repair_execution_dry_run.json and acceptance_repair_execution_dry_run.md
+-> acceptance_repair_execution_bundle.json and acceptance_repair_execution_bundle.md
+-> acceptance_repair_execution_record.json and acceptance_repair_execution_record.md
+-> rhythm_plan.json, rhythm_report.md, and rhythm_agent_handoff.json
+-> rhythm-aware acceptance required stages and repair commands
+-> rhythm_media_qc.json, rhythm_media_qc.md, and rhythm_media_qc_handoff.json
+-> rhythm_repair_plan.json, rhythm_repair_plan.md, and rhythm_repair_handoff.json
+-> workflow_plan.json, workflow_plan.md, and workflow_agent_handoff.json
+-> workflow_execution_record_quarantine.json
+-> workflow_execution_review.json, workflow_execution_review.md, and workflow_execution_handoff.json
+-> workflow_repair_plan.json, workflow_repair_plan.md, and workflow_repair_handoff.json
+-> workflow_repair_approval_request.json and workflow_repair_approval_request.md
+-> workflow_repair_approval_record.json and workflow_repair_approval_record.md
+-> workflow_repair_dry_run.json, workflow_repair_dry_run.md, and workflow_repair_dry_run_handoff.json
+-> workflow_repair_execution_record_quarantine.json
+-> workflow_repair_execution_review.json, workflow_repair_execution_review.md, and workflow_repair_execution_handoff.json
+-> workflow_repair_refresh_plan.json, workflow_repair_refresh_plan.md, and workflow_repair_refresh_handoff.json
+-> release_hardening_report.json and release_hardening_report.md
+-> generated real-media acceptance fixture through run_checks.py
 -> minimal project risk report from sources.jsonl
 -> run report
 -> fixed exit codes
@@ -113,8 +156,11 @@ project.yaml
 OpenCV/vision analysis, embeddings, visual classification beyond explicit
 evidence placeholders, fake/template proposals, automatic BGM selection or
 recommendation, fabricated beat analysis, model calls, image
-generation/editing, remote ASR/model downloads, and network search remain out
-of scope.
+generation/editing, remote ASR/model downloads, network search, automatic
+repair command execution, treating execution evidence as acceptance success,
+automatic edit-point movement, automatic music selection, and rhythm-triggered
+media rendering, rhythm-QC-triggered media rendering, or rhythm-repair-triggered
+execution remain out of scope.
 
 ## Local Setup
 
@@ -151,6 +197,13 @@ python3 -m venv .venv
 .venv/bin/artist-portrait review --project ./project.yaml --scope preview
 .venv/bin/artist-portrait review --project ./project.yaml --scope all
 .venv/bin/artist-portrait acceptance --project ./project.yaml
+.venv/bin/artist-portrait acceptance --project ./project.yaml --profile core
+.venv/bin/artist-portrait acceptance --project ./project.yaml --profile preview
+.venv/bin/artist-portrait acceptance --project ./project.yaml --profile delivery
+.venv/bin/artist-portrait acceptance --project ./project.yaml --profile delivery --repair-plan
+.venv/bin/artist-portrait acceptance --project ./project.yaml --profile delivery --approval-request
+.venv/bin/artist-portrait acceptance --project ./project.yaml --profile delivery --approval-record ./approval_record.json
+.venv/bin/artist-portrait acceptance --project ./project.yaml --profile delivery --execution-dry-run
 ```
 
 Commands such as `relate` and final `run` remain intentionally blocked.

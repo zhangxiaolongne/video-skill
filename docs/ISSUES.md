@@ -14,6 +14,33 @@ here only when they block a current or planned milestone.
 
 ## Active Issues
 
+### ISSUE-015: Release check validation expected only dirty-tree warning exit
+
+- Status: `resolved`
+- Severity: medium
+- Owner: `v0.25.0 release preparation`
+- Blocking condition: none after `run_checks.py` accepted both release-check
+  success states
+- Impact: resolved; release validation now handles both dirty working-tree
+  candidate checks returning warning exit `1` and clean release commits
+  returning ready exit `0`
+- Resolution condition: met by updating the generated real-media release
+  hardening check to accept `release-check` exit codes `(0, 1)` while still
+  requiring zero failed checks and no commit, push, network, or model-call
+  side effects
+
+### ISSUE-014: V0-030 task accounting violated the batch contract
+
+- Status: `resolved`
+- Severity: high
+- Owner: `V0-030`
+- Blocking condition: none after V0-031 countability audit
+- Impact: resolved; V0-031 listed ten user-visible rhythm-planning outcomes
+  with countability rationale before implementation
+- Resolution condition: met by V0-031 `CURRENT_BATCH.md` countability audit and
+  machine-readable `batch_contract_audit.status=passed`
+- Related decision: `DEC-030`
+
 ### ISSUE-002: Final-quality rendering is complete
 
 - Status: `resolved`

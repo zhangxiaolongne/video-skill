@@ -40,6 +40,23 @@ def run(command: list[str], *, expect: int | tuple[int, ...] = 0) -> None:
         )
 
 
+def run_json(command: list[str], *, expect: int | tuple[int, ...] = 0) -> dict:
+    print("$", " ".join(command), flush=True)
+    completed = subprocess.run(command, cwd=ROOT, capture_output=True, text=True)
+    expected = (expect,) if isinstance(expect, int) else expect
+    if completed.returncode not in expected:
+        raise SystemExit(
+            f"command exited {completed.returncode}, expected {expected}: "
+            f"{' '.join(command)}\nstdout: {completed.stdout}\nstderr: {completed.stderr}"
+        )
+    try:
+        return json.loads(completed.stdout)
+    except json.JSONDecodeError as exc:
+        raise SystemExit(
+            f"command did not emit JSON: {' '.join(command)}\n{completed.stdout}"
+        ) from exc
+
+
 def require_local_env() -> None:
     missing = [path for path in (PYTHON, ARTIST_PORTRAIT) if not path.exists()]
     if missing:
@@ -56,6 +73,12 @@ def check_schema_drift() -> None:
         tmp_path = Path(tmp)
         run([str(ARTIST_PORTRAIT), "generate-schema", "--output-dir", str(tmp_path)])
         for name in (
+            "acceptance_repair_approval_record.schema.json",
+            "acceptance_repair_approval_request.schema.json",
+            "acceptance_repair_execution_bundle.schema.json",
+            "acceptance_repair_execution_dry_run.schema.json",
+            "acceptance_repair_execution_record.schema.json",
+            "acceptance_repair_plan.schema.json",
             "analysis_record.schema.json",
             "project_acceptance_report.schema.json",
             "bgm_analysis_report.schema.json",
@@ -75,6 +98,11 @@ def check_schema_drift() -> None:
             "preview_validation_report.schema.json",
             "project_config.schema.json",
             "project_state.schema.json",
+            "rhythm_agent_candidate.schema.json",
+            "rhythm_intent.schema.json",
+            "rhythm_media_qc_report.schema.json",
+            "rhythm_plan.schema.json",
+            "rhythm_repair_plan.schema.json",
             "proposal_adapter_check.schema.json",
             "proposal_canonical_write_transaction_plan.schema.json",
             "proposal_execution_approval_record.schema.json",
@@ -95,12 +123,23 @@ def check_schema_drift() -> None:
             "proposal_request_packet.schema.json",
             "proposal_validation_report.schema.json",
             "proposal_set.schema.json",
+            "release_hardening_report.schema.json",
             "source_record.schema.json",
             "keyframe_record.schema.json",
             "transcript_record.schema.json",
             "text_model_gate.schema.json",
             "timeline_draft.schema.json",
             "timeline_validation_report.schema.json",
+            "workflow_execution_record.schema.json",
+            "workflow_execution_review.schema.json",
+            "workflow_plan.schema.json",
+            "workflow_repair_approval_record.schema.json",
+            "workflow_repair_approval_request.schema.json",
+            "workflow_repair_dry_run.schema.json",
+            "workflow_repair_execution_record.schema.json",
+            "workflow_repair_execution_review.schema.json",
+            "workflow_repair_refresh_plan.schema.json",
+            "workflow_repair_plan.schema.json",
         ):
             committed = ROOT / "schemas" / name
             generated = tmp_path / name
@@ -157,14 +196,14 @@ def check_gate_consistency() -> None:
         "DEVELOPMENT_PROGRESS.md": ROOT / "docs" / "DEVELOPMENT_PROGRESS.md",
     }
     content = {name: path.read_text(encoding="utf-8") for name, path in docs.items()}
-    if "Current gate: V0-024 project acceptance gate." not in content["AGENTS.md"]:
-        raise SystemExit("AGENTS.md current gate is not V0-024 project acceptance")
-    if "V0-024 project acceptance gate" not in content["master"]:
-        raise SystemExit("master document current gate is not V0-024 project acceptance")
-    if "Current V0-024 project acceptance gate work" not in content["README.md"]:
-        raise SystemExit("README current gate is not V0-024 project acceptance")
+    if "Current gate: V0-041 workflow repair evidence refresh guidance gate." not in content["AGENTS.md"]:
+        raise SystemExit("AGENTS.md current gate is not V0-041 workflow repair refresh")
+    if "V0-041 workflow repair evidence refresh guidance gate" not in content["master"]:
+        raise SystemExit("master document current gate is not V0-041 workflow repair refresh")
+    if "Current V0-041 workflow repair evidence refresh guidance gate work" not in content["README.md"]:
+        raise SystemExit("README current gate is not V0-041 workflow repair refresh")
     if (
-        "Current local gate: V0-024 project acceptance gate"
+        "Current local gate: V0-041 workflow repair evidence refresh guidance gate"
         not in content["DEVELOPMENT_PROGRESS.md"]
     ):
         raise SystemExit("development progress current gate is stale")
@@ -179,7 +218,7 @@ def check_progress_contract() -> None:
     payload = json.loads(path.read_text(encoding="utf-8"))
     if payload.get("schema_version") != "1.4":
         raise SystemExit("progress snapshot schema_version is not 1.4")
-    if payload.get("capability_gate") != "V0-024":
+    if payload.get("capability_gate") != "V0-041":
         raise SystemExit("progress snapshot capability gate is stale")
     documentation_system = payload.get("documentation_system") or {}
     expected_documents = {
@@ -294,6 +333,23 @@ def check_progress_contract() -> None:
             "bgm_recommendation_fit_review",
             "bgm_fit_controls",
             "project_acceptance",
+            "acceptance_profiles",
+            "real_media_acceptance_fixtures",
+            "acceptance_repair_plans",
+            "acceptance_repair_approvals",
+            "repair_execution_dry_runs",
+            "repair_execution_handoffs",
+            "rhythm_planning",
+            "rhythm_media_qc",
+            "rhythm_acceptance_integration",
+            "rhythm_manual_repair_planning",
+            "guided_workflow_planning",
+            "workflow_execution_evidence_review",
+            "workflow_evidence_repair_planning",
+            "workflow_repair_approval_dry_run",
+            "workflow_repair_execution_review",
+            "release_hardening",
+            "workflow_repair_refresh_guidance",
             "preview_rendering",
             "final_export",
         }
@@ -326,6 +382,40 @@ def check_progress_contract() -> None:
         raise SystemExit("progress snapshot BGM fit controls state is stale")
     if capability_progress.get("project_acceptance") != "completed":
         raise SystemExit("progress snapshot project acceptance state is stale")
+    if capability_progress.get("acceptance_profiles") not in {"in_progress", "completed"}:
+        raise SystemExit("progress snapshot acceptance profiles state is stale")
+    if capability_progress.get("real_media_acceptance_fixtures") != "completed":
+        raise SystemExit("progress snapshot real-media acceptance fixture state is stale")
+    if capability_progress.get("acceptance_repair_plans") != "completed":
+        raise SystemExit("progress snapshot acceptance repair-plan state is stale")
+    if capability_progress.get("acceptance_repair_approvals") != "completed":
+        raise SystemExit("progress snapshot acceptance repair approval state is stale")
+    if capability_progress.get("repair_execution_dry_runs") != "completed":
+        raise SystemExit("progress snapshot repair execution dry-run state is stale")
+    if capability_progress.get("repair_execution_handoffs") != "completed":
+        raise SystemExit("progress snapshot repair execution handoff state is stale")
+    if capability_progress.get("rhythm_planning") != "completed":
+        raise SystemExit("progress snapshot rhythm planning state is stale")
+    if capability_progress.get("rhythm_media_qc") != "completed":
+        raise SystemExit("progress snapshot rhythm media QC state is stale")
+    if capability_progress.get("rhythm_acceptance_integration") != "completed":
+        raise SystemExit("progress snapshot rhythm acceptance integration state is stale")
+    if capability_progress.get("rhythm_manual_repair_planning") != "completed":
+        raise SystemExit("progress snapshot rhythm repair planning state is stale")
+    if capability_progress.get("guided_workflow_planning") != "completed":
+        raise SystemExit("progress snapshot guided workflow planning state is stale")
+    if capability_progress.get("workflow_execution_evidence_review") != "completed":
+        raise SystemExit("progress snapshot workflow execution evidence review state is stale")
+    if capability_progress.get("workflow_evidence_repair_planning") != "completed":
+        raise SystemExit("progress snapshot workflow evidence repair planning state is stale")
+    if capability_progress.get("workflow_repair_approval_dry_run") != "completed":
+        raise SystemExit("progress snapshot workflow repair approval dry-run state is stale")
+    if capability_progress.get("workflow_repair_execution_review") != "completed":
+        raise SystemExit("progress snapshot workflow repair execution review state is stale")
+    if capability_progress.get("release_hardening") != "completed":
+        raise SystemExit("progress snapshot release hardening state is stale")
+    if capability_progress.get("workflow_repair_refresh_guidance") != "completed":
+        raise SystemExit("progress snapshot workflow repair refresh guidance state is stale")
     if capability_progress.get("preview_rendering") != "completed":
         raise SystemExit("progress snapshot preview state is stale")
     if capability_progress.get("preview_quality_review") != "completed":
@@ -463,6 +553,34 @@ def write_sine_wav(path: Path, *, seconds: float = 0.25, sample_rate: int = 8000
             handle.writeframesraw(sample.to_bytes(2, byteorder="little", signed=True))
 
 
+def write_test_video_mp4(path: Path, *, seconds: float = 2.0) -> None:
+    run(
+        [
+            "ffmpeg",
+            "-y",
+            "-hide_banner",
+            "-loglevel",
+            "error",
+            "-f",
+            "lavfi",
+            "-i",
+            f"testsrc=size=64x64:rate=24:duration={seconds}",
+            "-f",
+            "lavfi",
+            "-i",
+            f"sine=frequency=220:duration={seconds}",
+            "-shortest",
+            "-c:v",
+            "libx264",
+            "-pix_fmt",
+            "yuv420p",
+            "-c:a",
+            "aac",
+            str(path),
+        ]
+    )
+
+
 def check_real_scan_if_available() -> None:
     if shutil.which("ffprobe") is None or shutil.which("ffmpeg") is None:
         print("skipping real scan check; ffmpeg/ffprobe not found")
@@ -524,7 +642,7 @@ def check_real_scan_if_available() -> None:
 
         run(
             [str(ARTIST_PORTRAIT), "keyframes", "--project", str(project), "--quiet"],
-            expect=1,
+            expect=(0, 1),
         )
         keyframes = tmp_path / ".artist-portrait" / "data" / "keyframes.jsonl"
         if not keyframes.exists() or keyframes.read_text(encoding="utf-8") != "":
@@ -548,7 +666,7 @@ def check_real_scan_if_available() -> None:
             raise SystemExit("real scan material_map did not use analysis ledger")
         run(
             [str(ARTIST_PORTRAIT), "propose", "--project", str(project), "--json"],
-            expect=1,
+            expect=(0, 1),
         )
         context = tmp_path / ".artist-portrait" / "data" / "proposal_context.json"
         gate = tmp_path / ".artist-portrait" / "data" / "text_model_gate.json"
@@ -1562,6 +1680,811 @@ def check_local_foundation_outputs() -> None:
             raise SystemExit("doctor did not classify invalid sources")
 
 
+def check_real_media_acceptance_profiles_if_available() -> None:
+    if shutil.which("ffprobe") is None or shutil.which("ffmpeg") is None:
+        print("skipping real media acceptance profile check; ffmpeg/ffprobe not found")
+        return
+    with tempfile.TemporaryDirectory(prefix="artist-portrait-real-acceptance-") as tmp:
+        tmp_path = Path(tmp)
+        media_dir = tmp_path / "media"
+        media_dir.mkdir()
+        project = tmp_path / "project.yaml"
+        project_text = (ROOT / "fixtures" / "stage_a" / "valid_project.yaml").read_text(
+            encoding="utf-8"
+        )
+        project.write_text(
+            project_text.replace("scene_detection: auto", "scene_detection: off")
+            .replace("transcription: auto", "transcription: off")
+            .replace("target_duration_seconds: 180", "target_duration_seconds: 2"),
+            encoding="utf-8",
+        )
+        write_test_video_mp4(media_dir / "source.mp4", seconds=2.0)
+        (tmp_path / "sources.csv").write_text(
+            "location,source_type,work,role,rights_status,forbidden_by_user,notes\n"
+            "media/source.mp4,interview,Generated Video,Test Role,owned,false,"
+            "real acceptance profile fixture\n",
+            encoding="utf-8",
+        )
+
+        run([str(ARTIST_PORTRAIT), "init", "--project", str(project), "--quiet"], expect=(0, 1))
+        initial_workflow = run_json(
+            [
+                str(ARTIST_PORTRAIT),
+                "workflow",
+                "--project",
+                str(project),
+                "--target",
+                "delivery",
+                "--json",
+            ],
+            expect=1,
+        )
+        initial_workflow_plan = initial_workflow.get("workflow_plan") or {}
+        if initial_workflow_plan.get("next_command") != "artist-portrait scan --project <project.yaml>":
+            raise SystemExit("real acceptance fixture workflow did not start at scan")
+        if initial_workflow_plan.get("commands_executed") is not False:
+            raise SystemExit("real acceptance fixture workflow executed commands")
+        run([str(ARTIST_PORTRAIT), "scan", "--project", str(project), "--quiet"])
+        run([str(ARTIST_PORTRAIT), "segment", "--project", str(project), "--quiet"])
+        run([str(ARTIST_PORTRAIT), "keyframes", "--project", str(project), "--quiet"], expect=(0, 1))
+        run([str(ARTIST_PORTRAIT), "analyze", "--project", str(project), "--quiet"])
+        run([str(ARTIST_PORTRAIT), "map", "--project", str(project), "--quiet"])
+        blocked = run_json(
+            [str(ARTIST_PORTRAIT), "propose", "--project", str(project), "--json"],
+            expect=1,
+        )
+        if blocked.get("status") != "blocked":
+            raise SystemExit("real acceptance fixture did not prepare host-Agent handoff")
+
+        write_valid_proposals_from_context(tmp_path)
+        canonical = tmp_path / ".artist-portrait" / "data" / "proposals.json"
+        candidate = tmp_path / "proposal_candidate.json"
+        candidate.write_bytes(canonical.read_bytes())
+        canonical.unlink()
+        run(
+            [
+                str(ARTIST_PORTRAIT),
+                "propose",
+                "--project",
+                str(project),
+                "--agent-output",
+                str(candidate),
+                "--quiet",
+            ]
+        )
+        run(
+            [
+                str(ARTIST_PORTRAIT),
+                "timeline",
+                "--project",
+                str(project),
+                "--proposal",
+                "proposal_safe",
+                "--quiet",
+            ],
+            expect=(0, 1),
+        )
+
+        write_sine_wav(media_dir / "bgm.wav", seconds=1.0)
+        bgm_import = run_json(
+            [
+                str(ARTIST_PORTRAIT),
+                "bgm",
+                "import",
+                "--project",
+                str(project),
+                "--file",
+                "media/bgm.wav",
+                "--rights-status",
+                "owned",
+                "--json",
+            ],
+            expect=(0, 1),
+        )
+        candidate_id = bgm_import["candidate"]["music_candidate_id"]
+        run(
+            [
+                str(ARTIST_PORTRAIT),
+                "bgm",
+                "fit",
+                "--project",
+                str(project),
+                "--candidate",
+                candidate_id,
+                "--fit-mode",
+                "loop",
+                "--fade-in-seconds",
+                "0.1",
+                "--fade-out-seconds",
+                "0.1",
+                "--ducking-gain-db",
+                "-9",
+                "--quiet",
+            ],
+            expect=(0, 1),
+        )
+        bgm_review = run_json(
+            [str(ARTIST_PORTRAIT), "bgm", "review", "--project", str(project), "--json"],
+            expect=(0, 1),
+        )
+        if bgm_review.get("status") not in {"passed", "warning"}:
+            raise SystemExit("real acceptance fixture BGM review did not complete")
+        rhythm_intent = tmp_path / "rhythm_intent.json"
+        rhythm_intent.write_text(
+            json.dumps(
+                {
+                    "intent_id": "run_checks_rhythm_intent",
+                    "mode": "speech_first",
+                    "pacing": "medium",
+                    "text_density": "low",
+                    "transition_style": "smooth",
+                    "ending_style": "fade_out",
+                    "notes": "run_checks rhythm planning fixture",
+                    "model_call_performed_by_cli": False,
+                    "network_performed": False,
+                },
+                ensure_ascii=False,
+                indent=2,
+                sort_keys=True,
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+        rhythm_payload = run_json(
+            [
+                str(ARTIST_PORTRAIT),
+                "rhythm",
+                "--project",
+                str(project),
+                "--intent",
+                str(rhythm_intent),
+                "--json",
+            ],
+            expect=(0, 1),
+        )
+        rhythm_plan = rhythm_payload.get("rhythm_plan") or {}
+        if rhythm_plan.get("edit_points_moved") is not False:
+            raise SystemExit("real acceptance fixture rhythm moved edit points")
+        if rhythm_plan.get("automatic_music_selection") is not False:
+            raise SystemExit("real acceptance fixture rhythm selected music")
+        if rhythm_plan.get("media_rendered") is not False:
+            raise SystemExit("real acceptance fixture rhythm rendered media")
+        if rhythm_plan.get("timeline_profile", {}).get("domain_id") != "timeline_profile":
+            raise SystemExit("real acceptance fixture rhythm timeline profile missing")
+        if rhythm_plan.get("bgm_profile", {}).get("domain_id") != "bgm_profile":
+            raise SystemExit("real acceptance fixture rhythm BGM profile missing")
+        rhythm_repair_before_media = run_json(
+            [
+                str(ARTIST_PORTRAIT),
+                "rhythm",
+                "--project",
+                str(project),
+                "--repair-plan",
+                "--acceptance-profile",
+                "delivery",
+                "--json",
+            ],
+            expect=9,
+        )
+        rhythm_repair_plan = rhythm_repair_before_media.get("rhythm_repair_plan") or {}
+        if rhythm_repair_plan.get("required_action_count", 0) < 3:
+            raise SystemExit("real acceptance fixture rhythm repair plan lacks required actions")
+        if rhythm_repair_plan.get("commands_executed") is not False:
+            raise SystemExit("real acceptance fixture rhythm repair plan executed commands")
+        if rhythm_repair_plan.get("media_rendered") is not False:
+            raise SystemExit("real acceptance fixture rhythm repair plan rendered media")
+
+        core = run_json(
+            [
+                str(ARTIST_PORTRAIT),
+                "acceptance",
+                "--project",
+                str(project),
+                "--profile",
+                "core",
+                "--json",
+            ]
+        )
+        if core.get("status") != "passed" or core.get("profile_passed") is not True:
+            raise SystemExit("real acceptance fixture core profile did not pass")
+        delivery_plan = run_json(
+            [
+                str(ARTIST_PORTRAIT),
+                "acceptance",
+                "--project",
+                str(project),
+                "--profile",
+                "delivery",
+                "--repair-plan",
+                "--json",
+            ],
+            expect=9,
+        )
+        repair_plan = delivery_plan.get("repair_plan") or {}
+        if repair_plan.get("required_action_count", 0) < 2:
+            raise SystemExit("real acceptance fixture repair plan lacks required actions")
+        if repair_plan.get("first_required_command") != "artist-portrait preview --project <project.yaml>":
+            raise SystemExit("real acceptance fixture repair plan first command is wrong")
+        if repair_plan.get("automatic_repair_performed") is not False:
+            raise SystemExit("real acceptance fixture repair plan performed repair")
+        approval_request_payload = run_json(
+            [
+                str(ARTIST_PORTRAIT),
+                "acceptance",
+                "--project",
+                str(project),
+                "--profile",
+                "delivery",
+                "--approval-request",
+                "--json",
+            ],
+            expect=9,
+        )
+        approval_request = approval_request_payload.get("approval_request") or {}
+        if approval_request.get("repair_plan_id") != repair_plan.get("repair_plan_id"):
+            raise SystemExit("real acceptance fixture approval request is not bound to repair plan")
+        if not approval_request.get("actions"):
+            raise SystemExit("real acceptance fixture approval request has no actions")
+        if any(action.get("decision") != "pending" for action in approval_request.get("actions", [])):
+            raise SystemExit("real acceptance fixture approval request is not pending")
+        approval_candidate = tmp_path / "approval_record_candidate.json"
+        approval_candidate.write_text(
+            json.dumps(
+                {
+                    "schema_version": "0.3",
+                    "approval_record_id": "run_checks_approval_candidate",
+                    "project_id": approval_request["project_id"],
+                    "repair_plan_id": approval_request["repair_plan_id"],
+                    "acceptance_profile": approval_request["acceptance_profile"],
+                    "valid": False,
+                    "approved_action_ids": [],
+                    "rejected_action_ids": [],
+                    "issue_count": 0,
+                    "issues": [],
+                    "actions": [
+                        {
+                            **action,
+                            "decision": "approved",
+                            "rationale": "run_checks dry run approval",
+                        }
+                        for action in approval_request.get("actions", [])
+                        if action.get("required_for_profile")
+                    ],
+                    "network_performed": False,
+                    "model_call_performed_by_cli": False,
+                    "media_rendered": False,
+                    "automatic_repair_performed": False,
+                },
+                ensure_ascii=False,
+                indent=2,
+                sort_keys=True,
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+        dry_run_payload = run_json(
+            [
+                str(ARTIST_PORTRAIT),
+                "acceptance",
+                "--project",
+                str(project),
+                "--profile",
+                "delivery",
+                "--approval-record",
+                str(approval_candidate),
+                "--execution-dry-run",
+                "--execution-bundle",
+                "--json",
+            ],
+            expect=9,
+        )
+        dry_run = dry_run_payload.get("execution_dry_run") or {}
+        bundle = dry_run_payload.get("execution_bundle") or {}
+        if dry_run.get("commands_executed") is not False:
+            raise SystemExit("real acceptance fixture dry-run executed commands")
+        if any(step.get("would_execute") is not False for step in dry_run.get("steps", [])):
+            raise SystemExit("real acceptance fixture dry-run step would execute")
+        if bundle.get("commands_executed_by_cli") is not False:
+            raise SystemExit("real acceptance fixture execution bundle executed commands")
+        if any(command.get("executable_by_cli") is not False for command in bundle.get("commands", [])):
+            raise SystemExit("real acceptance fixture execution bundle exposed CLI execution")
+        execution_candidate = tmp_path / "execution_record_candidate.json"
+        execution_candidate.write_text(
+            json.dumps(
+                {
+                    "schema_version": "0.3",
+                    "execution_record_id": "run_checks_execution_record_candidate",
+                    "project_id": bundle.get("project_id"),
+                    "repair_plan_id": bundle.get("repair_plan_id"),
+                    "approval_record_id": bundle.get("approval_record_id"),
+                    "dry_run_id": bundle.get("dry_run_id"),
+                    "execution_bundle_id": bundle.get("execution_bundle_id"),
+                    "acceptance_profile": bundle.get("acceptance_profile"),
+                    "valid": False,
+                    "completed_action_ids": [],
+                    "failed_action_ids": [],
+                    "skipped_action_ids": [],
+                    "issue_count": 0,
+                    "issues": [],
+                    "actions": [
+                        {
+                            "action_id": command.get("action_id"),
+                            "step_id": command.get("step_id"),
+                            "command": command.get("command"),
+                            "status": "skipped",
+                            "exit_code": None,
+                            "artifact_refs": [],
+                            "notes": "run_checks validates evidence intake without claiming execution",
+                        }
+                        for command in bundle.get("commands", [])
+                    ],
+                    "network_performed": False,
+                    "model_call_performed_by_cli": False,
+                    "media_rendered": False,
+                    "automatic_repair_performed": False,
+                    "commands_executed_by_cli": False,
+                },
+                ensure_ascii=False,
+                indent=2,
+                sort_keys=True,
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+        execution_payload = run_json(
+            [
+                str(ARTIST_PORTRAIT),
+                "acceptance",
+                "--project",
+                str(project),
+                "--profile",
+                "delivery",
+                "--execution-record",
+                str(execution_candidate),
+                "--json",
+            ],
+            expect=9,
+        )
+        execution_record = execution_payload.get("execution_record") or {}
+        if execution_record.get("valid") is not True:
+            raise SystemExit("real acceptance fixture execution record did not validate")
+        if execution_record.get("commands_executed_by_cli") is not False:
+            raise SystemExit("real acceptance fixture execution record executed commands")
+
+        run(
+            [
+                str(ARTIST_PORTRAIT),
+                "preview",
+                "--project",
+                str(project),
+                "--width",
+                "320",
+                "--fps",
+                "10",
+                "--quiet",
+            ],
+            expect=(0, 1),
+        )
+        preview_rhythm_qc = run_json(
+            [
+                str(ARTIST_PORTRAIT),
+                "rhythm",
+                "--project",
+                str(project),
+                "--qc",
+                "--json",
+            ],
+            expect=(0, 1),
+        )
+        preview_rhythm_qc_report = preview_rhythm_qc.get("rhythm_media_qc") or {}
+        if preview_rhythm_qc_report.get("preview_rendered_by_qc") is not False:
+            raise SystemExit("real acceptance fixture preview rhythm QC rendered preview")
+        if preview_rhythm_qc_report.get("edit_points_moved") is not False:
+            raise SystemExit("real acceptance fixture preview rhythm QC moved edit points")
+        preview = run_json(
+            [
+                str(ARTIST_PORTRAIT),
+                "acceptance",
+                "--project",
+                str(project),
+                "--profile",
+                "preview",
+                "--json",
+            ]
+        )
+        if preview.get("status") != "passed" or preview.get("preview_ready") is not True:
+            raise SystemExit("real acceptance fixture preview profile did not pass")
+        preview_stages = {stage["stage_id"]: stage for stage in preview["acceptance"]["stages"]}
+        if preview_stages["rhythm_plan"]["status"] != "passed":
+            raise SystemExit("real acceptance fixture preview profile did not require rhythm plan")
+        if preview_stages["rhythm_media_qc"]["status"] != "passed":
+            raise SystemExit("real acceptance fixture preview profile did not require rhythm media QC")
+
+        run(
+            [
+                str(ARTIST_PORTRAIT),
+                "export",
+                "--project",
+                str(project),
+                "--profile",
+                "review_720p",
+                "--quiet",
+            ],
+            expect=(0, 1),
+        )
+        rhythm_qc = run_json(
+            [
+                str(ARTIST_PORTRAIT),
+                "rhythm",
+                "--project",
+                str(project),
+                "--qc",
+                "--json",
+            ],
+            expect=(0, 1),
+        )
+        rhythm_qc_report = rhythm_qc.get("rhythm_media_qc") or {}
+        if rhythm_qc_report.get("preview_rendered_by_qc") is not False:
+            raise SystemExit("real acceptance fixture rhythm QC rendered preview")
+        if rhythm_qc_report.get("final_export_rendered_by_qc") is not False:
+            raise SystemExit("real acceptance fixture rhythm QC rendered final export")
+        if rhythm_qc_report.get("edit_points_moved") is not False:
+            raise SystemExit("real acceptance fixture rhythm QC moved edit points")
+        if rhythm_qc_report.get("media_qc_summary", {}).get("domain_id") != "media_qc_summary":
+            raise SystemExit("real acceptance fixture rhythm QC summary missing")
+        rhythm_repair_after_media = run_json(
+            [
+                str(ARTIST_PORTRAIT),
+                "rhythm",
+                "--project",
+                str(project),
+                "--repair-plan",
+                "--acceptance-profile",
+                "delivery",
+                "--json",
+            ],
+            expect=(0, 1, 9),
+        )
+        rhythm_repair_after = rhythm_repair_after_media.get("rhythm_repair_plan") or {}
+        if rhythm_repair_after.get("commands_executed") is not False:
+            raise SystemExit("real acceptance fixture final rhythm repair plan executed commands")
+        if rhythm_repair_after.get("edit_points_moved") is not False:
+            raise SystemExit("real acceptance fixture final rhythm repair plan moved edit points")
+        delivery = run_json(
+            [
+                str(ARTIST_PORTRAIT),
+                "acceptance",
+                "--project",
+                str(project),
+                "--profile",
+                "delivery",
+                "--json",
+            ]
+        )
+        if delivery.get("status") != "passed" or delivery.get("final_export_ready") is not True:
+            raise SystemExit("real acceptance fixture delivery profile did not pass")
+        final_workflow = run_json(
+            [
+                str(ARTIST_PORTRAIT),
+                "workflow",
+                "--project",
+                str(project),
+                "--target",
+                "delivery",
+                "--json",
+            ]
+        )
+        final_workflow_plan = final_workflow.get("workflow_plan") or {}
+        if final_workflow_plan.get("status") != "ready":
+            raise SystemExit("real acceptance fixture final workflow was not ready")
+        if final_workflow_plan.get("commands_executed") is not False:
+            raise SystemExit("real acceptance fixture final workflow executed commands")
+        workflow_steps = [
+            step
+            for step in final_workflow_plan.get("steps", [])
+            if step.get("source") == "workflow"
+        ]
+        workflow_record_candidate = tmp_path / "workflow_execution_record_candidate.json"
+        broken_workflow_record_candidate = tmp_path / "workflow_execution_record_broken.json"
+        broken_workflow_record_candidate.write_text(
+            json.dumps(
+                {
+                    "execution_record_id": "real_fixture_workflow_execution_broken",
+                    "project_id": final_workflow_plan.get("project_id"),
+                    "workflow_plan_id": final_workflow_plan.get("workflow_plan_id"),
+                    "target": "delivery",
+                    "executed_by": "run_checks",
+                    "steps": [
+                        {
+                            "step_id": "init",
+                            "command": "artist-portrait init --project <project.yaml>",
+                            "status": "succeeded",
+                            "exit_code": 0,
+                            "output_refs": [".artist-portrait/state.json"],
+                        },
+                        {
+                            "step_id": "scan",
+                            "command": "artist-portrait scan --project <project.yaml>",
+                            "status": "succeeded",
+                            "exit_code": 0,
+                            "output_refs": [".artist-portrait/data/missing_sources.jsonl"],
+                        },
+                    ],
+                },
+                ensure_ascii=False,
+                indent=2,
+                sort_keys=True,
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+        broken_workflow_execution = run_json(
+            [
+                str(ARTIST_PORTRAIT),
+                "workflow",
+                "--project",
+                str(project),
+                "--target",
+                "delivery",
+                "--execution-record",
+                str(broken_workflow_record_candidate),
+                "--json",
+            ],
+            expect=1,
+        )
+        if (broken_workflow_execution.get("workflow_execution_review") or {}).get("status") != "failed":
+            raise SystemExit("broken workflow execution evidence did not fail review")
+        workflow_repair = run_json(
+            [
+                str(ARTIST_PORTRAIT),
+                "workflow",
+                "--project",
+                str(project),
+                "--target",
+                "delivery",
+                "--repair-plan",
+                "--json",
+            ],
+            expect=1,
+        )
+        workflow_repair_plan = workflow_repair.get("workflow_repair_plan") or {}
+        if workflow_repair_plan.get("first_required_command") != "artist-portrait scan --project <project.yaml>":
+            raise SystemExit("workflow repair plan did not point to scan repair")
+        if workflow_repair_plan.get("commands_executed") is not False:
+            raise SystemExit("workflow repair plan executed commands")
+        if workflow_repair_plan.get("acceptance_success_promoted") is not False:
+            raise SystemExit("workflow repair plan promoted acceptance success")
+        workflow_approval_request = run_json(
+            [
+                str(ARTIST_PORTRAIT),
+                "workflow",
+                "--project",
+                str(project),
+                "--target",
+                "delivery",
+                "--approval-request",
+                "--json",
+            ],
+            expect=1,
+        )
+        approval_request = workflow_approval_request.get("workflow_repair_approval_request") or {}
+        if approval_request.get("workflow_repair_plan_id") != workflow_repair_plan.get("workflow_repair_plan_id"):
+            raise SystemExit("workflow repair approval request did not bind to repair plan")
+        if approval_request.get("commands_executed") is not False:
+            raise SystemExit("workflow repair approval request executed commands")
+        first_action_id = (workflow_repair_plan.get("actions") or [{}])[0].get("action_id")
+        workflow_approval_candidate = tmp_path / "workflow_repair_approval_record_candidate.json"
+        workflow_approval_candidate.write_text(
+            json.dumps(
+                {
+                    "approval_record_id": "real_fixture_workflow_repair_approval",
+                    "project_id": workflow_repair_plan.get("project_id"),
+                    "workflow_repair_plan_id": workflow_repair_plan.get("workflow_repair_plan_id"),
+                    "workflow_plan_id": workflow_repair_plan.get("workflow_plan_id"),
+                    "workflow_execution_review_id": workflow_repair_plan.get("workflow_execution_review_id"),
+                    "target": "delivery",
+                    "approved_by": "run_checks",
+                    "approved_action_ids": [first_action_id],
+                    "rejected_action_ids": [],
+                    "status": "passed",
+                },
+                ensure_ascii=False,
+                indent=2,
+                sort_keys=True,
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+        workflow_approval = run_json(
+            [
+                str(ARTIST_PORTRAIT),
+                "workflow",
+                "--project",
+                str(project),
+                "--target",
+                "delivery",
+                "--approval-record",
+                str(workflow_approval_candidate),
+                "--json",
+            ]
+        )
+        approval_record = workflow_approval.get("workflow_repair_approval_record") or {}
+        if approval_record.get("status") != "passed":
+            raise SystemExit("workflow repair approval record did not pass")
+        if approval_record.get("commands_executed_by_cli") is not False:
+            raise SystemExit("workflow repair approval record executed commands")
+        workflow_dry_run = run_json(
+            [
+                str(ARTIST_PORTRAIT),
+                "workflow",
+                "--project",
+                str(project),
+                "--target",
+                "delivery",
+                "--repair-dry-run",
+                "--json",
+            ],
+            expect=1,
+        )
+        dry_run = workflow_dry_run.get("workflow_repair_dry_run") or {}
+        if dry_run.get("approved_step_count") != 1:
+            raise SystemExit("workflow repair dry-run approved count is wrong")
+        if dry_run.get("commands_executed") is not False:
+            raise SystemExit("workflow repair dry-run executed commands")
+        if dry_run.get("acceptance_success_promoted") is not False:
+            raise SystemExit("workflow repair dry-run promoted acceptance success")
+        approved_step = next(
+            (step for step in dry_run.get("steps") or [] if step.get("status") == "approved"),
+            None,
+        )
+        if not approved_step:
+            raise SystemExit("workflow repair dry-run did not expose an approved step")
+        workflow_repair_execution_candidate = tmp_path / "workflow_repair_execution_record_candidate.json"
+        workflow_repair_execution_candidate.write_text(
+            json.dumps(
+                {
+                    "execution_record_id": "real_fixture_workflow_repair_execution",
+                    "project_id": dry_run.get("project_id"),
+                    "workflow_repair_plan_id": dry_run.get("workflow_repair_plan_id"),
+                    "approval_record_id": dry_run.get("approval_record_id"),
+                    "dry_run_id": dry_run.get("dry_run_id"),
+                    "target": "delivery",
+                    "executed_by": "run_checks",
+                    "actions": [
+                        {
+                            "action_id": approved_step.get("action_id"),
+                            "step_id": approved_step.get("step_id"),
+                            "command": approved_step.get("command"),
+                            "status": "succeeded",
+                            "exit_code": 0,
+                            "output_refs": approved_step.get("expected_artifacts") or [],
+                        }
+                    ],
+                },
+                ensure_ascii=False,
+                indent=2,
+                sort_keys=True,
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+        workflow_repair_execution = run_json(
+            [
+                str(ARTIST_PORTRAIT),
+                "workflow",
+                "--project",
+                str(project),
+                "--target",
+                "delivery",
+                "--repair-execution-record",
+                str(workflow_repair_execution_candidate),
+                "--json",
+            ]
+        )
+        repair_execution_review = (
+            workflow_repair_execution.get("workflow_repair_execution_review") or {}
+        )
+        if repair_execution_review.get("status") != "passed":
+            raise SystemExit("workflow repair execution review did not pass")
+        if repair_execution_review.get("accepted_action_count") != 1:
+            raise SystemExit("workflow repair execution review accepted count is wrong")
+        if repair_execution_review.get("commands_executed_by_cli") is not False:
+            raise SystemExit("workflow repair execution review executed commands")
+        if repair_execution_review.get("acceptance_success_promoted_by_cli") is not False:
+            raise SystemExit("workflow repair execution review promoted acceptance success")
+        workflow_repair_refresh = run_json(
+            [
+                str(ARTIST_PORTRAIT),
+                "workflow",
+                "--project",
+                str(project),
+                "--target",
+                "delivery",
+                "--repair-refresh-plan",
+                "--json",
+            ]
+        )
+        refresh_plan = workflow_repair_refresh.get("workflow_repair_refresh_plan") or {}
+        if refresh_plan.get("status") != "ready":
+            raise SystemExit("workflow repair refresh plan did not become ready")
+        if refresh_plan.get("ready_step_count") != 1:
+            raise SystemExit("workflow repair refresh plan ready count is wrong")
+        if refresh_plan.get("commands_executed") is not False:
+            raise SystemExit("workflow repair refresh plan executed commands")
+        if refresh_plan.get("workflow_plan_mutated") is not False:
+            raise SystemExit("workflow repair refresh plan mutated workflow plan")
+        workflow_record_candidate.write_text(
+            json.dumps(
+                {
+                    "execution_record_id": "real_fixture_workflow_execution",
+                    "project_id": final_workflow_plan.get("project_id"),
+                    "workflow_plan_id": final_workflow_plan.get("workflow_plan_id"),
+                    "target": "delivery",
+                    "executed_by": "run_checks",
+                    "steps": [
+                        {
+                            "step_id": step.get("step_id"),
+                            "command": step.get("command"),
+                            "status": "succeeded",
+                            "exit_code": 0,
+                            "output_refs": step.get("expected_artifacts") or [],
+                        }
+                        for step in workflow_steps
+                    ],
+                },
+                ensure_ascii=False,
+                indent=2,
+                sort_keys=True,
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+        workflow_execution = run_json(
+            [
+                str(ARTIST_PORTRAIT),
+                "workflow",
+                "--project",
+                str(project),
+                "--target",
+                "delivery",
+                "--execution-record",
+                str(workflow_record_candidate),
+                "--json",
+            ]
+        )
+        execution_review = workflow_execution.get("workflow_execution_review") or {}
+        if execution_review.get("status") != "passed":
+            raise SystemExit("real acceptance fixture workflow execution review did not pass")
+        if execution_review.get("commands_executed_by_cli") is not False:
+            raise SystemExit("workflow execution review executed commands")
+        if execution_review.get("accepted_step_count") != len(workflow_steps):
+            raise SystemExit("workflow execution review did not accept every workflow step")
+        stages = {stage["stage_id"]: stage for stage in delivery["acceptance"]["stages"]}
+        if stages["bgm"]["status"] not in {"passed", "warning"}:
+            raise SystemExit("real acceptance fixture did not preserve BGM readiness")
+        if stages["forbidden_capability_audit"]["status"] != "passed":
+            raise SystemExit("real acceptance fixture triggered forbidden capabilities")
+        release_check = run_json(
+            [
+                str(ARTIST_PORTRAIT),
+                "release-check",
+                "--project",
+                str(project),
+                "--json",
+            ],
+            expect=(0, 1),
+        )
+        release_report = release_check.get("release_hardening_report") or {}
+        if release_report.get("status") not in {"warning", "ready_for_local_release"}:
+            raise SystemExit("release hardening report blocked unexpectedly")
+        if release_report.get("failed_count") != 0:
+            raise SystemExit("release hardening report has failed checks")
+        if release_report.get("commit_allowed") is not False:
+            raise SystemExit("release hardening report allowed commits")
+        if release_report.get("network_performed") is not False:
+            raise SystemExit("release hardening report performed network access")
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--skip-pytest", action="store_true")
@@ -1594,6 +2517,7 @@ def main(argv: list[str] | None = None) -> int:
     )
     check_local_foundation_outputs()
     check_real_scan_if_available()
+    check_real_media_acceptance_profiles_if_available()
     print("checks passed")
     return 0
 

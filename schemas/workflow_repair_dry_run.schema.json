@@ -1,0 +1,126 @@
+{
+  "$defs": {
+    "WorkflowRepairDryRunStep": {
+      "additionalProperties": false,
+      "properties": {
+        "action_id": {
+          "minLength": 1,
+          "title": "Action Id",
+          "type": "string"
+        },
+        "command": {
+          "minLength": 1,
+          "title": "Command",
+          "type": "string"
+        },
+        "expected_artifacts": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Expected Artifacts",
+          "type": "array"
+        },
+        "reason": {
+          "minLength": 1,
+          "title": "Reason",
+          "type": "string"
+        },
+        "status": {
+          "pattern": "^(approved|rejected)$",
+          "title": "Status",
+          "type": "string"
+        },
+        "step_id": {
+          "minLength": 1,
+          "title": "Step Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "action_id",
+        "step_id",
+        "command",
+        "status",
+        "reason"
+      ],
+      "title": "WorkflowRepairDryRunStep",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "acceptance_success_promoted": {
+      "default": false,
+      "title": "Acceptance Success Promoted",
+      "type": "boolean"
+    },
+    "approval_record_id": {
+      "minLength": 1,
+      "title": "Approval Record Id",
+      "type": "string"
+    },
+    "approved_step_count": {
+      "minimum": 0,
+      "title": "Approved Step Count",
+      "type": "integer"
+    },
+    "commands_executed": {
+      "default": false,
+      "title": "Commands Executed",
+      "type": "boolean"
+    },
+    "dry_run_id": {
+      "minLength": 1,
+      "title": "Dry Run Id",
+      "type": "string"
+    },
+    "media_rendered": {
+      "default": false,
+      "title": "Media Rendered",
+      "type": "boolean"
+    },
+    "project_id": {
+      "minLength": 1,
+      "title": "Project Id",
+      "type": "string"
+    },
+    "rejected_step_count": {
+      "minimum": 0,
+      "title": "Rejected Step Count",
+      "type": "integer"
+    },
+    "schema_version": {
+      "default": "0.3",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "steps": {
+      "items": {
+        "$ref": "#/$defs/WorkflowRepairDryRunStep"
+      },
+      "title": "Steps",
+      "type": "array"
+    },
+    "target": {
+      "pattern": "^(core|preview|delivery)$",
+      "title": "Target",
+      "type": "string"
+    },
+    "workflow_repair_plan_id": {
+      "minLength": 1,
+      "title": "Workflow Repair Plan Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "dry_run_id",
+    "project_id",
+    "workflow_repair_plan_id",
+    "approval_record_id",
+    "target",
+    "approved_step_count",
+    "rejected_step_count"
+  ],
+  "title": "WorkflowRepairDryRun",
+  "type": "object"
+}

@@ -28,20 +28,30 @@ readiness and gate-progress fragments must not be recreated.
 - Branch: `main`
 - Remote configured: `zhangxiaolongne/video-skill`
 - Canonical skill: `artist-portrait-editor`
-- Current local gate: V0-024 project acceptance gate
-- Current milestone: `V0-024 project acceptance gate`
-- Current batch: `V0-024`
+- Current local gate: V0-041 workflow repair evidence refresh guidance gate
+- Current milestone: `V0-041 workflow repair evidence refresh guidance gate`
+- Current batch: `V0-041`
 - Batch status: `completed`
-- Latest committed baseline: V0-010m
-- Release publication target: `main` with capability tag `v0.24.0`
+- Current release marker: tag `v0.25.0`
+- Previous published baseline: `v0.24.0`
+- Release publication target: `main` with capability tag `v0.25.0`
 - Final usable Skill status: foundation, creative proposals, canonical timeline,
   BGM fitting, and local low-resolution preview rendering are substantial;
   preview quality review, render controls, controlled local final export, and
   local BGM technical intelligence, BGM recommendation review, beat-engine
   evidence plumbing, recommendation-to-fit selection, recommendation-fit
-  review, explicit BGM fit controls, and project acceptance reporting are
+  review, explicit BGM fit controls, project acceptance reporting, and
+  profile-specific acceptance gates, and generated real-media acceptance
+  fixtures, deterministic acceptance repair plans, explicit repair approval
+  artifacts, non-executing repair dry-run manifests, and manual repair
+  execution handoff/evidence intake, BGM/edit rhythm planning, rhythm media QC,
+  rhythm-aware acceptance integration, rhythm manual repair planning, guided
+  workflow planning, workflow execution evidence review, workflow evidence
+  repair planning, workflow repair approval/dry-run packaging, workflow repair
+  execution evidence review, accumulated workflow/rhythm release hardening, and
+  workflow repair evidence refresh guidance are
   substantial;
-  release publication target is `v0.24.0`; installed-engine BPM extraction and
+  release publication target is `v0.25.0`; installed-engine BPM extraction and
   automatic music selection remain undelivered
 
 ## Capability Dashboard
@@ -67,15 +77,32 @@ readiness and gate-progress fragments must not be recreated.
 | Recommendation-fit review | `completed` | Selected BGM recommendations can be audited against the current fit, timeline, analysis/beat evidence, preview, and final-export readiness |
 | BGM fit controls | `completed` | Users can explicitly control fit mode, fades, gain, ducking, and beat-alignment request state without automatic edit-point movement |
 | Project acceptance | `completed` | Project-level acceptance reports evaluate core, BGM, preview, final export, and forbidden-capability readiness without auto-repair |
+| Acceptance profiles | `completed` | Explicit core, preview, and delivery profiles turn readiness levels into deterministic profile gates and exit codes |
+| Real-media acceptance fixtures | `completed` | Generated temporary video/BGM fixtures prove core, preview, and delivery acceptance profiles against FFmpeg-backed media artifacts |
+| Acceptance repair plans | `completed` | Failed or warning acceptance reports can produce deterministic required/optional next-command plans without executing repairs |
+| Acceptance repair approvals | `completed` | Repair approval requests and explicit approval record imports are canonicalized without executing approved actions |
+| Repair execution dry-runs | `completed` | Approved repair actions can be enumerated in canonical dry-run manifests with commands_executed=false |
+| Repair execution handoffs | `completed` | Approved dry-run commands can be packaged for manual execution and explicit external execution records can be validated without CLI execution |
+| BGM/edit rhythm planning | `completed` | Timeline rhythm, BGM rhythm, compatibility, intent, cut/cue, transition, text, ducking/silence, ending, and external rhythm recommendations can be audited without edit mutation |
+| Rhythm media QC | `completed` | Existing preview/final artifacts can be checked against the rhythm plan for binding, freshness, duration, audio, ducking, and ending evidence without rendering |
+| Rhythm acceptance integration | `completed` | Acceptance profiles now surface rhythm plan and rhythm media QC stages, require rhythm evidence for preview/delivery, and generate rhythm-specific repair commands without execution |
+| Rhythm manual repair planning | `completed` | Rhythm readiness failures can be turned into ordered profile-aware manual next-command plans and handoff artifacts without execution |
+| Guided workflow planning | `completed` | Core, preview, and delivery command paths can be generated from current project evidence with next-command guidance, runbook, and handoff artifacts |
+| Workflow execution evidence review | `completed` | Explicit external workflow execution records can be quarantined and reviewed against workflow plan, command, and artifact evidence without CLI execution |
+| Workflow evidence repair planning | `completed` | Rejected, missing, and skipped workflow evidence can be turned into ordered required/optional manual repair actions without execution |
+| Workflow repair approval/dry-run | `completed` | Workflow repair actions can be packaged into approval requests, approval records, and dry-run manifests without execution |
+| Workflow repair execution review | `completed` | Explicit external repair execution records can be quarantined and reviewed against dry-run action, command, and artifact evidence without CLI execution |
+| Release hardening | `completed` | Current gate, publication state, schema coverage, forbidden surfaces, artifact chain, and validation evidence can be audited before release |
+| Workflow repair refresh guidance | `completed` | Reviewed repair evidence can be packaged into the next explicit workflow execution-record guidance without workflow mutation |
 | Preview and rendering | `completed` | Local low-resolution preview rendering from timeline plus optional BGM fit works |
 | Preview quality review | `completed` | Bounded render controls and deterministic QC work before final export opens |
 | Final export | `completed` | Bounded local MP4 final export from canonical timeline, retained audio, optional fitted BGM, manifest, QC, review, status, doctor, audit, and invalidation work |
-| Development governance | `completed` | Six canonical owners and automatic drift checks are active |
+| Development governance | `completed` | Six canonical owners and automatic drift checks are active; V0-041 passed pre-implementation countability audit |
 
 ## Current Hard Boundaries
 
-V0-024 permits deterministic project acceptance reporting from existing
-artifacts and state. It does not permit:
+V0-041 permits deterministic workflow repair evidence refresh guidance from the
+current workflow repair execution review. It does not permit:
 
 - paid API calls, API keys, remote provider execution, or network search
 - Python-side hidden model calls or automatic paid fallback
@@ -85,9 +112,51 @@ artifacts and state. It does not permit:
 - automatic review-driven fitting or rendering
 - automatic fit-control-driven edit-point movement
 - automatic acceptance-driven repair or pipeline execution
+- automatic repair-plan execution
+- automatic approval-record execution
+- dry-run command execution
+- execution-bundle command execution by the CLI
+- treating external execution records as acceptance success
+- rhythm planning that moves edit points, selects music, fits music, renders
+  media, calls models from the CLI, or accesses the network
+- rhythm media QC that renders preview/final media, mutates timeline/music, or
+  auto-repairs QC issues
+- acceptance that auto-runs rhythm/rhythm QC, renders missing media, repairs
+  rhythm-QC gaps, or treats manual execution evidence as acceptance success
+- rhythm repair planning that executes commands, renders media, mutates
+  timeline/music, or treats guidance as acceptance success
+- workflow planning that executes commands, auto-runs pipeline stages, renders
+  media, mutates timeline/music, selects music, fits music, calls models from
+  the CLI, accesses the network, or treats guidance as acceptance success
+- workflow execution evidence review that executes commands, auto-runs
+  workflow or pipeline stages, renders media, mutates timeline/music, selects
+  music, fits music, calls models from the CLI, accesses the network, or treats
+  execution evidence as acceptance success
+- workflow repair planning that executes commands, auto-runs workflow or
+  pipeline stages, renders media, mutates timeline/music, selects music, fits
+  music, calls models from the CLI, accesses the network, or treats repair
+  guidance as acceptance success
+- workflow repair approval/dry-run packaging that executes commands, auto-runs
+  workflow or pipeline stages, renders media, mutates timeline/music, selects
+  music, fits music, calls models from the CLI, accesses the network, or treats
+  approval/dry-run artifacts as acceptance success
+- workflow repair execution review that executes repair commands, auto-runs
+  workflow or pipeline stages, renders media, mutates timeline/music, selects
+  music, fits music, calls models from the CLI, accesses the network, or treats
+  repair execution evidence as acceptance success
+- workflow repair refresh planning that executes workflow commands, mutates
+  workflow plans, auto-runs workflow or pipeline stages, renders media, mutates
+  timeline/music, calls models from the CLI, accesses the network, or treats
+  refreshed evidence as acceptance success
+- release hardening that commits, pushes, tags, renders media, executes repair
+  commands, auto-runs workflow or pipeline stages, mutates timeline/music,
+  calls models from the CLI, accesses the network, or treats readiness as
+  acceptance success
 - fabricated BPM/beat analysis when no validated local engine runs
 - automatic beat-synced edit-point changes
 - automatic final-export profile choice beyond explicit user CLI selection
+- automatic conversion from failed acceptance profile to remediation actions
+- downloaded media or durable binary fixture media
 - OpenCV, embeddings, vision classification, or image generation/editing
 
 ## Mandatory Batch Contract
@@ -153,6 +222,6 @@ Full status and resolution conditions live in `ISSUES.md`.
 
 ## Next Major Decision
 
-V0-024 completed project acceptance reporting. The next major decision is
-whether to do a larger release closeout, add real-media fixture acceptance, or
-add phrase-level beat controls when validated beat evidence is present.
+V0-041 completed workflow repair evidence refresh guidance. The next major
+decision is whether to prepare a local release with explicit approval, or move
+to the next media intelligence gate.

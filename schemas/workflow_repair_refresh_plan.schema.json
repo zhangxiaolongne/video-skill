@@ -1,0 +1,156 @@
+{
+  "$defs": {
+    "WorkflowRepairRefreshStep": {
+      "additionalProperties": false,
+      "properties": {
+        "action_id": {
+          "minLength": 1,
+          "title": "Action Id",
+          "type": "string"
+        },
+        "command": {
+          "minLength": 1,
+          "title": "Command",
+          "type": "string"
+        },
+        "evidence_refs": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Evidence Refs",
+          "type": "array"
+        },
+        "missing_refs": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Missing Refs",
+          "type": "array"
+        },
+        "rationale": {
+          "minLength": 1,
+          "title": "Rationale",
+          "type": "string"
+        },
+        "refresh_status": {
+          "pattern": "^(ready_to_resubmit|needs_repair|missing_evidence|skipped)$",
+          "title": "Refresh Status",
+          "type": "string"
+        },
+        "step_id": {
+          "minLength": 1,
+          "title": "Step Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "action_id",
+        "step_id",
+        "refresh_status",
+        "command",
+        "rationale"
+      ],
+      "title": "WorkflowRepairRefreshStep",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "acceptance_success_promoted": {
+      "default": false,
+      "title": "Acceptance Success Promoted",
+      "type": "boolean"
+    },
+    "blocked_step_count": {
+      "minimum": 0,
+      "title": "Blocked Step Count",
+      "type": "integer"
+    },
+    "commands_executed": {
+      "default": false,
+      "title": "Commands Executed",
+      "type": "boolean"
+    },
+    "media_rendered": {
+      "default": false,
+      "title": "Media Rendered",
+      "type": "boolean"
+    },
+    "next_command": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Next Command"
+    },
+    "project_id": {
+      "minLength": 1,
+      "title": "Project Id",
+      "type": "string"
+    },
+    "ready_step_count": {
+      "minimum": 0,
+      "title": "Ready Step Count",
+      "type": "integer"
+    },
+    "schema_version": {
+      "default": "0.3",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "status": {
+      "pattern": "^(ready|blocked|no_actions)$",
+      "title": "Status",
+      "type": "string"
+    },
+    "steps": {
+      "items": {
+        "$ref": "#/$defs/WorkflowRepairRefreshStep"
+      },
+      "title": "Steps",
+      "type": "array"
+    },
+    "target": {
+      "pattern": "^(core|preview|delivery)$",
+      "title": "Target",
+      "type": "string"
+    },
+    "workflow_plan_mutated": {
+      "default": false,
+      "title": "Workflow Plan Mutated",
+      "type": "boolean"
+    },
+    "workflow_repair_execution_review_id": {
+      "minLength": 1,
+      "title": "Workflow Repair Execution Review Id",
+      "type": "string"
+    },
+    "workflow_repair_plan_id": {
+      "minLength": 1,
+      "title": "Workflow Repair Plan Id",
+      "type": "string"
+    },
+    "workflow_repair_refresh_plan_id": {
+      "minLength": 1,
+      "title": "Workflow Repair Refresh Plan Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "workflow_repair_refresh_plan_id",
+    "project_id",
+    "workflow_repair_execution_review_id",
+    "workflow_repair_plan_id",
+    "target",
+    "status",
+    "ready_step_count",
+    "blocked_step_count"
+  ],
+  "title": "WorkflowRepairRefreshPlan",
+  "type": "object"
+}

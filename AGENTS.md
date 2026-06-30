@@ -3,7 +3,7 @@
 Follow `artist_portrait_editor_revision5_optimized.md` as the governing V0
 engineering-freeze document.
 
-Current gate: V0-024 project acceptance gate.
+Current gate: V0-041 workflow repair evidence refresh guidance gate.
 
 V0-011 uses the active Codex/ChatGPT host Agent as the creative model. Do not
 add paid APIs, API keys, remote provider dependencies, or hidden network calls.
@@ -110,6 +110,172 @@ forbidden-capability flags, then write canonical acceptance JSON/Markdown and
 run audit artifacts. It must not generate proposals, select music, change the
 timeline, fit music, render media, call models, access the network, use image
 generation/editing, or depend on paid APIs/API keys/remote providers.
+
+V0-025 may add explicit acceptance profiles for `standard`, `core`, `preview`,
+and `delivery`. It may make `acceptance --profile core|preview|delivery`
+deterministically evaluate profile-specific required stages, write profile
+status into canonical JSON/Markdown reports, update state/run audit, and return
+profile-appropriate exit codes. It must not auto-run missing pipeline stages,
+generate proposals, select music, fit music, change timelines, render media,
+call models, access the network, use image generation/editing, or depend on
+paid APIs/API keys/remote providers.
+
+V0-026 may add deterministic real-media acceptance fixtures and checks using
+locally generated temporary audio/video. It may run ffmpeg/ffprobe-backed
+scan, segment, keyframes, analyze, map, host-Agent candidate quarantine/import,
+timeline, BGM import/fit/review, preview, final export, and core/preview/
+delivery acceptance profiles inside tests or `run_checks.py`. It must not
+download media, access the network, call models from the CLI, automatically
+select music, fabricate beat grids, change edit timing automatically, or
+depend on paid APIs/API keys/remote providers.
+
+V0-027 may generate deterministic acceptance repair plans from the current
+acceptance report. It may write canonical JSON/Markdown repair-plan artifacts,
+classify required versus optional actions by acceptance profile, order
+next-action commands, and record the plan in state/run audit. It must not
+execute repair commands, auto-run pipeline steps, generate proposals, select or
+fit music automatically, render media, call models, access the network, use
+image generation/editing, or depend on paid APIs/API keys/remote providers.
+
+V0-028 may generate deterministic acceptance repair approval requests and
+validate/import explicit approval records against the current repair plan. It
+may write canonical JSON/Markdown approval request and approval record
+artifacts, verify project/profile/plan/action bindings, and record approval
+artifacts in state/run audit. It must not execute approved actions, auto-run
+pipeline steps, generate proposals, select or fit music automatically, render
+media, call models, access the network, use image generation/editing, or depend
+on paid APIs/API keys/remote providers.
+
+V0-029 may generate deterministic repair execution dry-run manifests from the
+current repair plan and a valid approval record. It may enumerate approved and
+rejected repair actions, commands, ordering, and blocking reasons, then write
+canonical JSON/Markdown artifacts and state/run audit refs. It must not execute
+commands, auto-run pipeline steps, generate proposals, select or fit music
+automatically, render media, call models, access the network, use image
+generation/editing, or depend on paid APIs/API keys/remote providers.
+
+V0-030 may generate deterministic manual repair execution bundle artifacts from
+the current repair execution dry-run and may import explicit external execution
+record candidates. It may validate project/profile/plan/approval/dry-run/step/
+command bindings, classify succeeded/failed/skipped external evidence, and
+write canonical JSON/Markdown bundle and record artifacts with state/run audit
+refs. It must not execute commands, auto-run pipeline steps, trust execution
+evidence as acceptance success, generate proposals, select or fit music
+automatically, render media, call models, access the network, use image
+generation/editing, or depend on paid APIs/API keys/remote providers.
+
+V0-031 may generate deterministic BGM/edit rhythm planning artifacts from the
+current canonical timeline, optional current BGM fit, optional BGM analysis,
+explicit rhythm intent JSON, and optional external rhythm candidate JSON. It
+may write canonical rhythm plan JSON, human rhythm report Markdown, host-Agent
+rhythm handoff JSON, and state/run audit refs covering timeline rhythm, BGM
+rhythm, compatibility, intent, cut/cue, transition, text, ducking/silence,
+ending, and candidate validation. It must not move edit points, select music,
+fit music automatically, render media, fabricate BPM or beat grids, call models
+from the CLI, access the network, use image generation/editing, or depend on
+paid APIs/API keys/remote providers.
+
+V0-032 may generate deterministic rhythm media QC artifacts from the current
+rhythm plan and existing preview/final-export manifests and validation reports.
+It may write canonical rhythm media QC JSON, Markdown, and handoff artifacts
+covering preview binding, final export binding, timeline freshness, BGM
+freshness, preview duration, final duration, audio expectation, ducking render,
+ending render, and media-QC summary. It must not render preview/final media,
+move edit points, select music, fit music automatically, call models from the
+CLI, access the network, use image generation/editing, fabricate BPM/beat
+grids, or depend on paid APIs/API keys/remote providers.
+
+V0-033 may integrate existing rhythm plan and rhythm media QC artifacts into
+acceptance profiles, repair plans, approval requests, dry-run manifests, manual
+execution bundles, reports, and generated real-media acceptance checks. It may
+make preview and delivery profiles require current rhythm evidence and may
+surface rhythm-specific next commands. It must not auto-run rhythm, auto-run
+rhythm QC, render media, execute repair commands, move edit points, select or
+fit music automatically, call models from the CLI, access the network, use
+image generation/editing, fabricate BPM/beat grids, or depend on paid APIs/API
+keys/remote providers.
+
+V0-034 may generate deterministic rhythm manual repair plans from existing
+rhythm, rhythm-QC, acceptance, preview, final-export, and BGM evidence. It may
+write canonical JSON, Markdown, and handoff artifacts with ordered manual next
+commands by acceptance profile. It must not execute commands, auto-run rhythm
+or rhythm QC, render media, move edit points, select or fit music
+automatically, call models from the CLI, access the network, use image
+generation/editing, fabricate BPM/beat grids, or depend on paid APIs/API
+keys/remote providers.
+
+V0-035 may generate deterministic guided workflow plans from existing project
+state and artifacts for `core`, `preview`, and `delivery` targets. It may write
+canonical workflow JSON, Markdown runbook, and handoff artifacts with ordered
+explicit commands and current next command. It must not execute commands,
+auto-run pipeline stages, render media, move edit points, select or fit music
+automatically, call models from the CLI, access the network, use image
+generation/editing, fabricate BPM/beat grids, or depend on paid APIs/API
+keys/remote providers.
+
+V0-036 may import and review explicit external workflow execution record
+candidates after byte-exact quarantine. It may validate project, target,
+workflow-plan, step, command, and artifact evidence bindings; classify step
+evidence as accepted, rejected, missing, or skipped; and write canonical JSON,
+Markdown, handoff, state, and run-audit artifacts. It must not execute
+commands, auto-run workflow steps, render media, move edit points, select or
+fit music automatically, call models from the CLI, access the network, use
+image generation/editing, fabricate BPM/beat grids, depend on paid APIs/API
+keys/remote providers, or treat execution evidence as acceptance success.
+
+V0-037 may generate deterministic workflow evidence repair plans from the
+current workflow plan and workflow execution review. It may classify rejected,
+missing, and skipped workflow evidence into required or optional manual repair
+actions, order actions by workflow step order, and write canonical JSON,
+Markdown, handoff, state, and run-audit artifacts. It must not execute repair
+commands, auto-run workflow or pipeline steps, render media, move edit points,
+select or fit music automatically, call models from the CLI, access the
+network, use image generation/editing, fabricate BPM/beat grids, depend on paid
+APIs/API keys/remote providers, or treat repair guidance as acceptance success.
+
+V0-038 may generate workflow repair approval requests, import explicit approval
+record candidates after byte-exact quarantine, validate repair-plan/action
+bindings, and generate workflow repair dry-run manifests for approved and
+rejected manual actions. It must not execute repair commands, auto-run workflow
+or pipeline steps, render media, move edit points, select or fit music
+automatically, call models from the CLI, access the network, use image
+generation/editing, fabricate BPM/beat grids, depend on paid APIs/API
+keys/remote providers, or treat approval/dry-run artifacts as acceptance
+success.
+
+V0-039 may import explicit external workflow repair execution record candidates
+after byte-exact quarantine and validate them against the current workflow
+repair dry-run, approval record, repair plan, target, action ids, commands, and
+expected artifact evidence. It may classify action evidence as accepted,
+rejected, missing, or skipped, and write canonical JSON, Markdown, handoff,
+state, and run-audit artifacts. It must not execute repair commands, auto-run
+workflow or pipeline steps, render media, move edit points, select or fit music
+automatically, call models from the CLI, access the network, use image
+generation/editing, fabricate BPM/beat grids, depend on paid APIs/API
+keys/remote providers, or treat repair execution evidence as acceptance
+success.
+
+V0-040 may generate deterministic release hardening reports for the accumulated
+workflow/rhythm gates. It may audit current-gate documentation consistency,
+local git publication state, schema coverage, forbidden provider surfaces,
+workflow/rhythm artifact documentation, and validation evidence, then write
+canonical JSON/Markdown artifacts. It must not commit, push, tag, render media,
+execute repair commands, auto-run workflow or pipeline steps, move edit
+points, select or fit music automatically, call models from the CLI, access the
+network, use image generation/editing, fabricate BPM/beat grids, depend on paid
+APIs/API keys/remote providers, or treat release hardening as acceptance
+success.
+
+V0-041 may generate deterministic workflow repair refresh plans from the
+current workflow repair execution review. It may map accepted repair evidence
+to ready-to-resubmit workflow execution evidence, preserve rejected/missing/
+skipped repair evidence as explicit gaps, and write canonical JSON, Markdown,
+handoff, state, and run-audit artifacts. It must not execute workflow commands,
+mutate workflow plans, auto-run pipeline steps, render media, move edit points,
+select or fit music automatically, call models from the CLI, access the
+network, use image generation/editing, fabricate BPM/beat grids, depend on paid
+APIs/API keys/remote providers, or treat refreshed evidence as acceptance
+success.
 
 Future BGM work must support direct audio uploads, audio extracted from uploaded
 video, embedded source audio, multiple candidates, and no-file-yet planning.
@@ -367,9 +533,85 @@ Allowed:
   gain, ducking, and beat-alignment request state
 - canonical `BgmFitControls` embedded in `.artist-portrait/data/bgm_fit.json`
 - `acceptance`
+- `acceptance --profile standard|core|preview|delivery`
+- deterministic generated real-media acceptance fixture checks
+- deterministic acceptance repair-plan artifacts without automatic execution
+- deterministic acceptance repair approval request/record artifacts without execution
+- deterministic repair execution dry-run artifacts without command execution
+- deterministic manual repair execution bundle and execution record artifacts
+  without command execution
+- `rhythm`
+- canonical `.artist-portrait/data/rhythm_plan.json`
+- deterministic `output/rhythm_report.md`
+- deterministic `output/rhythm_agent_handoff.json`
+- deterministic BGM/edit rhythm planning without edit-point movement,
+  automatic music selection, media rendering, model calls, or network access
+- canonical `.artist-portrait/data/rhythm_media_qc.json`
+- deterministic `output/rhythm_media_qc.md`
+- deterministic `output/rhythm_media_qc_handoff.json`
+- deterministic rhythm media QC over existing preview/final artifacts without
+  rendering media or mutating timeline/music
+- acceptance profile integration for existing rhythm plan and rhythm media QC
+  artifacts without auto-running rhythm, rhythm QC, rendering, repair execution,
+  or timeline/music mutation
+- `rhythm --repair-plan`
+- canonical `.artist-portrait/data/rhythm_repair_plan.json`
+- deterministic `output/rhythm_repair_plan.md`
+- deterministic `output/rhythm_repair_handoff.json`
+- deterministic rhythm manual repair planning without command execution,
+  rendering, edit-point movement, automatic music selection, or automatic BGM
+  fitting
+- `workflow --target core|preview|delivery`
+- canonical `.artist-portrait/data/workflow_plan.json`
+- deterministic `output/workflow_plan.md`
+- deterministic `output/workflow_agent_handoff.json`
+- deterministic guided workflow planning without command execution, rendering,
+  edit-point movement, automatic music selection, or automatic BGM fitting
+- `workflow --execution-record <candidate.json>`
+- canonical `.artist-portrait/data/workflow_execution_record_quarantine.json`
+- canonical `.artist-portrait/data/workflow_execution_review.json`
+- deterministic `output/workflow_execution_review.md`
+- deterministic `output/workflow_execution_handoff.json`
+- deterministic external workflow execution evidence review without command
+  execution, rendering, edit-point movement, automatic music selection,
+  automatic BGM fitting, or acceptance success promotion
+- `workflow --repair-plan`
+- canonical `.artist-portrait/data/workflow_repair_plan.json`
+- deterministic `output/workflow_repair_plan.md`
+- deterministic `output/workflow_repair_handoff.json`
+- deterministic workflow evidence repair planning without command execution,
+  rendering, edit-point movement, automatic music selection, automatic BGM
+  fitting, or acceptance success promotion
+- `workflow --approval-request`
+- `workflow --approval-record <candidate.json>`
+- `workflow --repair-dry-run`
+- canonical workflow repair approval request, approval record, and dry-run
+  artifacts without command execution or acceptance success promotion
+- `workflow --repair-execution-record <candidate.json>`
+- canonical `.artist-portrait/data/workflow_repair_execution_record_quarantine.json`
+- canonical `.artist-portrait/data/workflow_repair_execution_review.json`
+- deterministic `output/workflow_repair_execution_review.md`
+- deterministic `output/workflow_repair_execution_handoff.json`
+- deterministic workflow repair execution evidence review without command
+  execution, rendering, edit-point movement, automatic music selection,
+  automatic BGM fitting, or acceptance success promotion
+- `release-check --project <project.yaml>`
+- canonical `.artist-portrait/data/release_hardening_report.json`
+- deterministic `output/release_hardening_report.md`
+- deterministic release hardening audit without commit, push, tag, network
+  access, model calls, media rendering, repair execution, or acceptance success
+  promotion
+- `workflow --repair-refresh-plan`
+- canonical `.artist-portrait/data/workflow_repair_refresh_plan.json`
+- deterministic `output/workflow_repair_refresh_plan.md`
+- deterministic `output/workflow_repair_refresh_handoff.json`
+- deterministic workflow repair evidence refresh guidance without command
+  execution, workflow mutation, media rendering, model calls, network access,
+  or acceptance success promotion
 - canonical `.artist-portrait/data/acceptance_report.json`
 - deterministic `output/acceptance_report.md`
 - `ProjectAcceptanceReport` schema
+- acceptance profile, profile-passed, and required-stage reporting
 - `review --scope preview`
 - `review --scope all` as project review plus implemented timeline/preview review when available
 - repository skeleton

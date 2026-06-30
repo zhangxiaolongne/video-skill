@@ -1,7 +1,15 @@
 import json
 from pathlib import Path
 
-from artist_portrait_editor.models.acceptance import ProjectAcceptanceReport
+from artist_portrait_editor.models.acceptance import (
+    AcceptanceRepairApprovalRecord,
+    AcceptanceRepairApprovalRequest,
+    AcceptanceRepairExecutionBundle,
+    AcceptanceRepairExecutionDryRun,
+    AcceptanceRepairExecutionRecord,
+    AcceptanceRepairPlan,
+    ProjectAcceptanceReport,
+)
 from artist_portrait_editor.models.analysis import AnalysisRecord
 from artist_portrait_editor.models.bgm import (
     BgmAnalysisReport,
@@ -41,14 +49,40 @@ from artist_portrait_editor.models.proposal_adapter import ProposalProviderRegis
 from artist_portrait_editor.models.proposal_context import ProposalContext
 from artist_portrait_editor.models.proposal_request import ProposalRequestPacket
 from artist_portrait_editor.models.proposal_validation import ProposalValidationReport
+from artist_portrait_editor.models.release import ReleaseHardeningReport
 from artist_portrait_editor.models.source import SourceRecord
 from artist_portrait_editor.models.state import ProjectState
+from artist_portrait_editor.models.rhythm import (
+    RhythmAgentCandidate,
+    RhythmIntent,
+    RhythmMediaQcReport,
+    RhythmPlan,
+    RhythmRepairPlan,
+)
 from artist_portrait_editor.models.transcript import TranscriptRecord
 from artist_portrait_editor.models.timeline import TimelineDraft, TimelineValidationReport
+from artist_portrait_editor.models.workflow import (
+    WorkflowExecutionRecord,
+    WorkflowExecutionReview,
+    WorkflowPlan,
+    WorkflowRepairApprovalRecord,
+    WorkflowRepairApprovalRequest,
+    WorkflowRepairDryRun,
+    WorkflowRepairExecutionRecord,
+    WorkflowRepairExecutionReview,
+    WorkflowRepairRefreshPlan,
+    WorkflowRepairPlan,
+)
 
 
 def test_schema_generation_from_pydantic_models():
     analysis_schema = AnalysisRecord.model_json_schema()
+    approval_record_schema = AcceptanceRepairApprovalRecord.model_json_schema()
+    approval_request_schema = AcceptanceRepairApprovalRequest.model_json_schema()
+    execution_bundle_schema = AcceptanceRepairExecutionBundle.model_json_schema()
+    execution_dry_run_schema = AcceptanceRepairExecutionDryRun.model_json_schema()
+    execution_record_schema = AcceptanceRepairExecutionRecord.model_json_schema()
+    repair_plan_schema = AcceptanceRepairPlan.model_json_schema()
     acceptance_schema = ProjectAcceptanceReport.model_json_schema()
     bgm_analysis_schema = BgmAnalysisReport.model_json_schema()
     bgm_beat_grid_schema = BgmBeatGrid.model_json_schema()
@@ -69,6 +103,11 @@ def test_schema_generation_from_pydantic_models():
     proposal_validation_schema = ProposalValidationReport.model_json_schema()
     text_model_gate_schema = TextModelGate.model_json_schema()
     state_schema = ProjectState.model_json_schema()
+    rhythm_agent_schema = RhythmAgentCandidate.model_json_schema()
+    rhythm_intent_schema = RhythmIntent.model_json_schema()
+    rhythm_media_qc_schema = RhythmMediaQcReport.model_json_schema()
+    rhythm_plan_schema = RhythmPlan.model_json_schema()
+    rhythm_repair_schema = RhythmRepairPlan.model_json_schema()
     proposal_adapter_schema = ProposalAdapterCheck.model_json_schema()
     canonical_write_schema = ProposalCanonicalWriteTransactionPlan.model_json_schema()
     execution_approval_record_schema = ProposalExecutionApprovalRecord.model_json_schema()
@@ -85,12 +124,29 @@ def test_schema_generation_from_pydantic_models():
     mock_handshake_schema = ProposalMockAdapterHandshake.model_json_schema()
     provider_call_dry_run_schema = ProposalProviderCallDryRun.model_json_schema()
     provider_result_schema = ProposalProviderResultEnvelope.model_json_schema()
+    release_hardening_schema = ReleaseHardeningReport.model_json_schema()
     source_schema = SourceRecord.model_json_schema()
     transcript_schema = TranscriptRecord.model_json_schema()
     timeline_schema = TimelineDraft.model_json_schema()
     timeline_validation_schema = TimelineValidationReport.model_json_schema()
+    workflow_schema = WorkflowPlan.model_json_schema()
+    workflow_execution_record_schema = WorkflowExecutionRecord.model_json_schema()
+    workflow_execution_review_schema = WorkflowExecutionReview.model_json_schema()
+    workflow_repair_approval_record_schema = WorkflowRepairApprovalRecord.model_json_schema()
+    workflow_repair_approval_request_schema = WorkflowRepairApprovalRequest.model_json_schema()
+    workflow_repair_dry_run_schema = WorkflowRepairDryRun.model_json_schema()
+    workflow_repair_execution_record_schema = WorkflowRepairExecutionRecord.model_json_schema()
+    workflow_repair_execution_review_schema = WorkflowRepairExecutionReview.model_json_schema()
+    workflow_repair_refresh_schema = WorkflowRepairRefreshPlan.model_json_schema()
+    workflow_repair_plan_schema = WorkflowRepairPlan.model_json_schema()
 
     assert analysis_schema["title"] == "AnalysisRecord"
+    assert approval_record_schema["title"] == "AcceptanceRepairApprovalRecord"
+    assert approval_request_schema["title"] == "AcceptanceRepairApprovalRequest"
+    assert execution_bundle_schema["title"] == "AcceptanceRepairExecutionBundle"
+    assert execution_dry_run_schema["title"] == "AcceptanceRepairExecutionDryRun"
+    assert execution_record_schema["title"] == "AcceptanceRepairExecutionRecord"
+    assert repair_plan_schema["title"] == "AcceptanceRepairPlan"
     assert acceptance_schema["title"] == "ProjectAcceptanceReport"
     assert bgm_analysis_schema["title"] == "BgmAnalysisReport"
     assert bgm_beat_grid_schema["title"] == "BgmBeatGrid"
@@ -111,6 +167,11 @@ def test_schema_generation_from_pydantic_models():
     assert proposal_validation_schema["title"] == "ProposalValidationReport"
     assert text_model_gate_schema["title"] == "TextModelGate"
     assert state_schema["title"] == "ProjectState"
+    assert rhythm_agent_schema["title"] == "RhythmAgentCandidate"
+    assert rhythm_intent_schema["title"] == "RhythmIntent"
+    assert rhythm_media_qc_schema["title"] == "RhythmMediaQcReport"
+    assert rhythm_plan_schema["title"] == "RhythmPlan"
+    assert rhythm_repair_schema["title"] == "RhythmRepairPlan"
     assert proposal_adapter_schema["title"] == "ProposalAdapterCheck"
     assert canonical_write_schema["title"] == "ProposalCanonicalWriteTransactionPlan"
     assert execution_approval_record_schema["title"] == "ProposalExecutionApprovalRecord"
@@ -127,10 +188,21 @@ def test_schema_generation_from_pydantic_models():
     assert mock_handshake_schema["title"] == "ProposalMockAdapterHandshake"
     assert provider_call_dry_run_schema["title"] == "ProposalProviderCallDryRun"
     assert provider_result_schema["title"] == "ProposalProviderResultEnvelope"
+    assert release_hardening_schema["title"] == "ReleaseHardeningReport"
     assert source_schema["title"] == "SourceRecord"
     assert transcript_schema["title"] == "TranscriptRecord"
     assert timeline_schema["title"] == "TimelineDraft"
     assert timeline_validation_schema["title"] == "TimelineValidationReport"
+    assert workflow_schema["title"] == "WorkflowPlan"
+    assert workflow_execution_record_schema["title"] == "WorkflowExecutionRecord"
+    assert workflow_execution_review_schema["title"] == "WorkflowExecutionReview"
+    assert workflow_repair_approval_record_schema["title"] == "WorkflowRepairApprovalRecord"
+    assert workflow_repair_approval_request_schema["title"] == "WorkflowRepairApprovalRequest"
+    assert workflow_repair_dry_run_schema["title"] == "WorkflowRepairDryRun"
+    assert workflow_repair_execution_record_schema["title"] == "WorkflowRepairExecutionRecord"
+    assert workflow_repair_execution_review_schema["title"] == "WorkflowRepairExecutionReview"
+    assert workflow_repair_refresh_schema["title"] == "WorkflowRepairRefreshPlan"
+    assert workflow_repair_plan_schema["title"] == "WorkflowRepairPlan"
     assert "analysis_id" in analysis_schema["properties"]
     assert "project" in config_schema["properties"]
     assert "clip_id" in clip_schema["properties"]
@@ -167,6 +239,24 @@ def test_committed_schemas_match_pydantic_generation():
     schema_dir = Path(__file__).resolve().parents[2] / "schemas"
     committed_analysis = json.loads(
         (schema_dir / "analysis_record.schema.json").read_text(encoding="utf-8")
+    )
+    committed_approval_record = json.loads(
+        (schema_dir / "acceptance_repair_approval_record.schema.json").read_text(encoding="utf-8")
+    )
+    committed_approval_request = json.loads(
+        (schema_dir / "acceptance_repair_approval_request.schema.json").read_text(encoding="utf-8")
+    )
+    committed_execution_bundle = json.loads(
+        (schema_dir / "acceptance_repair_execution_bundle.schema.json").read_text(encoding="utf-8")
+    )
+    committed_execution_dry_run = json.loads(
+        (schema_dir / "acceptance_repair_execution_dry_run.schema.json").read_text(encoding="utf-8")
+    )
+    committed_execution_record = json.loads(
+        (schema_dir / "acceptance_repair_execution_record.schema.json").read_text(encoding="utf-8")
+    )
+    committed_repair_plan = json.loads(
+        (schema_dir / "acceptance_repair_plan.schema.json").read_text(encoding="utf-8")
     )
     committed_acceptance = json.loads(
         (schema_dir / "project_acceptance_report.schema.json").read_text(encoding="utf-8")
@@ -222,6 +312,64 @@ def test_committed_schemas_match_pydantic_generation():
     )
     committed_state = json.loads(
         (schema_dir / "project_state.schema.json").read_text(encoding="utf-8")
+    )
+    committed_release_hardening = json.loads(
+        (schema_dir / "release_hardening_report.schema.json").read_text(encoding="utf-8")
+    )
+    committed_rhythm_agent = json.loads(
+        (schema_dir / "rhythm_agent_candidate.schema.json").read_text(encoding="utf-8")
+    )
+    committed_rhythm_intent = json.loads(
+        (schema_dir / "rhythm_intent.schema.json").read_text(encoding="utf-8")
+    )
+    committed_rhythm_media_qc = json.loads(
+        (schema_dir / "rhythm_media_qc_report.schema.json").read_text(encoding="utf-8")
+    )
+    committed_rhythm_plan = json.loads(
+        (schema_dir / "rhythm_plan.schema.json").read_text(encoding="utf-8")
+    )
+    committed_rhythm_repair = json.loads(
+        (schema_dir / "rhythm_repair_plan.schema.json").read_text(encoding="utf-8")
+    )
+    committed_workflow = json.loads(
+        (schema_dir / "workflow_plan.schema.json").read_text(encoding="utf-8")
+    )
+    committed_workflow_execution_record = json.loads(
+        (schema_dir / "workflow_execution_record.schema.json").read_text(encoding="utf-8")
+    )
+    committed_workflow_execution_review = json.loads(
+        (schema_dir / "workflow_execution_review.schema.json").read_text(encoding="utf-8")
+    )
+    committed_workflow_repair_approval_record = json.loads(
+        (schema_dir / "workflow_repair_approval_record.schema.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    committed_workflow_repair_approval_request = json.loads(
+        (schema_dir / "workflow_repair_approval_request.schema.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    committed_workflow_repair_dry_run = json.loads(
+        (schema_dir / "workflow_repair_dry_run.schema.json").read_text(encoding="utf-8")
+    )
+    committed_workflow_repair_execution_record = json.loads(
+        (schema_dir / "workflow_repair_execution_record.schema.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    committed_workflow_repair_execution_review = json.loads(
+        (schema_dir / "workflow_repair_execution_review.schema.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    committed_workflow_repair_refresh = json.loads(
+        (schema_dir / "workflow_repair_refresh_plan.schema.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    committed_workflow_repair_plan = json.loads(
+        (schema_dir / "workflow_repair_plan.schema.json").read_text(encoding="utf-8")
     )
     committed_proposal_adapter = json.loads(
         (schema_dir / "proposal_adapter_check.schema.json").read_text(
@@ -324,6 +472,24 @@ def test_committed_schemas_match_pydantic_generation():
     assert committed_analysis == json.loads(
         json.dumps(AnalysisRecord.model_json_schema(), sort_keys=True)
     )
+    assert committed_approval_record == json.loads(
+        json.dumps(AcceptanceRepairApprovalRecord.model_json_schema(), sort_keys=True)
+    )
+    assert committed_approval_request == json.loads(
+        json.dumps(AcceptanceRepairApprovalRequest.model_json_schema(), sort_keys=True)
+    )
+    assert committed_execution_bundle == json.loads(
+        json.dumps(AcceptanceRepairExecutionBundle.model_json_schema(), sort_keys=True)
+    )
+    assert committed_execution_dry_run == json.loads(
+        json.dumps(AcceptanceRepairExecutionDryRun.model_json_schema(), sort_keys=True)
+    )
+    assert committed_execution_record == json.loads(
+        json.dumps(AcceptanceRepairExecutionRecord.model_json_schema(), sort_keys=True)
+    )
+    assert committed_repair_plan == json.loads(
+        json.dumps(AcceptanceRepairPlan.model_json_schema(), sort_keys=True)
+    )
     assert committed_acceptance == json.loads(
         json.dumps(ProjectAcceptanceReport.model_json_schema(), sort_keys=True)
     )
@@ -374,6 +540,54 @@ def test_committed_schemas_match_pydantic_generation():
     )
     assert committed_state == json.loads(
         json.dumps(ProjectState.model_json_schema(), sort_keys=True)
+    )
+    assert committed_release_hardening == json.loads(
+        json.dumps(ReleaseHardeningReport.model_json_schema(), sort_keys=True)
+    )
+    assert committed_rhythm_agent == json.loads(
+        json.dumps(RhythmAgentCandidate.model_json_schema(), sort_keys=True)
+    )
+    assert committed_rhythm_intent == json.loads(
+        json.dumps(RhythmIntent.model_json_schema(), sort_keys=True)
+    )
+    assert committed_rhythm_media_qc == json.loads(
+        json.dumps(RhythmMediaQcReport.model_json_schema(), sort_keys=True)
+    )
+    assert committed_rhythm_plan == json.loads(
+        json.dumps(RhythmPlan.model_json_schema(), sort_keys=True)
+    )
+    assert committed_rhythm_repair == json.loads(
+        json.dumps(RhythmRepairPlan.model_json_schema(), sort_keys=True)
+    )
+    assert committed_workflow == json.loads(
+        json.dumps(WorkflowPlan.model_json_schema(), sort_keys=True)
+    )
+    assert committed_workflow_execution_record == json.loads(
+        json.dumps(WorkflowExecutionRecord.model_json_schema(), sort_keys=True)
+    )
+    assert committed_workflow_execution_review == json.loads(
+        json.dumps(WorkflowExecutionReview.model_json_schema(), sort_keys=True)
+    )
+    assert committed_workflow_repair_approval_record == json.loads(
+        json.dumps(WorkflowRepairApprovalRecord.model_json_schema(), sort_keys=True)
+    )
+    assert committed_workflow_repair_approval_request == json.loads(
+        json.dumps(WorkflowRepairApprovalRequest.model_json_schema(), sort_keys=True)
+    )
+    assert committed_workflow_repair_dry_run == json.loads(
+        json.dumps(WorkflowRepairDryRun.model_json_schema(), sort_keys=True)
+    )
+    assert committed_workflow_repair_execution_record == json.loads(
+        json.dumps(WorkflowRepairExecutionRecord.model_json_schema(), sort_keys=True)
+    )
+    assert committed_workflow_repair_execution_review == json.loads(
+        json.dumps(WorkflowRepairExecutionReview.model_json_schema(), sort_keys=True)
+    )
+    assert committed_workflow_repair_refresh == json.loads(
+        json.dumps(WorkflowRepairRefreshPlan.model_json_schema(), sort_keys=True)
+    )
+    assert committed_workflow_repair_plan == json.loads(
+        json.dumps(WorkflowRepairPlan.model_json_schema(), sort_keys=True)
     )
     assert committed_proposal_adapter == json.loads(
         json.dumps(ProposalAdapterCheck.model_json_schema(), sort_keys=True)

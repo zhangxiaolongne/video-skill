@@ -1,7 +1,7 @@
 {
   "schema_version": "1.4",
-  "capability_gate": "V0-024",
-  "milestone": "V0-024 project acceptance gate",
+  "capability_gate": "V0-041",
+  "milestone": "V0-041 workflow repair evidence refresh guidance gate",
   "documentation_system": {
     "master": "artist_portrait_editor_revision5_optimized.md",
     "current_progress": "docs/DEVELOPMENT_PROGRESS.md",
@@ -13,12 +13,18 @@
     "historical_readiness_policy": "consolidated_in_release_ledger"
   },
   "active_batch": {
-    "id": "V0-024",
-    "name": "project acceptance gate",
+    "id": "V0-041",
+    "name": "workflow repair evidence refresh guidance gate",
     "status": "completed",
-    "started": "2026-06-28",
-    "capability_gate": "V0-024",
+    "started": "2026-06-30",
+    "capability_gate": "V0-041",
     "commit_policy": "local_until_large_functional_checkpoint"
+  },
+  "batch_contract_audit": {
+    "status": "passed",
+    "issue": "ISSUE-014",
+    "reason": "V0-041 tasks were audited before implementation and each task maps to user-visible workflow repair evidence refresh guidance, not to isolated fields, schemas, tests, or docs.",
+    "required_next_batch_rule": "Before editing, list at least ten proposed countable version outcomes with explicit countability rationale; if fewer than ten survive audit, stop and request gate promotion."
   },
   "capability_progress": {
     "media_foundation": "completed",
@@ -37,7 +43,24 @@
     "bgm_recommendation_to_fit_selection": "completed",
     "bgm_recommendation_fit_review": "completed",
     "bgm_fit_controls": "completed",
-    "project_acceptance": "completed"
+    "project_acceptance": "completed",
+    "acceptance_profiles": "completed",
+    "real_media_acceptance_fixtures": "completed",
+    "acceptance_repair_plans": "completed",
+    "acceptance_repair_approvals": "completed",
+    "repair_execution_dry_runs": "completed",
+    "repair_execution_handoffs": "completed",
+    "rhythm_planning": "completed",
+    "rhythm_media_qc": "completed",
+    "rhythm_acceptance_integration": "completed",
+    "rhythm_manual_repair_planning": "completed",
+    "guided_workflow_planning": "completed",
+    "workflow_execution_evidence_review": "completed",
+    "workflow_evidence_repair_planning": "completed",
+    "workflow_repair_approval_dry_run": "completed",
+    "workflow_repair_execution_review": "completed",
+    "release_hardening": "completed",
+    "workflow_repair_refresh_guidance": "completed"
   },
   "future_bgm_input_contract": {
     "status": "required_for_future_gate",
@@ -105,53 +128,53 @@
   },
   "tasks": [
     {
-      "id": "V024-01",
-      "name": "project acceptance gate promotion",
+      "id": "V041-01",
+      "name": "workflow repair refresh plan CLI",
       "status": "completed"
     },
     {
-      "id": "V024-02",
-      "name": "canonical acceptance report contract",
+      "id": "V041-02",
+      "name": "repair execution review binding",
       "status": "completed"
     },
     {
-      "id": "V024-03",
-      "name": "core readiness evaluation",
+      "id": "V041-03",
+      "name": "accepted repair action mapping",
       "status": "completed"
     },
     {
-      "id": "V024-04",
-      "name": "BGM readiness evaluation",
+      "id": "V041-04",
+      "name": "failed repair action mapping",
       "status": "completed"
     },
     {
-      "id": "V024-05",
-      "name": "preview readiness evaluation",
+      "id": "V041-05",
+      "name": "missing skipped repair action mapping",
       "status": "completed"
     },
     {
-      "id": "V024-06",
-      "name": "final-export readiness evaluation",
+      "id": "V041-06",
+      "name": "evidence resubmission package",
       "status": "completed"
     },
     {
-      "id": "V024-07",
-      "name": "forbidden-capability flag audit",
+      "id": "V041-07",
+      "name": "current workflow refresh command",
       "status": "completed"
     },
     {
-      "id": "V024-08",
-      "name": "acceptance CLI state and run-audit integration",
+      "id": "V041-08",
+      "name": "repair refresh handoff",
       "status": "completed"
     },
     {
-      "id": "V024-09",
-      "name": "acceptance schema and regression coverage",
+      "id": "V041-09",
+      "name": "no mutation audit",
       "status": "completed"
     },
     {
-      "id": "V024-10",
-      "name": "V0-024 governance and hard-check alignment",
+      "id": "V041-10",
+      "name": "real-media repair refresh checks",
       "status": "completed"
     }
   ],
@@ -176,6 +199,23 @@
     "bgm_recommendation_fit_review": true,
     "bgm_fit_controls": true,
     "project_acceptance": true,
+    "acceptance_profiles": true,
+    "real_media_acceptance_fixtures": true,
+    "acceptance_repair_plans": true,
+    "acceptance_repair_approvals": true,
+    "repair_execution_dry_runs": true,
+    "repair_execution_handoffs": true,
+    "rhythm_planning": true,
+    "rhythm_media_qc": true,
+    "rhythm_acceptance_integration": true,
+    "rhythm_manual_repair_planning": true,
+    "guided_workflow_planning": true,
+    "workflow_execution_evidence_review": true,
+    "workflow_evidence_repair_planning": true,
+    "workflow_repair_approval_dry_run": true,
+    "workflow_repair_execution_review": true,
+    "release_hardening": true,
+    "workflow_repair_refresh_guidance": true,
     "automatic_beat_synced_editing": false
   }
 }
