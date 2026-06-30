@@ -33,8 +33,9 @@ readiness and gate-progress fragments must not be recreated.
 - Current batch: `V0-041`
 - Batch status: `completed`
 - Current release marker: tag `v0.25.0`
-- Previous published baseline: `v0.24.0`
-- Release publication target: `main` with capability tag `v0.25.0`
+- Latest published baseline: `v0.25.0`
+- Release publication state: `main` and peeled `v0.25.0` verified at
+  `2920369ec4a6217d224cb061b8c84477c38355a2`
 - Final usable Skill status: foundation, creative proposals, canonical timeline,
   BGM fitting, and local low-resolution preview rendering are substantial;
   preview quality review, render controls, controlled local final export, and
@@ -51,7 +52,7 @@ readiness and gate-progress fragments must not be recreated.
   execution evidence review, accumulated workflow/rhythm release hardening, and
   workflow repair evidence refresh guidance are
   substantial;
-  release publication target is `v0.25.0`; installed-engine BPM extraction and
+  latest published release is `v0.25.0`; installed-engine BPM extraction and
   automatic music selection remain undelivered
 
 ## Capability Dashboard

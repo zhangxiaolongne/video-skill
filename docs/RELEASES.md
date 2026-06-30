@@ -20,21 +20,22 @@ gate-progress, or closeout fragments.
   V0-023, and V0-024
 - Release target: `v0.25.0`
 - Completed in release `v0.25.0`: V0-025 through V0-041
-- Working-tree publication state: `v0.25.0` prepared locally; tag and remote
-  push pending final command execution
+- Working-tree publication state: `v0.25.0` committed, tagged, and pushed
 - Governance state: V0-041 completed with pre-implementation countability audit
   passed; V0-030 task accounting issue is resolved as `ISSUE-014`
-- Latest published capability release tag: `v0.24.0`
-- Remote freshness: `main` and peeled `v0.24.0` both verified at
-  `d7dcab6430db4f0a6845079cebcd22cfbb85e74e` after push
-- Publication policy: push `main` and `v0.25.0` after final local release
-  validation
+- Latest published capability release tag: `v0.25.0`
+- Remote freshness: `main` and peeled `v0.25.0` both verified at
+  `2920369ec4a6217d224cb061b8c84477c38355a2` after push; annotated tag object
+  `e0b6a734b055ea7b3da32819de1d926c4e39e79c`
+- Publication policy: do not publish the next capability release until its
+  release candidate has passed full local validation
 
 ## Current Validation
 
 Validation is updated only after the complete current working tree passes.
 
-- Verified: `v0.25.0` release-candidate validation completed on `2026-06-30`
+- Verified: `v0.25.0` release validation and remote publication completed on
+  `2026-06-30`
 - Full pytest: `285 passed`
 - Project checks: `run_checks.py --skip-pytest` passed
 - Skill validation: passed
@@ -74,8 +75,8 @@ Validation is updated only after the complete current working tree passes.
   gate/progress tests passed with `17 passed`; project checks including
   generated real-media workflow repair refresh guidance, Skill validation, and
   schema drift passed; `git diff --check` passed
-- Git: included in release `v0.25.0`; tag and remote push pending final
-  command execution
+- Git: included in release `v0.25.0`; `main` and peeled tag verified at
+  `2920369ec4a6217d224cb061b8c84477c38355a2`
 
 ### V0-040 Accumulated Workflow/Rhythm Release Hardening Gate
 
