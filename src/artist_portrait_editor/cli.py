@@ -26,6 +26,7 @@ from artist_portrait_editor.bgm import (
     review_bgm,
 )
 from artist_portrait_editor.config_loader import ConfigLoadError, load_project_config
+from artist_portrait_editor.editor_package import EditorPackageError, build_editor_package
 from artist_portrait_editor.bgm_recommendation import (
     BgmRecommendationError,
     import_bgm_recommendation_candidate,
@@ -38,12 +39,27 @@ from artist_portrait_editor.final_export_workspace import (
     final_export_workspace,
     review_final_export_workspace,
 )
+from artist_portrait_editor.fcpxml_writer import (
+    FcpxmlWriterError,
+    build_fcpxml_draft,
+    build_fcpxml_repair_approval_request,
+    build_fcpxml_repair_dry_run,
+    build_fcpxml_repair_plan,
+    import_fcpxml_import_review,
+    import_fcpxml_repair_execution_record,
+    import_fcpxml_repair_approval_record,
+)
 from artist_portrait_editor.models.source import RightsStatus
 from artist_portrait_editor.models.acceptance import (
     AcceptanceRepairApprovalRecord,
     AcceptanceRepairExecutionDryRun,
 )
 from artist_portrait_editor.models.state import OverallStatus, StepLedgerEntry, StepStatus
+from artist_portrait_editor.nle_interchange import (
+    NleInterchangeError,
+    build_nle_interchange_plan,
+)
+from artist_portrait_editor.operator_runbook import build_operator_runbook
 from artist_portrait_editor.preview_workspace import (
     preview_workspace,
     review_preview_workspace,
@@ -145,6 +161,44 @@ def build_parser() -> argparse.ArgumentParser:
     workflow_sub.add_argument("--json", action="store_true")
     workflow_sub.add_argument("--quiet", action="store_true")
     workflow_sub.add_argument("--verbose", action="store_true")
+
+    operator_sub = subparsers.add_parser("operator")
+    operator_sub.add_argument("--project", required=True)
+    operator_sub.add_argument("--target", choices=("core", "preview", "delivery"), default="delivery")
+    operator_sub.add_argument("--json", action="store_true")
+    operator_sub.add_argument("--quiet", action="store_true")
+    operator_sub.add_argument("--verbose", action="store_true")
+
+    editor_package_sub = subparsers.add_parser("editor-package")
+    editor_package_sub.add_argument("--project", required=True)
+    editor_package_sub.add_argument("--json", action="store_true")
+    editor_package_sub.add_argument("--quiet", action="store_true")
+    editor_package_sub.add_argument("--verbose", action="store_true")
+
+    nle_plan_sub = subparsers.add_parser("nle-plan")
+    nle_plan_sub.add_argument("--project", required=True)
+    nle_plan_sub.add_argument(
+        "--target",
+        choices=("fcpxml", "edl", "resolve_csv", "all"),
+        default="all",
+    )
+    nle_plan_sub.add_argument("--frame-rate", type=float, default=24.0)
+    nle_plan_sub.add_argument("--json", action="store_true")
+    nle_plan_sub.add_argument("--quiet", action="store_true")
+    nle_plan_sub.add_argument("--verbose", action="store_true")
+
+    fcpxml_sub = subparsers.add_parser("fcpxml")
+    fcpxml_sub.add_argument("--project", required=True)
+    fcpxml_sub.add_argument("--draft", action="store_true")
+    fcpxml_sub.add_argument("--import-review")
+    fcpxml_sub.add_argument("--repair-plan", action="store_true")
+    fcpxml_sub.add_argument("--approval-request", action="store_true")
+    fcpxml_sub.add_argument("--approval-record")
+    fcpxml_sub.add_argument("--repair-dry-run", action="store_true")
+    fcpxml_sub.add_argument("--repair-execution-record")
+    fcpxml_sub.add_argument("--json", action="store_true")
+    fcpxml_sub.add_argument("--quiet", action="store_true")
+    fcpxml_sub.add_argument("--verbose", action="store_true")
 
     acceptance_sub = subparsers.add_parser("acceptance")
     acceptance_sub.add_argument("--project", required=True)
@@ -895,6 +949,783 @@ def cmd_workflow(args: argparse.Namespace) -> int:
         print(f"next {plan.next_command or 'none'}")
         print(f"wrote {payload['report']}")
     return int(ExitCode.success if plan.status == "ready" else ExitCode.success_with_warnings)
+
+
+def cmd_operator(args: argparse.Namespace) -> int:
+    if error := _validate_common_flags(args):
+        return int(error)
+    project_path = Path(args.project)
+    try:
+        config = load_project_config(project_path)
+    except ConfigLoadError as exc:
+        print(str(exc), file=sys.stderr)
+        return int(ExitCode.invalid_project_config)
+    root = project_root(project_path)
+    state = load_state(root)
+    json_path, md_path, handoff_path, runbook = build_operator_runbook(
+        root=root,
+        project_id=config.project.id,
+        target=args.target,
+        state=state,
+    )
+    if state is not None:
+        run_id = new_run_id()
+        status = (
+            StepStatus.completed
+            if runbook.status == "ready"
+            else StepStatus.completed_with_warnings
+            if runbook.status in {"in_progress", "warning"}
+            else StepStatus.failed
+        )
+        state.steps["operator"] = StepLedgerEntry(
+            status=status,
+            output_refs=[
+                json_path.relative_to(root).as_posix(),
+                md_path.relative_to(root).as_posix(),
+                handoff_path.relative_to(root).as_posix(),
+            ],
+            last_run_id=run_id,
+            warnings=[
+                stage.summary
+                for stage in runbook.stages
+                if stage.status in {"current", "blocked", "warning"}
+            ][:12],
+        )
+        state.latest_run_id = run_id
+        state.updated_at = utc_now()
+        runs_dir = root / ".artist-portrait" / "runs" / run_id
+        runs_dir.mkdir(parents=True, exist_ok=True)
+        write_json(
+            runs_dir / "command.json",
+            {"command": "operator", "project": str(project_path), "target": args.target},
+        )
+        write_json(runs_dir / "environment.json", environment_snapshot())
+        write_json(
+            runs_dir / "step_result.json",
+            {
+                "step": "operator",
+                "status": status.value,
+                "output_refs": state.steps["operator"].output_refs,
+                "commands_executed": False,
+                "media_rendered": False,
+                "timeline_mutated": False,
+                "edit_points_moved": False,
+                "automatic_music_selection": False,
+                "model_call_performed": False,
+                "network_performed": False,
+            },
+        )
+        save_state(root, state)
+        write_run_report(root / config.paths.output_dir, state, [])
+    payload = {
+        "output": json_path.relative_to(root).as_posix(),
+        "report": md_path.relative_to(root).as_posix(),
+        "handoff": handoff_path.relative_to(root).as_posix(),
+        "status": runbook.status,
+        "next_command": runbook.next_command,
+        "operator_runbook": runbook.model_dump(mode="json"),
+    }
+    if args.json:
+        print(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True))
+    elif not args.quiet:
+        print(f"operator {runbook.status}")
+        print(f"next {runbook.next_command or 'none'}")
+        print(f"wrote {payload['report']}")
+    return int(ExitCode.success if runbook.status == "ready" else ExitCode.success_with_warnings)
+
+
+def cmd_editor_package(args: argparse.Namespace) -> int:
+    if error := _validate_common_flags(args):
+        return int(error)
+    project_path = Path(args.project)
+    try:
+        config = load_project_config(project_path)
+    except ConfigLoadError as exc:
+        print(str(exc), file=sys.stderr)
+        return int(ExitCode.invalid_project_config)
+    root = project_root(project_path)
+    state = load_state(root)
+    try:
+        json_path, md_path, csv_path, handoff_path, package = build_editor_package(
+            root=root,
+            project_id=config.project.id,
+            state=state,
+        )
+    except EditorPackageError as exc:
+        print(str(exc), file=sys.stderr)
+        return int(ExitCode.output_or_reference_validation_failed)
+    if state is not None:
+        run_id = new_run_id()
+        status = (
+            StepStatus.completed
+            if package.status == "ready"
+            else StepStatus.completed_with_warnings
+            if package.status == "warning"
+            else StepStatus.failed
+        )
+        state.steps["editor_package"] = StepLedgerEntry(
+            status=status,
+            output_refs=[
+                json_path.relative_to(root).as_posix(),
+                md_path.relative_to(root).as_posix(),
+                csv_path.relative_to(root).as_posix(),
+                handoff_path.relative_to(root).as_posix(),
+            ],
+            last_run_id=run_id,
+            warnings=package.warnings,
+        )
+        state.latest_run_id = run_id
+        state.updated_at = utc_now()
+        runs_dir = root / ".artist-portrait" / "runs" / run_id
+        runs_dir.mkdir(parents=True, exist_ok=True)
+        write_json(
+            runs_dir / "command.json",
+            {"command": "editor-package", "project": str(project_path)},
+        )
+        write_json(runs_dir / "environment.json", environment_snapshot())
+        write_json(
+            runs_dir / "step_result.json",
+            {
+                "step": "editor_package",
+                "status": status.value,
+                "output_refs": state.steps["editor_package"].output_refs,
+                "commands_executed": False,
+                "media_rendered": False,
+                "timeline_mutated": False,
+                "edit_points_moved": False,
+                "automatic_music_selection": False,
+                "automatic_bgm_fit": False,
+                "model_call_performed": False,
+                "network_performed": False,
+                "image_generation_or_editing_used": False,
+            },
+        )
+        save_state(root, state)
+        write_run_report(root / config.paths.output_dir, state, [])
+    payload = {
+        "output": json_path.relative_to(root).as_posix(),
+        "report": md_path.relative_to(root).as_posix(),
+        "cue_sheet": csv_path.relative_to(root).as_posix(),
+        "handoff": handoff_path.relative_to(root).as_posix(),
+        "status": package.status,
+        "editor_package": package.model_dump(mode="json"),
+    }
+    if args.json:
+        print(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True))
+    elif not args.quiet:
+        print(f"editor-package {package.status}")
+        print(f"wrote {payload['report']}")
+        print(f"wrote {payload['cue_sheet']}")
+    return int(ExitCode.success if package.status == "ready" else ExitCode.success_with_warnings)
+
+
+def cmd_nle_plan(args: argparse.Namespace) -> int:
+    if error := _validate_common_flags(args):
+        return int(error)
+    project_path = Path(args.project)
+    try:
+        config = load_project_config(project_path)
+    except ConfigLoadError as exc:
+        print(str(exc), file=sys.stderr)
+        return int(ExitCode.invalid_project_config)
+    root = project_root(project_path)
+    state = load_state(root)
+    try:
+        json_path, md_path, csv_path, handoff_path, plan = build_nle_interchange_plan(
+            root=root,
+            project_id=config.project.id,
+            target=args.target,
+            frame_rate=args.frame_rate,
+        )
+    except NleInterchangeError as exc:
+        print(str(exc), file=sys.stderr)
+        return int(ExitCode.output_or_reference_validation_failed)
+    if state is not None:
+        run_id = new_run_id()
+        status = (
+            StepStatus.completed
+            if plan.status == "ready"
+            else StepStatus.completed_with_warnings
+            if plan.status == "warning"
+            else StepStatus.failed
+        )
+        state.steps["nle_plan"] = StepLedgerEntry(
+            status=status,
+            output_refs=[
+                json_path.relative_to(root).as_posix(),
+                md_path.relative_to(root).as_posix(),
+                csv_path.relative_to(root).as_posix(),
+                handoff_path.relative_to(root).as_posix(),
+            ],
+            last_run_id=run_id,
+            warnings=plan.warnings + plan.blocked_reasons,
+        )
+        state.latest_run_id = run_id
+        state.updated_at = utc_now()
+        runs_dir = root / ".artist-portrait" / "runs" / run_id
+        runs_dir.mkdir(parents=True, exist_ok=True)
+        write_json(
+            runs_dir / "command.json",
+            {
+                "command": "nle-plan",
+                "project": str(project_path),
+                "target": args.target,
+                "frame_rate": args.frame_rate,
+            },
+        )
+        write_json(runs_dir / "environment.json", environment_snapshot())
+        write_json(
+            runs_dir / "step_result.json",
+            {
+                "step": "nle_plan",
+                "status": status.value,
+                "output_refs": state.steps["nle_plan"].output_refs,
+                "commands_executed": False,
+                "media_rendered": False,
+                "timeline_mutated": False,
+                "edit_points_moved": False,
+                "nle_project_written": False,
+                "automatic_music_selection": False,
+                "automatic_bgm_fit": False,
+                "model_call_performed": False,
+                "network_performed": False,
+                "image_generation_or_editing_used": False,
+            },
+        )
+        save_state(root, state)
+        write_run_report(root / config.paths.output_dir, state, [])
+    payload = {
+        "output": json_path.relative_to(root).as_posix(),
+        "report": md_path.relative_to(root).as_posix(),
+        "mapping_csv": csv_path.relative_to(root).as_posix(),
+        "handoff": handoff_path.relative_to(root).as_posix(),
+        "status": plan.status,
+        "nle_interchange_plan": plan.model_dump(mode="json"),
+    }
+    if args.json:
+        print(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True))
+    elif not args.quiet:
+        print(f"nle-plan {plan.status}")
+        print(f"wrote {payload['report']}")
+        print(f"wrote {payload['mapping_csv']}")
+    return int(ExitCode.success if plan.status == "ready" else ExitCode.success_with_warnings)
+
+
+def cmd_fcpxml(args: argparse.Namespace) -> int:
+    if error := _validate_common_flags(args):
+        return int(error)
+    selected_modes = sum(
+        bool(item)
+        for item in (
+            args.draft,
+            args.import_review,
+            args.repair_plan,
+            args.approval_request,
+            args.approval_record,
+            args.repair_dry_run,
+            args.repair_execution_record,
+        )
+    )
+    if selected_modes != 1:
+        print(
+            "fcpxml requires exactly one of --draft, --import-review, --repair-plan, --approval-request, --approval-record, --repair-dry-run, or --repair-execution-record",
+            file=sys.stderr,
+        )
+        return int(ExitCode.invalid_cli_usage)
+    project_path = Path(args.project)
+    try:
+        config = load_project_config(project_path)
+    except ConfigLoadError as exc:
+        print(str(exc), file=sys.stderr)
+        return int(ExitCode.invalid_project_config)
+    root = project_root(project_path)
+    state = load_state(root)
+    if args.repair_execution_record:
+        try:
+            json_path, md_path, handoff_path, review = import_fcpxml_repair_execution_record(
+                root=root,
+                project_id=config.project.id,
+                candidate_path=Path(args.repair_execution_record),
+            )
+        except FcpxmlWriterError as exc:
+            print(str(exc), file=sys.stderr)
+            return int(ExitCode.output_or_reference_validation_failed)
+        if state is not None:
+            run_id = new_run_id()
+            status = (
+                StepStatus.completed
+                if review.status == "passed"
+                else StepStatus.completed_with_warnings
+                if review.status == "warning"
+                else StepStatus.failed
+            )
+            state.steps["fcpxml_repair_execution_review"] = StepLedgerEntry(
+                status=status,
+                output_refs=[
+                    json_path.relative_to(root).as_posix(),
+                    md_path.relative_to(root).as_posix(),
+                    handoff_path.relative_to(root).as_posix(),
+                ],
+                last_run_id=run_id,
+                warnings=[item.detail for item in review.action_reviews if item.review_status != "accepted"],
+            )
+            state.latest_run_id = run_id
+            state.updated_at = utc_now()
+            runs_dir = root / ".artist-portrait" / "runs" / run_id
+            runs_dir.mkdir(parents=True, exist_ok=True)
+            write_json(runs_dir / "command.json", {"command": "fcpxml", "project": str(project_path), "repair_execution_record": str(args.repair_execution_record)})
+            write_json(runs_dir / "environment.json", environment_snapshot())
+            write_json(
+                runs_dir / "step_result.json",
+                {
+                    "step": "fcpxml_repair_execution_review",
+                    "status": status.value,
+                    "output_refs": state.steps["fcpxml_repair_execution_review"].output_refs,
+                    "commands_executed_by_cli": False,
+                    "media_rendered_by_cli": False,
+                    "timeline_mutated_by_cli": False,
+                    "edit_points_moved_by_cli": False,
+                    "nle_import_performed_by_cli": False,
+                    "source_relink_performed_by_cli": False,
+                    "repair_success_promoted_by_cli": False,
+                    "acceptance_success_promoted_by_cli": False,
+                },
+            )
+            save_state(root, state)
+            write_run_report(root / config.paths.output_dir, state, [])
+        payload = {
+            "output": json_path.relative_to(root).as_posix(),
+            "report": md_path.relative_to(root).as_posix(),
+            "handoff": handoff_path.relative_to(root).as_posix(),
+            "status": review.status,
+            "fcpxml_repair_execution_review": review.model_dump(mode="json"),
+        }
+        if args.json:
+            print(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True))
+        elif not args.quiet:
+            print(f"fcpxml repair execution-review {review.status}")
+            print(f"wrote {payload['report']}")
+        return int(
+            ExitCode.success
+            if review.status == "passed"
+            else ExitCode.success_with_warnings
+            if review.status == "warning"
+            else ExitCode.output_or_reference_validation_failed
+        )
+    if args.approval_request:
+        try:
+            json_path, md_path, handoff_path, request = build_fcpxml_repair_approval_request(
+                root=root,
+                project_id=config.project.id,
+            )
+        except FcpxmlWriterError as exc:
+            print(str(exc), file=sys.stderr)
+            return int(ExitCode.output_or_reference_validation_failed)
+        if state is not None:
+            run_id = new_run_id()
+            state.steps["fcpxml_repair_approval_request"] = StepLedgerEntry(
+                status=StepStatus.completed,
+                output_refs=[
+                    json_path.relative_to(root).as_posix(),
+                    md_path.relative_to(root).as_posix(),
+                    handoff_path.relative_to(root).as_posix(),
+                ],
+                last_run_id=run_id,
+                warnings=[],
+            )
+            state.latest_run_id = run_id
+            state.updated_at = utc_now()
+            runs_dir = root / ".artist-portrait" / "runs" / run_id
+            runs_dir.mkdir(parents=True, exist_ok=True)
+            write_json(runs_dir / "command.json", {"command": "fcpxml", "project": str(project_path), "approval_request": True})
+            write_json(runs_dir / "environment.json", environment_snapshot())
+            write_json(
+                runs_dir / "step_result.json",
+                {
+                    "step": "fcpxml_repair_approval_request",
+                    "status": StepStatus.completed.value,
+                    "output_refs": state.steps["fcpxml_repair_approval_request"].output_refs,
+                    "commands_executed": False,
+                    "media_rendered": False,
+                    "timeline_mutated": False,
+                    "edit_points_moved": False,
+                    "nle_import_performed": False,
+                    "source_relink_performed": False,
+                    "repair_success_claimed": False,
+                },
+            )
+            save_state(root, state)
+            write_run_report(root / config.paths.output_dir, state, [])
+        payload = {
+            "output": json_path.relative_to(root).as_posix(),
+            "report": md_path.relative_to(root).as_posix(),
+            "handoff": handoff_path.relative_to(root).as_posix(),
+            "fcpxml_repair_approval_request": request.model_dump(mode="json"),
+        }
+        if args.json:
+            print(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True))
+        elif not args.quiet:
+            print("fcpxml repair approval-request")
+            print(f"wrote {payload['report']}")
+        return int(ExitCode.success)
+    if args.approval_record:
+        try:
+            json_path, md_path, record = import_fcpxml_repair_approval_record(
+                root=root,
+                project_id=config.project.id,
+                candidate_path=Path(args.approval_record),
+            )
+        except FcpxmlWriterError as exc:
+            print(str(exc), file=sys.stderr)
+            return int(ExitCode.output_or_reference_validation_failed)
+        if state is not None:
+            run_id = new_run_id()
+            status = StepStatus.completed if record.status == "passed" else StepStatus.failed
+            state.steps["fcpxml_repair_approval_record"] = StepLedgerEntry(
+                status=status,
+                output_refs=[
+                    json_path.relative_to(root).as_posix(),
+                    md_path.relative_to(root).as_posix(),
+                ],
+                last_run_id=run_id,
+                warnings=record.invalid_reasons,
+            )
+            state.latest_run_id = run_id
+            state.updated_at = utc_now()
+            runs_dir = root / ".artist-portrait" / "runs" / run_id
+            runs_dir.mkdir(parents=True, exist_ok=True)
+            write_json(runs_dir / "command.json", {"command": "fcpxml", "project": str(project_path), "approval_record": str(args.approval_record)})
+            write_json(runs_dir / "environment.json", environment_snapshot())
+            write_json(
+                runs_dir / "step_result.json",
+                {
+                    "step": "fcpxml_repair_approval_record",
+                    "status": status.value,
+                    "output_refs": state.steps["fcpxml_repair_approval_record"].output_refs,
+                    "commands_executed_by_cli": False,
+                    "media_rendered_by_cli": False,
+                    "timeline_mutated_by_cli": False,
+                    "edit_points_moved_by_cli": False,
+                    "nle_import_performed_by_cli": False,
+                    "source_relink_performed_by_cli": False,
+                    "repair_success_claimed_by_cli": False,
+                },
+            )
+            save_state(root, state)
+            write_run_report(root / config.paths.output_dir, state, [])
+        payload = {
+            "output": json_path.relative_to(root).as_posix(),
+            "report": md_path.relative_to(root).as_posix(),
+            "status": record.status,
+            "fcpxml_repair_approval_record": record.model_dump(mode="json"),
+        }
+        if args.json:
+            print(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True))
+        elif not args.quiet:
+            print(f"fcpxml repair approval-record {record.status}")
+            print(f"wrote {payload['report']}")
+        return int(ExitCode.success if record.status == "passed" else ExitCode.output_or_reference_validation_failed)
+    if args.repair_dry_run:
+        try:
+            json_path, md_path, handoff_path, dry_run = build_fcpxml_repair_dry_run(
+                root=root,
+                project_id=config.project.id,
+            )
+        except FcpxmlWriterError as exc:
+            print(str(exc), file=sys.stderr)
+            return int(ExitCode.output_or_reference_validation_failed)
+        if state is not None:
+            run_id = new_run_id()
+            state.steps["fcpxml_repair_dry_run"] = StepLedgerEntry(
+                status=StepStatus.completed,
+                output_refs=[
+                    json_path.relative_to(root).as_posix(),
+                    md_path.relative_to(root).as_posix(),
+                    handoff_path.relative_to(root).as_posix(),
+                ],
+                last_run_id=run_id,
+                warnings=[],
+            )
+            state.latest_run_id = run_id
+            state.updated_at = utc_now()
+            runs_dir = root / ".artist-portrait" / "runs" / run_id
+            runs_dir.mkdir(parents=True, exist_ok=True)
+            write_json(runs_dir / "command.json", {"command": "fcpxml", "project": str(project_path), "repair_dry_run": True})
+            write_json(runs_dir / "environment.json", environment_snapshot())
+            write_json(
+                runs_dir / "step_result.json",
+                {
+                    "step": "fcpxml_repair_dry_run",
+                    "status": StepStatus.completed.value,
+                    "output_refs": state.steps["fcpxml_repair_dry_run"].output_refs,
+                    "commands_executed": False,
+                    "media_rendered": False,
+                    "timeline_mutated": False,
+                    "edit_points_moved": False,
+                    "nle_import_performed": False,
+                    "source_relink_performed": False,
+                    "repair_success_claimed": False,
+                },
+            )
+            save_state(root, state)
+            write_run_report(root / config.paths.output_dir, state, [])
+        payload = {
+            "output": json_path.relative_to(root).as_posix(),
+            "report": md_path.relative_to(root).as_posix(),
+            "handoff": handoff_path.relative_to(root).as_posix(),
+            "fcpxml_repair_dry_run": dry_run.model_dump(mode="json"),
+        }
+        if args.json:
+            print(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True))
+        elif not args.quiet:
+            print("fcpxml repair dry-run")
+            print(f"wrote {payload['report']}")
+        return int(ExitCode.success)
+    if args.repair_plan:
+        try:
+            json_path, md_path, handoff_path, plan = build_fcpxml_repair_plan(
+                root=root,
+                project_id=config.project.id,
+            )
+        except FcpxmlWriterError as exc:
+            print(str(exc), file=sys.stderr)
+            return int(ExitCode.output_or_reference_validation_failed)
+        if state is not None:
+            run_id = new_run_id()
+            status = (
+                StepStatus.completed
+                if plan.status == "ready"
+                else StepStatus.completed_with_warnings
+                if plan.status == "warning"
+                else StepStatus.failed
+            )
+            state.steps["fcpxml_repair_plan"] = StepLedgerEntry(
+                status=status,
+                output_refs=[
+                    json_path.relative_to(root).as_posix(),
+                    md_path.relative_to(root).as_posix(),
+                    handoff_path.relative_to(root).as_posix(),
+                ],
+                last_run_id=run_id,
+                warnings=plan.warnings,
+            )
+            state.latest_run_id = run_id
+            state.updated_at = utc_now()
+            runs_dir = root / ".artist-portrait" / "runs" / run_id
+            runs_dir.mkdir(parents=True, exist_ok=True)
+            write_json(
+                runs_dir / "command.json",
+                {"command": "fcpxml", "project": str(project_path), "repair_plan": True},
+            )
+            write_json(runs_dir / "environment.json", environment_snapshot())
+            write_json(
+                runs_dir / "step_result.json",
+                {
+                    "step": "fcpxml_repair_plan",
+                    "status": status.value,
+                    "output_refs": state.steps["fcpxml_repair_plan"].output_refs,
+                    "commands_executed": False,
+                    "media_rendered": False,
+                    "timeline_mutated": False,
+                    "edit_points_moved": False,
+                    "nle_import_performed": False,
+                    "source_relink_performed": False,
+                    "automatic_music_selection": False,
+                    "automatic_bgm_fit": False,
+                    "model_call_performed": False,
+                    "network_performed": False,
+                    "image_generation_or_editing_used": False,
+                    "repair_success_claimed": False,
+                },
+            )
+            save_state(root, state)
+            write_run_report(root / config.paths.output_dir, state, [])
+        payload = {
+            "output": json_path.relative_to(root).as_posix(),
+            "report": md_path.relative_to(root).as_posix(),
+            "handoff": handoff_path.relative_to(root).as_posix(),
+            "status": plan.status,
+            "first_required_command": plan.first_required_command,
+            "fcpxml_repair_plan": plan.model_dump(mode="json"),
+        }
+        if args.json:
+            print(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True))
+        elif not args.quiet:
+            print(f"fcpxml repair-plan {plan.status}")
+            print(f"next {plan.first_required_command or 'none'}")
+            print(f"wrote {payload['report']}")
+        return int(
+            ExitCode.success
+            if plan.status == "ready"
+            else ExitCode.success_with_warnings
+            if plan.status == "warning"
+            else ExitCode.output_or_reference_validation_failed
+        )
+    if args.import_review:
+        try:
+            json_path, md_path, handoff_path, review = import_fcpxml_import_review(
+                root=root,
+                project_id=config.project.id,
+                candidate_path=Path(args.import_review),
+            )
+        except FcpxmlWriterError as exc:
+            print(str(exc), file=sys.stderr)
+            return int(ExitCode.output_or_reference_validation_failed)
+        if state is not None:
+            run_id = new_run_id()
+            status = (
+                StepStatus.completed
+                if review.status == "accepted"
+                else StepStatus.completed_with_warnings
+                if review.status == "warning"
+                else StepStatus.failed
+            )
+            state.steps["fcpxml_import_review"] = StepLedgerEntry(
+                status=status,
+                output_refs=[
+                    json_path.relative_to(root).as_posix(),
+                    md_path.relative_to(root).as_posix(),
+                    handoff_path.relative_to(root).as_posix(),
+                ],
+                last_run_id=run_id,
+                warnings=review.warnings + review.rejected_reasons,
+            )
+            state.latest_run_id = run_id
+            state.updated_at = utc_now()
+            runs_dir = root / ".artist-portrait" / "runs" / run_id
+            runs_dir.mkdir(parents=True, exist_ok=True)
+            write_json(
+                runs_dir / "command.json",
+                {
+                    "command": "fcpxml",
+                    "project": str(project_path),
+                    "import_review": str(args.import_review),
+                },
+            )
+            write_json(runs_dir / "environment.json", environment_snapshot())
+            write_json(
+                runs_dir / "step_result.json",
+                {
+                    "step": "fcpxml_import_review",
+                    "status": status.value,
+                    "output_refs": state.steps["fcpxml_import_review"].output_refs,
+                    "commands_executed": False,
+                    "media_rendered": False,
+                    "timeline_mutated": False,
+                    "edit_points_moved": False,
+                    "automatic_music_selection": False,
+                    "automatic_bgm_fit": False,
+                    "model_call_performed": False,
+                    "network_performed": False,
+                    "image_generation_or_editing_used": False,
+                    "import_success_accepted_as_project_success": False,
+                },
+            )
+            save_state(root, state)
+            write_run_report(root / config.paths.output_dir, state, [])
+        payload = {
+            "output": json_path.relative_to(root).as_posix(),
+            "report": md_path.relative_to(root).as_posix(),
+            "handoff": handoff_path.relative_to(root).as_posix(),
+            "status": review.status,
+            "fcpxml_import_review": review.model_dump(mode="json"),
+        }
+        if args.json:
+            print(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True))
+        elif not args.quiet:
+            print(f"fcpxml import-review {review.status}")
+            print(f"wrote {payload['report']}")
+        return int(
+            ExitCode.success
+            if review.status == "accepted"
+            else ExitCode.success_with_warnings
+            if review.status == "warning"
+            else ExitCode.output_or_reference_validation_failed
+        )
+    try:
+        (
+            draft_json_path,
+            fcpxml_path,
+            validation_path,
+            review_path,
+            handoff_path,
+            draft,
+            validation,
+        ) = build_fcpxml_draft(
+            root=root,
+            project_id=config.project.id,
+            draft=args.draft,
+        )
+    except FcpxmlWriterError as exc:
+        print(str(exc), file=sys.stderr)
+        return int(ExitCode.output_or_reference_validation_failed)
+    if state is not None:
+        run_id = new_run_id()
+        status = (
+            StepStatus.completed
+            if draft.status == "ready"
+            else StepStatus.completed_with_warnings
+            if draft.status == "warning"
+            else StepStatus.failed
+        )
+        state.steps["fcpxml_draft"] = StepLedgerEntry(
+            status=status,
+            output_refs=[
+                draft_json_path.relative_to(root).as_posix(),
+                fcpxml_path.relative_to(root).as_posix(),
+                validation_path.relative_to(root).as_posix(),
+                review_path.relative_to(root).as_posix(),
+                handoff_path.relative_to(root).as_posix(),
+            ],
+            last_run_id=run_id,
+            warnings=draft.warnings + draft.blocked_reasons + validation.errors,
+        )
+        state.latest_run_id = run_id
+        state.updated_at = utc_now()
+        runs_dir = root / ".artist-portrait" / "runs" / run_id
+        runs_dir.mkdir(parents=True, exist_ok=True)
+        write_json(
+            runs_dir / "command.json",
+            {"command": "fcpxml", "project": str(project_path), "draft": args.draft},
+        )
+        write_json(runs_dir / "environment.json", environment_snapshot())
+        write_json(
+            runs_dir / "step_result.json",
+            {
+                "step": "fcpxml_draft",
+                "status": status.value,
+                "output_refs": state.steps["fcpxml_draft"].output_refs,
+                "commands_executed": False,
+                "media_rendered": False,
+                "timeline_mutated": False,
+                "edit_points_moved": False,
+                "nle_import_performed": False,
+                "automatic_music_selection": False,
+                "automatic_bgm_fit": False,
+                "model_call_performed": False,
+                "network_performed": False,
+                "image_generation_or_editing_used": False,
+            },
+        )
+        save_state(root, state)
+        write_run_report(root / config.paths.output_dir, state, [])
+    payload = {
+        "output": draft_json_path.relative_to(root).as_posix(),
+        "fcpxml": fcpxml_path.relative_to(root).as_posix(),
+        "validation": validation_path.relative_to(root).as_posix(),
+        "report": review_path.relative_to(root).as_posix(),
+        "handoff": handoff_path.relative_to(root).as_posix(),
+        "status": draft.status,
+        "fcpxml_draft": draft.model_dump(mode="json"),
+        "fcpxml_validation": validation.model_dump(mode="json"),
+    }
+    if args.json:
+        print(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True))
+    elif not args.quiet:
+        print(f"fcpxml {draft.status}")
+        print(f"wrote {payload['fcpxml']}")
+        print(f"wrote {payload['report']}")
+    return int(ExitCode.success if draft.status == "ready" else ExitCode.success_with_warnings)
 
 
 def cmd_rhythm(args: argparse.Namespace) -> int:
@@ -2444,6 +3275,10 @@ def main(argv: list[str] | None = None) -> int:
         "generate-schema": cmd_generate_schema,
         "release-check": cmd_release_check,
         "workflow": cmd_workflow,
+        "operator": cmd_operator,
+        "editor-package": cmd_editor_package,
+        "nle-plan": cmd_nle_plan,
+        "fcpxml": cmd_fcpxml,
         "acceptance": cmd_acceptance,
         "scan": cmd_scan,
         "segment": cmd_segment,

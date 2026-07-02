@@ -8,6 +8,8 @@ from artist_portrait_editor.models.acceptance import ProjectAcceptanceReport
 from artist_portrait_editor.models.rhythm import RhythmRepairPlan
 from artist_portrait_editor.models.state import ProjectState, StepStatus
 from artist_portrait_editor.models.workflow import (
+    CreatorWorkflowDeliverable,
+    CreatorWorkflowStage,
     WorkflowExecutionRecord,
     WorkflowExecutionReview,
     WorkflowExecutionStepReview,
@@ -48,11 +50,21 @@ def build_workflow_plan(
     rhythm_repair = _read_optional(root / WORKSPACE_DIR / DATA_DIR / "rhythm_repair_plan.json", RhythmRepairPlan)
     steps = _workflow_steps(root, target, state, acceptance, rhythm_repair)
     next_step = next((step for step in steps if step.status in {"next", "blocked"}), None)
+    creator_stages = _creator_stages(steps, target)
+    deliverables = _creator_deliverables(root, target)
+    current_stage = next(
+        (stage for stage in creator_stages if stage.status in {"current", "blocked"}),
+        None,
+    )
     completed = sum(step.status == "done" for step in steps)
     blocked = sum(step.status == "blocked" for step in steps)
     remaining = sum(step.status in {"next", "pending", "blocked"} for step in steps)
     status = "ready" if remaining == 0 else "blocked" if blocked else "in_progress"
-    key = f"{project_id}:{target}:{completed}:{remaining}:{blocked}:{next_step.command if next_step else 'none'}"
+    key = (
+        f"{project_id}:{target}:{completed}:{remaining}:{blocked}:"
+        f"{next_step.command if next_step else 'none'}:"
+        f"{current_stage.stage_id if current_stage else 'none'}"
+    )
     plan = WorkflowPlan(
         workflow_plan_id="workflow_" + hashlib.sha256(key.encode()).hexdigest()[:20],
         project_id=project_id,
@@ -63,6 +75,12 @@ def build_workflow_plan(
         remaining_step_count=remaining,
         blocked_step_count=blocked,
         steps=steps,
+        creator_stage_count=len(creator_stages),
+        current_stage_id=current_stage.stage_id if current_stage else None,
+        current_stage_title=current_stage.title if current_stage else None,
+        creator_stages=creator_stages,
+        deliverables=deliverables,
+        bgm_input_guidance=_workflow_bgm_guidance(target),
     )
     json_path = root / WORKSPACE_DIR / DATA_DIR / "workflow_plan.json"
     md_path = root / "output" / "workflow_plan.md"
@@ -84,10 +102,43 @@ def render_workflow_plan(plan: WorkflowPlan) -> str:
         f"- Target: `{plan.target}`",
         f"- Status: `{plan.status}`",
         f"- Next command: `{plan.next_command or 'none'}`",
+        f"- Current creator stage: `{plan.current_stage_title or 'none'}`",
         f"- Completed steps: `{plan.completed_step_count}`",
         f"- Remaining steps: `{plan.remaining_step_count}`",
         "",
+        "## Creator Path",
+        "",
     ]
+    for stage in plan.creator_stages:
+        lines.extend(
+            [
+                f"### `{stage.stage_id}` {stage.title}",
+                "",
+                f"- Status: `{stage.status}`",
+                f"- Next command: `{stage.next_command or 'none'}`",
+                f"- Summary: {stage.summary}",
+            ]
+        )
+        if stage.deliverable_refs:
+            lines.append(
+                f"- Deliverables: {', '.join(f'`{ref}`' for ref in stage.deliverable_refs)}"
+            )
+        lines.append("")
+    if plan.deliverables:
+        lines.extend(["## Deliverables", ""])
+        for deliverable in plan.deliverables:
+            lines.extend(
+                [
+                    f"- `{deliverable.deliverable_id}`: `{deliverable.status}` - {deliverable.summary}",
+                ]
+            )
+        lines.append("")
+    if plan.bgm_input_guidance:
+        lines.extend(["## BGM Input Guidance", ""])
+        for item in plan.bgm_input_guidance:
+            lines.append(f"- {item}")
+        lines.append("")
+    lines.extend(["## Command Steps", ""])
     for step in plan.steps:
         lines.extend(
             [
@@ -657,6 +708,10 @@ def _workflow_steps(
                 ("final_export", "delivery", "artist-portrait export --project <project.yaml> --profile review_720p", [".artist-portrait/data/final_export_validation.json", "output/final_export.mp4"], "Render and validate delivery-review export."),
                 ("rhythm_qc_delivery", "rhythm", "artist-portrait rhythm --project <project.yaml> --qc", [".artist-portrait/data/rhythm_media_qc.json", "output/rhythm_media_qc.md"], "Refresh rhythm QC against final export."),
                 ("acceptance_delivery", "acceptance", "artist-portrait acceptance --project <project.yaml> --profile delivery", [".artist-portrait/data/acceptance_report.json", "output/acceptance_report.md"], "Evaluate delivery readiness."),
+                ("operator", "handoff", "artist-portrait operator --project <project.yaml> --target delivery", [".artist-portrait/data/operator_runbook.json", "output/operator_runbook.md"], "Summarize the project into one operator-facing runbook."),
+                ("editor_package", "handoff", "artist-portrait editor-package --project <project.yaml>", [".artist-portrait/data/editor_package.json", "output/editor_package.md", "output/cue_sheet.csv"], "Create editor-facing package, cue sheet, and handoff instructions."),
+                ("nle_plan", "handoff", "artist-portrait nle-plan --project <project.yaml> --target all", [".artist-portrait/data/nle_interchange_plan.json", "output/nle_interchange_plan.md", "output/nle_interchange_map.csv"], "Map the editor package into NLE interchange targets."),
+                ("fcpxml_draft", "handoff", "artist-portrait fcpxml --project <project.yaml> --draft", [".artist-portrait/data/fcpxml_draft.json", ".artist-portrait/data/fcpxml_validation.json", "output/draft.fcpxml", "output/fcpxml_review.md"], "Write a supervised relink-required FCPXML draft for editor review."),
             ]
         )
     steps: list[WorkflowStep] = []
@@ -711,6 +766,203 @@ def _workflow_steps(
     return steps
 
 
+def _creator_stages(steps: list[WorkflowStep], target: str) -> list[CreatorWorkflowStage]:
+    definitions = [
+        (
+            "setup",
+            "Project setup",
+            ["init", "scan"],
+            "Initialize the workspace and canonical source ledger.",
+            [".artist-portrait/state.json", ".artist-portrait/data/sources.jsonl"],
+        ),
+        (
+            "material_research",
+            "Material research",
+            ["segment", "analyze", "map"],
+            "Turn scanned sources into clips, evidence, and a material map.",
+            ["output/clip_report.md", "output/analysis_report.md", "output/material_map.md"],
+        ),
+        (
+            "creative_decision",
+            "Creative proposal and timeline",
+            ["propose", "proposal_import", "timeline"],
+            "Prepare host-Agent proposals, import the selected proposal, and build the timeline.",
+            [
+                "output/proposal_agent_handoff.json",
+                ".artist-portrait/data/proposals.json",
+                "output/timeline_draft.json",
+            ],
+        ),
+    ]
+    if target in {"preview", "delivery"}:
+        definitions.extend(
+            [
+                (
+                    "music_rhythm",
+                    "Music and rhythm",
+                    ["bgm_import_or_fit", "bgm_fit", "rhythm"],
+                    "Bind explicit BGM input, fit it to the timeline, and plan edit rhythm.",
+                    [
+                        ".artist-portrait/data/bgm_candidates.json",
+                        ".artist-portrait/data/bgm_fit.json",
+                        "output/rhythm_report.md",
+                    ],
+                ),
+                (
+                    "preview_review",
+                    "Preview review",
+                    ["preview", "rhythm_qc_preview", "acceptance_preview"],
+                    "Render a low-resolution preview and evaluate preview readiness.",
+                    ["output/preview_lowres.mp4", "output/rhythm_media_qc.md", "output/acceptance_report.md"],
+                ),
+            ]
+        )
+    if target == "delivery":
+        definitions.extend(
+            [
+                (
+                    "delivery_review",
+                    "Delivery review",
+                    ["final_export", "rhythm_qc_delivery", "acceptance_delivery"],
+                    "Render final review media and evaluate delivery readiness.",
+                    ["output/final_export.mp4", "output/rhythm_media_qc.md", "output/acceptance_report.md"],
+                ),
+                (
+                    "editor_handoff",
+                    "Editor and NLE handoff",
+                    ["operator", "editor_package", "nle_plan", "fcpxml_draft"],
+                    "Package the accepted edit for operator review and NLE follow-up.",
+                    [
+                        "output/operator_runbook.md",
+                        "output/editor_package.md",
+                        "output/nle_interchange_plan.md",
+                        "output/draft.fcpxml",
+                    ],
+                ),
+            ]
+        )
+    by_id = {step.step_id: step for step in steps}
+    stages: list[CreatorWorkflowStage] = []
+    for order, (stage_id, title, step_ids, summary, deliverables) in enumerate(definitions, start=1):
+        stage_steps = [by_id[step_id] for step_id in step_ids if step_id in by_id]
+        statuses = [step.status for step in stage_steps]
+        if statuses and all(status == "done" for status in statuses):
+            status = "done"
+        elif any(item == "blocked" for item in statuses):
+            status = "blocked"
+        elif any(item == "next" for item in statuses):
+            status = "current"
+        else:
+            status = "pending"
+        next_step = next((step for step in stage_steps if step.status in {"next", "blocked"}), None)
+        stages.append(
+            CreatorWorkflowStage(
+                stage_id=stage_id,
+                order=order,
+                title=title,
+                status=status,
+                next_command=next_step.command if next_step else None,
+                summary=summary,
+                step_ids=step_ids,
+                deliverable_refs=deliverables,
+                blocking_step_ids=[step.step_id for step in stage_steps if step.status == "blocked"],
+            )
+        )
+    return stages
+
+
+def _creator_deliverables(root: Path, target: str) -> list[CreatorWorkflowDeliverable]:
+    definitions = [
+        (
+            "material_map",
+            "material_research",
+            "Material map",
+            ["output/material_map.md"],
+            "Analysis-led source and clip review map.",
+        ),
+        (
+            "timeline",
+            "creative_decision",
+            "Canonical timeline",
+            ["output/timeline_draft.json"],
+            "Selected proposal converted into canonical timeline draft.",
+        ),
+    ]
+    if target in {"preview", "delivery"}:
+        definitions.extend(
+            [
+                (
+                    "rhythm_plan",
+                    "music_rhythm",
+                    "Rhythm plan",
+                    ["output/rhythm_report.md"],
+                    "BGM/edit rhythm planning report.",
+                ),
+                (
+                    "preview_media",
+                    "preview_review",
+                    "Preview media",
+                    ["output/preview_lowres.mp4", ".artist-portrait/data/preview_validation.json"],
+                    "Low-resolution preview plus validation.",
+                ),
+            ]
+        )
+    if target == "delivery":
+        definitions.extend(
+            [
+                (
+                    "final_export",
+                    "delivery_review",
+                    "Final review export",
+                    ["output/final_export.mp4", ".artist-portrait/data/final_export_validation.json"],
+                    "Bounded local final MP4 export plus validation.",
+                ),
+                (
+                    "editor_package",
+                    "editor_handoff",
+                    "Editor package",
+                    ["output/editor_package.md", "output/cue_sheet.csv", "output/editor_handoff.json"],
+                    "Editor-facing instructions, cue sheet, and handoff.",
+                ),
+                (
+                    "nle_package",
+                    "editor_handoff",
+                    "NLE package",
+                    ["output/nle_interchange_plan.md", "output/nle_interchange_map.csv", "output/draft.fcpxml"],
+                    "NLE mapping plan and supervised FCPXML draft.",
+                ),
+            ]
+        )
+    deliverables: list[CreatorWorkflowDeliverable] = []
+    for deliverable_id, stage_id, label, refs, summary in definitions:
+        present = all((root / ref).exists() for ref in refs)
+        deliverables.append(
+            CreatorWorkflowDeliverable(
+                deliverable_id=deliverable_id,
+                stage_id=stage_id,
+                label=label,
+                status="present" if present else "missing",
+                refs=refs,
+                summary=summary,
+            )
+        )
+    return deliverables
+
+
+def _workflow_bgm_guidance(target: str) -> list[str]:
+    if target == "core":
+        return [
+            "Core target does not require BGM, but unresolved music intent should remain explicit.",
+        ]
+    return [
+        "Direct audio: import a project-local audio file with `bgm import --file <audio>`.",
+        "Video audio extract: import from project-local video only with source/range/stream/hash provenance; never treat a mixed video track as clean BGM.",
+        "Source embedded audio: retained original source audio remains separate from selected BGM.",
+        "Multiple candidates: keep candidates distinct until the user explicitly chooses one for fitting.",
+        "No file yet: preserve an unresolved music slot and continue planning without fabricating BPM or beat grids.",
+    ]
+
+
 def _step_done(root: Path, state: ProjectState | None, step_id: str, artifacts: list[str]) -> bool:
     if step_id == "init":
         return state is not None
@@ -725,6 +977,16 @@ def _step_done(root: Path, state: ProjectState | None, step_id: str, artifacts: 
     if step_id == "rhythm_qc_delivery":
         return (root / WORKSPACE_DIR / DATA_DIR / "rhythm_media_qc.json").exists() and (
             root / WORKSPACE_DIR / DATA_DIR / "final_export_validation.json"
+        ).exists()
+    if step_id == "operator":
+        return (root / WORKSPACE_DIR / DATA_DIR / "operator_runbook.json").exists()
+    if step_id == "editor_package":
+        return (root / WORKSPACE_DIR / DATA_DIR / "editor_package.json").exists()
+    if step_id == "nle_plan":
+        return (root / WORKSPACE_DIR / DATA_DIR / "nle_interchange_plan.json").exists()
+    if step_id == "fcpxml_draft":
+        return (root / WORKSPACE_DIR / DATA_DIR / "fcpxml_draft.json").exists() and (
+            root / WORKSPACE_DIR / DATA_DIR / "fcpxml_validation.json"
         ).exists()
     if step_id.startswith("acceptance_"):
         report_path = root / WORKSPACE_DIR / DATA_DIR / "acceptance_report.json"
@@ -1087,6 +1349,11 @@ def _workflow_handoff(plan: WorkflowPlan) -> dict:
         "target": plan.target,
         "task": "Review the workflow plan and guide the user through explicit commands only.",
         "next_command": plan.next_command,
+        "current_stage_id": plan.current_stage_id,
+        "current_stage_title": plan.current_stage_title,
+        "creator_stages": [stage.model_dump(mode="json") for stage in plan.creator_stages],
+        "deliverables": [item.model_dump(mode="json") for item in plan.deliverables],
+        "bgm_input_guidance": plan.bgm_input_guidance,
         "steps": [step.model_dump(mode="json") for step in plan.steps],
         "forbidden": [
             "do not execute commands without explicit user action",

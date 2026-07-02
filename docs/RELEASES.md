@@ -7,9 +7,9 @@ gate-progress, or closeout fragments.
 
 ## Current Release State
 
-- Capability gate: `V0-043`
-- Active local batch: `V0-043 phrase-level manual edit guidance gate`
-- Current release marker: tag `v0.27.0`
+- Capability gate: `V0-051`
+- Active local batch: `ACCEPTANCE-STAGE-06 Release candidate and publication`
+- Current release marker: local target `v0.28.0`
 - Release date: `2026-06-30`
 - Release commit subject: `Release artist portrait editor v0.27.0`
 - Previous published baseline:
@@ -18,14 +18,16 @@ gate-progress, or closeout fragments.
   consolidation, proposal review hardening, `DEV-GOV-001`, V0-011, V0-012,
   V0-013, V0-014, V0-015, V0-016, V0-017, V0-018, V0-020, V0-021, V0-022,
   V0-023, and V0-024
-- Release target: `v0.27.0`
+- Release target: `v0.28.0`
 - Completed in release `v0.25.0`: V0-025 through V0-041
 - Completed in release `v0.26.0`: V0-042
 - Completed in release `v0.27.0`: V0-043
-- Working-tree publication state: V0-043 is included in published `v0.27.0`;
-  post-release publication ledger update complete
-- Governance state: V0-043 completed with pre-implementation countability audit
-  passed; V0-030 task accounting issue is resolved as `ISSUE-014`
+- Working-tree publication state: V0-044 through V0-051 plus
+  ACCEPTANCE-STAGE-01 through ACCEPTANCE-STAGE-06 are local unpublished work on
+  top of published `v0.27.0`
+- Governance state: ACCEPTANCE-STAGE-06 passed final-acceptance countability
+  audit; V0-051 passed pre-implementation countability audit;
+  V0-030 task accounting issue is resolved as `ISSUE-014`
 - Latest published capability release tag: `v0.27.0`
 - Remote freshness: peeled `v0.27.0` verified at
   `473da7388805cf3ea5c806c031f3822ea7a5ce0f` after push; annotated tag object
@@ -38,9 +40,13 @@ gate-progress, or closeout fragments.
 
 Validation is updated only after the complete current working tree passes.
 
-- Verified: V0-043 local validation passed on `2026-06-30`
-- Full pytest: `289 passed`
-- Project checks: `run_checks.py --skip-pytest` passed
+- Verified: ACCEPTANCE-STAGE-06 release-candidate validation passed on
+  `2026-07-02`; publication remains pending until the completed batch is
+  committed and tagged as `v0.28.0`
+- Full pytest: passed with `290 passed` for combined local V0-044/V0-051 stack
+- Project checks: `run_checks.py --skip-pytest` passed including golden
+  baseline, BGM/rhythm quality, NLE round-trip readiness, and release-candidate
+  publication checks
 - Skill validation: passed
 - Schema drift: passed
 - Media workflow: deterministic local workflow, real FFmpeg BGM analysis,
@@ -53,13 +59,297 @@ Validation is updated only after the complete current working tree passes.
   workflow repair approval/dry-run packaging, workflow repair execution
   evidence review, accumulated workflow/rhythm release hardening, and workflow
   repair evidence refresh guidance, V0-042 BGM rhythm intelligence generation
-  and rhythm-plan/rhythm-QC binding, plus V0-043 phrase-level manual edit
-  guidance
+  and rhythm-plan/rhythm-QC binding, V0-043 phrase-level manual edit guidance,
+  V0-044 operator runbook usability checks, V0-045 editor package handoff
+  checks, V0-046 NLE interchange planning checks, V0-047 supervised FCPXML
+  draft writer checks, V0-048 FCPXML import-review evidence checks, V0-049
+  FCPXML import/relink repair planning checks, V0-050 FCPXML repair
+  approval/dry-run packaging checks, V0-051 FCPXML repair execution
+  evidence review checks, ACCEPTANCE-STAGE-03 golden baseline checks,
+  ACCEPTANCE-STAGE-04 BGM/rhythm quality checks, plus ACCEPTANCE-STAGE-05 NLE
+  round-trip checks, plus ACCEPTANCE-STAGE-06 release-candidate checks
   passed; proposal generation remained correctly blocked without paid API,
   API key, remote provider, or hidden network dependency
 - Git diff check: `git diff --check` passed
 
 ## Major Version History
+
+### ACCEPTANCE-STAGE-06 Release Candidate And Publication
+
+- Status: completed locally on `2026-07-02`
+- Capability: `scripts/run_release_candidate.py` validates target version
+  `0.28.0`, target tag `v0.28.0`, package preflight, canonical install
+  simulation, Skill validation, Git remote/tag state, final-acceptance
+  completion, release ledger targeting, and publication guardrails
+- Boundary: release-candidate checks do not create commits, tags, pushes,
+  network calls, hidden model calls, media renders, timeline mutations, NLE
+  operations, or image generation/editing
+- Validation: `scripts/run_release_candidate.py --allow-dirty --json` passed
+  with warning only for the intentionally dirty unpublished tree; targeted Stage
+  6 governance tests passed with `37 passed`; full pytest passed with `290
+  passed`; `run_checks.py --skip-pytest` passed including golden baseline,
+  BGM/rhythm quality, NLE round-trip readiness, and release-candidate
+  publication checks; Python compile, JSON validation, Skill validation, schema
+  drift, and diff hygiene passed
+- Git: not released yet; publication step pending final commit/tag/push
+
+### ACCEPTANCE-STAGE-05 NLE Round-Trip Readiness
+
+- Status: completed locally on `2026-07-02`
+- Capability: `scripts/run_nle_roundtrip_readiness.py` validates editor package
+  readiness, NLE map coverage, relink-required FCPXML draft boundaries,
+  external import-review evidence, relink/playback repair planning, repair
+  approval and dry-run packaging, repair execution evidence review, workflow
+  execution handback, and operator NLE evidence visibility
+- Boundary: no NLE import from the CLI, no CLI source relink, no timeline
+  mutation, no edit-point movement, no editor instruction execution, no
+  automatic music selection, no model calls, no network access, no image
+  generation/editing, and no repair/acceptance/applied-edit success promotion
+- Validation: `scripts/run_nle_roundtrip_readiness.py --workspace <tmp> --json`
+  passed with warning import-review evidence, required relink actions, approved
+  dry-run actions, passed repair execution review, passed workflow execution
+  handback, operator FCPXML/workflow evidence visibility, and all guardrails
+  false; targeted Stage 5 governance tests passed with `37 passed`; full
+  pytest passed with `290 passed`; `run_checks.py --skip-pytest` passed
+  including golden baseline, BGM/rhythm quality, and NLE round-trip checks;
+  Python compile, JSON validation, Skill validation, schema drift, and diff
+  hygiene passed
+- Git: not released; local working tree only
+
+### ACCEPTANCE-STAGE-04 BGM And Rhythm Quality Pass
+
+- Status: completed locally on `2026-07-02`
+- Capability: `scripts/run_bgm_rhythm_quality.py` validates no-file-yet rhythm
+  planning, direct audio BGM, video-extracted BGM risk, source embedded audio
+  risk, multiple candidate rhythm intelligence, explicit BGM fit controls,
+  manual edit guidance categories, preview/final rhythm media QC, and media
+  readiness under warning states
+- Boundary: no automatic music selection, no automatic fit without explicit
+  candidate, no edit-point movement, no fabricated BPM/beats, no CLI model
+  calls, no network access, no NLE import, no relinking, no external success
+  promotion, and no image generation/editing
+- Validation: `scripts/run_bgm_rhythm_quality.py --workspace <tmp> --json`
+  passed with three BGM modes, two mixed-audio high-risk candidates, explicit
+  fit controls, ten manual guidance categories, preview/final readiness, and
+  all guardrails false; targeted Stage 4 governance tests passed with `37
+  passed`; full pytest passed with `290 passed`; `run_checks.py --skip-pytest`
+  passed including golden baseline and BGM/rhythm quality checks; Python
+  compile, JSON validation, Skill validation, schema drift, and diff hygiene
+  passed
+- Git: not released; local working tree only
+
+### ACCEPTANCE-STAGE-03 Golden Real-Project Baseline
+
+- Status: completed locally on `2026-07-02`
+- Capability: `fixtures/golden_artist_portrait/` and
+  `scripts/run_golden_baseline.py` define and run a deterministic realistic
+  project from generated local media through proposal import, timeline, BGM,
+  rhythm, preview, final export, operator runbook, editor package, cue sheet,
+  NLE map, FCPXML draft, acceptance, workflow readiness, and golden manifest
+- Boundary: no downloads, no paid APIs, no CLI model calls, no network access,
+  no automatic music selection, no automatic edit-point movement, no NLE
+  import, no source relinking, no external success promotion, and no image
+  generation/editing
+- Validation: `scripts/run_golden_baseline.py --workspace <tmp> --json` passed
+  with 24 checked artifacts; targeted Stage 3 governance tests passed with `37
+  passed`; full pytest passed with `290 passed`; `run_checks.py --skip-pytest`
+  passed including the golden baseline; JSON, Python compile, schema drift,
+  Skill validation, and diff hygiene passed
+- Git: not released; local working tree only
+
+### ACCEPTANCE-STAGE-02 Guided Creator Workflow
+
+- Status: completed locally on `2026-07-01`
+- Capability: `workflow --target delivery` now exposes creator stages, current
+  stage, next command, deliverable readiness, and BGM input guidance, and it
+  continues the delivery path through operator runbook, editor package, NLE
+  interchange plan, and supervised FCPXML draft
+- Boundary: no workflow command execution, no media rendering from workflow, no
+  NLE import, no source relinking, no timeline mutation, no edit-point movement,
+  no automatic music selection or fitting, no model calls, no network access,
+  and no image generation/editing
+- Validation: targeted Stage 2 workflow/schema/governance tests passed with
+  `41 passed`; full pytest passed with `290 passed`;
+  `run_checks.py --skip-pytest` passed; schema generation and Python compile
+  checks passed
+- Git: not released; local working tree only
+
+### ACCEPTANCE-STAGE-01 Final Acceptance Target Refactor
+
+- Status: completed locally on `2026-07-01`
+- Capability: defines final Skill acceptance as a six-stage path covering
+  guided operator workflow, golden real-project baseline, BGM/rhythm quality,
+  NLE round-trip readiness, and release candidate publication
+- Boundary: no media behavior, render behavior, model calls, network search,
+  image generation/editing, NLE import, source relinking, automatic music
+  selection, or automatic edit timing changes were opened by this stage
+- Validation: Stage 1 governance tests passed; project checks including
+  final-acceptance roadmap checks, Skill validation, schema drift, and full
+  pytest passed with `290 passed`
+- Git: not released; local working tree only
+
+### V0-051 FCPXML Repair Execution Evidence Import Gate
+
+- Status: completed locally on `2026-07-01`
+- Capability: `artist-portrait fcpxml --project <project.yaml>
+  --repair-execution-record <candidate.json>` quarantines explicit external
+  FCPXML repair execution evidence, validates it against the current repair
+  dry-run chain, and writes accepted/rejected/missing/skipped action review
+  artifacts
+- Boundary: no repair command execution, no Final Cut Pro or NLE import by the
+  CLI, no source relinking, no media rendering, no canonical timeline mutation,
+  no edit-point movement, no editor instruction execution, no automatic music
+  selection or fitting, no CLI model calls, no network access, no paid APIs, no
+  remote providers, no image generation/editing, and no treating execution
+  evidence as repair success, acceptance success, or applied edits
+- Validation: targeted V0-051 schema/integration/governance tests passed;
+  project checks including generated real-media FCPXML repair execution
+  evidence review checks, Skill validation, schema drift, and full pytest
+  passed with `290 passed`
+- Git: not released; local working tree only
+
+### V0-050 FCPXML Repair Approval/Dry-Run Packaging Gate
+
+- Status: completed locally on `2026-07-01`
+- Capability: `artist-portrait fcpxml --project <project.yaml>
+  --approval-request`, `--approval-record <candidate.json>`, and
+  `--repair-dry-run` package the current FCPXML repair plan into explicit
+  approval request, quarantined approval record, and approved/rejected dry-run
+  artifacts
+- Boundary: no repair command execution, no Final Cut Pro or NLE import by the
+  CLI, no source relinking, no media rendering, no canonical timeline mutation,
+  no edit-point movement, no editor instruction execution, no automatic music
+  selection or fitting, no CLI model calls, no network access, no paid APIs, no
+  remote providers, no image generation/editing, and no treating approval or
+  dry-run artifacts as repair success or applied edits
+- Validation: targeted V0-050 schema/integration/governance tests passed;
+  project checks including generated real-media FCPXML repair approval/dry-run
+  checks, Skill validation, schema drift, and full pytest passed with `290
+  passed`
+- Git: not released; local working tree only
+
+### V0-049 FCPXML Import/Relink Repair Planning Gate
+
+- Status: completed locally on `2026-07-01`
+- Capability: `artist-portrait fcpxml --project <project.yaml>
+  --repair-plan` reads the current FCPXML draft, validation report, and
+  import-review evidence, then writes canonical
+  `.artist-portrait/data/fcpxml_repair_plan.json`,
+  `output/fcpxml_repair_plan.md`, and `output/fcpxml_repair_handoff.json`
+  with ordered manual relink, import blocker, finding, playback review, and
+  operator review actions
+- Boundary: no Final Cut Pro or NLE import by the CLI, no source relinking, no
+  media rendering, no canonical timeline mutation, no edit-point movement, no
+  editor instruction execution, no automatic music selection or fitting, no CLI
+  model calls, no network access, no paid APIs, no remote providers, no image
+  generation/editing, and no claiming repair success or applied edits
+- Validation: targeted V0-049 schema/integration/governance tests passed;
+  project checks including generated real-media FCPXML repair-plan checks,
+  Skill validation, schema drift, and full pytest passed with `290 passed`
+- Git: not released; local working tree only
+
+### V0-048 FCPXML Import-Review Evidence Gate
+
+- Status: completed locally on `2026-07-01`
+- Capability: `artist-portrait fcpxml --project <project.yaml>
+  --import-review <candidate.json>` quarantines explicit external FCPXML
+  import-review evidence and writes canonical
+  `.artist-portrait/data/fcpxml_import_review_candidate_quarantine.json`,
+  `.artist-portrait/data/fcpxml_import_review.json`,
+  `output/fcpxml_import_review.md`, and
+  `output/fcpxml_import_review_handoff.json`
+- Boundary: no Final Cut Pro or NLE import by the CLI, no media rendering, no
+  canonical timeline mutation, no edit-point movement, no editor instruction
+  execution, no automatic music selection or fitting, no CLI model calls, no
+  network access, no paid APIs, no remote providers, no image generation/editing,
+  and no treating external import evidence as project acceptance success or
+  applied edits
+- Validation: targeted V0-048 schema/integration/governance tests passed;
+  project checks including generated real-media FCPXML import-review evidence
+  checks, Skill validation, schema drift, and full pytest passed with `290
+  passed`
+- Git: not released; local working tree only
+
+### V0-047 Supervised FCPXML Draft Writer Gate
+
+- Status: completed locally on `2026-07-01`
+- Capability: `artist-portrait fcpxml --project <project.yaml> --draft` writes
+  canonical `.artist-portrait/data/fcpxml_draft.json`,
+  `.artist-portrait/data/fcpxml_validation.json`, `output/draft.fcpxml`,
+  `output/fcpxml_review.md`, and `output/fcpxml_handoff.json`, converting
+  current FCPXML target mappings into a parseable draft with relink-required
+  placeholder assets, clip coverage, marker candidates, audio notes, validation,
+  warnings, and handoff refs
+- Boundary: no Final Cut Pro or NLE import, no media rendering, no canonical
+  timeline mutation, no edit-point movement, no editor instruction execution,
+  no automatic music selection or fitting, no fabricated BPM or beat grids, no
+  CLI model calls, no network access, no paid APIs, no remote providers, no
+  image generation/editing, no claiming relink success, and no claiming draft
+  contents were applied edits
+- Validation: targeted V0-047 schema/integration/governance tests passed;
+  project checks including generated real-media FCPXML draft checks, Skill
+  validation, schema drift, and full pytest passed with `290 passed`
+- Git: not released; local working tree only
+
+### V0-046 NLE Interchange Planning Gate
+
+- Status: completed locally on `2026-07-01`
+- Capability: `artist-portrait nle-plan --project <project.yaml>
+  --target fcpxml|edl|resolve_csv|all` writes canonical
+  `.artist-portrait/data/nle_interchange_plan.json`,
+  `output/nle_interchange_plan.md`, `output/nle_interchange_map.csv`, and
+  `output/nle_interchange_handoff.json`, converting the current editor package
+  into target-specific timeline, audio, and marker mapping candidates with
+  format limitations and warnings
+- Boundary: no FCPXML/EDL/Resolve project writing, no media rendering, no
+  timeline mutation, no edit-point movement, no editor instruction execution,
+  no automatic music selection or fitting, no fabricated BPM or beat grids, no
+  CLI model calls, no network access, no paid APIs, no remote providers, no
+  image generation/editing, and no claiming mapping candidates were applied
+- Validation: targeted V0-046 schema/integration/governance tests passed;
+  project checks including generated real-media NLE-plan checks, Skill
+  validation, schema drift, and full pytest passed with `290 passed`
+- Git: not released; local working tree only
+
+### V0-045 Editor Package Handoff Gate
+
+- Status: completed locally on `2026-07-01`
+- Capability: `artist-portrait editor-package --project <project.yaml>` writes
+  canonical `.artist-portrait/data/editor_package.json`,
+  `output/editor_package.md`, `output/cue_sheet.csv`, and
+  `output/editor_handoff.json`, converting current timeline, optional BGM fit,
+  rhythm, edit guidance, and operator evidence into editor-facing instructions
+  and cue-sheet rows
+- Boundary: no media rendering, no timeline mutation, no edit-point movement,
+  no editor instruction execution, no automatic music selection or fitting, no
+  fabricated BPM or beat grids, no CLI model calls, no network access, no paid
+  APIs, no remote providers, no image generation/editing, and no claiming edits
+  were applied
+- Validation: targeted V0-045 editor-package/schema tests passed with `3
+  passed`; project checks including generated real-media editor-package checks,
+  Skill validation, schema drift, and full pytest passed with `290 passed`
+- Git: not released; local working tree only
+
+### V0-044 Operator Runbook Usability Gate
+
+- Status: completed locally on `2026-06-30`
+- Capability: `artist-portrait operator --project <project.yaml> --target
+  core|preview|delivery` writes canonical
+  `.artist-portrait/data/operator_runbook.json`, `output/operator_runbook.md`,
+  and `output/operator_handoff.json`, consolidating workflow, acceptance, BGM,
+  rhythm, media validation, repair, and manual guidance evidence into a stage
+  ladder, current next command, artifact readiness map, BGM input-mode
+  guidance, manual guidance refs, and forbidden-capability audit
+- Boundary: no workflow or repair command execution, no pipeline auto-run, no
+  media rendering, no timeline mutation, no edit-point movement, no automatic
+  music selection or fitting, no fabricated BPM or beat grids, no CLI model
+  calls, no network access, no paid APIs, no remote providers, no image
+  generation/editing, and no treating mixed extracted video audio as clean BGM
+- Validation: targeted V0-044 operator/schema/gate/progress tests passed with
+  `16 passed`; full pytest passed with `290 passed`; project checks including
+  generated real-media operator runbook checks, Skill validation, schema drift,
+  and release hardening passed
+- Git: not released; local working tree only
 
 ### V0-043 Phrase-Level Manual Edit Guidance Gate
 

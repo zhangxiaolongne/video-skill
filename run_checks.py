@@ -28,6 +28,10 @@ QUICK_VALIDATE = (
 )
 PACKAGE_PREFLIGHT = ROOT / "scripts" / "skill_package_preflight.py"
 SIMULATE_INSTALL = ROOT / "scripts" / "simulate_skill_install.py"
+GOLDEN_BASELINE = ROOT / "scripts" / "run_golden_baseline.py"
+BGM_RHYTHM_QUALITY = ROOT / "scripts" / "run_bgm_rhythm_quality.py"
+NLE_ROUNDTRIP_READINESS = ROOT / "scripts" / "run_nle_roundtrip_readiness.py"
+RELEASE_CANDIDATE = ROOT / "scripts" / "run_release_candidate.py"
 
 
 def run(command: list[str], *, expect: int | tuple[int, ...] = 0) -> None:
@@ -93,9 +97,22 @@ def check_schema_drift() -> None:
             "bgm_recommendation_set.schema.json",
             "bgm_recommendation_validation_report.schema.json",
             "clip_record.schema.json",
+            "editor_package.schema.json",
             "edit_guidance_report.schema.json",
+            "fcpxml_draft.schema.json",
+            "fcpxml_import_review.schema.json",
+            "fcpxml_import_review_candidate.schema.json",
+            "fcpxml_repair_approval_record.schema.json",
+            "fcpxml_repair_approval_request.schema.json",
+            "fcpxml_repair_dry_run.schema.json",
+            "fcpxml_repair_execution_record.schema.json",
+            "fcpxml_repair_execution_review.schema.json",
+            "fcpxml_repair_plan.schema.json",
+            "fcpxml_validation_report.schema.json",
             "final_export_manifest.schema.json",
             "final_export_validation_report.schema.json",
+            "nle_interchange_plan.schema.json",
+            "operator_runbook.schema.json",
             "preview_render_manifest.schema.json",
             "preview_validation_report.schema.json",
             "project_config.schema.json",
@@ -198,14 +215,16 @@ def check_gate_consistency() -> None:
         "DEVELOPMENT_PROGRESS.md": ROOT / "docs" / "DEVELOPMENT_PROGRESS.md",
     }
     content = {name: path.read_text(encoding="utf-8") for name, path in docs.items()}
-    if "Current gate: V0-043 phrase-level manual edit guidance gate." not in content["AGENTS.md"]:
-        raise SystemExit("AGENTS.md current gate is not V0-043 edit guidance")
-    if "V0-043 phrase-level manual edit guidance gate" not in content["master"]:
-        raise SystemExit("master document current gate is not V0-043 edit guidance")
-    if "Current V0-043 phrase-level manual edit guidance gate work" not in content["README.md"]:
-        raise SystemExit("README current gate is not V0-043 edit guidance")
+    if "Current gate: V0-051 FCPXML repair execution evidence import gate." not in content["AGENTS.md"]:
+        raise SystemExit("AGENTS.md current gate is not V0-051 FCPXML repair execution")
+    if "V0-051 FCPXML repair execution evidence import gate" not in content["master"]:
+        raise SystemExit("master document current gate is not V0-051 FCPXML repair execution")
+    if "Current V0-051 FCPXML repair execution evidence import gate work" not in content["README.md"]:
+        raise SystemExit("README current gate is not V0-051 FCPXML repair execution")
+    if "ACCEPTANCE-STAGE-06 Release candidate and publication" not in content["README.md"]:
+        raise SystemExit("README current acceptance stage is stale")
     if (
-        "Current local gate: V0-043 phrase-level manual edit guidance gate"
+        "Current local gate: V0-051 FCPXML repair execution evidence import gate"
         not in content["DEVELOPMENT_PROGRESS.md"]
     ):
         raise SystemExit("development progress current gate is stale")
@@ -220,7 +239,7 @@ def check_progress_contract() -> None:
     payload = json.loads(path.read_text(encoding="utf-8"))
     if payload.get("schema_version") != "1.4":
         raise SystemExit("progress snapshot schema_version is not 1.4")
-    if payload.get("capability_gate") != "V0-043":
+    if payload.get("capability_gate") != "V0-051":
         raise SystemExit("progress snapshot capability gate is stale")
     documentation_system = payload.get("documentation_system") or {}
     expected_documents = {
@@ -245,7 +264,10 @@ def check_progress_contract() -> None:
     active_batch = payload.get("active_batch") or {}
     if active_batch.get("capability_gate") != payload.get("capability_gate"):
         raise SystemExit("active batch capability gate does not match progress gate")
-    if not re.fullmatch(r"V\d+-\d{3}", str(active_batch.get("id") or "")):
+    if not re.fullmatch(
+        r"(V\d+-\d{3}|ACCEPTANCE-STAGE-\d{2})",
+        str(active_batch.get("id") or ""),
+    ):
         raise SystemExit("progress snapshot active batch id is invalid")
     allowed_batch_statuses = {"planned", "in_progress", "completed", "blocked", "dropped"}
     if active_batch.get("status") not in allowed_batch_statuses:
@@ -286,10 +308,63 @@ def check_progress_contract() -> None:
     releases = (ROOT / expected_documents["releases"]).read_text(encoding="utf-8")
     if payload.get("milestone") not in progress:
         raise SystemExit("development dashboard milestone is stale")
+    final_acceptance = payload.get("final_acceptance") or {}
+    if final_acceptance.get("current_stage") != "ACCEPTANCE-STAGE-06":
+        raise SystemExit("final acceptance current stage is stale")
+    if final_acceptance.get("stage_count") != 6:
+        raise SystemExit("final acceptance stage count is stale")
+    if final_acceptance.get("next_stage") is not None:
+        raise SystemExit("final acceptance next stage is stale")
+    stages = final_acceptance.get("stages") or []
+    expected_stage_ids = [
+        "ACCEPTANCE-STAGE-01",
+        "ACCEPTANCE-STAGE-02",
+        "ACCEPTANCE-STAGE-03",
+        "ACCEPTANCE-STAGE-04",
+        "ACCEPTANCE-STAGE-05",
+        "ACCEPTANCE-STAGE-06",
+    ]
+    if [stage.get("id") for stage in stages] != expected_stage_ids:
+        raise SystemExit("final acceptance roadmap stage ids are stale")
+    if any(stage.get("status") != "completed" for stage in stages):
+        raise SystemExit("final acceptance stages are not all completed")
+    if final_acceptance.get("technical_substrate_completion_pct") != 100:
+        raise SystemExit("technical substrate completion estimate is stale")
+    if final_acceptance.get("final_usability_completion_pct") != 100:
+        raise SystemExit("final usability completion estimate is stale")
+    definition = final_acceptance.get("definition_of_done") or []
+    for phrase in (
+        "operator path",
+        "creative path",
+        "media path",
+        "delivery path",
+        "evidence path",
+        "release path",
+    ):
+        if not any(phrase in item for item in definition):
+            raise SystemExit(f"final acceptance definition lacks {phrase}")
+    for marker in (
+        "Final Acceptance Roadmap",
+        "ACCEPTANCE-STAGE-04",
+        "ACCEPTANCE-STAGE-05",
+        "ACCEPTANCE-STAGE-06",
+        "BGM and rhythm quality pass",
+        "NLE round-trip readiness",
+        "Release candidate and publication",
+        "Stage 6 completed",
+    ):
+        if marker not in progress:
+            raise SystemExit(
+                f"development dashboard lacks final acceptance marker: {marker}"
+            )
     if "## Active Issues" not in issues:
         raise SystemExit("issue ledger lacks active issues")
+    if "ISSUE-016" not in issues or "ISSUE-017" not in issues:
+        raise SystemExit("issue ledger lacks final acceptance blockers")
     if "## Active Decisions" not in decisions:
         raise SystemExit("decision ledger lacks active decisions")
+    if "DEC-052" not in decisions:
+        raise SystemExit("decision ledger lacks final acceptance stage decision")
     if "## Current Release State" not in releases or "## Current Validation" not in releases:
         raise SystemExit("release ledger lacks current state or validation")
     if "Do not recreate per-version readiness" not in releases:
@@ -354,6 +429,18 @@ def check_progress_contract() -> None:
             "workflow_repair_refresh_guidance",
             "bgm_rhythm_intelligence",
             "phrase_level_edit_guidance",
+            "operator_runbook_usability",
+            "editor_package_handoff",
+            "nle_interchange_planning",
+            "supervised_fcpxml_draft_writer",
+            "fcpxml_import_review_evidence",
+            "fcpxml_repair_planning",
+            "fcpxml_repair_approval_dry_run",
+            "fcpxml_repair_execution_review",
+            "golden_real_project_baseline",
+            "bgm_rhythm_quality_pass",
+            "nle_roundtrip_readiness",
+            "release_candidate_publication",
             "preview_rendering",
             "final_export",
         }
@@ -424,6 +511,30 @@ def check_progress_contract() -> None:
         raise SystemExit("progress snapshot BGM rhythm intelligence state is stale")
     if capability_progress.get("phrase_level_edit_guidance") != "completed":
         raise SystemExit("progress snapshot edit guidance state is stale")
+    if capability_progress.get("operator_runbook_usability") not in {"in_progress", "completed"}:
+        raise SystemExit("progress snapshot operator runbook state is stale")
+    if capability_progress.get("editor_package_handoff") != "completed":
+        raise SystemExit("progress snapshot editor package state is stale")
+    if capability_progress.get("nle_interchange_planning") != "completed":
+        raise SystemExit("progress snapshot NLE interchange state is stale")
+    if capability_progress.get("supervised_fcpxml_draft_writer") != "completed":
+        raise SystemExit("progress snapshot FCPXML draft state is stale")
+    if capability_progress.get("fcpxml_import_review_evidence") != "completed":
+        raise SystemExit("progress snapshot FCPXML import-review state is stale")
+    if capability_progress.get("fcpxml_repair_planning") != "completed":
+        raise SystemExit("progress snapshot FCPXML repair planning state is stale")
+    if capability_progress.get("fcpxml_repair_approval_dry_run") != "completed":
+        raise SystemExit("progress snapshot FCPXML repair approval dry-run state is stale")
+    if capability_progress.get("fcpxml_repair_execution_review") != "completed":
+        raise SystemExit("progress snapshot FCPXML repair execution review state is stale")
+    if capability_progress.get("golden_real_project_baseline") != "completed":
+        raise SystemExit("progress snapshot golden baseline state is stale")
+    if capability_progress.get("bgm_rhythm_quality_pass") != "completed":
+        raise SystemExit("progress snapshot BGM/rhythm quality state is stale")
+    if capability_progress.get("nle_roundtrip_readiness") != "completed":
+        raise SystemExit("progress snapshot NLE round-trip readiness state is stale")
+    if capability_progress.get("release_candidate_publication") != "completed":
+        raise SystemExit("progress snapshot release candidate publication state is stale")
     if capability_progress.get("preview_rendering") != "completed":
         raise SystemExit("progress snapshot preview state is stale")
     if capability_progress.get("preview_quality_review") != "completed":
@@ -1730,6 +1841,15 @@ def check_real_media_acceptance_profiles_if_available() -> None:
         initial_workflow_plan = initial_workflow.get("workflow_plan") or {}
         if initial_workflow_plan.get("next_command") != "artist-portrait scan --project <project.yaml>":
             raise SystemExit("real acceptance fixture workflow did not start at scan")
+        if initial_workflow_plan.get("current_stage_id") != "setup":
+            raise SystemExit("real acceptance fixture workflow did not expose setup stage")
+        if initial_workflow_plan.get("creator_stage_count", 0) < 7:
+            raise SystemExit("real acceptance fixture workflow lacks creator stages")
+        if not any(
+            "mixed video track" in item
+            for item in initial_workflow_plan.get("bgm_input_guidance", [])
+        ):
+            raise SystemExit("real acceptance fixture workflow lacks BGM extraction guidance")
         if initial_workflow_plan.get("commands_executed") is not False:
             raise SystemExit("real acceptance fixture workflow executed commands")
         run([str(ARTIST_PORTRAIT), "scan", "--project", str(project), "--quiet"])
@@ -1920,6 +2040,37 @@ def check_real_media_acceptance_profiles_if_available() -> None:
             raise SystemExit("real acceptance fixture edit guidance rendered media")
         if edit_guidance.get("automatic_music_selection") is not False:
             raise SystemExit("real acceptance fixture edit guidance selected music")
+        mid_operator = run_json(
+            [
+                str(ARTIST_PORTRAIT),
+                "operator",
+                "--project",
+                str(project),
+                "--target",
+                "delivery",
+                "--json",
+            ],
+            expect=(0, 1),
+        )
+        mid_operator_runbook = mid_operator.get("operator_runbook") or {}
+        if mid_operator_runbook.get("edit_guidance_id") != edit_guidance.get("edit_guidance_id"):
+            raise SystemExit("real acceptance fixture operator did not bind edit guidance")
+        if mid_operator_runbook.get("next_command") is None:
+            raise SystemExit("real acceptance fixture operator lacked next command")
+        if mid_operator_runbook.get("commands_executed") is not False:
+            raise SystemExit("real acceptance fixture operator executed commands")
+        if mid_operator_runbook.get("media_rendered") is not False:
+            raise SystemExit("real acceptance fixture operator rendered media")
+        if mid_operator_runbook.get("timeline_mutated") is not False:
+            raise SystemExit("real acceptance fixture operator mutated timeline")
+        if mid_operator_runbook.get("automatic_music_selection") is not False:
+            raise SystemExit("real acceptance fixture operator selected music")
+        if mid_operator_runbook.get("network_performed") is not False:
+            raise SystemExit("real acceptance fixture operator accessed network")
+        if "video_audio_extract" not in {
+            item.get("mode") for item in mid_operator_runbook.get("bgm_input_guidance", [])
+        }:
+            raise SystemExit("real acceptance fixture operator missed BGM input guidance")
         rhythm_repair_before_media = run_json(
             [
                 str(ARTIST_PORTRAIT),
@@ -2239,16 +2390,488 @@ def check_real_media_acceptance_profiles_if_available() -> None:
                 "--target",
                 "delivery",
                 "--json",
-            ]
+            ],
+            expect=(0, 1),
         )
         final_workflow_plan = final_workflow.get("workflow_plan") or {}
-        if final_workflow_plan.get("status") != "ready":
-            raise SystemExit("real acceptance fixture final workflow was not ready")
+        if final_workflow_plan.get("status") != "in_progress":
+            raise SystemExit("real acceptance fixture workflow did not continue to handoff")
+        if final_workflow_plan.get("next_command") not in {
+            "artist-portrait operator --project <project.yaml> --target delivery",
+            "artist-portrait editor-package --project <project.yaml>",
+            "artist-portrait nle-plan --project <project.yaml> --target all",
+            "artist-portrait fcpxml --project <project.yaml> --draft",
+        }:
+            raise SystemExit("real acceptance fixture workflow did not point to handoff chain")
+        if final_workflow_plan.get("current_stage_id") != "editor_handoff":
+            raise SystemExit("real acceptance fixture workflow current stage is not editor handoff")
+        deliverables = {
+            item.get("deliverable_id"): item
+            for item in final_workflow_plan.get("deliverables", [])
+        }
+        if deliverables.get("nle_package", {}).get("status") != "missing":
+            raise SystemExit("real acceptance fixture workflow NLE package should still be missing")
         if final_workflow_plan.get("commands_executed") is not False:
             raise SystemExit("real acceptance fixture final workflow executed commands")
+        final_operator = run_json(
+            [
+                str(ARTIST_PORTRAIT),
+                "operator",
+                "--project",
+                str(project),
+                "--target",
+                "delivery",
+                "--json",
+            ],
+            expect=(0, 1),
+        )
+        final_operator_runbook = final_operator.get("operator_runbook") or {}
+        if final_operator_runbook.get("status") not in {"ready", "warning"}:
+            raise SystemExit("real acceptance fixture final operator was not ready or warning")
+        if final_operator_runbook.get("next_command") not in {
+            "artist-portrait editor-package --project <project.yaml>",
+            "artist-portrait nle-plan --project <project.yaml> --target all",
+            "artist-portrait fcpxml --project <project.yaml> --draft",
+        }:
+            raise SystemExit("real acceptance fixture operator did not point to handoff chain")
+        if final_operator_runbook.get("acceptance_id") != delivery.get("acceptance", {}).get("acceptance_id"):
+            raise SystemExit("real acceptance fixture final operator did not bind acceptance")
+        if final_operator_runbook.get("final_export_validation") is not None:
+            raise SystemExit("real acceptance fixture operator leaked unexpected top-level final export field")
+        editor_package_payload = run_json(
+            [
+                str(ARTIST_PORTRAIT),
+                "editor-package",
+                "--project",
+                str(project),
+                "--json",
+            ],
+            expect=(0, 1),
+        )
+        editor_package = editor_package_payload.get("editor_package") or {}
+        if editor_package_payload.get("cue_sheet") != "output/cue_sheet.csv":
+            raise SystemExit("real acceptance fixture editor package did not write cue sheet")
+        if editor_package.get("timeline_item_count", 0) < 1:
+            raise SystemExit("real acceptance fixture editor package lacks timeline items")
+        if editor_package.get("audio_item_count", 0) < 3:
+            raise SystemExit("real acceptance fixture editor package lacks audio items")
+        if editor_package.get("manual_action_count", 0) < 10:
+            raise SystemExit("real acceptance fixture editor package lacks manual actions")
+        if editor_package.get("cue_sheet_row_count", 0) < (
+            editor_package.get("timeline_item_count", 0)
+            + editor_package.get("audio_item_count", 0)
+            + editor_package.get("manual_action_count", 0)
+        ):
+            raise SystemExit("real acceptance fixture editor package cue rows are incomplete")
+        if editor_package.get("media_rendered") is not False:
+            raise SystemExit("real acceptance fixture editor package rendered media")
+        if editor_package.get("timeline_mutated") is not False:
+            raise SystemExit("real acceptance fixture editor package mutated timeline")
+        if editor_package.get("edit_points_moved") is not False:
+            raise SystemExit("real acceptance fixture editor package moved edit points")
+        if editor_package.get("automatic_music_selection") is not False:
+            raise SystemExit("real acceptance fixture editor package selected music")
+        if editor_package.get("automatic_bgm_fit") is not False:
+            raise SystemExit("real acceptance fixture editor package fitted BGM")
+        cue_sheet_text = (tmp_path / "output" / "cue_sheet.csv").read_text(encoding="utf-8")
+        if "manual_action" not in cue_sheet_text or "audio" not in cue_sheet_text:
+            raise SystemExit("real acceptance fixture cue sheet lacks manual or audio rows")
+        nle_payload = run_json(
+            [
+                str(ARTIST_PORTRAIT),
+                "nle-plan",
+                "--project",
+                str(project),
+                "--target",
+                "all",
+                "--json",
+            ],
+            expect=(0, 1),
+        )
+        nle_plan = nle_payload.get("nle_interchange_plan") or {}
+        if nle_payload.get("mapping_csv") != "output/nle_interchange_map.csv":
+            raise SystemExit("real acceptance fixture NLE plan did not write mapping CSV")
+        if nle_plan.get("target") != "all":
+            raise SystemExit("real acceptance fixture NLE plan target is stale")
+        if nle_plan.get("timeline_mapping_count", 0) < 3:
+            raise SystemExit("real acceptance fixture NLE plan lacks timeline mappings")
+        if nle_plan.get("audio_mapping_count", 0) < 3:
+            raise SystemExit("real acceptance fixture NLE plan lacks audio mappings")
+        if nle_plan.get("marker_mapping_count", 0) < 10:
+            raise SystemExit("real acceptance fixture NLE plan lacks marker mappings")
+        targets = {item.get("target") for item in nle_plan.get("target_summaries", [])}
+        if targets != {"fcpxml", "edl", "resolve_csv"}:
+            raise SystemExit("real acceptance fixture NLE plan lacks target summaries")
+        if nle_plan.get("nle_project_written") is not False:
+            raise SystemExit("real acceptance fixture NLE plan wrote NLE project")
+        if nle_plan.get("media_rendered") is not False:
+            raise SystemExit("real acceptance fixture NLE plan rendered media")
+        if nle_plan.get("timeline_mutated") is not False:
+            raise SystemExit("real acceptance fixture NLE plan mutated timeline")
+        if nle_plan.get("edit_points_moved") is not False:
+            raise SystemExit("real acceptance fixture NLE plan moved edit points")
+        if nle_plan.get("automatic_music_selection") is not False:
+            raise SystemExit("real acceptance fixture NLE plan selected music")
+        if nle_plan.get("automatic_bgm_fit") is not False:
+            raise SystemExit("real acceptance fixture NLE plan fitted BGM")
+        nle_map_text = (tmp_path / "output" / "nle_interchange_map.csv").read_text(encoding="utf-8")
+        if "timeline" not in nle_map_text or "marker" not in nle_map_text or "audio" not in nle_map_text:
+            raise SystemExit("real acceptance fixture NLE plan map lacks expected rows")
+        fcpxml_payload = run_json(
+            [
+                str(ARTIST_PORTRAIT),
+                "fcpxml",
+                "--project",
+                str(project),
+                "--draft",
+                "--json",
+            ],
+            expect=(0, 1),
+        )
+        fcpxml_draft = fcpxml_payload.get("fcpxml_draft") or {}
+        fcpxml_validation = fcpxml_payload.get("fcpxml_validation") or {}
+        if fcpxml_payload.get("fcpxml") != "output/draft.fcpxml":
+            raise SystemExit("real acceptance fixture FCPXML draft did not write draft.fcpxml")
+        if fcpxml_draft.get("clip_count", 0) < 1:
+            raise SystemExit("real acceptance fixture FCPXML draft lacks clips")
+        if fcpxml_draft.get("marker_count", 0) < 10:
+            raise SystemExit("real acceptance fixture FCPXML draft lacks markers")
+        if fcpxml_draft.get("audio_note_count", 0) < 3:
+            raise SystemExit("real acceptance fixture FCPXML draft lacks audio notes")
+        if fcpxml_draft.get("relink_required") is not True:
+            raise SystemExit("real acceptance fixture FCPXML draft did not preserve relink requirement")
+        if fcpxml_draft.get("import_verified") is not False:
+            raise SystemExit("real acceptance fixture FCPXML draft claimed import verification")
+        if fcpxml_validation.get("xml_parse_passed") is not True:
+            raise SystemExit("real acceptance fixture FCPXML validation did not parse XML")
+        if fcpxml_validation.get("import_verified") is not False:
+            raise SystemExit("real acceptance fixture FCPXML validation claimed import verification")
+        if fcpxml_draft.get("nle_import_performed") is not False:
+            raise SystemExit("real acceptance fixture FCPXML draft imported into NLE")
+        if fcpxml_draft.get("media_rendered") is not False:
+            raise SystemExit("real acceptance fixture FCPXML draft rendered media")
+        if fcpxml_draft.get("timeline_mutated") is not False:
+            raise SystemExit("real acceptance fixture FCPXML draft mutated timeline")
+        if fcpxml_draft.get("edit_points_moved") is not False:
+            raise SystemExit("real acceptance fixture FCPXML draft moved edit points")
+        fcpxml_text = (tmp_path / "output" / "draft.fcpxml").read_text(encoding="utf-8")
+        if "ARTIST_PORTRAIT_RELINK_REQUIRED" not in fcpxml_text:
+            raise SystemExit("real acceptance fixture FCPXML draft lacks relink placeholder")
+        completed_handoff_workflow = run_json(
+            [
+                str(ARTIST_PORTRAIT),
+                "workflow",
+                "--project",
+                str(project),
+                "--target",
+                "delivery",
+                "--json",
+            ]
+        )
+        completed_handoff_plan = completed_handoff_workflow.get("workflow_plan") or {}
+        if completed_handoff_plan.get("status") != "ready":
+            raise SystemExit("real acceptance fixture workflow was not ready after handoff package")
+        if completed_handoff_plan.get("next_command") is not None:
+            raise SystemExit("real acceptance fixture workflow still had next command after handoff")
+        completed_deliverables = {
+            item.get("deliverable_id"): item
+            for item in completed_handoff_plan.get("deliverables", [])
+        }
+        if completed_deliverables.get("nle_package", {}).get("status") != "present":
+            raise SystemExit("real acceptance fixture workflow NLE package was not present")
+        fcpxml_import_review_candidate = tmp_path / "fcpxml_import_review_candidate.json"
+        fcpxml_import_review_candidate.write_text(
+            json.dumps(
+                {
+                    "import_review_id": "real_fixture_fcpxml_import_review",
+                    "project_id": fcpxml_draft.get("project_id"),
+                    "fcpxml_draft_id": fcpxml_draft.get("fcpxml_draft_id"),
+                    "nle_plan_id": fcpxml_draft.get("nle_plan_id"),
+                    "reviewed_by": "run_checks",
+                    "application_name": "Final Cut Pro",
+                    "application_version": "external-review",
+                    "import_attempted": True,
+                    "import_succeeded": True,
+                    "relink_attempted": True,
+                    "relink_succeeded": False,
+                    "relink_missing_count": 1,
+                    "timeline_opened": True,
+                    "playback_checked": False,
+                    "issue_count": 1,
+                    "issues": [
+                        {
+                            "issue_id": "relink_required",
+                            "severity": "warning",
+                            "category": "asset_relink",
+                            "detail": "Draft imported, but placeholder assets require manual relink.",
+                        }
+                    ],
+                    "evidence_refs": ["run_checks external review fixture"],
+                    "media_rendered": False,
+                    "timeline_mutated": False,
+                    "edit_points_moved": False,
+                    "automatic_music_selection": False,
+                    "automatic_bgm_fit": False,
+                    "model_call_performed_by_cli": False,
+                    "network_performed": False,
+                    "image_generation_or_editing_used": False,
+                }
+            ),
+            encoding="utf-8",
+        )
+        fcpxml_import_review_payload = run_json(
+            [
+                str(ARTIST_PORTRAIT),
+                "fcpxml",
+                "--project",
+                str(project),
+                "--import-review",
+                str(fcpxml_import_review_candidate),
+                "--json",
+            ],
+            expect=(0, 1),
+        )
+        fcpxml_import_review = fcpxml_import_review_payload.get("fcpxml_import_review") or {}
+        if fcpxml_import_review.get("binding_status") != "matched":
+            raise SystemExit("real acceptance fixture FCPXML import review binding mismatch")
+        if fcpxml_import_review.get("status") != "warning":
+            raise SystemExit("real acceptance fixture FCPXML import review did not preserve warning state")
+        if fcpxml_import_review.get("import_success_claimed") is not True:
+            raise SystemExit("real acceptance fixture FCPXML import review lost import success claim")
+        if fcpxml_import_review.get("import_success_accepted_as_project_success") is not False:
+            raise SystemExit("real acceptance fixture FCPXML import review promoted import to project success")
+        if fcpxml_import_review.get("media_rendered") is not False:
+            raise SystemExit("real acceptance fixture FCPXML import review rendered media")
+        if fcpxml_import_review.get("timeline_mutated") is not False:
+            raise SystemExit("real acceptance fixture FCPXML import review mutated timeline")
+        if fcpxml_import_review.get("edit_points_moved") is not False:
+            raise SystemExit("real acceptance fixture FCPXML import review moved edit points")
+        fcpxml_repair_payload = run_json(
+            [
+                str(ARTIST_PORTRAIT),
+                "fcpxml",
+                "--project",
+                str(project),
+                "--repair-plan",
+                "--json",
+            ],
+            expect=(0, 1),
+        )
+        fcpxml_repair_plan = fcpxml_repair_payload.get("fcpxml_repair_plan") or {}
+        if fcpxml_repair_plan.get("fcpxml_draft_id") != fcpxml_draft.get("fcpxml_draft_id"):
+            raise SystemExit("real acceptance fixture FCPXML repair plan lost draft binding")
+        if (
+            fcpxml_repair_plan.get("fcpxml_import_review_id")
+            != fcpxml_import_review.get("review_id")
+        ):
+            raise SystemExit("real acceptance fixture FCPXML repair plan lost import-review binding")
+        if fcpxml_repair_plan.get("required_action_count", 0) < 2:
+            raise SystemExit("real acceptance fixture FCPXML repair plan lacks required actions")
+        if fcpxml_repair_plan.get("relink_action_count", 0) < 2:
+            raise SystemExit("real acceptance fixture FCPXML repair plan lacks relink actions")
+        if fcpxml_repair_plan.get("playback_review_required") is not True:
+            raise SystemExit("real acceptance fixture FCPXML repair plan lacks playback review action")
+        if fcpxml_repair_plan.get("commands_executed") is not False:
+            raise SystemExit("real acceptance fixture FCPXML repair plan executed commands")
+        if fcpxml_repair_plan.get("media_rendered") is not False:
+            raise SystemExit("real acceptance fixture FCPXML repair plan rendered media")
+        if fcpxml_repair_plan.get("timeline_mutated") is not False:
+            raise SystemExit("real acceptance fixture FCPXML repair plan mutated timeline")
+        if fcpxml_repair_plan.get("edit_points_moved") is not False:
+            raise SystemExit("real acceptance fixture FCPXML repair plan moved edit points")
+        if fcpxml_repair_plan.get("nle_import_performed") is not False:
+            raise SystemExit("real acceptance fixture FCPXML repair plan imported into NLE")
+        if fcpxml_repair_plan.get("source_relink_performed") is not False:
+            raise SystemExit("real acceptance fixture FCPXML repair plan relinked media")
+        if fcpxml_repair_plan.get("repair_success_claimed") is not False:
+            raise SystemExit("real acceptance fixture FCPXML repair plan claimed repair success")
+        fcpxml_approval_request_payload = run_json(
+            [
+                str(ARTIST_PORTRAIT),
+                "fcpxml",
+                "--project",
+                str(project),
+                "--approval-request",
+                "--json",
+            ]
+        )
+        fcpxml_approval_request = (
+            fcpxml_approval_request_payload.get("fcpxml_repair_approval_request") or {}
+        )
+        if fcpxml_approval_request.get("fcpxml_repair_plan_id") != fcpxml_repair_plan.get("repair_plan_id"):
+            raise SystemExit("real acceptance fixture FCPXML approval request lost repair-plan binding")
+        if len(fcpxml_approval_request.get("required_action_ids") or []) < 2:
+            raise SystemExit("real acceptance fixture FCPXML approval request lacks required actions")
+        if fcpxml_approval_request.get("commands_executed") is not False:
+            raise SystemExit("real acceptance fixture FCPXML approval request executed commands")
+        approved_fcpxml_action = fcpxml_approval_request["required_action_ids"][0]
+        fcpxml_action_ids = [action.get("action_id") for action in fcpxml_repair_plan.get("actions", [])]
+        fcpxml_approval_record_candidate = tmp_path / "fcpxml_repair_approval_record_candidate.json"
+        fcpxml_approval_record_candidate.write_text(
+            json.dumps(
+                {
+                    "approval_record_id": "real_fixture_fcpxml_repair_approval",
+                    "project_id": fcpxml_repair_plan.get("project_id"),
+                    "fcpxml_repair_plan_id": fcpxml_repair_plan.get("repair_plan_id"),
+                    "fcpxml_draft_id": fcpxml_repair_plan.get("fcpxml_draft_id"),
+                    "fcpxml_import_review_id": fcpxml_repair_plan.get("fcpxml_import_review_id"),
+                    "approved_by": "run_checks",
+                    "approved_action_ids": [approved_fcpxml_action],
+                    "rejected_action_ids": [
+                        action_id for action_id in fcpxml_action_ids if action_id != approved_fcpxml_action
+                    ],
+                    "status": "failed",
+                    "invalid_reasons": ["candidate status is overwritten by validation"],
+                    "commands_executed_by_cli": False,
+                    "media_rendered_by_cli": False,
+                    "timeline_mutated_by_cli": False,
+                    "edit_points_moved_by_cli": False,
+                    "nle_import_performed_by_cli": False,
+                    "source_relink_performed_by_cli": False,
+                    "automatic_music_selection_by_cli": False,
+                    "automatic_bgm_fit_by_cli": False,
+                    "model_call_performed_by_cli": False,
+                    "network_performed_by_cli": False,
+                    "image_generation_or_editing_used_by_cli": False,
+                    "repair_success_claimed_by_cli": False,
+                }
+            ),
+            encoding="utf-8",
+        )
+        fcpxml_approval_record_payload = run_json(
+            [
+                str(ARTIST_PORTRAIT),
+                "fcpxml",
+                "--project",
+                str(project),
+                "--approval-record",
+                str(fcpxml_approval_record_candidate),
+                "--json",
+            ]
+        )
+        fcpxml_approval_record = (
+            fcpxml_approval_record_payload.get("fcpxml_repair_approval_record") or {}
+        )
+        if fcpxml_approval_record.get("status") != "passed":
+            raise SystemExit("real acceptance fixture FCPXML approval record did not pass")
+        if fcpxml_approval_record.get("commands_executed_by_cli") is not False:
+            raise SystemExit("real acceptance fixture FCPXML approval record executed commands")
+        if fcpxml_approval_record.get("source_relink_performed_by_cli") is not False:
+            raise SystemExit("real acceptance fixture FCPXML approval record relinked media")
+        fcpxml_dry_run_payload = run_json(
+            [
+                str(ARTIST_PORTRAIT),
+                "fcpxml",
+                "--project",
+                str(project),
+                "--repair-dry-run",
+                "--json",
+            ]
+        )
+        fcpxml_dry_run = fcpxml_dry_run_payload.get("fcpxml_repair_dry_run") or {}
+        if fcpxml_dry_run.get("approved_action_count") != 1:
+            raise SystemExit("real acceptance fixture FCPXML dry-run approved count is wrong")
+        if fcpxml_dry_run.get("rejected_action_count", 0) < 1:
+            raise SystemExit("real acceptance fixture FCPXML dry-run lacks rejected actions")
+        if fcpxml_dry_run.get("commands_executed") is not False:
+            raise SystemExit("real acceptance fixture FCPXML dry-run executed commands")
+        if fcpxml_dry_run.get("nle_import_performed") is not False:
+            raise SystemExit("real acceptance fixture FCPXML dry-run imported into NLE")
+        if fcpxml_dry_run.get("source_relink_performed") is not False:
+            raise SystemExit("real acceptance fixture FCPXML dry-run relinked media")
+        if fcpxml_dry_run.get("repair_success_claimed") is not False:
+            raise SystemExit("real acceptance fixture FCPXML dry-run claimed repair success")
+        approved_fcpxml_step = next(
+            (
+                step
+                for step in fcpxml_dry_run.get("steps", [])
+                if step.get("status") == "approved"
+            ),
+            None,
+        )
+        if not approved_fcpxml_step:
+            raise SystemExit("real acceptance fixture FCPXML dry-run has no approved step")
+        fcpxml_repair_execution_candidate = (
+            tmp_path / "fcpxml_repair_execution_record_candidate.json"
+        )
+        fcpxml_repair_execution_candidate.write_text(
+            json.dumps(
+                {
+                    "execution_record_id": "real_fixture_fcpxml_repair_execution_safe",
+                    "project_id": fcpxml_dry_run.get("project_id"),
+                    "fcpxml_repair_plan_id": fcpxml_dry_run.get("fcpxml_repair_plan_id"),
+                    "approval_record_id": fcpxml_dry_run.get("approval_record_id"),
+                    "dry_run_id": fcpxml_dry_run.get("dry_run_id"),
+                    "fcpxml_draft_id": fcpxml_dry_run.get("fcpxml_draft_id"),
+                    "fcpxml_import_review_id": fcpxml_dry_run.get("fcpxml_import_review_id"),
+                    "executed_by": "run_checks",
+                    "actions": [
+                        {
+                            "action_id": approved_fcpxml_step.get("action_id"),
+                            "command": approved_fcpxml_step.get("command"),
+                            "status": "succeeded",
+                            "exit_code": 0,
+                            "output_refs": ["external-fcpxml-import-review"],
+                            "evidence_refs": ["manual relink/import evidence"],
+                        }
+                    ],
+                    "commands_executed_by_cli": False,
+                    "media_rendered_by_cli": False,
+                    "timeline_mutated_by_cli": False,
+                    "edit_points_moved_by_cli": False,
+                    "nle_import_performed_by_cli": False,
+                    "source_relink_performed_by_cli": False,
+                    "automatic_music_selection_by_cli": False,
+                    "automatic_bgm_fit_by_cli": False,
+                    "model_call_performed_by_cli": False,
+                    "network_performed_by_cli": False,
+                    "image_generation_or_editing_used_by_cli": False,
+                    "repair_success_promoted_by_cli": False,
+                    "acceptance_success_promoted_by_cli": False,
+                }
+            ),
+            encoding="utf-8",
+        )
+        fcpxml_execution_payload = run_json(
+            [
+                str(ARTIST_PORTRAIT),
+                "fcpxml",
+                "--project",
+                str(project),
+                "--repair-execution-record",
+                str(fcpxml_repair_execution_candidate),
+                "--json",
+            ]
+        )
+        fcpxml_execution_review = (
+            fcpxml_execution_payload.get("fcpxml_repair_execution_review") or {}
+        )
+        if fcpxml_execution_review.get("status") != "passed":
+            raise SystemExit("real acceptance fixture FCPXML execution review did not pass")
+        if fcpxml_execution_review.get("accepted_action_count") != 1:
+            raise SystemExit("real acceptance fixture FCPXML execution accepted count is wrong")
+        if fcpxml_execution_review.get("rejected_action_count") != 0:
+            raise SystemExit("real acceptance fixture FCPXML execution rejected evidence")
+        if fcpxml_execution_review.get("missing_action_count") != 0:
+            raise SystemExit("real acceptance fixture FCPXML execution has missing evidence")
+        forbidden_execution_flags = {
+            "commands_executed_by_cli": "executed commands",
+            "media_rendered_by_cli": "rendered media",
+            "timeline_mutated_by_cli": "mutated timeline",
+            "edit_points_moved_by_cli": "moved edit points",
+            "nle_import_performed_by_cli": "imported into NLE",
+            "source_relink_performed_by_cli": "relinked source media",
+            "repair_success_promoted_by_cli": "promoted repair success",
+            "acceptance_success_promoted_by_cli": "promoted acceptance success",
+        }
+        for flag, description in forbidden_execution_flags.items():
+            if fcpxml_execution_review.get(flag) is not False:
+                raise SystemExit(
+                    f"real acceptance fixture FCPXML execution review {description}"
+                )
         workflow_steps = [
             step
-            for step in final_workflow_plan.get("steps", [])
+            for step in completed_handoff_plan.get("steps", [])
             if step.get("source") == "workflow"
         ]
         workflow_record_candidate = tmp_path / "workflow_execution_record_candidate.json"
@@ -2257,8 +2880,8 @@ def check_real_media_acceptance_profiles_if_available() -> None:
             json.dumps(
                 {
                     "execution_record_id": "real_fixture_workflow_execution_broken",
-                    "project_id": final_workflow_plan.get("project_id"),
-                    "workflow_plan_id": final_workflow_plan.get("workflow_plan_id"),
+                    "project_id": completed_handoff_plan.get("project_id"),
+                    "workflow_plan_id": completed_handoff_plan.get("workflow_plan_id"),
                     "target": "delivery",
                     "executed_by": "run_checks",
                     "steps": [
@@ -2484,8 +3107,8 @@ def check_real_media_acceptance_profiles_if_available() -> None:
             json.dumps(
                 {
                     "execution_record_id": "real_fixture_workflow_execution",
-                    "project_id": final_workflow_plan.get("project_id"),
-                    "workflow_plan_id": final_workflow_plan.get("workflow_plan_id"),
+                    "project_id": completed_handoff_plan.get("project_id"),
+                    "workflow_plan_id": completed_handoff_plan.get("workflow_plan_id"),
                     "target": "delivery",
                     "executed_by": "run_checks",
                     "steps": [
@@ -2552,6 +3175,180 @@ def check_real_media_acceptance_profiles_if_available() -> None:
             raise SystemExit("release hardening report performed network access")
 
 
+def check_golden_artist_portrait_baseline_if_available() -> None:
+    if shutil.which("ffprobe") is None or shutil.which("ffmpeg") is None:
+        print("skipping golden artist portrait baseline; ffmpeg/ffprobe not found")
+        return
+    with tempfile.TemporaryDirectory(prefix="artist-portrait-golden-check-") as tmp:
+        payload = run_json(
+            [
+                str(PYTHON),
+                str(GOLDEN_BASELINE),
+                "--workspace",
+                tmp,
+                "--json",
+            ]
+        )
+        if payload.get("status") != "passed":
+            raise SystemExit("golden baseline did not pass")
+        if payload.get("source_count") != 2:
+            raise SystemExit("golden baseline source count drifted")
+        acceptance = payload.get("acceptance") or {}
+        if acceptance.get("preview_ready") is not True:
+            raise SystemExit("golden baseline preview is not ready")
+        if acceptance.get("delivery_ready") is not True:
+            raise SystemExit("golden baseline delivery is not ready")
+        if acceptance.get("workflow_ready") is not True:
+            raise SystemExit("golden baseline workflow is not ready")
+        guardrails = payload.get("guardrails") or {}
+        if any(value is not False for value in guardrails.values()):
+            raise SystemExit(f"golden baseline guardrail drift: {guardrails}")
+        counts = payload.get("counts") or {}
+        if counts.get("edit_guidance_actions", 0) < 10:
+            raise SystemExit("golden baseline lacks edit guidance actions")
+        if counts.get("editor_package_actions", 0) < 10:
+            raise SystemExit("golden baseline lacks editor package actions")
+        if counts.get("fcpxml_clips", 0) < 2:
+            raise SystemExit("golden baseline FCPXML clip coverage drifted")
+        artifacts = payload.get("artifacts") or []
+        if len(artifacts) < 20 or any(item.get("exists") is not True for item in artifacts):
+            raise SystemExit("golden baseline artifact contract drifted")
+
+
+def check_bgm_rhythm_quality_pass_if_available() -> None:
+    if shutil.which("ffprobe") is None or shutil.which("ffmpeg") is None:
+        print("skipping BGM/rhythm quality pass; ffmpeg/ffprobe not found")
+        return
+    with tempfile.TemporaryDirectory(prefix="artist-portrait-bgm-rhythm-quality-") as tmp:
+        payload = run_json(
+            [
+                str(PYTHON),
+                str(BGM_RHYTHM_QUALITY),
+                "--workspace",
+                tmp,
+                "--json",
+            ]
+        )
+        if payload.get("status") != "passed":
+            raise SystemExit("BGM/rhythm quality pass did not pass")
+        if set(payload.get("input_modes") or []) != {
+            "direct_audio",
+            "source_embedded_audio",
+            "video_audio_extract",
+        }:
+            raise SystemExit("BGM/rhythm quality input modes drifted")
+        if payload.get("candidate_count") != 3:
+            raise SystemExit("BGM/rhythm quality candidate count drifted")
+        if payload.get("mixed_audio_candidate_count", 0) < 2:
+            raise SystemExit("BGM/rhythm quality missed mixed audio candidates")
+        if payload.get("source_risk_high_count", 0) < 2:
+            raise SystemExit("BGM/rhythm quality missed source-risk warnings")
+        fit_controls = payload.get("fit_controls") or {}
+        if fit_controls.get("ducking_gain_db") != -11.0:
+            raise SystemExit("BGM/rhythm quality explicit ducking control drifted")
+        if fit_controls.get("target_gain_db") != -13.0:
+            raise SystemExit("BGM/rhythm quality explicit target gain drifted")
+        if fit_controls.get("ducking_interval_count", 0) < 1:
+            raise SystemExit("BGM/rhythm quality lost ducking intervals")
+        guidance = payload.get("guidance") or {}
+        if guidance.get("manual_only") is not True:
+            raise SystemExit("BGM/rhythm quality guidance is not manual-only")
+        if guidance.get("action_count", 0) < 10:
+            raise SystemExit("BGM/rhythm quality guidance lacks actions")
+        media_qc = payload.get("media_qc") or {}
+        if media_qc.get("preview_ready") is not True or media_qc.get("delivery_ready") is not True:
+            raise SystemExit("BGM/rhythm quality media readiness drifted")
+        guardrails = payload.get("guardrails") or {}
+        if any(value is not False for value in guardrails.values()):
+            raise SystemExit(f"BGM/rhythm quality guardrail drift: {guardrails}")
+
+
+def check_nle_roundtrip_readiness_if_available() -> None:
+    if shutil.which("ffprobe") is None or shutil.which("ffmpeg") is None:
+        print("skipping NLE round-trip readiness; ffmpeg/ffprobe not found")
+        return
+    with tempfile.TemporaryDirectory(prefix="artist-portrait-nle-roundtrip-") as tmp:
+        payload = run_json(
+            [
+                str(PYTHON),
+                str(NLE_ROUNDTRIP_READINESS),
+                "--workspace",
+                tmp,
+                "--json",
+            ]
+        )
+        if payload.get("status") != "passed":
+            raise SystemExit("NLE round-trip readiness did not pass")
+        package = payload.get("package") or {}
+        if package.get("editor_manual_action_count", 0) < 10:
+            raise SystemExit("NLE round-trip lost editor package manual actions")
+        if package.get("nle_timeline_mapping_count", 0) < 1:
+            raise SystemExit("NLE round-trip lost NLE timeline mappings")
+        if package.get("fcpxml_clip_count", 0) < 2:
+            raise SystemExit("NLE round-trip lost FCPXML clip coverage")
+        if package.get("artifact_map_contains_workflow_execution") is not True:
+            raise SystemExit("NLE round-trip operator handback lost workflow execution evidence")
+        if package.get("artifact_map_contains_fcpxml_repair_execution") is not True:
+            raise SystemExit("NLE round-trip operator handback lost FCPXML repair evidence")
+        import_review = payload.get("import_review") or {}
+        if import_review.get("binding_status") != "matched":
+            raise SystemExit("NLE round-trip import review binding drifted")
+        if import_review.get("import_success_claimed") is not True:
+            raise SystemExit("NLE round-trip import success evidence missing")
+        if import_review.get("relink_success_claimed") is not False:
+            raise SystemExit("NLE round-trip relink warning disappeared")
+        if import_review.get("success_promoted") is not False:
+            raise SystemExit("NLE round-trip promoted external import success")
+        repair = payload.get("repair") or {}
+        if repair.get("required_action_count", 0) < 1:
+            raise SystemExit("NLE round-trip lacks required repair actions")
+        if repair.get("accepted_action_count") != repair.get("dry_run_approved_action_count"):
+            raise SystemExit("NLE round-trip repair execution review did not accept approved actions")
+        workflow = payload.get("workflow_handback") or {}
+        if workflow.get("workflow_status") != "ready":
+            raise SystemExit("NLE round-trip workflow is not ready")
+        if workflow.get("workflow_execution_review_status") != "passed":
+            raise SystemExit("NLE round-trip workflow execution handback did not pass")
+        guardrails = payload.get("guardrails") or {}
+        if any(value is not False for value in guardrails.values()):
+            raise SystemExit(f"NLE round-trip guardrail drift: {guardrails}")
+
+
+def check_release_candidate_publication() -> None:
+    payload = run_json(
+        [
+            str(PYTHON),
+            str(RELEASE_CANDIDATE),
+            "--allow-dirty",
+            "--json",
+        ]
+    )
+    if payload.get("status") not in {"passed", "warning"}:
+        raise SystemExit("release candidate check failed")
+    if payload.get("target_version") != "0.28.0" or payload.get("target_tag") != "v0.28.0":
+        raise SystemExit("release candidate target version drifted")
+    checks = payload.get("checks") or {}
+    for name in (
+        "version_matches_target",
+        "active_stage_is_stage_06",
+        "final_acceptance_complete",
+        "current_batch_completed",
+        "release_ledger_targets_current_version",
+        "preflight_ok",
+        "install_simulation_ok",
+        "quick_validate_ok",
+        "previous_tag_exists",
+        "target_tag_state_valid",
+        "origin_is_video_skill",
+        "working_tree_clean_or_allowed",
+    ):
+        if checks.get(name) is not True:
+            raise SystemExit(f"release candidate check failed: {name}")
+    guardrails = payload.get("guardrails") or {}
+    if any(value is not False for value in guardrails.values()):
+        raise SystemExit(f"release candidate guardrail drift: {guardrails}")
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--skip-pytest", action="store_true")
@@ -2585,6 +3382,10 @@ def main(argv: list[str] | None = None) -> int:
     check_local_foundation_outputs()
     check_real_scan_if_available()
     check_real_media_acceptance_profiles_if_available()
+    check_golden_artist_portrait_baseline_if_available()
+    check_bgm_rhythm_quality_pass_if_available()
+    check_nle_roundtrip_readiness_if_available()
+    check_release_candidate_publication()
     print("checks passed")
     return 0
 

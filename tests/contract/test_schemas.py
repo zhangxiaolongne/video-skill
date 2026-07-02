@@ -28,8 +28,23 @@ from artist_portrait_editor.models.bgm_recommendation import (
 )
 from artist_portrait_editor.models.clip import ClipRecord
 from artist_portrait_editor.models.config import ProjectConfig
+from artist_portrait_editor.models.editor_package import EditorPackage
+from artist_portrait_editor.models.fcpxml import (
+    FcpxmlDraft,
+    FcpxmlImportReview,
+    FcpxmlImportReviewCandidate,
+    FcpxmlRepairApprovalRecord,
+    FcpxmlRepairApprovalRequest,
+    FcpxmlRepairDryRun,
+    FcpxmlRepairExecutionRecord,
+    FcpxmlRepairExecutionReview,
+    FcpxmlRepairPlan,
+    FcpxmlValidationReport,
+)
 from artist_portrait_editor.models.keyframe import KeyframeRecord
 from artist_portrait_editor.models.model_gate import TextModelGate
+from artist_portrait_editor.models.nle_interchange import NleInterchangePlan
+from artist_portrait_editor.models.operator import OperatorRunbook
 from artist_portrait_editor.models.proposal import ProposalSet
 from artist_portrait_editor.models.proposal_adapter import ProposalAdapterCheck
 from artist_portrait_editor.models.proposal_adapter import ProposalCanonicalWriteTransactionPlan
@@ -106,6 +121,19 @@ def test_schema_generation_from_pydantic_models():
     proposal_validation_schema = ProposalValidationReport.model_json_schema()
     text_model_gate_schema = TextModelGate.model_json_schema()
     state_schema = ProjectState.model_json_schema()
+    editor_package_schema = EditorPackage.model_json_schema()
+    fcpxml_draft_schema = FcpxmlDraft.model_json_schema()
+    fcpxml_import_review_schema = FcpxmlImportReview.model_json_schema()
+    fcpxml_import_review_candidate_schema = FcpxmlImportReviewCandidate.model_json_schema()
+    fcpxml_repair_approval_record_schema = FcpxmlRepairApprovalRecord.model_json_schema()
+    fcpxml_repair_approval_request_schema = FcpxmlRepairApprovalRequest.model_json_schema()
+    fcpxml_repair_dry_run_schema = FcpxmlRepairDryRun.model_json_schema()
+    fcpxml_repair_execution_record_schema = FcpxmlRepairExecutionRecord.model_json_schema()
+    fcpxml_repair_execution_review_schema = FcpxmlRepairExecutionReview.model_json_schema()
+    fcpxml_repair_plan_schema = FcpxmlRepairPlan.model_json_schema()
+    fcpxml_validation_schema = FcpxmlValidationReport.model_json_schema()
+    nle_interchange_schema = NleInterchangePlan.model_json_schema()
+    operator_schema = OperatorRunbook.model_json_schema()
     rhythm_agent_schema = RhythmAgentCandidate.model_json_schema()
     rhythm_intent_schema = RhythmIntent.model_json_schema()
     rhythm_media_qc_schema = RhythmMediaQcReport.model_json_schema()
@@ -194,6 +222,19 @@ def test_schema_generation_from_pydantic_models():
     assert provider_call_dry_run_schema["title"] == "ProposalProviderCallDryRun"
     assert provider_result_schema["title"] == "ProposalProviderResultEnvelope"
     assert release_hardening_schema["title"] == "ReleaseHardeningReport"
+    assert editor_package_schema["title"] == "EditorPackage"
+    assert fcpxml_draft_schema["title"] == "FcpxmlDraft"
+    assert fcpxml_import_review_schema["title"] == "FcpxmlImportReview"
+    assert fcpxml_import_review_candidate_schema["title"] == "FcpxmlImportReviewCandidate"
+    assert fcpxml_repair_approval_record_schema["title"] == "FcpxmlRepairApprovalRecord"
+    assert fcpxml_repair_approval_request_schema["title"] == "FcpxmlRepairApprovalRequest"
+    assert fcpxml_repair_dry_run_schema["title"] == "FcpxmlRepairDryRun"
+    assert fcpxml_repair_execution_record_schema["title"] == "FcpxmlRepairExecutionRecord"
+    assert fcpxml_repair_execution_review_schema["title"] == "FcpxmlRepairExecutionReview"
+    assert fcpxml_repair_plan_schema["title"] == "FcpxmlRepairPlan"
+    assert fcpxml_validation_schema["title"] == "FcpxmlValidationReport"
+    assert nle_interchange_schema["title"] == "NleInterchangePlan"
+    assert operator_schema["title"] == "OperatorRunbook"
     assert edit_guidance_schema["title"] == "EditGuidanceReport"
     assert source_schema["title"] == "SourceRecord"
     assert transcript_schema["title"] == "TranscriptRecord"
@@ -321,6 +362,45 @@ def test_committed_schemas_match_pydantic_generation():
     )
     committed_release_hardening = json.loads(
         (schema_dir / "release_hardening_report.schema.json").read_text(encoding="utf-8")
+    )
+    committed_editor_package = json.loads(
+        (schema_dir / "editor_package.schema.json").read_text(encoding="utf-8")
+    )
+    committed_fcpxml_draft = json.loads(
+        (schema_dir / "fcpxml_draft.schema.json").read_text(encoding="utf-8")
+    )
+    committed_fcpxml_import_review = json.loads(
+        (schema_dir / "fcpxml_import_review.schema.json").read_text(encoding="utf-8")
+    )
+    committed_fcpxml_import_review_candidate = json.loads(
+        (schema_dir / "fcpxml_import_review_candidate.schema.json").read_text(encoding="utf-8")
+    )
+    committed_fcpxml_repair_approval_record = json.loads(
+        (schema_dir / "fcpxml_repair_approval_record.schema.json").read_text(encoding="utf-8")
+    )
+    committed_fcpxml_repair_approval_request = json.loads(
+        (schema_dir / "fcpxml_repair_approval_request.schema.json").read_text(encoding="utf-8")
+    )
+    committed_fcpxml_repair_dry_run = json.loads(
+        (schema_dir / "fcpxml_repair_dry_run.schema.json").read_text(encoding="utf-8")
+    )
+    committed_fcpxml_repair_execution_record = json.loads(
+        (schema_dir / "fcpxml_repair_execution_record.schema.json").read_text(encoding="utf-8")
+    )
+    committed_fcpxml_repair_execution_review = json.loads(
+        (schema_dir / "fcpxml_repair_execution_review.schema.json").read_text(encoding="utf-8")
+    )
+    committed_fcpxml_repair_plan = json.loads(
+        (schema_dir / "fcpxml_repair_plan.schema.json").read_text(encoding="utf-8")
+    )
+    committed_fcpxml_validation = json.loads(
+        (schema_dir / "fcpxml_validation_report.schema.json").read_text(encoding="utf-8")
+    )
+    committed_nle_interchange = json.loads(
+        (schema_dir / "nle_interchange_plan.schema.json").read_text(encoding="utf-8")
+    )
+    committed_operator = json.loads(
+        (schema_dir / "operator_runbook.schema.json").read_text(encoding="utf-8")
     )
     committed_edit_guidance = json.loads(
         (schema_dir / "edit_guidance_report.schema.json").read_text(encoding="utf-8")
@@ -557,6 +637,45 @@ def test_committed_schemas_match_pydantic_generation():
     )
     assert committed_release_hardening == json.loads(
         json.dumps(ReleaseHardeningReport.model_json_schema(), sort_keys=True)
+    )
+    assert committed_editor_package == json.loads(
+        json.dumps(EditorPackage.model_json_schema(), sort_keys=True)
+    )
+    assert committed_fcpxml_draft == json.loads(
+        json.dumps(FcpxmlDraft.model_json_schema(), sort_keys=True)
+    )
+    assert committed_fcpxml_import_review == json.loads(
+        json.dumps(FcpxmlImportReview.model_json_schema(), sort_keys=True)
+    )
+    assert committed_fcpxml_import_review_candidate == json.loads(
+        json.dumps(FcpxmlImportReviewCandidate.model_json_schema(), sort_keys=True)
+    )
+    assert committed_fcpxml_repair_approval_record == json.loads(
+        json.dumps(FcpxmlRepairApprovalRecord.model_json_schema(), sort_keys=True)
+    )
+    assert committed_fcpxml_repair_approval_request == json.loads(
+        json.dumps(FcpxmlRepairApprovalRequest.model_json_schema(), sort_keys=True)
+    )
+    assert committed_fcpxml_repair_dry_run == json.loads(
+        json.dumps(FcpxmlRepairDryRun.model_json_schema(), sort_keys=True)
+    )
+    assert committed_fcpxml_repair_execution_record == json.loads(
+        json.dumps(FcpxmlRepairExecutionRecord.model_json_schema(), sort_keys=True)
+    )
+    assert committed_fcpxml_repair_execution_review == json.loads(
+        json.dumps(FcpxmlRepairExecutionReview.model_json_schema(), sort_keys=True)
+    )
+    assert committed_fcpxml_repair_plan == json.loads(
+        json.dumps(FcpxmlRepairPlan.model_json_schema(), sort_keys=True)
+    )
+    assert committed_fcpxml_validation == json.loads(
+        json.dumps(FcpxmlValidationReport.model_json_schema(), sort_keys=True)
+    )
+    assert committed_nle_interchange == json.loads(
+        json.dumps(NleInterchangePlan.model_json_schema(), sort_keys=True)
+    )
+    assert committed_operator == json.loads(
+        json.dumps(OperatorRunbook.model_json_schema(), sort_keys=True)
     )
     assert committed_edit_guidance == json.loads(
         json.dumps(EditGuidanceReport.model_json_schema(), sort_keys=True)

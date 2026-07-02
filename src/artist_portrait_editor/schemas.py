@@ -30,12 +30,27 @@ from artist_portrait_editor.models.bgm_recommendation import (
 )
 from artist_portrait_editor.models.clip import ClipRecord
 from artist_portrait_editor.models.config import ProjectConfig
+from artist_portrait_editor.models.editor_package import EditorPackage
+from artist_portrait_editor.models.fcpxml import (
+    FcpxmlDraft,
+    FcpxmlImportReview,
+    FcpxmlImportReviewCandidate,
+    FcpxmlRepairApprovalRecord,
+    FcpxmlRepairApprovalRequest,
+    FcpxmlRepairDryRun,
+    FcpxmlRepairExecutionRecord,
+    FcpxmlRepairExecutionReview,
+    FcpxmlRepairPlan,
+    FcpxmlValidationReport,
+)
 from artist_portrait_editor.models.keyframe import KeyframeRecord
 from artist_portrait_editor.models.final_export import (
     FinalExportManifest,
     FinalExportValidationReport,
 )
 from artist_portrait_editor.models.model_gate import TextModelGate
+from artist_portrait_editor.models.nle_interchange import NleInterchangePlan
+from artist_portrait_editor.models.operator import OperatorRunbook
 from artist_portrait_editor.models.proposal import ProposalSet
 from artist_portrait_editor.models.proposal_adapter import (
     ProposalAdapterCheck,
@@ -122,6 +137,27 @@ def write_schema_files(output_dir: Path) -> None:
         "bgm_recommendation_validation_report.schema.json": (
             BgmRecommendationValidationReport.model_json_schema()
         ),
+        "editor_package.schema.json": EditorPackage.model_json_schema(),
+        "fcpxml_draft.schema.json": FcpxmlDraft.model_json_schema(),
+        "fcpxml_import_review.schema.json": FcpxmlImportReview.model_json_schema(),
+        "fcpxml_import_review_candidate.schema.json": (
+            FcpxmlImportReviewCandidate.model_json_schema()
+        ),
+        "fcpxml_repair_approval_record.schema.json": (
+            FcpxmlRepairApprovalRecord.model_json_schema()
+        ),
+        "fcpxml_repair_approval_request.schema.json": (
+            FcpxmlRepairApprovalRequest.model_json_schema()
+        ),
+        "fcpxml_repair_dry_run.schema.json": FcpxmlRepairDryRun.model_json_schema(),
+        "fcpxml_repair_execution_record.schema.json": (
+            FcpxmlRepairExecutionRecord.model_json_schema()
+        ),
+        "fcpxml_repair_execution_review.schema.json": (
+            FcpxmlRepairExecutionReview.model_json_schema()
+        ),
+        "fcpxml_repair_plan.schema.json": FcpxmlRepairPlan.model_json_schema(),
+        "fcpxml_validation_report.schema.json": FcpxmlValidationReport.model_json_schema(),
         "final_export_manifest.schema.json": FinalExportManifest.model_json_schema(),
         "final_export_validation_report.schema.json": (
             FinalExportValidationReport.model_json_schema()
@@ -131,6 +167,8 @@ def write_schema_files(output_dir: Path) -> None:
         "preview_render_manifest.schema.json": PreviewRenderManifest.model_json_schema(),
         "preview_validation_report.schema.json": PreviewValidationReport.model_json_schema(),
         "release_hardening_report.schema.json": ReleaseHardeningReport.model_json_schema(),
+        "nle_interchange_plan.schema.json": NleInterchangePlan.model_json_schema(),
+        "operator_runbook.schema.json": OperatorRunbook.model_json_schema(),
         "edit_guidance_report.schema.json": EditGuidanceReport.model_json_schema(),
         "rhythm_agent_candidate.schema.json": RhythmAgentCandidate.model_json_schema(),
         "rhythm_intent.schema.json": RhythmIntent.model_json_schema(),

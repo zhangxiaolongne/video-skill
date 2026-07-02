@@ -3,7 +3,7 @@
 Follow `artist_portrait_editor_revision5_optimized.md` as the governing V0
 engineering-freeze document.
 
-Current gate: V0-043 phrase-level manual edit guidance gate.
+Current gate: V0-051 FCPXML repair execution evidence import gate.
 
 V0-011 uses the active Codex/ChatGPT host Agent as the creative model. Do not
 add paid APIs, API keys, remote provider dependencies, or hidden network calls.
@@ -298,6 +298,114 @@ mutate timelines, select music, fit music automatically, render media, call
 models from the CLI, access the network, use image generation/editing,
 fabricate BPM/beat grids, or treat guidance as an execution plan.
 
+V0-044 may generate a deterministic operator runbook from existing project
+state, workflow, acceptance, BGM, rhythm, media validation, repair, and manual
+guidance artifacts. It may write canonical `.artist-portrait/data/operator_runbook.json`,
+`output/operator_runbook.md`, and `output/operator_handoff.json`, summarize the
+stage ladder, current next command, artifact readiness map, BGM input-mode
+guidance, manual guidance refs, and forbidden-capability audit. It must not
+execute workflow or repair commands, auto-run pipeline stages, render media,
+mutate timelines, move edit points, select or fit music automatically, fabricate
+BPM or beat grids, call models from the CLI, access the network, use image
+generation/editing, or treat mixed extracted video audio as clean BGM.
+
+V0-045 may generate deterministic editor handoff packages from the current
+canonical timeline and optional current BGM fit, rhythm plan, edit guidance, and
+operator runbook. It may write canonical `.artist-portrait/data/editor_package.json`,
+`output/editor_package.md`, `output/cue_sheet.csv`, and
+`output/editor_handoff.json`, translating timeline segments, BGM placement,
+fades/gain/ducking policy, beat-alignment status, manual edit actions, artifact
+bindings, and forbidden-capability flags into editor-facing instructions. It
+must not render media, mutate timelines, move edit points, execute editor
+instructions, select or fit music automatically, fabricate BPM or beat grids,
+call models from the CLI, access the network, use image generation/editing, or
+treat the package as proof that edits were applied.
+
+V0-046 may generate deterministic NLE interchange planning artifacts from the
+current editor package. It may write canonical
+`.artist-portrait/data/nle_interchange_plan.json`,
+`output/nle_interchange_plan.md`, `output/nle_interchange_map.csv`, and
+`output/nle_interchange_handoff.json`, mapping timeline, BGM/audio, and manual
+action guidance into FCPXML, EDL, and Resolve CSV export-candidate rows,
+warnings, target summaries, format limitations, and handoff refs. It must not
+write FCPXML/EDL/Resolve project files, render media, mutate timelines, move
+edit points, execute editor instructions, select or fit music automatically,
+fabricate BPM or beat grids, call models from the CLI, access the network, use
+image generation/editing, or treat mapping candidates as applied edits.
+
+V0-047 may generate supervised FCPXML draft writer artifacts from the current
+FCPXML-capable NLE interchange plan. It may write canonical
+`.artist-portrait/data/fcpxml_draft.json`,
+`.artist-portrait/data/fcpxml_validation.json`, `output/draft.fcpxml`,
+`output/fcpxml_review.md`, and `output/fcpxml_handoff.json`, with XML parse
+validation, relink-required placeholder assets, clip and marker mapping
+coverage, audio notes, warnings, and forbidden-capability audit. It must not
+import into Final Cut Pro or any NLE, render media, mutate canonical timelines,
+move edit points, execute editor instructions, select or fit music
+automatically, fabricate BPM or beat grids, call models from the CLI, access the
+network, use image generation/editing, claim source relinking succeeded, or
+treat the draft as applied edits.
+
+V0-048 may import explicit external FCPXML import-review evidence after
+byte-exact quarantine and validate it against the current FCPXML draft, project,
+and NLE plan. It may write canonical
+`.artist-portrait/data/fcpxml_import_review_candidate_quarantine.json`,
+`.artist-portrait/data/fcpxml_import_review.json`,
+`output/fcpxml_import_review.md`, and
+`output/fcpxml_import_review_handoff.json`, classifying binding status, import
+attempt/success claims, relink claims, external findings, warnings, and
+rejected reasons. It must not import into Final Cut Pro or any NLE, render
+media, mutate canonical timelines, move edit points, execute editor
+instructions, select or fit music automatically, call models from the CLI,
+access the network, use image generation/editing, or treat external import
+evidence as project acceptance success or applied edits.
+
+V0-049 may generate deterministic FCPXML import/relink repair planning
+artifacts from the current FCPXML draft, FCPXML validation report, and explicit
+external FCPXML import-review evidence. It may write canonical
+`.artist-portrait/data/fcpxml_repair_plan.json`,
+`output/fcpxml_repair_plan.md`, and `output/fcpxml_repair_handoff.json`,
+classifying relink-required placeholders, import blockers, external findings,
+playback-review gaps, required and optional manual actions, expected evidence,
+and first required command. It must not import into Final Cut Pro or any NLE,
+relink source media, render media, mutate canonical timelines, move edit
+points, execute editor instructions, select or fit music automatically, call
+models from the CLI, access the network, use image generation/editing, or claim
+repair success or applied edits.
+
+V0-050 may generate deterministic FCPXML repair approval requests, import
+explicit approval record candidates after byte-exact quarantine, validate
+repair-plan/action bindings, and generate FCPXML repair dry-run manifests for
+approved and rejected manual actions. It may write canonical
+`.artist-portrait/data/fcpxml_repair_approval_request.json`,
+`output/fcpxml_repair_approval_request.md`,
+`output/fcpxml_repair_approval_handoff.json`,
+`.artist-portrait/data/fcpxml_repair_approval_record_quarantine.json`,
+`.artist-portrait/data/fcpxml_repair_approval_record.json`,
+`output/fcpxml_repair_approval_record.md`,
+`.artist-portrait/data/fcpxml_repair_dry_run.json`,
+`output/fcpxml_repair_dry_run.md`, and
+`output/fcpxml_repair_dry_run_handoff.json`. It must not execute repair
+commands, import into Final Cut Pro or any NLE, relink source media, render
+media, mutate canonical timelines, move edit points, execute editor
+instructions, select or fit music automatically, call models from the CLI,
+access the network, use image generation/editing, or treat approval/dry-run
+artifacts as repair success or applied edits.
+
+V0-051 may import explicit external FCPXML repair execution record candidates
+after byte-exact quarantine and validate them against the current FCPXML repair
+dry-run, approval record, repair plan, draft, and import-review evidence. It
+may classify action evidence as accepted, rejected, missing, or skipped, and
+write canonical `.artist-portrait/data/fcpxml_repair_execution_record_quarantine.json`,
+`.artist-portrait/data/fcpxml_repair_execution_review.json`,
+`output/fcpxml_repair_execution_review.md`, and
+`output/fcpxml_repair_execution_handoff.json`. It must not execute repair
+commands, import into Final Cut Pro or any NLE, relink source media, render
+media, mutate canonical timelines, move edit points, execute editor
+instructions, select or fit music automatically, call models from the CLI,
+access the network, use image generation/editing, or treat execution evidence
+as repair success, acceptance success, or applied edits.
+
 Future BGM work must support direct audio uploads, audio extracted from uploaded
 video, embedded source audio, multiple candidates, and no-file-yet planning.
 Never treat an extracted video mix as clean BGM without explicit separation or
@@ -329,8 +437,16 @@ release milestone toward the final usable video-editing skill.
 Before editing:
 
 - plan the next big-version direction, not only the next local change
-- define at least ten independent version tasks for the batch
+- define either one named final-acceptance stage or at least ten independent
+  version tasks for the batch
 - state the expected before/after change in final-goal completion
+
+For non-stage capability batches, the old floor still applies: define at least ten independent version tasks with release-level outcomes before editing.
+
+A final-acceptance stage counts only when it closes a project-level gap in
+operator workflow, creative quality, BGM/rhythm fit, delivery packaging,
+evidence recovery, or release readiness. It is not a container for ten small
+fields, schemas, reports, tests, refactors, diagnostics, or bug fixes.
 
 A version task counts when it independently adds at least one of:
 
@@ -368,8 +484,10 @@ it.
 If the current gate does not permit ten meaningful version tasks:
 
 - do not pad the batch with fields, packets, tests, docs, refactors, or review rules
-- stop implementation
-- present the exact gate promotion required and the next real capability milestone
+- stop implementation unless the work is one named final-acceptance stage with
+  project-level acceptance criteria
+- present the exact gate promotion required and the next real capability or
+  acceptance milestone
 - wait for explicit gate approval before implementing forbidden behavior
 
 V0-010 foundation and proposal review are closed for ordinary expansion. Do not
@@ -545,6 +663,61 @@ Allowed:
 - deterministic `output/edit_guidance.md`
 - deterministic `output/edit_guidance_handoff.json`
 - phrase-level manual edit guidance without timeline mutation
+- `operator`
+- canonical `.artist-portrait/data/operator_runbook.json`
+- deterministic `output/operator_runbook.md`
+- deterministic `output/operator_handoff.json`
+- operator-facing stage ladder, next-command summary, artifact readiness map,
+  BGM input-mode guidance, manual guidance refs, and forbidden-capability audit
+- `editor-package`
+- canonical `.artist-portrait/data/editor_package.json`
+- deterministic `output/editor_package.md`
+- deterministic `output/cue_sheet.csv`
+- deterministic `output/editor_handoff.json`
+- editor-facing timeline, BGM, audio, manual action, artifact binding, and
+  forbidden-capability handoff package without applying edits
+- `nle-plan`
+- canonical `.artist-portrait/data/nle_interchange_plan.json`
+- deterministic `output/nle_interchange_plan.md`
+- deterministic `output/nle_interchange_map.csv`
+- deterministic `output/nle_interchange_handoff.json`
+- FCPXML, EDL, and Resolve CSV interchange planning from editor-package
+  evidence without writing NLE project files
+- `fcpxml --draft`
+- canonical `.artist-portrait/data/fcpxml_draft.json`
+- canonical `.artist-portrait/data/fcpxml_validation.json`
+- deterministic `output/draft.fcpxml`
+- deterministic `output/fcpxml_review.md`
+- deterministic `output/fcpxml_handoff.json`
+- supervised FCPXML draft writer with relink-required placeholder assets and
+  XML parse validation without NLE import
+- `fcpxml --import-review <candidate.json>`
+- canonical `.artist-portrait/data/fcpxml_import_review_candidate_quarantine.json`
+- canonical `.artist-portrait/data/fcpxml_import_review.json`
+- deterministic `output/fcpxml_import_review.md`
+- deterministic `output/fcpxml_import_review_handoff.json`
+- explicit external FCPXML import-review evidence validation without NLE import
+  or acceptance promotion
+- `fcpxml --repair-plan`
+- canonical `.artist-portrait/data/fcpxml_repair_plan.json`
+- deterministic `output/fcpxml_repair_plan.md`
+- deterministic `output/fcpxml_repair_handoff.json`
+- deterministic FCPXML import/relink repair planning without executing NLE
+  import, relinking, rendering, timeline mutation, or repair success promotion
+- `fcpxml --approval-request`
+- `fcpxml --approval-record <candidate.json>`
+- `fcpxml --repair-dry-run`
+- canonical FCPXML repair approval request, quarantined approval record, and
+  repair dry-run artifacts without command execution, NLE import, source
+  relinking, rendering, timeline mutation, or repair success promotion
+- `fcpxml --repair-execution-record <candidate.json>`
+- canonical `.artist-portrait/data/fcpxml_repair_execution_record_quarantine.json`
+- canonical `.artist-portrait/data/fcpxml_repair_execution_review.json`
+- deterministic `output/fcpxml_repair_execution_review.md`
+- deterministic `output/fcpxml_repair_execution_handoff.json`
+- external FCPXML repair execution evidence review without command execution,
+  NLE import, source relinking, rendering, timeline mutation, repair success
+  promotion, or acceptance success promotion
 - BGM analysis status, doctor diagnostics, schema, run audit, and invalidation
 - `bgm recommend`
 - canonical `.artist-portrait/data/bgm_recommendation_context.json`

@@ -1,0 +1,40 @@
+{
+  "schema_version": "1.0",
+  "project_id": "golden_artist_portrait_001",
+  "required_artifacts": [
+    ".artist-portrait/data/sources.jsonl",
+    ".artist-portrait/data/clips.jsonl",
+    ".artist-portrait/data/analysis.jsonl",
+    ".artist-portrait/data/proposals.json",
+    "output/timeline_draft.json",
+    ".artist-portrait/data/bgm_candidates.json",
+    ".artist-portrait/data/bgm_analysis.json",
+    ".artist-portrait/data/bgm_fit.json",
+    ".artist-portrait/data/rhythm_plan.json",
+    ".artist-portrait/data/edit_guidance.json",
+    ".artist-portrait/data/preview_manifest.json",
+    ".artist-portrait/data/final_export_manifest.json",
+    ".artist-portrait/data/acceptance_report.json",
+    ".artist-portrait/data/operator_runbook.json",
+    ".artist-portrait/data/editor_package.json",
+    ".artist-portrait/data/nle_interchange_plan.json",
+    ".artist-portrait/data/fcpxml_draft.json",
+    ".artist-portrait/data/fcpxml_validation.json",
+    "output/preview_lowres.mp4",
+    "output/final_export.mp4",
+    "output/editor_package.md",
+    "output/cue_sheet.csv",
+    "output/nle_interchange_map.csv",
+    "output/draft.fcpxml"
+  ],
+  "required_guardrails": {
+    "commands_executed_by_workflow": false,
+    "automatic_music_selection": false,
+    "automatic_bgm_fit_without_explicit_candidate": false,
+    "timeline_mutated_by_guidance": false,
+    "nle_import_performed": false,
+    "network_performed": false,
+    "model_call_performed_by_cli": false,
+    "image_generation_or_editing_used": false
+  }
+}

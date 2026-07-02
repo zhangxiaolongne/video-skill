@@ -1,0 +1,98 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "approval_request_id": {
+      "minLength": 1,
+      "title": "Approval Request Id",
+      "type": "string"
+    },
+    "approval_required": {
+      "default": true,
+      "title": "Approval Required",
+      "type": "boolean"
+    },
+    "commands_executed": {
+      "default": false,
+      "title": "Commands Executed",
+      "type": "boolean"
+    },
+    "edit_points_moved": {
+      "default": false,
+      "title": "Edit Points Moved",
+      "type": "boolean"
+    },
+    "fcpxml_draft_id": {
+      "minLength": 1,
+      "title": "Fcpxml Draft Id",
+      "type": "string"
+    },
+    "fcpxml_import_review_id": {
+      "minLength": 1,
+      "title": "Fcpxml Import Review Id",
+      "type": "string"
+    },
+    "fcpxml_repair_plan_id": {
+      "minLength": 1,
+      "title": "Fcpxml Repair Plan Id",
+      "type": "string"
+    },
+    "media_rendered": {
+      "default": false,
+      "title": "Media Rendered",
+      "type": "boolean"
+    },
+    "nle_import_performed": {
+      "default": false,
+      "title": "Nle Import Performed",
+      "type": "boolean"
+    },
+    "optional_action_ids": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Optional Action Ids",
+      "type": "array"
+    },
+    "project_id": {
+      "minLength": 1,
+      "title": "Project Id",
+      "type": "string"
+    },
+    "repair_success_claimed": {
+      "default": false,
+      "title": "Repair Success Claimed",
+      "type": "boolean"
+    },
+    "required_action_ids": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Required Action Ids",
+      "type": "array"
+    },
+    "schema_version": {
+      "default": "0.3",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "source_relink_performed": {
+      "default": false,
+      "title": "Source Relink Performed",
+      "type": "boolean"
+    },
+    "timeline_mutated": {
+      "default": false,
+      "title": "Timeline Mutated",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "approval_request_id",
+    "project_id",
+    "fcpxml_repair_plan_id",
+    "fcpxml_draft_id",
+    "fcpxml_import_review_id"
+  ],
+  "title": "FcpxmlRepairApprovalRequest",
+  "type": "object"
+}

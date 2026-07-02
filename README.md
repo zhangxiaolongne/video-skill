@@ -22,7 +22,7 @@ Historical version outcomes are consolidated in `docs/RELEASES.md`.
 
 ## Current Gate
 
-Current V0-043 phrase-level manual edit guidance gate work allows deterministic project
+Current V0-051 FCPXML repair execution evidence import gate work allows deterministic project
 setup, local media scanning, fixed-window clip segmentation, optional
 PySceneDetect video scene segmentation, local-only faster-whisper transcription
 when available, ffmpeg midpoint keyframe extraction for video clips,
@@ -52,7 +52,22 @@ rhythm media QC, rhythm manual repair planning, guided workflow planning,
 workflow execution evidence review, workflow evidence repair planning, workflow
 repair approval/dry-run packaging, workflow repair execution evidence review,
 release hardening audit, workflow repair evidence refresh guidance, BGM rhythm
-intelligence, and phrase-level manual edit guidance:
+intelligence, phrase-level manual edit guidance, operator runbook usability,
+editor package handoff, NLE interchange planning, supervised FCPXML draft
+writing, explicit FCPXML import-review evidence validation, FCPXML
+import/relink repair planning, FCPXML repair approval/dry-run packaging,
+FCPXML repair execution evidence review, the golden real-project baseline, the
+BGM/rhythm quality pass, the supervised NLE round-trip readiness pass, and the
+release-candidate validation path:
+
+## Current Final-Acceptance Stage
+
+Current acceptance work: `ACCEPTANCE-STAGE-06 Release candidate and publication`.
+The project is no longer treating isolated artifacts, schemas,
+reports, packets, review rules, or individual tests as major progress toward
+final usability. Remaining acceptance work was organized into six stages; Stage
+6 is complete, and the next work should be post-release maintenance or a new
+explicitly promoted capability gate.
 
 The V0-010 proposal foundation is now consolidated around one artifact registry.
 `status` and `doctor` validate cross-artifact references, project identity,
@@ -116,6 +131,16 @@ project.yaml
 -> bgm_beat_grids/<music_candidate_id>.json when a validated local beat adapter succeeds
 -> bgm_rhythm_intelligence.json, bgm_rhythm_intelligence.md, and bgm_rhythm_handoff.json
 -> edit_guidance.json, edit_guidance.md, and edit_guidance_handoff.json
+-> operator_runbook.json, operator_runbook.md, and operator_handoff.json
+-> editor_package.json, editor_package.md, cue_sheet.csv, and editor_handoff.json
+-> nle_interchange_plan.json, nle_interchange_plan.md, nle_interchange_map.csv, and nle_interchange_handoff.json
+-> fcpxml_draft.json, fcpxml_validation.json, draft.fcpxml, fcpxml_review.md, and fcpxml_handoff.json
+-> fcpxml_import_review_candidate_quarantine.json, fcpxml_import_review.json, fcpxml_import_review.md, and fcpxml_import_review_handoff.json
+-> fcpxml_repair_plan.json, fcpxml_repair_plan.md, and fcpxml_repair_handoff.json
+-> fcpxml_repair_approval_request.json, fcpxml_repair_approval_request.md, and fcpxml_repair_approval_handoff.json
+-> fcpxml_repair_approval_record_quarantine.json, fcpxml_repair_approval_record.json, and fcpxml_repair_approval_record.md
+-> fcpxml_repair_dry_run.json, fcpxml_repair_dry_run.md, and fcpxml_repair_dry_run_handoff.json
+-> fcpxml_repair_execution_record_quarantine.json, fcpxml_repair_execution_review.json, fcpxml_repair_execution_review.md, and fcpxml_repair_execution_handoff.json
 -> bgm_recommendation_context.json, bgm_recommendation_request.json, and bgm_recommendation_agent_handoff.json
 -> bgm_recommendations.json and bgm_recommendation_review.md
 -> bgm_recommendation_selection.json and bgm_recommendation_selection_review.md

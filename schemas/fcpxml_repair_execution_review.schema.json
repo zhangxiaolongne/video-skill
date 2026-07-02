@@ -1,0 +1,256 @@
+{
+  "$defs": {
+    "FcpxmlRepairExecutionActionReview": {
+      "additionalProperties": false,
+      "properties": {
+        "action_id": {
+          "minLength": 1,
+          "title": "Action Id",
+          "type": "string"
+        },
+        "command_matched": {
+          "default": false,
+          "title": "Command Matched",
+          "type": "boolean"
+        },
+        "detail": {
+          "minLength": 1,
+          "title": "Detail",
+          "type": "string"
+        },
+        "dry_run_status": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Dry Run Status"
+        },
+        "evidence_refs": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Evidence Refs",
+          "type": "array"
+        },
+        "missing_refs": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Missing Refs",
+          "type": "array"
+        },
+        "output_refs": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Output Refs",
+          "type": "array"
+        },
+        "review_status": {
+          "pattern": "^(accepted|rejected|missing|skipped)$",
+          "title": "Review Status",
+          "type": "string"
+        },
+        "submitted_status": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Submitted Status"
+        }
+      },
+      "required": [
+        "action_id",
+        "review_status",
+        "detail"
+      ],
+      "title": "FcpxmlRepairExecutionActionReview",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "acceptance_success_promoted_by_cli": {
+      "default": false,
+      "title": "Acceptance Success Promoted By Cli",
+      "type": "boolean"
+    },
+    "accepted_action_count": {
+      "minimum": 0,
+      "title": "Accepted Action Count",
+      "type": "integer"
+    },
+    "action_reviews": {
+      "items": {
+        "$ref": "#/$defs/FcpxmlRepairExecutionActionReview"
+      },
+      "title": "Action Reviews",
+      "type": "array"
+    },
+    "approval_record_id": {
+      "minLength": 1,
+      "title": "Approval Record Id",
+      "type": "string"
+    },
+    "automatic_bgm_fit_by_cli": {
+      "default": false,
+      "title": "Automatic Bgm Fit By Cli",
+      "type": "boolean"
+    },
+    "automatic_music_selection_by_cli": {
+      "default": false,
+      "title": "Automatic Music Selection By Cli",
+      "type": "boolean"
+    },
+    "candidate_bytes": {
+      "minimum": 0,
+      "title": "Candidate Bytes",
+      "type": "integer"
+    },
+    "candidate_sha256": {
+      "maxLength": 64,
+      "minLength": 64,
+      "title": "Candidate Sha256",
+      "type": "string"
+    },
+    "commands_executed_by_cli": {
+      "default": false,
+      "title": "Commands Executed By Cli",
+      "type": "boolean"
+    },
+    "dry_run_id": {
+      "minLength": 1,
+      "title": "Dry Run Id",
+      "type": "string"
+    },
+    "edit_points_moved_by_cli": {
+      "default": false,
+      "title": "Edit Points Moved By Cli",
+      "type": "boolean"
+    },
+    "execution_review_id": {
+      "minLength": 1,
+      "title": "Execution Review Id",
+      "type": "string"
+    },
+    "fcpxml_draft_id": {
+      "minLength": 1,
+      "title": "Fcpxml Draft Id",
+      "type": "string"
+    },
+    "fcpxml_import_review_id": {
+      "minLength": 1,
+      "title": "Fcpxml Import Review Id",
+      "type": "string"
+    },
+    "fcpxml_repair_plan_id": {
+      "minLength": 1,
+      "title": "Fcpxml Repair Plan Id",
+      "type": "string"
+    },
+    "image_generation_or_editing_used_by_cli": {
+      "default": false,
+      "title": "Image Generation Or Editing Used By Cli",
+      "type": "boolean"
+    },
+    "media_rendered_by_cli": {
+      "default": false,
+      "title": "Media Rendered By Cli",
+      "type": "boolean"
+    },
+    "missing_action_count": {
+      "minimum": 0,
+      "title": "Missing Action Count",
+      "type": "integer"
+    },
+    "model_call_performed_by_cli": {
+      "default": false,
+      "title": "Model Call Performed By Cli",
+      "type": "boolean"
+    },
+    "network_performed_by_cli": {
+      "default": false,
+      "title": "Network Performed By Cli",
+      "type": "boolean"
+    },
+    "nle_import_performed_by_cli": {
+      "default": false,
+      "title": "Nle Import Performed By Cli",
+      "type": "boolean"
+    },
+    "project_id": {
+      "minLength": 1,
+      "title": "Project Id",
+      "type": "string"
+    },
+    "quarantine_ref": {
+      "minLength": 1,
+      "title": "Quarantine Ref",
+      "type": "string"
+    },
+    "rejected_action_count": {
+      "minimum": 0,
+      "title": "Rejected Action Count",
+      "type": "integer"
+    },
+    "repair_success_promoted_by_cli": {
+      "default": false,
+      "title": "Repair Success Promoted By Cli",
+      "type": "boolean"
+    },
+    "schema_version": {
+      "default": "0.3",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "skipped_action_count": {
+      "minimum": 0,
+      "title": "Skipped Action Count",
+      "type": "integer"
+    },
+    "source_relink_performed_by_cli": {
+      "default": false,
+      "title": "Source Relink Performed By Cli",
+      "type": "boolean"
+    },
+    "status": {
+      "pattern": "^(passed|warning|failed)$",
+      "title": "Status",
+      "type": "string"
+    },
+    "timeline_mutated_by_cli": {
+      "default": false,
+      "title": "Timeline Mutated By Cli",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "execution_review_id",
+    "project_id",
+    "fcpxml_repair_plan_id",
+    "approval_record_id",
+    "dry_run_id",
+    "fcpxml_draft_id",
+    "fcpxml_import_review_id",
+    "status",
+    "quarantine_ref",
+    "candidate_sha256",
+    "candidate_bytes",
+    "accepted_action_count",
+    "rejected_action_count",
+    "missing_action_count",
+    "skipped_action_count"
+  ],
+  "title": "FcpxmlRepairExecutionReview",
+  "type": "object"
+}

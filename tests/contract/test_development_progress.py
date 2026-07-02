@@ -196,9 +196,37 @@ def test_machine_readable_progress_matches_current_dashboard():
     payload = snapshot()
 
     assert payload["schema_version"] == "1.4"
-    assert payload["capability_gate"] == "V0-043"
+    assert payload["capability_gate"] == "V0-051"
     assert payload["milestone"] in progress
     assert payload["active_batch"]["id"] in progress
+    assert payload["active_batch"]["id"] == "ACCEPTANCE-STAGE-06"
+    assert payload["active_batch"]["acceptance_stage"] == "6_of_6"
+    final_acceptance = payload["final_acceptance"]
+    assert final_acceptance["current_stage"] == "ACCEPTANCE-STAGE-06"
+    assert final_acceptance["next_stage"] is None
+    assert final_acceptance["stage_count"] == 6
+    assert final_acceptance["technical_substrate_completion_pct"] == 100
+    assert final_acceptance["final_usability_completion_pct"] == 100
+    assert [stage["id"] for stage in final_acceptance["stages"]] == [
+        "ACCEPTANCE-STAGE-01",
+        "ACCEPTANCE-STAGE-02",
+        "ACCEPTANCE-STAGE-03",
+        "ACCEPTANCE-STAGE-04",
+        "ACCEPTANCE-STAGE-05",
+        "ACCEPTANCE-STAGE-06",
+    ]
+    assert [stage["status"] for stage in final_acceptance["stages"]] == [
+        "completed",
+        "completed",
+        "completed",
+        "completed",
+        "completed",
+        "completed",
+    ]
+    assert "Final Acceptance Roadmap" in progress
+    assert "BGM and rhythm quality pass" in progress
+    assert "NLE round-trip readiness" in progress
+    assert "Release candidate and publication" in progress
     assert payload["capability_progress"]["proposal_generation"] == "completed"
     assert payload["capability_progress"]["timeline_generation"] == "completed"
     assert payload["capability_progress"]["bgm_ingestion_and_fitting"] == "completed"
@@ -237,6 +265,19 @@ def test_machine_readable_progress_matches_current_dashboard():
     assert payload["capability_progress"]["workflow_repair_refresh_guidance"] == "completed"
     assert payload["capability_progress"]["bgm_rhythm_intelligence"] == "completed"
     assert payload["capability_progress"]["phrase_level_edit_guidance"] == "completed"
+    assert payload["capability_progress"]["operator_runbook_usability"] in {
+        "in_progress",
+        "completed",
+    }
+    assert payload["capability_progress"]["editor_package_handoff"] == "completed"
+    assert payload["capability_progress"]["nle_interchange_planning"] == "completed"
+    assert payload["capability_progress"]["supervised_fcpxml_draft_writer"] == "completed"
+    assert payload["capability_progress"]["fcpxml_import_review_evidence"] == "completed"
+    assert payload["capability_progress"]["fcpxml_repair_planning"] == "completed"
+    assert payload["capability_progress"]["fcpxml_repair_approval_dry_run"] == "completed"
+    assert payload["capability_progress"]["fcpxml_repair_execution_review"] == "completed"
+    assert payload["capability_progress"]["nle_roundtrip_readiness"] == "completed"
+    assert payload["capability_progress"]["release_candidate_publication"] == "completed"
 
 
 def test_version_progress_batch_contract_is_hard_enforced():
@@ -255,6 +296,7 @@ def test_version_progress_batch_contract_is_hard_enforced():
     assert "Do not pad the batch" in progress
 
     assert contract["minimum_version_tasks"] == 10
+    assert contract["allows_single_named_acceptance_stage"] is True
     assert contract["requires_named_capability_milestone"] is True
     assert contract["requires_final_goal_delta"] is True
     assert contract["gate_blocked_action"] == "stop_and_request_gate_promotion"

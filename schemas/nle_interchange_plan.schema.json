@@ -1,0 +1,552 @@
+{
+  "$defs": {
+    "NleInterchangeAudioMapping": {
+      "additionalProperties": false,
+      "properties": {
+        "category": {
+          "minLength": 1,
+          "title": "Category",
+          "type": "string"
+        },
+        "compatibility": {
+          "pattern": "^(export_candidate|warning|blocked)$",
+          "title": "Compatibility",
+          "type": "string"
+        },
+        "evidence_refs": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Evidence Refs",
+          "type": "array"
+        },
+        "instruction": {
+          "minLength": 1,
+          "title": "Instruction",
+          "type": "string"
+        },
+        "mapping_id": {
+          "minLength": 1,
+          "title": "Mapping Id",
+          "type": "string"
+        },
+        "order": {
+          "minimum": 1,
+          "title": "Order",
+          "type": "integer"
+        },
+        "source_item_id": {
+          "minLength": 1,
+          "title": "Source Item Id",
+          "type": "string"
+        },
+        "target": {
+          "pattern": "^(fcpxml|edl|resolve_csv)$",
+          "title": "Target",
+          "type": "string"
+        },
+        "timeline_end": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Timeline End"
+        },
+        "timeline_start": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Timeline Start"
+        },
+        "warnings": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Warnings",
+          "type": "array"
+        }
+      },
+      "required": [
+        "mapping_id",
+        "source_item_id",
+        "target",
+        "order",
+        "category",
+        "compatibility",
+        "instruction"
+      ],
+      "title": "NleInterchangeAudioMapping",
+      "type": "object"
+    },
+    "NleInterchangeMarkerMapping": {
+      "additionalProperties": false,
+      "properties": {
+        "category": {
+          "minLength": 1,
+          "title": "Category",
+          "type": "string"
+        },
+        "compatibility": {
+          "pattern": "^(export_candidate|warning|blocked)$",
+          "title": "Compatibility",
+          "type": "string"
+        },
+        "evidence_refs": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Evidence Refs",
+          "type": "array"
+        },
+        "mapping_id": {
+          "minLength": 1,
+          "title": "Mapping Id",
+          "type": "string"
+        },
+        "marker_name": {
+          "minLength": 1,
+          "title": "Marker Name",
+          "type": "string"
+        },
+        "note": {
+          "minLength": 1,
+          "title": "Note",
+          "type": "string"
+        },
+        "order": {
+          "minimum": 1,
+          "title": "Order",
+          "type": "integer"
+        },
+        "priority": {
+          "minLength": 1,
+          "title": "Priority",
+          "type": "string"
+        },
+        "source_action_id": {
+          "minLength": 1,
+          "title": "Source Action Id",
+          "type": "string"
+        },
+        "target": {
+          "pattern": "^(fcpxml|edl|resolve_csv)$",
+          "title": "Target",
+          "type": "string"
+        },
+        "timeline_end": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Timeline End"
+        },
+        "timeline_start": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Timeline Start"
+        },
+        "warnings": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Warnings",
+          "type": "array"
+        }
+      },
+      "required": [
+        "mapping_id",
+        "source_action_id",
+        "target",
+        "order",
+        "category",
+        "priority",
+        "compatibility",
+        "marker_name",
+        "note"
+      ],
+      "title": "NleInterchangeMarkerMapping",
+      "type": "object"
+    },
+    "NleInterchangeTargetSummary": {
+      "additionalProperties": false,
+      "properties": {
+        "audio_mapping_count": {
+          "minimum": 0,
+          "title": "Audio Mapping Count",
+          "type": "integer"
+        },
+        "blocked_count": {
+          "minimum": 0,
+          "title": "Blocked Count",
+          "type": "integer"
+        },
+        "export_candidate_count": {
+          "minimum": 0,
+          "title": "Export Candidate Count",
+          "type": "integer"
+        },
+        "format_limitations": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Format Limitations",
+          "type": "array"
+        },
+        "marker_mapping_count": {
+          "minimum": 0,
+          "title": "Marker Mapping Count",
+          "type": "integer"
+        },
+        "status": {
+          "pattern": "^(ready|warning|blocked)$",
+          "title": "Status",
+          "type": "string"
+        },
+        "target": {
+          "pattern": "^(fcpxml|edl|resolve_csv)$",
+          "title": "Target",
+          "type": "string"
+        },
+        "timeline_mapping_count": {
+          "minimum": 0,
+          "title": "Timeline Mapping Count",
+          "type": "integer"
+        },
+        "warning_count": {
+          "minimum": 0,
+          "title": "Warning Count",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "target",
+        "status",
+        "timeline_mapping_count",
+        "audio_mapping_count",
+        "marker_mapping_count",
+        "export_candidate_count",
+        "warning_count",
+        "blocked_count"
+      ],
+      "title": "NleInterchangeTargetSummary",
+      "type": "object"
+    },
+    "NleInterchangeTimelineMapping": {
+      "additionalProperties": false,
+      "properties": {
+        "clip_id": {
+          "minLength": 1,
+          "title": "Clip Id",
+          "type": "string"
+        },
+        "compatibility": {
+          "pattern": "^(export_candidate|warning|blocked)$",
+          "title": "Compatibility",
+          "type": "string"
+        },
+        "evidence_refs": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Evidence Refs",
+          "type": "array"
+        },
+        "instruction": {
+          "minLength": 1,
+          "title": "Instruction",
+          "type": "string"
+        },
+        "mapping_id": {
+          "minLength": 1,
+          "title": "Mapping Id",
+          "type": "string"
+        },
+        "media_role": {
+          "minLength": 1,
+          "title": "Media Role",
+          "type": "string"
+        },
+        "order": {
+          "minimum": 1,
+          "title": "Order",
+          "type": "integer"
+        },
+        "record_in": {
+          "minLength": 1,
+          "title": "Record In",
+          "type": "string"
+        },
+        "record_out": {
+          "minLength": 1,
+          "title": "Record Out",
+          "type": "string"
+        },
+        "source_id": {
+          "minLength": 1,
+          "title": "Source Id",
+          "type": "string"
+        },
+        "source_in": {
+          "minimum": 0,
+          "title": "Source In",
+          "type": "number"
+        },
+        "source_item_id": {
+          "minLength": 1,
+          "title": "Source Item Id",
+          "type": "string"
+        },
+        "source_out": {
+          "exclusiveMinimum": 0,
+          "title": "Source Out",
+          "type": "number"
+        },
+        "target": {
+          "pattern": "^(fcpxml|edl|resolve_csv)$",
+          "title": "Target",
+          "type": "string"
+        },
+        "timeline_end": {
+          "exclusiveMinimum": 0,
+          "title": "Timeline End",
+          "type": "number"
+        },
+        "timeline_start": {
+          "minimum": 0,
+          "title": "Timeline Start",
+          "type": "number"
+        },
+        "track_id": {
+          "minLength": 1,
+          "title": "Track Id",
+          "type": "string"
+        },
+        "transition_support": {
+          "pattern": "^(native|note_only|unsupported)$",
+          "title": "Transition Support",
+          "type": "string"
+        },
+        "warnings": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Warnings",
+          "type": "array"
+        }
+      },
+      "required": [
+        "mapping_id",
+        "source_item_id",
+        "target",
+        "order",
+        "timeline_start",
+        "timeline_end",
+        "record_in",
+        "record_out",
+        "source_id",
+        "clip_id",
+        "source_in",
+        "source_out",
+        "track_id",
+        "media_role",
+        "transition_support",
+        "compatibility",
+        "instruction"
+      ],
+      "title": "NleInterchangeTimelineMapping",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "audio_mapping_count": {
+      "minimum": 0,
+      "title": "Audio Mapping Count",
+      "type": "integer"
+    },
+    "audio_mappings": {
+      "items": {
+        "$ref": "#/$defs/NleInterchangeAudioMapping"
+      },
+      "title": "Audio Mappings",
+      "type": "array"
+    },
+    "automatic_bgm_fit": {
+      "default": false,
+      "title": "Automatic Bgm Fit",
+      "type": "boolean"
+    },
+    "automatic_music_selection": {
+      "default": false,
+      "title": "Automatic Music Selection",
+      "type": "boolean"
+    },
+    "blocked_reasons": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Blocked Reasons",
+      "type": "array"
+    },
+    "commands_executed": {
+      "default": false,
+      "title": "Commands Executed",
+      "type": "boolean"
+    },
+    "edit_points_moved": {
+      "default": false,
+      "title": "Edit Points Moved",
+      "type": "boolean"
+    },
+    "editor_package_id": {
+      "minLength": 1,
+      "title": "Editor Package Id",
+      "type": "string"
+    },
+    "forbidden_capabilities": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Forbidden Capabilities",
+      "type": "array"
+    },
+    "frame_rate": {
+      "exclusiveMinimum": 0,
+      "title": "Frame Rate",
+      "type": "number"
+    },
+    "image_generation_or_editing_used": {
+      "default": false,
+      "title": "Image Generation Or Editing Used",
+      "type": "boolean"
+    },
+    "marker_mapping_count": {
+      "minimum": 0,
+      "title": "Marker Mapping Count",
+      "type": "integer"
+    },
+    "marker_mappings": {
+      "items": {
+        "$ref": "#/$defs/NleInterchangeMarkerMapping"
+      },
+      "title": "Marker Mappings",
+      "type": "array"
+    },
+    "media_rendered": {
+      "default": false,
+      "title": "Media Rendered",
+      "type": "boolean"
+    },
+    "model_call_performed_by_cli": {
+      "default": false,
+      "title": "Model Call Performed By Cli",
+      "type": "boolean"
+    },
+    "network_performed": {
+      "default": false,
+      "title": "Network Performed",
+      "type": "boolean"
+    },
+    "nle_plan_id": {
+      "minLength": 1,
+      "title": "Nle Plan Id",
+      "type": "string"
+    },
+    "nle_project_written": {
+      "default": false,
+      "title": "Nle Project Written",
+      "type": "boolean"
+    },
+    "project_id": {
+      "minLength": 1,
+      "title": "Project Id",
+      "type": "string"
+    },
+    "schema_version": {
+      "default": "0.3",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "status": {
+      "pattern": "^(ready|warning|blocked)$",
+      "title": "Status",
+      "type": "string"
+    },
+    "target": {
+      "pattern": "^(fcpxml|edl|resolve_csv|all)$",
+      "title": "Target",
+      "type": "string"
+    },
+    "target_summaries": {
+      "items": {
+        "$ref": "#/$defs/NleInterchangeTargetSummary"
+      },
+      "title": "Target Summaries",
+      "type": "array"
+    },
+    "timeline_mapping_count": {
+      "minimum": 0,
+      "title": "Timeline Mapping Count",
+      "type": "integer"
+    },
+    "timeline_mappings": {
+      "items": {
+        "$ref": "#/$defs/NleInterchangeTimelineMapping"
+      },
+      "title": "Timeline Mappings",
+      "type": "array"
+    },
+    "timeline_mutated": {
+      "default": false,
+      "title": "Timeline Mutated",
+      "type": "boolean"
+    },
+    "warnings": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Warnings",
+      "type": "array"
+    }
+  },
+  "required": [
+    "nle_plan_id",
+    "project_id",
+    "editor_package_id",
+    "target",
+    "status",
+    "frame_rate",
+    "timeline_mapping_count",
+    "audio_mapping_count",
+    "marker_mapping_count"
+  ],
+  "title": "NleInterchangePlan",
+  "type": "object"
+}

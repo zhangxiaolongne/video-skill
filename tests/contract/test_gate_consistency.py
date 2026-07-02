@@ -12,11 +12,13 @@ def test_current_gate_is_consistent_across_primary_docs():
     readme = (ROOT / "README.md").read_text(encoding="utf-8")
     progress = (ROOT / "docs" / "DEVELOPMENT_PROGRESS.md").read_text(encoding="utf-8")
 
-    gate = "V0-043 phrase-level manual edit guidance gate"
+    gate = "V0-051 FCPXML repair execution evidence import gate"
     assert f"Current gate: {gate}." in agents
     assert gate in master
     assert f"Current {gate} work" in readme
     assert f"Current local gate: {gate}" in progress
+    assert "ACCEPTANCE-STAGE-06 Release candidate and publication" in readme
+    assert "Current acceptance stage: `ACCEPTANCE-STAGE-06" in progress
 
 
 def test_historical_fragment_documents_are_removed():
@@ -65,5 +67,14 @@ def test_current_gate_preserves_remaining_boundaries():
     assert "bgm_rhythm_intelligence" in docs
     assert "phrase-level manual edit guidance" in docs
     assert "edit_guidance" in docs
+    assert "operator runbook" in docs
+    assert "operator_runbook" in docs
+    assert "editor package" in docs
+    assert "editor_package" in docs
+    assert "NLE interchange" in docs
+    assert "nle_interchange" in docs
+    assert "FCPXML draft" in docs
+    assert "fcpxml" in docs
+    assert "import-review" in docs
     assert "release hardening" in docs
     assert "auto-run pipeline" in docs or "auto-run" in docs

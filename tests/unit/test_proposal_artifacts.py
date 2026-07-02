@@ -110,10 +110,12 @@ def test_progress_snapshot_is_machine_readable_and_paid_gate_closed():
         (root / "docs" / "current_progress.json").read_text(encoding="utf-8")
     )
 
-    assert payload["capability_gate"] == "V0-043"
-    assert payload["milestone"] == "V0-043 phrase-level manual edit guidance gate"
-    assert payload["active_batch"]["id"] == "V0-043"
+    assert payload["capability_gate"] == "V0-051"
+    assert payload["milestone"] == "V0-051 FCPXML repair execution evidence import gate"
+    assert payload["active_batch"]["id"] == "ACCEPTANCE-STAGE-06"
     assert payload["active_batch"]["capability_gate"] == payload["capability_gate"]
+    assert payload["final_acceptance"]["current_stage"] == "ACCEPTANCE-STAGE-06"
+    assert payload["final_acceptance"]["next_stage"] is None
     assert len(payload["tasks"]) == 10
     assert {task["status"] for task in payload["tasks"]}.issubset(
         {"planned", "in_progress", "completed", "blocked", "dropped"}
@@ -157,7 +159,19 @@ def test_progress_snapshot_is_machine_readable_and_paid_gate_closed():
             "workflow_repair_refresh_guidance",
             "bgm_rhythm_intelligence",
             "phrase_level_edit_guidance",
-            "preview_rendering",
-            "final_export",
-        }
+            "operator_runbook_usability",
+            "editor_package_handoff",
+            "nle_interchange_planning",
+            "supervised_fcpxml_draft_writer",
+            "fcpxml_import_review_evidence",
+            "fcpxml_repair_planning",
+                "fcpxml_repair_approval_dry_run",
+                "fcpxml_repair_execution_review",
+                "golden_real_project_baseline",
+                "bgm_rhythm_quality_pass",
+                "nle_roundtrip_readiness",
+                "release_candidate_publication",
+                "preview_rendering",
+                "final_export",
+            }
     )

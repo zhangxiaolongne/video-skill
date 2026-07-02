@@ -1,6 +1,7 @@
 import json
 import shutil
 import subprocess
+import xml.etree.ElementTree as ET
 from pathlib import Path
 
 import pytest
@@ -134,7 +135,7 @@ def test_release_check_writes_hardening_report_without_publication(tmp_path, cap
 
     assert payload["output"] == ".artist-portrait/data/release_hardening_report.json"
     assert payload["report"] == "output/release_hardening_report.md"
-    assert report["capability_gate"] == "V0-043"
+    assert report["capability_gate"] == "V0-051"
     assert report["status"] in {"warning", "ready_for_local_release"}
     assert report["failed_count"] == 0
     assert report["commit_allowed"] is False
@@ -3774,6 +3775,410 @@ def test_rhythm_cli_plans_bgm_edit_rhythm_without_mutating_outputs(tmp_path, cap
     assert (tmp_path / "output" / "edit_guidance.md").exists()
     assert (tmp_path / "output" / "edit_guidance_handoff.json").exists()
 
+    assert (
+        main(["operator", "--project", str(project_path), "--target", "delivery", "--json"])
+        in (0, 1)
+    )
+    operator_payload = json.loads(capsys.readouterr().out)
+    assert operator_payload["output"] == ".artist-portrait/data/operator_runbook.json"
+
+    assert main(["editor-package", "--project", str(project_path), "--json"]) in (0, 1)
+    editor_payload = json.loads(capsys.readouterr().out)
+    editor_package = editor_payload["editor_package"]
+    assert editor_payload["output"] == ".artist-portrait/data/editor_package.json"
+    assert editor_payload["report"] == "output/editor_package.md"
+    assert editor_payload["cue_sheet"] == "output/cue_sheet.csv"
+    assert editor_payload["handoff"] == "output/editor_handoff.json"
+    assert editor_package["timeline_id"] == plan["timeline_id"]
+    assert editor_package["timeline_item_count"] >= 1
+    assert editor_package["audio_item_count"] >= 3
+    assert editor_package["manual_action_count"] == guidance["action_count"]
+    assert editor_package["cue_sheet_row_count"] >= (
+        editor_package["timeline_item_count"]
+        + editor_package["audio_item_count"]
+        + editor_package["manual_action_count"]
+    )
+    assert {item["category"] for item in editor_package["audio_items"]} >= {
+        "bgm_segment",
+        "ducking",
+        "fade",
+        "gain",
+        "beat_alignment",
+    }
+    assert {action["category"] for action in editor_package["manual_actions"]} >= {
+        "subtitle",
+        "ducking",
+        "handoff",
+    }
+    assert editor_package["commands_executed"] is False
+    assert editor_package["media_rendered"] is False
+    assert editor_package["timeline_mutated"] is False
+    assert editor_package["edit_points_moved"] is False
+    assert editor_package["automatic_music_selection"] is False
+    assert editor_package["automatic_bgm_fit"] is False
+    assert editor_package["model_call_performed_by_cli"] is False
+    assert editor_package["network_performed"] is False
+    assert editor_package["image_generation_or_editing_used"] is False
+    cue_sheet = (tmp_path / "output" / "cue_sheet.csv").read_text(encoding="utf-8")
+    assert "row_type,item_id,order,timeline_start,timeline_end,track,source,instruction,evidence_refs" in cue_sheet
+    assert "manual_action" in cue_sheet
+    assert (tmp_path / ".artist-portrait" / "data" / "editor_package.json").exists()
+    assert (tmp_path / "output" / "editor_package.md").exists()
+    assert (tmp_path / "output" / "editor_handoff.json").exists()
+
+    assert main(["nle-plan", "--project", str(project_path), "--target", "all", "--json"]) in (0, 1)
+    nle_payload = json.loads(capsys.readouterr().out)
+    nle_plan = nle_payload["nle_interchange_plan"]
+    assert nle_payload["output"] == ".artist-portrait/data/nle_interchange_plan.json"
+    assert nle_payload["report"] == "output/nle_interchange_plan.md"
+    assert nle_payload["mapping_csv"] == "output/nle_interchange_map.csv"
+    assert nle_payload["handoff"] == "output/nle_interchange_handoff.json"
+    assert nle_plan["target"] == "all"
+    assert nle_plan["editor_package_id"] == editor_package["editor_package_id"]
+    assert nle_plan["timeline_mapping_count"] >= editor_package["timeline_item_count"] * 3
+    assert nle_plan["audio_mapping_count"] >= editor_package["audio_item_count"] * 3
+    assert nle_plan["marker_mapping_count"] >= editor_package["manual_action_count"] * 3
+    assert {summary["target"] for summary in nle_plan["target_summaries"]} == {
+        "fcpxml",
+        "edl",
+        "resolve_csv",
+    }
+    assert {mapping["target"] for mapping in nle_plan["timeline_mappings"]} == {
+        "fcpxml",
+        "edl",
+        "resolve_csv",
+    }
+    assert any(mapping["compatibility"] == "warning" for mapping in nle_plan["audio_mappings"])
+    assert any(mapping["compatibility"] == "warning" for mapping in nle_plan["marker_mappings"])
+    assert nle_plan["commands_executed"] is False
+    assert nle_plan["media_rendered"] is False
+    assert nle_plan["timeline_mutated"] is False
+    assert nle_plan["edit_points_moved"] is False
+    assert nle_plan["nle_project_written"] is False
+    assert nle_plan["automatic_music_selection"] is False
+    assert nle_plan["automatic_bgm_fit"] is False
+    assert nle_plan["model_call_performed_by_cli"] is False
+    assert nle_plan["network_performed"] is False
+    assert nle_plan["image_generation_or_editing_used"] is False
+    nle_csv = (tmp_path / "output" / "nle_interchange_map.csv").read_text(encoding="utf-8")
+    assert "row_type,target,mapping_id,source_id,order,timeline_start,timeline_end,record_in,record_out,compatibility,instruction,warnings,evidence_refs" in nle_csv
+    assert "timeline" in nle_csv
+    assert "audio" in nle_csv
+    assert "marker" in nle_csv
+    assert (tmp_path / ".artist-portrait" / "data" / "nle_interchange_plan.json").exists()
+    assert (tmp_path / "output" / "nle_interchange_plan.md").exists()
+    assert (tmp_path / "output" / "nle_interchange_handoff.json").exists()
+
+    assert main(["fcpxml", "--project", str(project_path), "--draft", "--json"]) in (0, 1)
+    fcpxml_payload = json.loads(capsys.readouterr().out)
+    fcpxml_draft = fcpxml_payload["fcpxml_draft"]
+    fcpxml_validation = fcpxml_payload["fcpxml_validation"]
+    assert fcpxml_payload["output"] == ".artist-portrait/data/fcpxml_draft.json"
+    assert fcpxml_payload["fcpxml"] == "output/draft.fcpxml"
+    assert fcpxml_payload["validation"] == ".artist-portrait/data/fcpxml_validation.json"
+    assert fcpxml_payload["report"] == "output/fcpxml_review.md"
+    assert fcpxml_payload["handoff"] == "output/fcpxml_handoff.json"
+    assert fcpxml_draft["nle_plan_id"] == nle_plan["nle_plan_id"]
+    assert fcpxml_draft["clip_count"] >= editor_package["timeline_item_count"]
+    assert fcpxml_draft["marker_count"] >= editor_package["manual_action_count"]
+    assert fcpxml_draft["audio_note_count"] >= editor_package["audio_item_count"]
+    assert fcpxml_draft["relink_required"] is True
+    assert fcpxml_draft["import_verified"] is False
+    assert fcpxml_draft["commands_executed"] is False
+    assert fcpxml_draft["media_rendered"] is False
+    assert fcpxml_draft["timeline_mutated"] is False
+    assert fcpxml_draft["edit_points_moved"] is False
+    assert fcpxml_draft["nle_import_performed"] is False
+    assert fcpxml_draft["automatic_music_selection"] is False
+    assert fcpxml_draft["automatic_bgm_fit"] is False
+    assert fcpxml_draft["model_call_performed_by_cli"] is False
+    assert fcpxml_draft["network_performed"] is False
+    assert fcpxml_draft["image_generation_or_editing_used"] is False
+    assert fcpxml_validation["xml_parse_passed"] is True
+    assert fcpxml_validation["import_verified"] is False
+    fcpxml_text = (tmp_path / "output" / "draft.fcpxml").read_text(encoding="utf-8")
+    assert "ARTIST_PORTRAIT_RELINK_REQUIRED" in fcpxml_text
+    ET.fromstring(fcpxml_text.split("\n", 2)[2])
+    assert (tmp_path / ".artist-portrait" / "data" / "fcpxml_draft.json").exists()
+    assert (tmp_path / ".artist-portrait" / "data" / "fcpxml_validation.json").exists()
+    assert (tmp_path / "output" / "fcpxml_review.md").exists()
+    assert (tmp_path / "output" / "fcpxml_handoff.json").exists()
+
+    import_review_candidate = tmp_path / "fcpxml_import_review_candidate.json"
+    import_review_candidate.write_text(
+        json.dumps(
+            {
+                "import_review_id": "fcpxml_import_review_candidate_safe",
+                "project_id": fcpxml_draft["project_id"],
+                "fcpxml_draft_id": fcpxml_draft["fcpxml_draft_id"],
+                "nle_plan_id": fcpxml_draft["nle_plan_id"],
+                "reviewed_by": "integration-test",
+                "application_name": "Final Cut Pro",
+                "application_version": "external-review",
+                "import_attempted": True,
+                "import_succeeded": True,
+                "relink_attempted": True,
+                "relink_succeeded": False,
+                "relink_missing_count": 1,
+                "timeline_opened": True,
+                "playback_checked": False,
+                "issue_count": 1,
+                "issues": [
+                    {
+                        "issue_id": "relink_required",
+                        "severity": "warning",
+                        "category": "asset_relink",
+                        "detail": "Draft imported, but placeholder assets require manual relink.",
+                    }
+                ],
+                "evidence_refs": ["manual external import review"],
+                "media_rendered": False,
+                "timeline_mutated": False,
+                "edit_points_moved": False,
+                "automatic_music_selection": False,
+                "automatic_bgm_fit": False,
+                "model_call_performed_by_cli": False,
+                "network_performed": False,
+                "image_generation_or_editing_used": False,
+            }
+        ),
+        encoding="utf-8",
+    )
+    assert (
+        main(
+            [
+                "fcpxml",
+                "--project",
+                str(project_path),
+                "--import-review",
+                str(import_review_candidate),
+                "--json",
+            ]
+        )
+        in (0, 1)
+    )
+    import_review_payload = json.loads(capsys.readouterr().out)
+    import_review = import_review_payload["fcpxml_import_review"]
+    assert import_review_payload["output"] == ".artist-portrait/data/fcpxml_import_review.json"
+    assert import_review_payload["report"] == "output/fcpxml_import_review.md"
+    assert import_review_payload["handoff"] == "output/fcpxml_import_review_handoff.json"
+    assert import_review["binding_status"] == "matched"
+    assert import_review["status"] == "warning"
+    assert import_review["import_attempted"] is True
+    assert import_review["import_success_claimed"] is True
+    assert import_review["import_success_accepted_as_project_success"] is False
+    assert import_review["relink_success_claimed"] is False
+    assert import_review["commands_executed"] is False
+    assert import_review["media_rendered"] is False
+    assert import_review["timeline_mutated"] is False
+    assert import_review["edit_points_moved"] is False
+    assert import_review["automatic_music_selection"] is False
+    assert import_review["automatic_bgm_fit"] is False
+    assert import_review["model_call_performed_by_cli"] is False
+    assert import_review["network_performed"] is False
+    assert import_review["image_generation_or_editing_used"] is False
+    assert (tmp_path / ".artist-portrait" / "data" / "fcpxml_import_review.json").exists()
+    assert (
+        tmp_path / ".artist-portrait" / "data" / "fcpxml_import_review_candidate_quarantine.json"
+    ).exists()
+    assert (tmp_path / "output" / "fcpxml_import_review.md").exists()
+    assert (tmp_path / "output" / "fcpxml_import_review_handoff.json").exists()
+
+    assert main(["fcpxml", "--project", str(project_path), "--repair-plan", "--json"]) in (0, 1)
+    repair_payload = json.loads(capsys.readouterr().out)
+    repair_plan = repair_payload["fcpxml_repair_plan"]
+    assert repair_payload["output"] == ".artist-portrait/data/fcpxml_repair_plan.json"
+    assert repair_payload["report"] == "output/fcpxml_repair_plan.md"
+    assert repair_payload["handoff"] == "output/fcpxml_repair_handoff.json"
+    assert repair_plan["fcpxml_draft_id"] == fcpxml_draft["fcpxml_draft_id"]
+    assert repair_plan["fcpxml_import_review_id"] == import_review["review_id"]
+    assert repair_plan["status"] == "warning"
+    assert repair_plan["action_count"] >= 3
+    assert repair_plan["required_action_count"] >= 2
+    assert repair_plan["optional_action_count"] >= 1
+    assert repair_plan["relink_action_count"] >= 2
+    assert repair_plan["playback_review_required"] is True
+    assert repair_plan["commands_executed"] is False
+    assert repair_plan["media_rendered"] is False
+    assert repair_plan["timeline_mutated"] is False
+    assert repair_plan["edit_points_moved"] is False
+    assert repair_plan["nle_import_performed"] is False
+    assert repair_plan["source_relink_performed"] is False
+    assert repair_plan["automatic_music_selection"] is False
+    assert repair_plan["automatic_bgm_fit"] is False
+    assert repair_plan["model_call_performed_by_cli"] is False
+    assert repair_plan["network_performed"] is False
+    assert repair_plan["image_generation_or_editing_used"] is False
+    assert repair_plan["repair_success_claimed"] is False
+    assert (tmp_path / ".artist-portrait" / "data" / "fcpxml_repair_plan.json").exists()
+    assert (tmp_path / "output" / "fcpxml_repair_plan.md").exists()
+    assert (tmp_path / "output" / "fcpxml_repair_handoff.json").exists()
+
+    assert main(["fcpxml", "--project", str(project_path), "--approval-request", "--json"]) == 0
+    approval_request_payload = json.loads(capsys.readouterr().out)
+    approval_request = approval_request_payload["fcpxml_repair_approval_request"]
+    assert approval_request_payload["output"] == ".artist-portrait/data/fcpxml_repair_approval_request.json"
+    assert approval_request_payload["report"] == "output/fcpxml_repair_approval_request.md"
+    assert approval_request_payload["handoff"] == "output/fcpxml_repair_approval_handoff.json"
+    assert approval_request["fcpxml_repair_plan_id"] == repair_plan["repair_plan_id"]
+    assert approval_request["fcpxml_draft_id"] == repair_plan["fcpxml_draft_id"]
+    assert len(approval_request["required_action_ids"]) >= 2
+    assert approval_request["commands_executed"] is False
+    assert approval_request["media_rendered"] is False
+    assert approval_request["timeline_mutated"] is False
+    assert approval_request["nle_import_performed"] is False
+    assert approval_request["source_relink_performed"] is False
+    assert approval_request["repair_success_claimed"] is False
+
+    approved_action = approval_request["required_action_ids"][0]
+    all_action_ids = [action["action_id"] for action in repair_plan["actions"]]
+    approval_record_candidate = tmp_path / "fcpxml_repair_approval_record_candidate.json"
+    approval_record_candidate.write_text(
+        json.dumps(
+            {
+                "approval_record_id": "fcpxml_repair_approval_record_safe",
+                "project_id": repair_plan["project_id"],
+                "fcpxml_repair_plan_id": repair_plan["repair_plan_id"],
+                "fcpxml_draft_id": repair_plan["fcpxml_draft_id"],
+                "fcpxml_import_review_id": repair_plan["fcpxml_import_review_id"],
+                "approved_by": "integration-test",
+                "approved_action_ids": [approved_action],
+                "rejected_action_ids": [item for item in all_action_ids if item != approved_action],
+                "status": "failed",
+                "invalid_reasons": ["candidate status is overwritten by validation"],
+                "commands_executed_by_cli": False,
+                "media_rendered_by_cli": False,
+                "timeline_mutated_by_cli": False,
+                "edit_points_moved_by_cli": False,
+                "nle_import_performed_by_cli": False,
+                "source_relink_performed_by_cli": False,
+                "automatic_music_selection_by_cli": False,
+                "automatic_bgm_fit_by_cli": False,
+                "model_call_performed_by_cli": False,
+                "network_performed_by_cli": False,
+                "image_generation_or_editing_used_by_cli": False,
+                "repair_success_claimed_by_cli": False,
+            }
+        ),
+        encoding="utf-8",
+    )
+    assert (
+        main(
+            [
+                "fcpxml",
+                "--project",
+                str(project_path),
+                "--approval-record",
+                str(approval_record_candidate),
+                "--json",
+            ]
+        )
+        == 0
+    )
+    approval_record_payload = json.loads(capsys.readouterr().out)
+    approval_record = approval_record_payload["fcpxml_repair_approval_record"]
+    assert approval_record_payload["output"] == ".artist-portrait/data/fcpxml_repair_approval_record.json"
+    assert approval_record_payload["report"] == "output/fcpxml_repair_approval_record.md"
+    assert approval_record["status"] == "passed"
+    assert approval_record["invalid_reasons"] == []
+    assert approval_record["candidate_sha256"]
+    assert approval_record["quarantine_ref"] == ".artist-portrait/data/fcpxml_repair_approval_record_quarantine.json"
+    assert approval_record["commands_executed_by_cli"] is False
+    assert approval_record["media_rendered_by_cli"] is False
+    assert approval_record["timeline_mutated_by_cli"] is False
+    assert approval_record["nle_import_performed_by_cli"] is False
+    assert approval_record["source_relink_performed_by_cli"] is False
+    assert approval_record["repair_success_claimed_by_cli"] is False
+
+    assert main(["fcpxml", "--project", str(project_path), "--repair-dry-run", "--json"]) == 0
+    dry_run_payload = json.loads(capsys.readouterr().out)
+    dry_run = dry_run_payload["fcpxml_repair_dry_run"]
+    assert dry_run_payload["output"] == ".artist-portrait/data/fcpxml_repair_dry_run.json"
+    assert dry_run_payload["report"] == "output/fcpxml_repair_dry_run.md"
+    assert dry_run_payload["handoff"] == "output/fcpxml_repair_dry_run_handoff.json"
+    assert dry_run["fcpxml_repair_plan_id"] == repair_plan["repair_plan_id"]
+    assert dry_run["approval_record_id"] == approval_record["approval_record_id"]
+    assert dry_run["approved_action_count"] == 1
+    assert dry_run["rejected_action_count"] >= 1
+    assert dry_run["commands_executed"] is False
+    assert dry_run["media_rendered"] is False
+    assert dry_run["timeline_mutated"] is False
+    assert dry_run["edit_points_moved"] is False
+    assert dry_run["nle_import_performed"] is False
+    assert dry_run["source_relink_performed"] is False
+    assert dry_run["repair_success_claimed"] is False
+
+    approved_step = next(step for step in dry_run["steps"] if step["status"] == "approved")
+    repair_execution_candidate = tmp_path / "fcpxml_repair_execution_record_candidate.json"
+    repair_execution_candidate.write_text(
+        json.dumps(
+            {
+                "execution_record_id": "fcpxml_repair_execution_record_safe",
+                "project_id": dry_run["project_id"],
+                "fcpxml_repair_plan_id": dry_run["fcpxml_repair_plan_id"],
+                "approval_record_id": dry_run["approval_record_id"],
+                "dry_run_id": dry_run["dry_run_id"],
+                "fcpxml_draft_id": dry_run["fcpxml_draft_id"],
+                "fcpxml_import_review_id": dry_run["fcpxml_import_review_id"],
+                "executed_by": "integration-test",
+                "actions": [
+                    {
+                        "action_id": approved_step["action_id"],
+                        "command": approved_step["command"],
+                        "status": "succeeded",
+                        "exit_code": 0,
+                        "output_refs": ["external-nle-review"],
+                        "evidence_refs": ["manual relink evidence"],
+                        "notes": "external manual repair execution evidence",
+                    }
+                ],
+                "commands_executed_by_cli": False,
+                "media_rendered_by_cli": False,
+                "timeline_mutated_by_cli": False,
+                "edit_points_moved_by_cli": False,
+                "nle_import_performed_by_cli": False,
+                "source_relink_performed_by_cli": False,
+                "automatic_music_selection_by_cli": False,
+                "automatic_bgm_fit_by_cli": False,
+                "model_call_performed_by_cli": False,
+                "network_performed_by_cli": False,
+                "image_generation_or_editing_used_by_cli": False,
+                "repair_success_promoted_by_cli": False,
+                "acceptance_success_promoted_by_cli": False,
+            }
+        ),
+        encoding="utf-8",
+    )
+    assert (
+        main(
+            [
+                "fcpxml",
+                "--project",
+                str(project_path),
+                "--repair-execution-record",
+                str(repair_execution_candidate),
+                "--json",
+            ]
+        )
+        == 0
+    )
+    repair_execution_payload = json.loads(capsys.readouterr().out)
+    repair_execution_review = repair_execution_payload["fcpxml_repair_execution_review"]
+    assert repair_execution_payload["output"] == ".artist-portrait/data/fcpxml_repair_execution_review.json"
+    assert repair_execution_payload["report"] == "output/fcpxml_repair_execution_review.md"
+    assert repair_execution_payload["handoff"] == "output/fcpxml_repair_execution_handoff.json"
+    assert repair_execution_review["status"] == "passed"
+    assert repair_execution_review["accepted_action_count"] == 1
+    assert repair_execution_review["rejected_action_count"] == 0
+    assert repair_execution_review["missing_action_count"] == 0
+    assert repair_execution_review["commands_executed_by_cli"] is False
+    assert repair_execution_review["media_rendered_by_cli"] is False
+    assert repair_execution_review["timeline_mutated_by_cli"] is False
+    assert repair_execution_review["nle_import_performed_by_cli"] is False
+    assert repair_execution_review["source_relink_performed_by_cli"] is False
+    assert repair_execution_review["repair_success_promoted_by_cli"] is False
+    assert repair_execution_review["acceptance_success_promoted_by_cli"] is False
+
     agent_candidate_path = tmp_path / "rhythm_candidate.json"
     agent_candidate_path.write_text(
         json.dumps(
@@ -4885,6 +5290,9 @@ def test_workflow_cli_guides_next_delivery_commands_without_execution(tmp_path, 
     assert plan["target"] == "delivery"
     assert plan["status"] == "in_progress"
     assert plan["next_command"] == "artist-portrait scan --project <project.yaml>"
+    assert plan["current_stage_id"] == "setup"
+    assert plan["current_stage_title"] == "Project setup"
+    assert plan["creator_stage_count"] >= 7
     assert plan["commands_executed"] is False
     assert plan["media_rendered"] is False
     assert plan["edit_points_moved"] is False
@@ -4893,9 +5301,69 @@ def test_workflow_cli_guides_next_delivery_commands_without_execution(tmp_path, 
     assert steps["init"]["status"] == "done"
     assert steps["scan"]["status"] == "next"
     assert steps["final_export"]["status"] == "pending"
+    assert steps["operator"]["status"] == "pending"
+    assert steps["editor_package"]["status"] == "pending"
+    assert steps["nle_plan"]["status"] == "pending"
+    assert steps["fcpxml_draft"]["status"] == "pending"
+    creator_stages = {stage["stage_id"]: stage for stage in plan["creator_stages"]}
+    assert creator_stages["setup"]["status"] == "current"
+    assert creator_stages["editor_handoff"]["status"] == "pending"
+    deliverables = {item["deliverable_id"]: item for item in plan["deliverables"]}
+    assert deliverables["material_map"]["status"] == "missing"
+    assert deliverables["nle_package"]["status"] == "missing"
+    assert any("Direct audio" in item for item in plan["bgm_input_guidance"])
+    assert any("mixed video track" in item for item in plan["bgm_input_guidance"])
     assert (tmp_path / ".artist-portrait" / "data" / "workflow_plan.json").exists()
     assert (tmp_path / "output" / "workflow_plan.md").exists()
     assert (tmp_path / "output" / "workflow_agent_handoff.json").exists()
+
+
+def test_operator_cli_summarizes_next_action_and_guardrails_without_execution(tmp_path, capsys):
+    project_path = tmp_path / "project.yaml"
+    project_path.write_text(
+        project_fixture_with_scene_detection("off"),
+        encoding="utf-8",
+    )
+    assert main(["init", "--project", str(project_path), "--quiet"]) in (0, 1)
+    capsys.readouterr()
+
+    assert main(["operator", "--project", str(project_path), "--target", "delivery", "--json"]) == 1
+    payload = json.loads(capsys.readouterr().out)
+    runbook = payload["operator_runbook"]
+    assert payload["output"] == ".artist-portrait/data/operator_runbook.json"
+    assert payload["report"] == "output/operator_runbook.md"
+    assert payload["handoff"] == "output/operator_handoff.json"
+    assert payload["next_command"] == "artist-portrait scan --project <project.yaml>"
+    assert runbook["target"] == "delivery"
+    assert runbook["status"] == "in_progress"
+    assert runbook["workflow_plan_id"]
+    assert runbook["stage_count"] >= 14
+    assert runbook["done_stage_count"] >= 1
+    assert runbook["pending_stage_count"] >= 1
+    stages = {stage["stage_id"]: stage for stage in runbook["stages"]}
+    assert stages["scan"]["status"] == "current"
+    assert stages["final_export"]["status"] == "pending"
+    artifacts = {artifact["artifact_id"]: artifact for artifact in runbook["artifact_map"]}
+    assert artifacts["workflow_plan"]["status"] == "present"
+    assert artifacts["edit_guidance"]["status"] == "missing"
+    bgm_modes = {item["mode"]: item for item in runbook["bgm_input_guidance"]}
+    assert bgm_modes["direct_audio"]["status"] == "missing"
+    assert bgm_modes["video_audio_extract"]["status"] == "missing"
+    assert bgm_modes["source_embedded_audio"]["status"] == "missing"
+    assert bgm_modes["no_file_yet"]["status"] == "warning"
+    assert "treat mixed extracted video audio as clean BGM" in " ".join(
+        runbook["forbidden_capabilities"]
+    )
+    assert runbook["commands_executed"] is False
+    assert runbook["media_rendered"] is False
+    assert runbook["timeline_mutated"] is False
+    assert runbook["edit_points_moved"] is False
+    assert runbook["automatic_music_selection"] is False
+    assert runbook["model_call_performed_by_cli"] is False
+    assert runbook["network_performed"] is False
+    assert (tmp_path / ".artist-portrait" / "data" / "operator_runbook.json").exists()
+    assert (tmp_path / "output" / "operator_runbook.md").exists()
+    assert (tmp_path / "output" / "operator_handoff.json").exists()
 
 
 def test_workflow_execution_record_review_quarantines_and_validates_evidence(tmp_path, capsys):

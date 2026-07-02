@@ -1,0 +1,224 @@
+{
+  "$defs": {
+    "FcpxmlImportReviewIssue": {
+      "additionalProperties": false,
+      "properties": {
+        "category": {
+          "minLength": 1,
+          "title": "Category",
+          "type": "string"
+        },
+        "detail": {
+          "minLength": 1,
+          "title": "Detail",
+          "type": "string"
+        },
+        "issue_id": {
+          "minLength": 1,
+          "title": "Issue Id",
+          "type": "string"
+        },
+        "severity": {
+          "pattern": "^(info|warning|error)$",
+          "title": "Severity",
+          "type": "string"
+        }
+      },
+      "required": [
+        "issue_id",
+        "severity",
+        "category",
+        "detail"
+      ],
+      "title": "FcpxmlImportReviewIssue",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "accepted_issue_count": {
+      "minimum": 0,
+      "title": "Accepted Issue Count",
+      "type": "integer"
+    },
+    "automatic_bgm_fit": {
+      "default": false,
+      "title": "Automatic Bgm Fit",
+      "type": "boolean"
+    },
+    "automatic_music_selection": {
+      "default": false,
+      "title": "Automatic Music Selection",
+      "type": "boolean"
+    },
+    "binding_status": {
+      "pattern": "^(matched|mismatch)$",
+      "title": "Binding Status",
+      "type": "string"
+    },
+    "candidate_fingerprint": {
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "title": "Candidate Fingerprint",
+      "type": "string"
+    },
+    "commands_executed": {
+      "default": false,
+      "title": "Commands Executed",
+      "type": "boolean"
+    },
+    "edit_points_moved": {
+      "default": false,
+      "title": "Edit Points Moved",
+      "type": "boolean"
+    },
+    "error_count": {
+      "minimum": 0,
+      "title": "Error Count",
+      "type": "integer"
+    },
+    "fcpxml_draft_id": {
+      "minLength": 1,
+      "title": "Fcpxml Draft Id",
+      "type": "string"
+    },
+    "findings": {
+      "items": {
+        "$ref": "#/$defs/FcpxmlImportReviewIssue"
+      },
+      "title": "Findings",
+      "type": "array"
+    },
+    "forbidden_capabilities": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Forbidden Capabilities",
+      "type": "array"
+    },
+    "image_generation_or_editing_used": {
+      "default": false,
+      "title": "Image Generation Or Editing Used",
+      "type": "boolean"
+    },
+    "import_attempted": {
+      "title": "Import Attempted",
+      "type": "boolean"
+    },
+    "import_success_accepted_as_project_success": {
+      "default": false,
+      "title": "Import Success Accepted As Project Success",
+      "type": "boolean"
+    },
+    "import_success_claimed": {
+      "title": "Import Success Claimed",
+      "type": "boolean"
+    },
+    "issue_count": {
+      "minimum": 0,
+      "title": "Issue Count",
+      "type": "integer"
+    },
+    "media_rendered": {
+      "default": false,
+      "title": "Media Rendered",
+      "type": "boolean"
+    },
+    "model_call_performed_by_cli": {
+      "default": false,
+      "title": "Model Call Performed By Cli",
+      "type": "boolean"
+    },
+    "network_performed": {
+      "default": false,
+      "title": "Network Performed",
+      "type": "boolean"
+    },
+    "nle_plan_id": {
+      "minLength": 1,
+      "title": "Nle Plan Id",
+      "type": "string"
+    },
+    "playback_checked": {
+      "title": "Playback Checked",
+      "type": "boolean"
+    },
+    "project_id": {
+      "minLength": 1,
+      "title": "Project Id",
+      "type": "string"
+    },
+    "quarantine_ref": {
+      "minLength": 1,
+      "title": "Quarantine Ref",
+      "type": "string"
+    },
+    "rejected_reasons": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Rejected Reasons",
+      "type": "array"
+    },
+    "relink_success_claimed": {
+      "title": "Relink Success Claimed",
+      "type": "boolean"
+    },
+    "review_id": {
+      "minLength": 1,
+      "title": "Review Id",
+      "type": "string"
+    },
+    "schema_version": {
+      "default": "0.3",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "status": {
+      "pattern": "^(accepted|warning|rejected)$",
+      "title": "Status",
+      "type": "string"
+    },
+    "timeline_mutated": {
+      "default": false,
+      "title": "Timeline Mutated",
+      "type": "boolean"
+    },
+    "timeline_opened": {
+      "title": "Timeline Opened",
+      "type": "boolean"
+    },
+    "warning_count": {
+      "minimum": 0,
+      "title": "Warning Count",
+      "type": "integer"
+    },
+    "warnings": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Warnings",
+      "type": "array"
+    }
+  },
+  "required": [
+    "review_id",
+    "project_id",
+    "fcpxml_draft_id",
+    "nle_plan_id",
+    "candidate_fingerprint",
+    "quarantine_ref",
+    "status",
+    "binding_status",
+    "import_attempted",
+    "import_success_claimed",
+    "relink_success_claimed",
+    "timeline_opened",
+    "playback_checked",
+    "issue_count",
+    "accepted_issue_count",
+    "warning_count",
+    "error_count"
+  ],
+  "title": "FcpxmlImportReview",
+  "type": "object"
+}

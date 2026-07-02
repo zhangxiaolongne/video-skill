@@ -719,7 +719,7 @@ APIs/API keys/remote providers, use hidden model calls, use image
 generation/editing, perform source separation, or treat rhythm intelligence as
 acceptance success.
 
-Current V0-043 implementation scope additionally allows:
+V0-043 implementation scope additionally allows:
 
 - `rhythm --edit-guidance`
 - canonical `.artist-portrait/data/edit_guidance.json`
@@ -742,6 +742,185 @@ or beat grids, call models from the CLI, access the network, depend on paid
 APIs/API keys/remote providers, use hidden model calls, use image
 generation/editing, perform source separation, or treat guidance as an
 execution plan.
+
+V0-044 implementation scope additionally allows:
+
+- `operator --target core|preview|delivery`
+- canonical `.artist-portrait/data/operator_runbook.json`
+- deterministic `output/operator_runbook.md`
+- deterministic `output/operator_handoff.json`
+- operator-facing stage ladder from current workflow evidence
+- current next-command summary without command execution
+- artifact readiness map for workflow, acceptance, BGM, rhythm, media
+  validation, repair, and manual guidance artifacts
+- BGM input-mode guidance for direct audio, video audio extraction, embedded
+  source audio, and no-file-yet planning
+- manual guidance references to edit guidance, rhythm reports, rhythm media QC,
+  workflow plans, and acceptance reports
+- forbidden-capability audit in both JSON and handoff output
+
+V0-044 does not allow the operator runbook to execute workflow or repair
+commands, auto-run pipeline stages, render media, mutate timelines, move edit
+points, select or fit music automatically, fabricate BPM or beat grids, call
+models from the CLI, access the network, depend on paid APIs/API keys/remote
+providers, use hidden model calls, use image generation/editing, perform source
+separation, treat repair evidence as acceptance success, or treat mixed
+extracted video audio as clean BGM.
+
+V0-045 implementation scope additionally allows:
+
+- `editor-package`
+- canonical `.artist-portrait/data/editor_package.json`
+- deterministic `output/editor_package.md`
+- deterministic `output/cue_sheet.csv`
+- deterministic `output/editor_handoff.json`
+- editor-facing timeline items from the current canonical timeline
+- BGM placement, gain, fade, ducking, and beat-alignment instructions from the
+  current explicit BGM fit plan when present
+- manual edit actions from current edit guidance when present
+- artifact bindings for timeline, BGM fit, rhythm plan, edit guidance, and
+  operator runbook
+- CSV cue sheet rows for timeline, audio, and manual action instructions
+
+V0-045 does not allow editor packages to render media, mutate timelines, move
+edit points, execute editor instructions, select or fit music automatically,
+fabricate BPM or beat grids, call models from the CLI, access the network,
+depend on paid APIs/API keys/remote providers, use hidden model calls, use image
+generation/editing, perform source separation, or claim edits were applied.
+
+V0-046 implementation scope additionally allows:
+
+- `nle-plan`
+- canonical `.artist-portrait/data/nle_interchange_plan.json`
+- deterministic `output/nle_interchange_plan.md`
+- deterministic `output/nle_interchange_map.csv`
+- deterministic `output/nle_interchange_handoff.json`
+- target planning for `fcpxml`, `edl`, `resolve_csv`, and `all`
+- timeline, audio, and marker mapping candidates from the current editor
+  package
+- explicit target summaries, format limitations, warnings, blocked reasons,
+  and forbidden-capability flags
+
+V0-046 does not allow writing FCPXML, EDL, Resolve project files, or any other
+NLE project artifact. It also does not allow rendering media, mutating
+timelines, moving edit points, executing editor instructions, selecting or
+fitting music automatically, fabricating BPM or beat grids, calling models from
+the CLI, accessing the network, depending on paid APIs/API keys/remote
+providers, using hidden model calls, using image generation/editing, performing
+source separation, or claiming mapping candidates were applied edits.
+
+V0-047 implementation scope additionally allows:
+
+- `fcpxml --draft`
+- canonical `.artist-portrait/data/fcpxml_draft.json`
+- canonical `.artist-portrait/data/fcpxml_validation.json`
+- deterministic `output/draft.fcpxml`
+- deterministic `output/fcpxml_review.md`
+- deterministic `output/fcpxml_handoff.json`
+- XML parse validation for the generated draft
+- relink-required placeholder FCPXML assets that do not claim source relinking
+  succeeded
+- clip, marker, and audio-note coverage from the current FCPXML target mappings
+
+V0-047 does not allow importing the FCPXML into Final Cut Pro or any other NLE,
+rendering media, mutating canonical timelines, moving edit points, executing
+editor instructions, selecting or fitting music automatically, fabricating BPM
+or beat grids, calling models from the CLI, accessing the network, depending on
+paid APIs/API keys/remote providers, using hidden model calls, using image
+generation/editing, performing source separation, claiming relink success, or
+claiming draft contents were applied edits.
+
+V0-048 implementation scope additionally allows:
+
+- `fcpxml --import-review <candidate.json>`
+- canonical `.artist-portrait/data/fcpxml_import_review_candidate_quarantine.json`
+- canonical `.artist-portrait/data/fcpxml_import_review.json`
+- deterministic `output/fcpxml_import_review.md`
+- deterministic `output/fcpxml_import_review_handoff.json`
+- validation of explicit external FCPXML import-review evidence against the
+  current project, FCPXML draft, and NLE plan
+- classification of import/relink success claims, external findings, warnings,
+  and rejected reasons without acceptance promotion
+
+V0-048 does not allow the CLI to import into Final Cut Pro or any other NLE,
+render media, mutate canonical timelines, move edit points, execute editor
+instructions, select or fit music automatically, call models from the CLI,
+access the network, depend on paid APIs/API keys/remote providers, use hidden
+model calls, use image generation/editing, perform source separation, treat
+external import evidence as project acceptance success, or claim reviewed
+external evidence means edits were applied.
+
+V0-049 implementation scope additionally allows:
+
+- `fcpxml --repair-plan`
+- canonical `.artist-portrait/data/fcpxml_repair_plan.json`
+- deterministic `output/fcpxml_repair_plan.md`
+- deterministic `output/fcpxml_repair_handoff.json`
+- validation of current FCPXML draft, validation report, import-review evidence,
+  project, and NLE-plan bindings
+- deterministic classification of relink-required placeholders, import
+  blockers, external findings, timeline-opened gaps, playback-check gaps,
+  required actions, optional actions, expected evidence, and first required
+  command
+
+V0-049 does not allow the CLI to import into Final Cut Pro or any other NLE,
+relink source media, render media, mutate canonical timelines, move edit
+points, execute editor instructions, select or fit music automatically, call
+models from the CLI, access the network, depend on paid APIs/API keys/remote
+providers, use hidden model calls, use image generation/editing, perform source
+separation, claim repair success, or claim planned fixes were applied edits.
+
+V0-050 implementation scope additionally allows:
+
+- `fcpxml --approval-request`
+- `fcpxml --approval-record <candidate.json>`
+- `fcpxml --repair-dry-run`
+- canonical `.artist-portrait/data/fcpxml_repair_approval_request.json`
+- deterministic `output/fcpxml_repair_approval_request.md`
+- deterministic `output/fcpxml_repair_approval_handoff.json`
+- canonical `.artist-portrait/data/fcpxml_repair_approval_record_quarantine.json`
+- canonical `.artist-portrait/data/fcpxml_repair_approval_record.json`
+- deterministic `output/fcpxml_repair_approval_record.md`
+- canonical `.artist-portrait/data/fcpxml_repair_dry_run.json`
+- deterministic `output/fcpxml_repair_dry_run.md`
+- deterministic `output/fcpxml_repair_dry_run_handoff.json`
+- validation of explicit approval choices against the current FCPXML repair
+  plan, action ids, draft id, import-review id, and forbidden CLI-side
+  execution flags
+- deterministic approved/rejected manual action dry-run packaging without
+  command execution
+
+V0-050 does not allow executing repair commands, importing into Final Cut Pro
+or any other NLE, relinking source media, rendering media, mutating canonical
+timelines, moving edit points, executing editor instructions, selecting or
+fitting music automatically, calling models from the CLI, accessing the
+network, depending on paid APIs/API keys/remote providers, using hidden model
+calls, using image generation/editing, performing source separation, treating
+approval/dry-run artifacts as repair success, or claiming approved fixes were
+applied edits.
+
+Current V0-051 implementation scope additionally allows:
+
+- `fcpxml --repair-execution-record <candidate.json>`
+- canonical `.artist-portrait/data/fcpxml_repair_execution_record_quarantine.json`
+- canonical `.artist-portrait/data/fcpxml_repair_execution_review.json`
+- deterministic `output/fcpxml_repair_execution_review.md`
+- deterministic `output/fcpxml_repair_execution_handoff.json`
+- validation of explicit external FCPXML repair execution evidence against the
+  current dry-run, approval record, repair plan, draft, import-review evidence,
+  approved action ids, commands, output refs, evidence refs, and forbidden
+  CLI-side success/execution flags
+- deterministic accepted/rejected/missing/skipped action classification without
+  command execution
+
+V0-051 does not allow executing repair commands, importing into Final Cut Pro
+or any other NLE, relinking source media, rendering media, mutating canonical
+timelines, moving edit points, executing editor instructions, selecting or
+fitting music automatically, calling models from the CLI, accessing the
+network, depending on paid APIs/API keys/remote providers, using hidden model
+calls, using image generation/editing, performing source separation, treating
+execution evidence as repair success, treating execution evidence as
+acceptance success, or claiming submitted fixes were applied edits.
 
 - `scan`
 - deterministic `sources.jsonl`

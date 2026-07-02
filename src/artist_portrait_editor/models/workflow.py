@@ -19,6 +19,31 @@ class WorkflowStep(BaseModel):
     executes_automatically: bool = False
 
 
+class CreatorWorkflowStage(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    stage_id: str = Field(min_length=1)
+    order: int = Field(ge=1)
+    title: str = Field(min_length=1)
+    status: str = Field(pattern=r"^(done|current|pending|blocked)$")
+    next_command: str | None = None
+    summary: str = Field(min_length=1)
+    step_ids: list[str] = Field(default_factory=list)
+    deliverable_refs: list[str] = Field(default_factory=list)
+    blocking_step_ids: list[str] = Field(default_factory=list)
+
+
+class CreatorWorkflowDeliverable(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    deliverable_id: str = Field(min_length=1)
+    stage_id: str = Field(min_length=1)
+    label: str = Field(min_length=1)
+    status: str = Field(pattern=r"^(present|missing|blocked)$")
+    refs: list[str] = Field(default_factory=list)
+    summary: str = Field(min_length=1)
+
+
 class WorkflowPlan(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -32,6 +57,12 @@ class WorkflowPlan(BaseModel):
     remaining_step_count: int = Field(ge=0)
     blocked_step_count: int = Field(ge=0)
     steps: list[WorkflowStep] = Field(default_factory=list)
+    creator_stage_count: int = Field(ge=0)
+    current_stage_id: str | None = None
+    current_stage_title: str | None = None
+    creator_stages: list[CreatorWorkflowStage] = Field(default_factory=list)
+    deliverables: list[CreatorWorkflowDeliverable] = Field(default_factory=list)
+    bgm_input_guidance: list[str] = Field(default_factory=list)
     commands_executed: bool = False
     media_rendered: bool = False
     edit_points_moved: bool = False

@@ -14,6 +14,33 @@ here only when they block a current or planned milestone.
 
 ## Active Issues
 
+### ISSUE-016: Final acceptance usability is not complete
+
+- Status: `resolved`
+- Severity: high
+- Owner: `final acceptance roadmap`
+- Blocking condition: none after Stage 6
+- Impact: the project has substantial technical substrate, but a normal
+  operator now has one guided workflow path, a fixed golden real-project
+  baseline, a BGM/rhythm quality pass, supervised NLE round-trip readiness, and
+  a release-candidate validation/publication path
+- Resolution condition: complete the six-stage final acceptance roadmap and
+  pass full local validation, install simulation, release-candidate checks, and
+  publication-state verification
+- Related decision: `DEC-052`
+
+### ISSUE-017: Artifact-sized gates can hide final-goal drift
+
+- Status: `resolved`
+- Severity: high
+- Owner: `development governance`
+- Blocking condition: none after Stage 2
+- Impact: resolved; Stage 2 proved a named final-acceptance stage can close a
+  real operator workflow gap instead of adding isolated artifacts
+- Resolution condition: met by `ACCEPTANCE-STAGE-02` plus `run_checks.py`
+  final-acceptance roadmap and anti-fragmentation checks
+- Related decision: `DEC-052`
+
 ### ISSUE-015: Release check validation expected only dirty-tree warning exit
 
 - Status: `resolved`

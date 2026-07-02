@@ -12,6 +12,273 @@ it. Do not use this file as a task list.
 
 ## Active Decisions
 
+### DEC-057: Release candidate validation closes the planned final-acceptance roadmap
+
+- Recorded: `2026-07-02`
+- Status: `active`
+- Decision: `ACCEPTANCE-STAGE-06` establishes
+  `scripts/run_release_candidate.py` as the deterministic release-candidate
+  audit for version target, package preflight, canonical install simulation,
+  Skill validation, Git remote/tag state, final-acceptance completion, release
+  ledger targeting, and publication guardrails
+- Rationale: final usability is not closed merely because the editing pipeline
+  works. The accumulated local work must also be packageable, installable,
+  fully validated, and publishable with explicit Git state.
+- Consequence: release checks may report dirty or clean publication state, but
+  they must not create commits, tags, pushes, network calls, hidden model calls,
+  media renders, or image generation. Git publication remains an explicit
+  release action recorded in `docs/RELEASES.md`.
+- Revisit when: a future capability gate requires a new release target or the
+  packaging/install policy changes.
+
+### DEC-056: NLE round-trip readiness is supervised evidence, not applied edits
+
+- Recorded: `2026-07-02`
+- Status: `active`
+- Decision: `ACCEPTANCE-STAGE-05` establishes
+  `scripts/run_nle_roundtrip_readiness.py` as the deterministic quality pass
+  for editor package, NLE interchange plan, relink-required FCPXML draft,
+  explicit external import-review evidence, repair planning, approval,
+  dry-run, repair execution review, workflow execution handback, and operator
+  NLE evidence visibility
+- Rationale: final usability needs a supervised path from generated handoff
+  files to external editor evidence and back into the operator workflow. A
+  draft FCPXML file alone is not a usable NLE round-trip.
+- Consequence: import success, relink attempts, repair execution evidence, and
+  workflow execution evidence may be recorded and validated, but the CLI still
+  must not import into an NLE, relink media, mutate timelines, execute editor
+  instructions, or treat external evidence as repair, acceptance, or applied
+  edit success
+- Revisit when: Stage 6 packages and publishes the local work as a release
+  candidate, or a future gate adds real user-driven NLE import automation with
+  explicit permission
+
+### DEC-055: BGM/rhythm quality is validated as editing logic
+
+- Recorded: `2026-07-02`
+- Status: `active`
+- Decision: `ACCEPTANCE-STAGE-04` establishes
+  `scripts/run_bgm_rhythm_quality.py` as the deterministic quality pass for
+  direct audio, video-extracted audio, source embedded audio, multiple
+  candidates, no-file-yet rhythm planning, explicit fit controls, manual edit
+  guidance, and preview/final rhythm QC
+- Rationale: BGM is not a decorative export layer. Final acceptance requires
+  music, rhythm, subtitles, transitions, pauses, ducking, phrase review,
+  cut-review, endings, source risk, preview, and final media QC to be judged
+  together as editing behavior
+- Consequence: mixed video/source audio must be preserved as high-risk evidence
+  and must not be treated as clean BGM. Quality warnings may keep acceptance
+  profiles from claiming a clean pass even when preview/final media are ready.
+  The CLI still must not auto-select music, move edit points, fabricate
+  BPM/beats, call models, access the network, or render media from quality
+  review itself
+- Revisit when: Stage 5 adds supervised NLE round-trip readiness or a validated
+  local beat engine is installed and opens stronger beat evidence
+
+### DEC-054: Golden baseline is the realistic end-to-end proof
+
+- Recorded: `2026-07-02`
+- Status: `active`
+- Decision: `ACCEPTANCE-STAGE-03` establishes
+  `fixtures/golden_artist_portrait/` and `scripts/run_golden_baseline.py` as
+  the fixed realistic baseline for final-acceptance drift checks
+- Rationale: temporary generated fixtures prove mechanics, but final acceptance
+  needs one stable creator-facing project that exercises proposal, timeline,
+  BGM, rhythm, preview, final export, editor package, NLE mapping, FCPXML
+  draft, acceptance, and workflow readiness together
+- Consequence: full project checks may run the golden baseline when local
+  FFmpeg/ffprobe are available. The baseline may generate deterministic local
+  media and explicit proposal candidates, but it must not download media,
+  access the network, call models from the CLI, auto-select music, import into
+  an NLE, relink media, or claim external NLE success
+- Revisit when: Stage 4 expands BGM/rhythm quality scenarios or Stage 6 turns
+  the local working stack into a release candidate
+
+### DEC-053: Guided workflow is the primary operator path
+
+- Recorded: `2026-07-01`
+- Status: `active`
+- Decision: `ACCEPTANCE-STAGE-02` makes `workflow --target delivery` the
+  primary operator path from raw materials through reviewable delivery and NLE
+  handoff artifacts. The workflow plan now exposes creator stages, current
+  stage, next command, deliverable readiness, and BGM input guidance
+- Rationale: the project already had many commands, but final acceptance
+  requires one obvious route through them. A normal operator should not need to
+  infer that delivery acceptance must be followed by operator runbook, editor
+  package, NLE plan, and FCPXML draft generation
+- Consequence: workflow guidance may point to operator/editor/NLE/FCPXML
+  commands and report deliverable status, but it must not execute commands,
+  render media, import into an NLE, relink sources, move edit points, select
+  music, call models, access the network, or treat guidance as completion
+- Revisit when: Stage 3 introduces a golden real-project baseline or Stage 5
+  opens the supervised NLE round-trip readiness pass
+
+### DEC-052: Final acceptance stages supersede artifact-sized progress gates
+
+- Recorded: `2026-07-01`
+- Status: `active`
+- Decision: after V0-051, ordinary progress toward final Skill acceptance is
+  measured by named final-acceptance stages, starting with
+  `ACCEPTANCE-STAGE-01`, rather than by isolated artifacts, schemas, reports,
+  packets, review rules, or individual tests
+- Rationale: the project already has many deterministic engineering artifacts;
+  further progress must close operator-facing usability, quality, delivery,
+  evidence, and release gaps instead of adding more internal proof objects
+- Consequence: a future batch may count as one major stage only when it closes a
+  project-level final acceptance gap, or as a normal capability milestone only
+  when it has at least ten independent release-level outcomes. Supporting
+  fields, schema updates, tests, docs, refactors, and bug fixes remain inside
+  the stage that needs them
+- Revisit when: the six-stage final acceptance roadmap is complete or the
+  project enters a post-release maintenance mode
+
+### DEC-051: FCPXML repair execution evidence is reviewed, not trusted
+
+- Recorded: `2026-07-01`
+- Status: `active`
+- Decision: V0-051 adds `fcpxml --repair-execution-record
+  <candidate.json>` to quarantine and review explicit external FCPXML repair
+  execution evidence against the current repair dry-run, approval record,
+  repair plan, draft, and import-review evidence
+- Rationale: after a dry-run authorizes manual repair actions, the Skill needs
+  a safe way to ingest what was attempted outside the CLI without confusing
+  submitted evidence with verified repair success or applied edits
+- Consequence: action evidence may be accepted, rejected, missing, or skipped
+  by binding checks, approved action scope, command matching, output refs, and
+  evidence refs, but the CLI still cannot execute commands, import into an
+  NLE, relink source media, render media, mutate timelines, move edit points,
+  select or fit music automatically, call models, access the network, use image
+  generation, promote repair success, promote acceptance success, or claim
+  edits were applied
+- Revisit when: a later gate opens FCPXML repair refresh planning or a
+  supervised NLE round-trip package
+
+### DEC-050: FCPXML repair approvals control manual action packaging only
+
+- Recorded: `2026-07-01`
+- Status: `active`
+- Decision: V0-050 adds `fcpxml --approval-request`, `fcpxml
+  --approval-record <candidate.json>`, and `fcpxml --repair-dry-run` to collect
+  explicit approval choices for FCPXML repair actions and package approved and
+  rejected actions into a dry-run manifest
+- Rationale: FCPXML repair planning needs an explicit user-control gate before
+  any external repair execution evidence is accepted, otherwise planned actions
+  could be mistaken for authorized work
+- Consequence: approval requests, approval records, and dry-run manifests can
+  bind project, repair plan, draft, import-review, action ids, and expected
+  artifacts, but they cannot execute commands, import into an NLE, relink
+  source media, render media, mutate timelines, move edit points, select or fit
+  music automatically, call models, access the network, use image generation,
+  claim repair success, or claim edits were applied
+- Revisit when: a later gate opens explicit external FCPXML repair execution
+  evidence import or repair refresh planning
+
+### DEC-049: FCPXML repair plans guide manual fixes, not execution
+
+- Recorded: `2026-07-01`
+- Status: `active`
+- Decision: V0-049 adds `fcpxml --repair-plan` to convert the current FCPXML
+  draft, validation report, and explicit external import-review evidence into
+  deterministic manual repair actions for relink, import blockers, findings,
+  timeline-opened gaps, and playback-review gaps
+- Rationale: after import-review evidence exists, the next useful step is not
+  another release pass but a concrete manual repair plan that tells the
+  operator what to fix and what evidence to bring back
+- Consequence: repair plans may produce required/optional actions, expected
+  artifacts, first required command, Markdown report, and handoff packet, but
+  they cannot import into an NLE, relink source media, render media, mutate
+  timelines, move edit points, execute editor instructions, select or fit music
+  automatically, call models, access the network, use image generation, claim
+  repair success, or claim edits were applied
+- Revisit when: a later gate opens explicit repair approval/dry-run packaging
+  or external repair execution evidence import
+
+### DEC-048: FCPXML import review is external evidence, not acceptance success
+
+- Recorded: `2026-07-01`
+- Status: `active`
+- Decision: V0-048 adds `fcpxml --import-review <candidate.json>` to quarantine
+  and validate explicit external FCPXML import-review evidence against the
+  current project, FCPXML draft, and NLE plan
+- Rationale: after generating a draft, the next safe step is to ingest what a
+  human or external tool observed during import/relink review without letting
+  the CLI perform or over-trust the import
+- Consequence: import success, relink status, playback checks, and findings are
+  recorded as evidence only; they cannot become project acceptance success,
+  applied edits, timeline mutation, media rendering, automatic music selection,
+  model calls, network access, or image generation
+- Revisit when: a later gate opens explicit editor execution evidence import or
+  supervised relink repair planning
+
+### DEC-047: FCPXML output is a supervised draft, not an imported project
+
+- Recorded: `2026-07-01`
+- Status: `active`
+- Decision: V0-047 adds `fcpxml --draft` to translate the current FCPXML target
+  mappings into a parseable draft FCPXML file, canonical draft metadata,
+  validation report, Markdown review, and handoff packet
+- Rationale: a reviewable FCPXML artifact is the next concrete handoff step,
+  but claiming import success or applied edits before supervised NLE evidence
+  would be false precision
+- Consequence: FCPXML drafts may contain relink-required placeholder assets,
+  clip mappings, marker candidates, and audio notes, but they cannot import into
+  Final Cut Pro, render media, mutate timelines, move edit points, execute
+  editor actions, select or fit music automatically, call models, access the
+  network, claim relink success, or claim edits were applied
+- Revisit when: a later gate imports explicit FCPXML/NLE review evidence or
+  opens supervised editor execution evidence intake
+
+### DEC-046: NLE interchange is a mapping plan, not a project writer
+
+- Recorded: `2026-07-01`
+- Status: `active`
+- Decision: V0-046 adds `nle-plan` to translate the current editor package into
+  FCPXML, EDL, and Resolve CSV interchange mapping candidates, target summaries,
+  format limitations, warnings, CSV sidecar rows, and handoff refs
+- Rationale: before writing real NLE project files, the Skill needs an explicit
+  compatibility layer that shows what can map cleanly, what degrades to notes,
+  and what remains blocked
+- Consequence: NLE interchange plans may guide future export writers, but they
+  cannot write FCPXML/EDL/Resolve project files, render media, mutate timelines,
+  move edit points, execute editor actions, select or fit music automatically,
+  call models, access the network, or claim edits were applied
+- Revisit when: a later gate opens supervised FCPXML/EDL/Resolve writer output
+  or explicit editor execution evidence import
+
+### DEC-045: Editor package is handoff evidence, not applied edits
+
+- Recorded: `2026-07-01`
+- Status: `active`
+- Decision: V0-045 adds `editor-package` to translate current canonical
+  timeline, optional BGM fit, rhythm plan, edit guidance, and operator runbook
+  evidence into JSON, Markdown, CSV cue sheet, and handoff instructions for
+  human/NLE follow-up
+- Rationale: a usable video-editing Skill needs a concrete cut sheet before it
+  can safely open NLE-specific export or supervised execution
+- Consequence: editor packages may instruct and bind evidence, but they cannot
+  render media, mutate timelines, move edit points, execute editor actions,
+  select or fit music automatically, call models, access the network, or claim
+  edits were applied
+- Revisit when: a later gate opens FCPXML/EDL/DaVinci export or explicit editor
+  execution evidence import
+
+### DEC-044: Operator runbook is a read-only control surface
+
+- Recorded: `2026-06-30`
+- Status: `active`
+- Decision: V0-044 adds `operator` to summarize current project state,
+  workflow, acceptance, BGM, rhythm, media validation, repair, and manual
+  guidance evidence into one operator-facing runbook and handoff packet
+- Rationale: the project now has many reliable artifacts, but final usability
+  requires one place to answer "where are we, what evidence exists, and what is
+  the next manual command" without confusing guidance with execution
+- Consequence: the operator runbook may point to commands and artifacts, but it
+  cannot execute commands, auto-run pipeline stages, render media, mutate
+  timelines, move edit points, select or fit music automatically, call models,
+  access the network, or promote repair evidence as acceptance success
+- Revisit when: a later gate opens a supervised execution mode with explicit
+  user approval and separate audit semantics
+
 ### DEC-042: BGM rhythm intelligence is review evidence, not automatic editing
 
 - Recorded: `2026-06-30`

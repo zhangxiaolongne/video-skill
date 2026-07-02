@@ -1,0 +1,11 @@
+{
+  "intent_id": "golden_rhythm_intent_v1",
+  "mode": "speech_first",
+  "pacing": "medium",
+  "text_density": "low",
+  "transition_style": "smooth",
+  "ending_style": "fade_out",
+  "notes": "Golden baseline keeps speech readability ahead of BGM energy.",
+  "model_call_performed_by_cli": false,
+  "network_performed": false
+}

@@ -1,0 +1,335 @@
+{
+  "$defs": {
+    "FcpxmlDraftClip": {
+      "additionalProperties": false,
+      "properties": {
+        "asset_id": {
+          "minLength": 1,
+          "title": "Asset Id",
+          "type": "string"
+        },
+        "clip_id": {
+          "minLength": 1,
+          "title": "Clip Id",
+          "type": "string"
+        },
+        "duration_seconds": {
+          "exclusiveMinimum": 0,
+          "title": "Duration Seconds",
+          "type": "number"
+        },
+        "evidence_refs": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Evidence Refs",
+          "type": "array"
+        },
+        "mapping_id": {
+          "minLength": 1,
+          "title": "Mapping Id",
+          "type": "string"
+        },
+        "name": {
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "offset_seconds": {
+          "minimum": 0,
+          "title": "Offset Seconds",
+          "type": "number"
+        },
+        "relink_required": {
+          "default": true,
+          "title": "Relink Required",
+          "type": "boolean"
+        },
+        "source_duration_seconds": {
+          "exclusiveMinimum": 0,
+          "title": "Source Duration Seconds",
+          "type": "number"
+        },
+        "source_id": {
+          "minLength": 1,
+          "title": "Source Id",
+          "type": "string"
+        },
+        "source_start_seconds": {
+          "minimum": 0,
+          "title": "Source Start Seconds",
+          "type": "number"
+        },
+        "warning_count": {
+          "minimum": 0,
+          "title": "Warning Count",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "clip_id",
+        "mapping_id",
+        "asset_id",
+        "name",
+        "offset_seconds",
+        "duration_seconds",
+        "source_start_seconds",
+        "source_duration_seconds",
+        "source_id",
+        "warning_count"
+      ],
+      "title": "FcpxmlDraftClip",
+      "type": "object"
+    },
+    "FcpxmlDraftMarker": {
+      "additionalProperties": false,
+      "properties": {
+        "category": {
+          "minLength": 1,
+          "title": "Category",
+          "type": "string"
+        },
+        "duration_seconds": {
+          "minimum": 0,
+          "title": "Duration Seconds",
+          "type": "number"
+        },
+        "evidence_refs": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Evidence Refs",
+          "type": "array"
+        },
+        "mapping_id": {
+          "minLength": 1,
+          "title": "Mapping Id",
+          "type": "string"
+        },
+        "marker_id": {
+          "minLength": 1,
+          "title": "Marker Id",
+          "type": "string"
+        },
+        "name": {
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "note": {
+          "minLength": 1,
+          "title": "Note",
+          "type": "string"
+        },
+        "offset_seconds": {
+          "minimum": 0,
+          "title": "Offset Seconds",
+          "type": "number"
+        },
+        "priority": {
+          "minLength": 1,
+          "title": "Priority",
+          "type": "string"
+        }
+      },
+      "required": [
+        "marker_id",
+        "mapping_id",
+        "name",
+        "note",
+        "offset_seconds",
+        "duration_seconds",
+        "priority",
+        "category"
+      ],
+      "title": "FcpxmlDraftMarker",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "audio_note_count": {
+      "minimum": 0,
+      "title": "Audio Note Count",
+      "type": "integer"
+    },
+    "audio_notes": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Audio Notes",
+      "type": "array"
+    },
+    "automatic_bgm_fit": {
+      "default": false,
+      "title": "Automatic Bgm Fit",
+      "type": "boolean"
+    },
+    "automatic_music_selection": {
+      "default": false,
+      "title": "Automatic Music Selection",
+      "type": "boolean"
+    },
+    "blocked_reasons": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Blocked Reasons",
+      "type": "array"
+    },
+    "clip_count": {
+      "minimum": 0,
+      "title": "Clip Count",
+      "type": "integer"
+    },
+    "clips": {
+      "items": {
+        "$ref": "#/$defs/FcpxmlDraftClip"
+      },
+      "title": "Clips",
+      "type": "array"
+    },
+    "commands_executed": {
+      "default": false,
+      "title": "Commands Executed",
+      "type": "boolean"
+    },
+    "draft_ref": {
+      "minLength": 1,
+      "title": "Draft Ref",
+      "type": "string"
+    },
+    "edit_points_moved": {
+      "default": false,
+      "title": "Edit Points Moved",
+      "type": "boolean"
+    },
+    "editor_package_id": {
+      "minLength": 1,
+      "title": "Editor Package Id",
+      "type": "string"
+    },
+    "fcpxml_draft_id": {
+      "minLength": 1,
+      "title": "Fcpxml Draft Id",
+      "type": "string"
+    },
+    "fcpxml_version": {
+      "minLength": 1,
+      "title": "Fcpxml Version",
+      "type": "string"
+    },
+    "forbidden_capabilities": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Forbidden Capabilities",
+      "type": "array"
+    },
+    "frame_rate": {
+      "exclusiveMinimum": 0,
+      "title": "Frame Rate",
+      "type": "number"
+    },
+    "image_generation_or_editing_used": {
+      "default": false,
+      "title": "Image Generation Or Editing Used",
+      "type": "boolean"
+    },
+    "import_verified": {
+      "default": false,
+      "title": "Import Verified",
+      "type": "boolean"
+    },
+    "marker_count": {
+      "minimum": 0,
+      "title": "Marker Count",
+      "type": "integer"
+    },
+    "markers": {
+      "items": {
+        "$ref": "#/$defs/FcpxmlDraftMarker"
+      },
+      "title": "Markers",
+      "type": "array"
+    },
+    "media_rendered": {
+      "default": false,
+      "title": "Media Rendered",
+      "type": "boolean"
+    },
+    "model_call_performed_by_cli": {
+      "default": false,
+      "title": "Model Call Performed By Cli",
+      "type": "boolean"
+    },
+    "network_performed": {
+      "default": false,
+      "title": "Network Performed",
+      "type": "boolean"
+    },
+    "nle_import_performed": {
+      "default": false,
+      "title": "Nle Import Performed",
+      "type": "boolean"
+    },
+    "nle_plan_id": {
+      "minLength": 1,
+      "title": "Nle Plan Id",
+      "type": "string"
+    },
+    "project_id": {
+      "minLength": 1,
+      "title": "Project Id",
+      "type": "string"
+    },
+    "relink_required": {
+      "default": true,
+      "title": "Relink Required",
+      "type": "boolean"
+    },
+    "schema_version": {
+      "default": "0.3",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "status": {
+      "pattern": "^(ready|warning|blocked)$",
+      "title": "Status",
+      "type": "string"
+    },
+    "timeline_mutated": {
+      "default": false,
+      "title": "Timeline Mutated",
+      "type": "boolean"
+    },
+    "validation_ref": {
+      "minLength": 1,
+      "title": "Validation Ref",
+      "type": "string"
+    },
+    "warnings": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Warnings",
+      "type": "array"
+    }
+  },
+  "required": [
+    "fcpxml_draft_id",
+    "project_id",
+    "nle_plan_id",
+    "editor_package_id",
+    "status",
+    "frame_rate",
+    "fcpxml_version",
+    "draft_ref",
+    "validation_ref",
+    "clip_count",
+    "marker_count",
+    "audio_note_count"
+  ],
+  "title": "FcpxmlDraft",
+  "type": "object"
+}

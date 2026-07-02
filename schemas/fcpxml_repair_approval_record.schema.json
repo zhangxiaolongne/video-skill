@@ -1,0 +1,167 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "approval_record_id": {
+      "minLength": 1,
+      "title": "Approval Record Id",
+      "type": "string"
+    },
+    "approved_action_ids": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Approved Action Ids",
+      "type": "array"
+    },
+    "approved_by": {
+      "minLength": 1,
+      "title": "Approved By",
+      "type": "string"
+    },
+    "automatic_bgm_fit_by_cli": {
+      "default": false,
+      "title": "Automatic Bgm Fit By Cli",
+      "type": "boolean"
+    },
+    "automatic_music_selection_by_cli": {
+      "default": false,
+      "title": "Automatic Music Selection By Cli",
+      "type": "boolean"
+    },
+    "candidate_bytes": {
+      "default": 0,
+      "minimum": 0,
+      "title": "Candidate Bytes",
+      "type": "integer"
+    },
+    "candidate_sha256": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Candidate Sha256"
+    },
+    "commands_executed_by_cli": {
+      "default": false,
+      "title": "Commands Executed By Cli",
+      "type": "boolean"
+    },
+    "edit_points_moved_by_cli": {
+      "default": false,
+      "title": "Edit Points Moved By Cli",
+      "type": "boolean"
+    },
+    "fcpxml_draft_id": {
+      "minLength": 1,
+      "title": "Fcpxml Draft Id",
+      "type": "string"
+    },
+    "fcpxml_import_review_id": {
+      "minLength": 1,
+      "title": "Fcpxml Import Review Id",
+      "type": "string"
+    },
+    "fcpxml_repair_plan_id": {
+      "minLength": 1,
+      "title": "Fcpxml Repair Plan Id",
+      "type": "string"
+    },
+    "image_generation_or_editing_used_by_cli": {
+      "default": false,
+      "title": "Image Generation Or Editing Used By Cli",
+      "type": "boolean"
+    },
+    "invalid_reasons": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Invalid Reasons",
+      "type": "array"
+    },
+    "media_rendered_by_cli": {
+      "default": false,
+      "title": "Media Rendered By Cli",
+      "type": "boolean"
+    },
+    "model_call_performed_by_cli": {
+      "default": false,
+      "title": "Model Call Performed By Cli",
+      "type": "boolean"
+    },
+    "network_performed_by_cli": {
+      "default": false,
+      "title": "Network Performed By Cli",
+      "type": "boolean"
+    },
+    "nle_import_performed_by_cli": {
+      "default": false,
+      "title": "Nle Import Performed By Cli",
+      "type": "boolean"
+    },
+    "project_id": {
+      "minLength": 1,
+      "title": "Project Id",
+      "type": "string"
+    },
+    "quarantine_ref": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Quarantine Ref"
+    },
+    "rejected_action_ids": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Rejected Action Ids",
+      "type": "array"
+    },
+    "repair_success_claimed_by_cli": {
+      "default": false,
+      "title": "Repair Success Claimed By Cli",
+      "type": "boolean"
+    },
+    "schema_version": {
+      "default": "0.3",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "source_relink_performed_by_cli": {
+      "default": false,
+      "title": "Source Relink Performed By Cli",
+      "type": "boolean"
+    },
+    "status": {
+      "pattern": "^(passed|failed)$",
+      "title": "Status",
+      "type": "string"
+    },
+    "timeline_mutated_by_cli": {
+      "default": false,
+      "title": "Timeline Mutated By Cli",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "approval_record_id",
+    "project_id",
+    "fcpxml_repair_plan_id",
+    "fcpxml_draft_id",
+    "fcpxml_import_review_id",
+    "approved_by",
+    "status"
+  ],
+  "title": "FcpxmlRepairApprovalRecord",
+  "type": "object"
+}

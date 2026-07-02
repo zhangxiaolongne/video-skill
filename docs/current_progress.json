@@ -1,7 +1,7 @@
 {
   "schema_version": "1.4",
-  "capability_gate": "V0-043",
-  "milestone": "V0-043 phrase-level manual edit guidance gate",
+  "capability_gate": "V0-051",
+  "milestone": "V0-051 FCPXML repair execution evidence import gate",
   "documentation_system": {
     "master": "artist_portrait_editor_revision5_optimized.md",
     "current_progress": "docs/DEVELOPMENT_PROGRESS.md",
@@ -13,18 +13,72 @@
     "historical_readiness_policy": "consolidated_in_release_ledger"
   },
   "active_batch": {
-    "id": "V0-043",
-    "name": "Phrase-level manual edit guidance gate",
+    "id": "ACCEPTANCE-STAGE-06",
+    "name": "Release candidate and publication",
     "status": "completed",
-    "started": "2026-06-30",
-    "capability_gate": "V0-043",
+    "started": "2026-07-02",
+    "capability_gate": "V0-051",
+    "acceptance_stage": "6_of_6",
     "commit_policy": "local_until_large_functional_checkpoint"
   },
   "batch_contract_audit": {
     "status": "passed",
     "issue": "ISSUE-014",
-    "reason": "V0-043 tasks were audited before implementation and each task maps to user-visible phrase-level manual edit guidance, not to isolated fields, schemas, tests, or docs.",
-    "required_next_batch_rule": "Before editing, list at least ten proposed countable version outcomes with explicit countability rationale; if fewer than ten survive audit, stop and request gate promotion."
+    "reason": "ACCEPTANCE-STAGE-06 was audited before implementation and closes the release-candidate validation and publication-readiness gap, not isolated fields, schemas, tests, or docs.",
+    "required_next_batch_rule": "Before editing, either select one named final-acceptance stage or list at least ten proposed countable version outcomes with explicit countability rationale; if neither survives audit, stop and request gate promotion."
+  },
+  "final_acceptance": {
+    "current_stage": "ACCEPTANCE-STAGE-06",
+    "stage_count": 6,
+    "technical_substrate_completion_pct": 100,
+    "final_usability_completion_pct": 100,
+    "definition_of_done": [
+      "operator path has one obvious next step at every point",
+      "creative path keeps proposal, timeline, text, BGM, rhythm, transitions, preview, and export connected",
+      "media path supports direct audio, video-extracted audio, embedded audio, multiple candidates, and no-file-yet planning with provenance",
+      "delivery path produces or explicitly blocks preview MP4, final MP4, editor package, cue sheet, FCPXML, NLE maps, and handoff docs",
+      "evidence path imports and reviews external workflow/NLE evidence without promoting unverified success",
+      "release path checks package validation, install simulation, full tests, Git state, tag, and remote freshness"
+    ],
+    "stages": [
+      {
+        "id": "ACCEPTANCE-STAGE-01",
+        "name": "Final acceptance target refactor",
+        "status": "completed",
+        "exit_criteria": "Final acceptance dimensions, remaining stage map, blockers, and anti-fragmentation checks are recorded and validated"
+      },
+      {
+        "id": "ACCEPTANCE-STAGE-02",
+        "name": "Guided creator workflow",
+        "status": "completed",
+        "exit_criteria": "One primary guided path can tell the user the next command from raw materials through reviewable deliverables"
+      },
+      {
+        "id": "ACCEPTANCE-STAGE-03",
+        "name": "Golden real-project baseline",
+        "status": "completed",
+        "exit_criteria": "A deterministic golden project proves proposal, timeline, BGM, preview, final export, packages, and acceptance reports together"
+      },
+      {
+        "id": "ACCEPTANCE-STAGE-04",
+        "name": "BGM and rhythm quality pass",
+        "status": "completed",
+        "exit_criteria": "Direct audio, extracted video audio, embedded audio, multiple candidates, rhythm fit, transitions, text timing, and review guidance are evaluated as one music/editing pass"
+      },
+      {
+        "id": "ACCEPTANCE-STAGE-05",
+        "name": "NLE round-trip readiness",
+        "status": "completed",
+        "exit_criteria": "FCPXML/NLE package, relink guidance, import review, repair refresh, and operator handback form one supervised workflow"
+      },
+      {
+        "id": "ACCEPTANCE-STAGE-06",
+        "name": "Release candidate and publication",
+        "status": "completed",
+        "exit_criteria": "Full validation, install simulation, docs, commit, tag, push, and GitHub state are intentional and recorded"
+      }
+    ],
+    "next_stage": null
   },
   "capability_progress": {
     "media_foundation": "completed",
@@ -62,7 +116,19 @@
     "release_hardening": "completed",
     "workflow_repair_refresh_guidance": "completed",
     "bgm_rhythm_intelligence": "completed",
-    "phrase_level_edit_guidance": "completed"
+    "phrase_level_edit_guidance": "completed",
+    "operator_runbook_usability": "completed",
+    "editor_package_handoff": "completed",
+    "nle_interchange_planning": "completed",
+    "supervised_fcpxml_draft_writer": "completed",
+    "fcpxml_import_review_evidence": "completed",
+    "fcpxml_repair_planning": "completed",
+    "fcpxml_repair_approval_dry_run": "completed",
+    "fcpxml_repair_execution_review": "completed",
+    "golden_real_project_baseline": "completed",
+    "bgm_rhythm_quality_pass": "completed",
+    "nle_roundtrip_readiness": "completed",
+    "release_candidate_publication": "completed"
   },
   "future_bgm_input_contract": {
     "status": "required_for_future_gate",
@@ -98,6 +164,7 @@
   },
   "development_batch_contract": {
     "minimum_version_tasks": 10,
+    "allows_single_named_acceptance_stage": true,
     "requires_named_capability_milestone": true,
     "requires_final_goal_delta": true,
     "gate_blocked_action": "stop_and_request_gate_promotion",
@@ -130,53 +197,53 @@
   },
   "tasks": [
     {
-      "id": "V043-01",
-      "name": "manual edit guidance CLI",
+      "id": "AS6-01",
+      "name": "release version target proof",
       "status": "completed"
     },
     {
-      "id": "V043-02",
-      "name": "subtitle entrance guidance",
+      "id": "AS6-02",
+      "name": "package preflight proof",
       "status": "completed"
     },
     {
-      "id": "V043-03",
-      "name": "transition review guidance",
+      "id": "AS6-03",
+      "name": "canonical install simulation proof",
       "status": "completed"
     },
     {
-      "id": "V043-04",
-      "name": "pause and breathing-room guidance",
+      "id": "AS6-04",
+      "name": "full validation proof",
       "status": "completed"
     },
     {
-      "id": "V043-05",
-      "name": "ducking review guidance",
+      "id": "AS6-05",
+      "name": "release candidate audit proof",
       "status": "completed"
     },
     {
-      "id": "V043-06",
-      "name": "BGM phrase reference guidance",
+      "id": "AS6-06",
+      "name": "Git publication-state proof",
       "status": "completed"
     },
     {
-      "id": "V043-07",
-      "name": "cut-to-cue manual review guidance",
+      "id": "AS6-07",
+      "name": "release ledger closeout proof",
       "status": "completed"
     },
     {
-      "id": "V043-08",
-      "name": "ending style guidance",
+      "id": "AS6-08",
+      "name": "final-goal completion proof",
       "status": "completed"
     },
     {
-      "id": "V043-09",
-      "name": "source risk and QC repair guidance",
+      "id": "AS6-09",
+      "name": "publication boundary proof",
       "status": "completed"
     },
     {
-      "id": "V043-10",
-      "name": "manual handoff and no-mutation audit",
+      "id": "AS6-10",
+      "name": "post-release handoff proof",
       "status": "completed"
     }
   ],
@@ -220,6 +287,18 @@
     "workflow_repair_refresh_guidance": true,
     "bgm_rhythm_intelligence": true,
     "phrase_level_edit_guidance": true,
-    "automatic_beat_synced_editing": false
+    "operator_runbook_usability": true,
+    "editor_package_handoff": true,
+    "automatic_beat_synced_editing": false,
+    "nle_interchange_planning": true,
+    "supervised_fcpxml_draft_writer": true,
+    "fcpxml_import_review_evidence": true,
+    "fcpxml_repair_planning": true,
+    "fcpxml_repair_approval_dry_run": true,
+    "fcpxml_repair_execution_review": true,
+    "golden_real_project_baseline": true,
+    "bgm_rhythm_quality_pass": true,
+    "nle_roundtrip_readiness": true,
+    "release_candidate_publication": true
   }
 }
