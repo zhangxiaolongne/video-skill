@@ -33,12 +33,12 @@ readiness and gate-progress fragments must not be recreated.
 - Current acceptance stage: `ACCEPTANCE-STAGE-06 Release candidate and publication`
 - Current batch: `ACCEPTANCE-STAGE-06`
 - Batch status: `completed`
-- Current release marker: local target `v0.28.0`
-- Latest published baseline: `v0.27.0`
-- Release publication state: peeled `v0.27.0` verified at
-  `473da7388805cf3ea5c806c031f3822ea7a5ce0f`; annotated tag object
-  `baf4a4ef2ef77bbd127033626c16e367994cb2a9`; `main` contains the
-  post-release publication ledger
+- Current release marker: published `v0.28.0`
+- Latest published baseline: `v0.28.0`
+- Release publication state: peeled `v0.28.0` verified at
+  `d3f5e7379620325132be0b0586551dffc3c21291`; annotated tag object
+  `9b77b6681d82bf5c78beebb4f8f6b37e9f70eb17`; remote `main` also points to
+  `d3f5e7379620325132be0b0586551dffc3c21291`
 - Final usable Skill status: foundation, creative proposals, canonical timeline,
   BGM fitting, and local low-resolution preview rendering are substantial;
   preview quality review, render controls, controlled local final export, and
@@ -60,7 +60,7 @@ readiness and gate-progress fragments must not be recreated.
   FCPXML repair approval/dry-run packaging, FCPXML repair execution evidence
   review, the golden real-project baseline, the BGM/rhythm quality pass, and
   the supervised NLE round-trip readiness pass are substantial;
-  latest published release is `v0.27.0`; final acceptance is organized into six
+  latest published release is `v0.28.0`; final acceptance is organized into six
   stages and Stage 6 now validates the release-candidate path on top of
   editor/NLE/FCPXML package readiness,
   relink-required boundaries, external import-review evidence, repair approval
@@ -83,7 +83,7 @@ installation with explicit boundaries and deterministic validation.
 | `ACCEPTANCE-STAGE-03` Golden real-project baseline | `completed` | Tests use generated fixtures, not a realistic creator-facing sample project | A deterministic golden project proves proposal, timeline, BGM, preview, final export, packages, and acceptance reports together |
 | `ACCEPTANCE-STAGE-04` BGM and rhythm quality pass | `completed` | BGM is handled technically but not yet enough like editing logic | Direct audio, extracted video audio, embedded audio, multiple candidates, rhythm fit, transitions, text timing, and review guidance are evaluated as one music/editing pass |
 | `ACCEPTANCE-STAGE-05` NLE round-trip readiness | `completed` | FCPXML evidence exists but the editor-facing handoff is not yet a complete round-trip package | FCPXML/NLE package, relink guidance, import review, repair refresh, and operator handback form one supervised workflow |
-| `ACCEPTANCE-STAGE-06` Release candidate and publication | `completed` | V0-044 through V0-051 remain local and unpublished | Full validation, install simulation, docs, commit, tag, push, and GitHub state are intentional and recorded |
+| `ACCEPTANCE-STAGE-06` Release candidate and publication | `completed` | V0-044 through V0-051 needed release-candidate publication | Full validation, install simulation, docs, commit, tag, push, and GitHub state are intentional and recorded |
 
 Final acceptance dimensions:
 

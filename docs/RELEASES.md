@@ -9,11 +9,11 @@ gate-progress, or closeout fragments.
 
 - Capability gate: `V0-051`
 - Active local batch: `ACCEPTANCE-STAGE-06 Release candidate and publication`
-- Current release marker: local target `v0.28.0`
-- Release date: `2026-06-30`
-- Release commit subject: `Release artist portrait editor v0.27.0`
-- Previous published baseline:
-  `d7dcab6430db4f0a6845079cebcd22cfbb85e74e`
+- Current release marker: published `v0.28.0`
+- Release date: `2026-07-02`
+- Release commit subject: `Release artist portrait editor v0.28.0`
+- Current published baseline:
+  `d3f5e7379620325132be0b0586551dffc3c21291`
 - Completed in release `v0.24.0`: V0-010n through V0-010t, V0-010 foundation
   consolidation, proposal review hardening, `DEV-GOV-001`, V0-011, V0-012,
   V0-013, V0-014, V0-015, V0-016, V0-017, V0-018, V0-020, V0-021, V0-022,
@@ -22,17 +22,19 @@ gate-progress, or closeout fragments.
 - Completed in release `v0.25.0`: V0-025 through V0-041
 - Completed in release `v0.26.0`: V0-042
 - Completed in release `v0.27.0`: V0-043
-- Working-tree publication state: V0-044 through V0-051 plus
-  ACCEPTANCE-STAGE-01 through ACCEPTANCE-STAGE-06 are local unpublished work on
-  top of published `v0.27.0`
+- Completed in release `v0.28.0`: V0-044, V0-045, V0-046, V0-047, V0-048,
+  V0-049, V0-050, V0-051, ACCEPTANCE-STAGE-01, ACCEPTANCE-STAGE-02,
+  ACCEPTANCE-STAGE-03, ACCEPTANCE-STAGE-04, ACCEPTANCE-STAGE-05, and
+  ACCEPTANCE-STAGE-06
+- Working-tree publication state: clean after `v0.28.0` release publication
 - Governance state: ACCEPTANCE-STAGE-06 passed final-acceptance countability
   audit; V0-051 passed pre-implementation countability audit;
   V0-030 task accounting issue is resolved as `ISSUE-014`
-- Latest published capability release tag: `v0.27.0`
-- Remote freshness: peeled `v0.27.0` verified at
-  `473da7388805cf3ea5c806c031f3822ea7a5ce0f` after push; annotated tag object
-  `baf4a4ef2ef77bbd127033626c16e367994cb2a9`; `main` contains the
-  post-release publication ledger after tag publication
+- Latest published capability release tag: `v0.28.0`
+- Remote freshness: peeled `v0.28.0` verified at
+  `d3f5e7379620325132be0b0586551dffc3c21291` after push; annotated tag object
+  `9b77b6681d82bf5c78beebb4f8f6b37e9f70eb17`; remote `main` verified at
+  `d3f5e7379620325132be0b0586551dffc3c21291`
 - Publication policy: do not publish the next capability release until its
   release candidate has passed full local validation
 
@@ -41,8 +43,7 @@ gate-progress, or closeout fragments.
 Validation is updated only after the complete current working tree passes.
 
 - Verified: ACCEPTANCE-STAGE-06 release-candidate validation passed on
-  `2026-07-02`; publication remains pending until the completed batch is
-  committed and tagged as `v0.28.0`
+  `2026-07-02`; `v0.28.0` is committed, tagged, pushed, and remote-verified
 - Full pytest: passed with `290 passed` for combined local V0-044/V0-051 stack
 - Project checks: `run_checks.py --skip-pytest` passed including golden
   baseline, BGM/rhythm quality, NLE round-trip readiness, and release-candidate
@@ -91,7 +92,10 @@ Validation is updated only after the complete current working tree passes.
   BGM/rhythm quality, NLE round-trip readiness, and release-candidate
   publication checks; Python compile, JSON validation, Skill validation, schema
   drift, and diff hygiene passed
-- Git: not released yet; publication step pending final commit/tag/push
+- Git: published as `v0.28.0`; release commit
+  `d3f5e7379620325132be0b0586551dffc3c21291`, annotated tag object
+  `9b77b6681d82bf5c78beebb4f8f6b37e9f70eb17`, and remote `main`/peeled tag
+  both verified at `d3f5e7379620325132be0b0586551dffc3c21291`
 
 ### ACCEPTANCE-STAGE-05 NLE Round-Trip Readiness
 

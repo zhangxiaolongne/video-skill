@@ -77,6 +77,8 @@ support work inside the stage.
 - Accepted boundary: Stage 6 release checks do not themselves commit, tag, push,
   call models, access the network, render media, mutate timelines, use image
   generation/editing, or execute NLE operations
-- Release action: publication pending final Git commit/tag/push step until this
-  completed batch is committed and tagged as `v0.28.0`
+- Release action: published as `v0.28.0`; release commit
+  `d3f5e7379620325132be0b0586551dffc3c21291`, annotated tag object
+  `9b77b6681d82bf5c78beebb4f8f6b37e9f70eb17`, and remote `main`/peeled tag
+  both verified at `d3f5e7379620325132be0b0586551dffc3c21291`
 - Next batch: post-release maintenance only
