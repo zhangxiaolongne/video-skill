@@ -192,7 +192,7 @@ def test_issue_decision_and_release_ledgers_have_required_contracts():
     assert "Current Release State" in releases
     assert "Current Validation" in releases
     assert "Do not recreate per-version readiness" in releases
-    assert "d3f5e7379620325132be0b0586551dffc3c21291" in releases
+    assert "v0.30.0" in releases
     assert "docs/archive/DECISIONS_HISTORY.md" not in releases
     assert "Full\nrelease history" not in releases
 
@@ -208,10 +208,10 @@ def test_machine_readable_progress_matches_current_dashboard():
     assert payload["active_batch"]["id"] == "V2-01"
     assert payload["active_batch"]["status"] == "planned"
     assert payload["active_batch"]["acceptance_stage"] is None
-    assert payload["latest_release"]["tag"] == "v0.29.0"
+    assert payload["latest_release"]["tag"] == "v0.30.0"
     assert payload["latest_release"]["status"] == "published"
     assert payload["latest_release"]["release_commit"] == (
-        "fb723b2d13114b5b2885a19c1a06bdccd4cf02ca"
+        "e80393915e0c850f119e9181d2bd5120f1504c4c"
     )
     assert payload["archive_policy"]["decision_history"] == (
         "docs/archive/DECISIONS_HISTORY.md"

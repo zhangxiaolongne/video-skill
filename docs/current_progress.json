@@ -27,19 +27,19 @@
     "commit_policy": "commit_tag_and_push_only_after_v2_01_capability_and_validation_close_as_one_version"
   },
   "latest_release": {
-    "tag": "v0.29.0",
+    "tag": "v0.30.0",
     "status": "published",
-    "release_commit": "fb723b2d13114b5b2885a19c1a06bdccd4cf02ca",
-    "tag_object": "84ab1f9cc60e1445447badd6858a62031b57133c",
-    "remote_main_publication_ledger": "4bd44ca793755689689689c2fa100113b9f09a80f88",
-    "scope": "V1-01 through V1-08 aesthetic editing baseline and revision promotion"
+    "release_commit": "e80393915e0c850f119e9181d2bd5120f1504c4c",
+    "tag_object": "7ed5f14b7b7bfd12a62d508d23abfc7ac9b7b6be",
+    "remote_main_publication_ledger": "pending_force_push",
+    "scope": "Single-root architecture baseline preserving the V1 capability surface and completing the refactor"
   },
   "latest_local_validation": {
     "date": "2026-07-10",
     "full_pytest": ".venv/bin/python -m pytest passed with 239 passed",
     "project_checks": ".venv/bin/python run_checks.py passed after proposal/workflow/acceptance/FCPXML/BGM JSON-chain convergence and workspace diagnostics extraction",
-    "release_candidate": ".venv/bin/python scripts/run_release_candidate.py --allow-dirty --json passed with expected dirty warning from uncommitted supporting work",
-    "current_doc_followup": "V2 audit, capacity refactor, workspace modularization, direct dependency imports, and proposal/workflow/acceptance/FCPXML/BGM JSON convergence passed locally; not a published capability release"
+    "release_candidate": ".venv/bin/python scripts/run_release_candidate.py --allow-dirty --json passed before the single-root history reset; rerun after publication ledger commit",
+    "current_doc_followup": "Single-root v0.30.0 architecture baseline created locally; force-push and object verification are pending"
   },
   "capability_summary": {
     "engineering_substrate": "published",

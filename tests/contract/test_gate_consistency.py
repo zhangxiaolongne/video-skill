@@ -20,7 +20,7 @@ def test_current_gate_is_consistent_across_primary_docs():
     assert f"Current active gate: {gate}" in progress
     assert "`V2-01` Real Video Aesthetic Baseline" in progress
     assert "Current published capability work: `V1-08 Revision promotion, revised render" in readme
-    assert "release is `v0.29.0`." in readme
+    assert "release baseline is `v0.30.0`." in readme
     assert "Current acceptance stage: `ACCEPTANCE-STAGE-06` completed" in progress
 
 

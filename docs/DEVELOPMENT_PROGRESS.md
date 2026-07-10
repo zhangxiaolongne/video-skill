@@ -18,11 +18,11 @@ issue tracker, or master strategy document.
 
 - Current active gate: V2-01 Real Video Aesthetic Baseline
 - Current batch: `V2-01` Real Video Aesthetic Baseline, status `planned`
-- Latest published release: `v0.29.0`
+- Latest published release baseline: `v0.30.0`
 - Current published capability work: V1-08 revision promotion and V1 release
   packaging
 - Current acceptance stage: `ACCEPTANCE-STAGE-06` completed and published in
-  `v0.29.0`
+  `v0.30.0`
 - Next release policy: no commit, tag, or push until V2-01 closes as a real
   capability version and the user approves publication
 

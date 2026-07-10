@@ -13,7 +13,7 @@
 
 ## Stage Outcome
 
-Before this stage, `v0.29.0` can run a complete engineering pipeline and can
+Before this stage, the retained `v0.30.0` baseline can run a complete engineering pipeline and can
 promote revised timelines, but the real-video trial still shows weak editing
 judgment: fixed-window bias, shallow content understanding, raw source-layout
 retention in the final frame, incomplete BGM rhythm judgment, and no mature

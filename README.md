@@ -85,11 +85,11 @@ release-candidate validation path:
 ## Current Final-Acceptance Stage
 
 Current published capability work: `V1-08 Revision promotion, revised render
-readiness, and V1 release packaging` in `v0.29.0`.
+readiness, and V1 release packaging` in the retained `v0.30.0` baseline.
 Current active planning gate: `V2-01 Real Video Aesthetic Baseline`.
 The latest published acceptance release remains `ACCEPTANCE-STAGE-06 Release
 candidate and publication` in `v0.28.0`; the latest published V1 capability
-release is `v0.29.0`.
+release baseline is `v0.30.0`.
 The project is no longer treating isolated artifacts, schemas,
 reports, packets, review rules, or individual tests as major progress toward
 final usability. Remaining acceptance work was organized into six stages; Stage
