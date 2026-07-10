@@ -1,0 +1,193 @@
+{
+  "$defs": {
+    "FcpxmlImportReviewIssue": {
+      "additionalProperties": false,
+      "properties": {
+        "category": {
+          "minLength": 1,
+          "title": "Category",
+          "type": "string"
+        },
+        "detail": {
+          "minLength": 1,
+          "title": "Detail",
+          "type": "string"
+        },
+        "issue_id": {
+          "minLength": 1,
+          "title": "Issue Id",
+          "type": "string"
+        },
+        "severity": {
+          "pattern": "^(info|warning|error)$",
+          "title": "Severity",
+          "type": "string"
+        }
+      },
+      "required": [
+        "issue_id",
+        "severity",
+        "category",
+        "detail"
+      ],
+      "title": "FcpxmlImportReviewIssue",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "application_name": {
+      "minLength": 1,
+      "title": "Application Name",
+      "type": "string"
+    },
+    "application_version": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Application Version"
+    },
+    "automatic_bgm_fit": {
+      "default": false,
+      "title": "Automatic Bgm Fit",
+      "type": "boolean"
+    },
+    "automatic_music_selection": {
+      "default": false,
+      "title": "Automatic Music Selection",
+      "type": "boolean"
+    },
+    "edit_points_moved": {
+      "default": false,
+      "title": "Edit Points Moved",
+      "type": "boolean"
+    },
+    "evidence_refs": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Evidence Refs",
+      "type": "array"
+    },
+    "fcpxml_draft_id": {
+      "minLength": 1,
+      "title": "Fcpxml Draft Id",
+      "type": "string"
+    },
+    "image_generation_or_editing_used": {
+      "default": false,
+      "title": "Image Generation Or Editing Used",
+      "type": "boolean"
+    },
+    "import_attempted": {
+      "title": "Import Attempted",
+      "type": "boolean"
+    },
+    "import_review_id": {
+      "minLength": 1,
+      "title": "Import Review Id",
+      "type": "string"
+    },
+    "import_succeeded": {
+      "title": "Import Succeeded",
+      "type": "boolean"
+    },
+    "issue_count": {
+      "minimum": 0,
+      "title": "Issue Count",
+      "type": "integer"
+    },
+    "issues": {
+      "items": {
+        "$ref": "#/$defs/FcpxmlImportReviewIssue"
+      },
+      "title": "Issues",
+      "type": "array"
+    },
+    "media_rendered": {
+      "default": false,
+      "title": "Media Rendered",
+      "type": "boolean"
+    },
+    "model_call_performed_by_cli": {
+      "default": false,
+      "title": "Model Call Performed By Cli",
+      "type": "boolean"
+    },
+    "network_performed": {
+      "default": false,
+      "title": "Network Performed",
+      "type": "boolean"
+    },
+    "nle_plan_id": {
+      "minLength": 1,
+      "title": "Nle Plan Id",
+      "type": "string"
+    },
+    "playback_checked": {
+      "default": false,
+      "title": "Playback Checked",
+      "type": "boolean"
+    },
+    "project_id": {
+      "minLength": 1,
+      "title": "Project Id",
+      "type": "string"
+    },
+    "relink_attempted": {
+      "default": false,
+      "title": "Relink Attempted",
+      "type": "boolean"
+    },
+    "relink_missing_count": {
+      "default": 0,
+      "minimum": 0,
+      "title": "Relink Missing Count",
+      "type": "integer"
+    },
+    "relink_succeeded": {
+      "default": false,
+      "title": "Relink Succeeded",
+      "type": "boolean"
+    },
+    "reviewed_by": {
+      "minLength": 1,
+      "title": "Reviewed By",
+      "type": "string"
+    },
+    "schema_version": {
+      "default": "0.3",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "timeline_mutated": {
+      "default": false,
+      "title": "Timeline Mutated",
+      "type": "boolean"
+    },
+    "timeline_opened": {
+      "default": false,
+      "title": "Timeline Opened",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "import_review_id",
+    "project_id",
+    "fcpxml_draft_id",
+    "nle_plan_id",
+    "reviewed_by",
+    "application_name",
+    "import_attempted",
+    "import_succeeded",
+    "issue_count"
+  ],
+  "title": "FcpxmlImportReviewCandidate",
+  "type": "object"
+}

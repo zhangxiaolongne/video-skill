@@ -1,0 +1,165 @@
+{
+  "schema_version": "1.5",
+  "capability_gate": "V2-01",
+  "milestone": "V2-01 Real Video Aesthetic Baseline",
+  "documentation_system": {
+    "master": "artist_portrait_editor_revision5_optimized.md",
+    "current_progress": "docs/DEVELOPMENT_PROGRESS.md",
+    "current_batch": "docs/CURRENT_BATCH.md",
+    "issues": "docs/ISSUES.md",
+    "decisions": "docs/DECISIONS.md",
+    "releases": "docs/RELEASES.md",
+    "machine_progress": "docs/current_progress.json",
+    "historical_readiness_policy": "consolidated_in_release_ledger"
+  },
+  "archive_policy": {
+    "decision_history": "docs/archive/DECISIONS_HISTORY.md",
+    "release_history": "docs/archive/RELEASES_HISTORY.md",
+    "current_files_keep_only": "active decisions, current validation, active batch, and next development direction"
+  },
+  "active_batch": {
+    "id": "V2-01",
+    "name": "Real Video Aesthetic Baseline",
+    "status": "planned",
+    "started": "2026-07-04",
+    "capability_gate": "V2-01",
+    "acceptance_stage": null,
+    "commit_policy": "commit_tag_and_push_only_after_v2_01_capability_and_validation_close_as_one_version"
+  },
+  "latest_release": {
+    "tag": "v0.29.0",
+    "status": "published",
+    "release_commit": "fb723b2d13114b5b2885a19c1a06bdccd4cf02ca",
+    "tag_object": "84ab1f9cc60e1445447badd6858a62031b57133c",
+    "remote_main_publication_ledger": "4bd44ca793755689689689c2fa100113b9f09a80f88",
+    "scope": "V1-01 through V1-08 aesthetic editing baseline and revision promotion"
+  },
+  "latest_local_validation": {
+    "date": "2026-07-10",
+    "full_pytest": ".venv/bin/python -m pytest passed with 239 passed",
+    "project_checks": ".venv/bin/python run_checks.py passed after proposal/workflow/acceptance/FCPXML/BGM JSON-chain convergence and workspace diagnostics extraction",
+    "release_candidate": ".venv/bin/python scripts/run_release_candidate.py --allow-dirty --json passed with expected dirty warning from uncommitted supporting work",
+    "current_doc_followup": "V2 audit, capacity refactor, workspace modularization, direct dependency imports, and proposal/workflow/acceptance/FCPXML/BGM JSON convergence passed locally; not a published capability release"
+  },
+  "capability_summary": {
+    "engineering_substrate": "published",
+    "v1_aesthetic_foundation": "published",
+    "real_video_aesthetic_maturity": "planned",
+    "current_gap": "end-to-end proof exists, but mature aesthetic editing, final-frame composition, and safe reframing on real footage are not yet proven"
+  },
+  "json_governance": {
+    "canonical_rule": "JSON is kept only for canonical machine truth, boundary evidence, generated schema contracts, media validation, run audit, or release-critical evidence.",
+    "merge_rule": "ordinary handoff, review, status, summary, and next-action JSON must be folded into existing artifacts or Markdown.",
+    "visibility_policy": "generated evidence remains visible unless the user approves deletion or a documented cleanup plan owns it"
+  },
+  "future_bgm_input_contract": {
+    "status": "required_for_future_gate",
+    "input_modes": [
+      "direct_audio",
+      "video_audio_extract",
+      "source_embedded_audio",
+      "multiple_candidates",
+      "none_yet"
+    ],
+    "required_provenance": [
+      "music_candidate_id",
+      "input_mode",
+      "source_ref",
+      "source_media_kind",
+      "extract_in",
+      "extract_out",
+      "audio_stream_index",
+      "content_hash",
+      "duration",
+      "rights_status",
+      "contains_speech",
+      "contains_vocals",
+      "contains_environment",
+      "contains_sound_effects",
+      "user_intent",
+      "analysis_status"
+    ],
+    "allows_unresolved_music_slot": true,
+    "video_extract_is_mixed_audio": true,
+    "video_extract_implies_clean_bgm": false,
+    "derived_audio_is_rebuildable_cache": true
+  },
+  "development_batch_contract": {
+    "minimum_version_tasks": 10,
+    "allows_single_named_acceptance_stage": true,
+    "requires_named_capability_milestone": true,
+    "requires_final_goal_delta": true,
+    "gate_blocked_action": "stop_and_request_gate_promotion",
+    "v0_010_ordinary_expansion_closed": true,
+    "small_task_non_counting_work": [
+      "isolated_fields",
+      "isolated_schemas_or_models",
+      "individual_tests_or_fixtures",
+      "documentation_only",
+      "local_refactors_or_file_moves",
+      "incidental_bug_fixes",
+      "isolated_diagnostics",
+      "isolated_review_rules"
+    ],
+    "major_version_eligible_work": [
+      "versioned_data_contract_migration",
+      "comprehensive_acceptance_or_evaluation_program",
+      "capability_enabling_architectural_refactor",
+      "major_defect_closure_or_release_hardening_program"
+    ]
+  },
+  "tasks": [
+    {
+      "id": "V201-01",
+      "status": "planned"
+    },
+    {
+      "id": "V201-02",
+      "status": "planned"
+    },
+    {
+      "id": "V201-03",
+      "status": "planned"
+    },
+    {
+      "id": "V201-04",
+      "status": "planned"
+    },
+    {
+      "id": "V201-05",
+      "status": "planned"
+    },
+    {
+      "id": "V201-06",
+      "status": "planned"
+    },
+    {
+      "id": "V201-07",
+      "status": "planned"
+    },
+    {
+      "id": "V201-08",
+      "status": "planned"
+    },
+    {
+      "id": "V201-09",
+      "status": "planned"
+    },
+    {
+      "id": "V201-10",
+      "status": "planned"
+    },
+    {
+      "id": "V201-11",
+      "status": "planned"
+    },
+    {
+      "id": "V201-12",
+      "status": "planned"
+    },
+    {
+      "id": "V201-13",
+      "status": "planned"
+    }
+  ]
+}

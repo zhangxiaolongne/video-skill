@@ -1,0 +1,206 @@
+{
+  "$defs": {
+    "RhythmRepairAction": {
+      "additionalProperties": false,
+      "properties": {
+        "action_id": {
+          "minLength": 1,
+          "title": "Action Id",
+          "type": "string"
+        },
+        "category": {
+          "pattern": "^(rhythm_plan|preview|final_export|bgm|rhythm_qc|review)$",
+          "title": "Category",
+          "type": "string"
+        },
+        "command": {
+          "minLength": 1,
+          "title": "Command",
+          "type": "string"
+        },
+        "executes_automatically": {
+          "default": false,
+          "title": "Executes Automatically",
+          "type": "boolean"
+        },
+        "expected_artifacts": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Expected Artifacts",
+          "type": "array"
+        },
+        "order": {
+          "minimum": 1,
+          "title": "Order",
+          "type": "integer"
+        },
+        "rationale": {
+          "minLength": 1,
+          "title": "Rationale",
+          "type": "string"
+        },
+        "reason_code": {
+          "minLength": 1,
+          "title": "Reason Code",
+          "type": "string"
+        },
+        "severity": {
+          "pattern": "^(required|optional)$",
+          "title": "Severity",
+          "type": "string"
+        }
+      },
+      "required": [
+        "action_id",
+        "order",
+        "category",
+        "reason_code",
+        "severity",
+        "command",
+        "rationale"
+      ],
+      "title": "RhythmRepairAction",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "acceptance_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Acceptance Id"
+    },
+    "acceptance_profile": {
+      "pattern": "^(standard|core|preview|delivery)$",
+      "title": "Acceptance Profile",
+      "type": "string"
+    },
+    "action_count": {
+      "minimum": 0,
+      "title": "Action Count",
+      "type": "integer"
+    },
+    "actions": {
+      "items": {
+        "$ref": "#/$defs/RhythmRepairAction"
+      },
+      "title": "Actions",
+      "type": "array"
+    },
+    "automatic_music_selection": {
+      "default": false,
+      "title": "Automatic Music Selection",
+      "type": "boolean"
+    },
+    "commands_executed": {
+      "default": false,
+      "title": "Commands Executed",
+      "type": "boolean"
+    },
+    "edit_points_moved": {
+      "default": false,
+      "title": "Edit Points Moved",
+      "type": "boolean"
+    },
+    "first_required_command": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "First Required Command"
+    },
+    "media_rendered": {
+      "default": false,
+      "title": "Media Rendered",
+      "type": "boolean"
+    },
+    "model_call_performed_by_cli": {
+      "default": false,
+      "title": "Model Call Performed By Cli",
+      "type": "boolean"
+    },
+    "network_performed": {
+      "default": false,
+      "title": "Network Performed",
+      "type": "boolean"
+    },
+    "optional_action_count": {
+      "minimum": 0,
+      "title": "Optional Action Count",
+      "type": "integer"
+    },
+    "project_id": {
+      "minLength": 1,
+      "title": "Project Id",
+      "type": "string"
+    },
+    "required_action_count": {
+      "minimum": 0,
+      "title": "Required Action Count",
+      "type": "integer"
+    },
+    "rhythm_plan_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Rhythm Plan Id"
+    },
+    "rhythm_qc_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Rhythm Qc Id"
+    },
+    "rhythm_repair_plan_id": {
+      "minLength": 1,
+      "title": "Rhythm Repair Plan Id",
+      "type": "string"
+    },
+    "schema_version": {
+      "default": "0.3",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "status": {
+      "pattern": "^(passed|warning|blocked)$",
+      "title": "Status",
+      "type": "string"
+    }
+  },
+  "required": [
+    "rhythm_repair_plan_id",
+    "project_id",
+    "acceptance_profile",
+    "action_count",
+    "required_action_count",
+    "optional_action_count",
+    "status"
+  ],
+  "title": "RhythmRepairPlan",
+  "type": "object"
+}

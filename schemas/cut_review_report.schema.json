@@ -1,0 +1,530 @@
+{
+  "$defs": {
+    "CutReviewIssue": {
+      "additionalProperties": false,
+      "properties": {
+        "diagnosis": {
+          "minLength": 1,
+          "title": "Diagnosis",
+          "type": "string"
+        },
+        "domain": {
+          "pattern": "^(opening|dead_space|ending|rhythm|audio|structure|media_qc|delivery)$",
+          "title": "Domain",
+          "type": "string"
+        },
+        "evidence_refs": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Evidence Refs",
+          "type": "array"
+        },
+        "issue_id": {
+          "minLength": 1,
+          "title": "Issue Id",
+          "type": "string"
+        },
+        "second_pass_action_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Second Pass Action Id"
+        },
+        "severity": {
+          "pattern": "^(info|warning|error)$",
+          "title": "Severity",
+          "type": "string"
+        },
+        "timeline_end": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Timeline End"
+        },
+        "timeline_start": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Timeline Start"
+        }
+      },
+      "required": [
+        "issue_id",
+        "domain",
+        "severity",
+        "diagnosis"
+      ],
+      "title": "CutReviewIssue",
+      "type": "object"
+    },
+    "SecondPassAction": {
+      "additionalProperties": false,
+      "properties": {
+        "action_id": {
+          "minLength": 1,
+          "title": "Action Id",
+          "type": "string"
+        },
+        "action_type": {
+          "pattern": "^(tighten_opening|trim_dead_space|strengthen_ending|adjust_transition|rebalance_audio|rerender_preview|rerender_final|manual_review)$",
+          "title": "Action Type",
+          "type": "string"
+        },
+        "command_hint": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Command Hint"
+        },
+        "edits_applied": {
+          "default": false,
+          "title": "Edits Applied",
+          "type": "boolean"
+        },
+        "evidence_refs": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Evidence Refs",
+          "type": "array"
+        },
+        "expected_effect": {
+          "minLength": 1,
+          "title": "Expected Effect",
+          "type": "string"
+        },
+        "manual_only": {
+          "default": true,
+          "title": "Manual Only",
+          "type": "boolean"
+        },
+        "order": {
+          "minimum": 1,
+          "title": "Order",
+          "type": "integer"
+        },
+        "priority": {
+          "pattern": "^(low|medium|high)$",
+          "title": "Priority",
+          "type": "string"
+        },
+        "rationale": {
+          "minLength": 1,
+          "title": "Rationale",
+          "type": "string"
+        },
+        "recommendation": {
+          "minLength": 1,
+          "title": "Recommendation",
+          "type": "string"
+        },
+        "timeline_end": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Timeline End"
+        },
+        "timeline_start": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Timeline Start"
+        }
+      },
+      "required": [
+        "action_id",
+        "order",
+        "action_type",
+        "priority",
+        "recommendation",
+        "rationale",
+        "expected_effect"
+      ],
+      "title": "SecondPassAction",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "audio_status": {
+      "pattern": "^(clean|review|conflict|unknown)$",
+      "title": "Audio Status",
+      "type": "string"
+    },
+    "automatic_bgm_fit": {
+      "default": false,
+      "title": "Automatic Bgm Fit",
+      "type": "boolean"
+    },
+    "automatic_music_selection": {
+      "default": false,
+      "title": "Automatic Music Selection",
+      "type": "boolean"
+    },
+    "commands_executed": {
+      "default": false,
+      "title": "Commands Executed",
+      "type": "boolean"
+    },
+    "cut_review_id": {
+      "minLength": 1,
+      "title": "Cut Review Id",
+      "type": "string"
+    },
+    "dead_space_status": {
+      "pattern": "^(clear|review|crowded|unknown)$",
+      "title": "Dead Space Status",
+      "type": "string"
+    },
+    "edit_guidance_fingerprint": {
+      "anyOf": [
+        {
+          "pattern": "^sha256:[0-9a-f]{64}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Edit Guidance Fingerprint"
+    },
+    "edit_guidance_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Edit Guidance Id"
+    },
+    "edit_points_moved": {
+      "default": false,
+      "title": "Edit Points Moved",
+      "type": "boolean"
+    },
+    "ending_status": {
+      "pattern": "^(strong|review|weak|unknown)$",
+      "title": "Ending Status",
+      "type": "string"
+    },
+    "final_export_validation_fingerprint": {
+      "anyOf": [
+        {
+          "pattern": "^sha256:[0-9a-f]{64}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Final Export Validation Fingerprint"
+    },
+    "final_export_validation_ref": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Final Export Validation Ref"
+    },
+    "first_second_pass_action": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "First Second Pass Action"
+    },
+    "high_priority_action_count": {
+      "minimum": 0,
+      "title": "High Priority Action Count",
+      "type": "integer"
+    },
+    "high_priority_issue_count": {
+      "minimum": 0,
+      "title": "High Priority Issue Count",
+      "type": "integer"
+    },
+    "image_generation_or_editing_used": {
+      "default": false,
+      "title": "Image Generation Or Editing Used",
+      "type": "boolean"
+    },
+    "issue_count": {
+      "minimum": 0,
+      "title": "Issue Count",
+      "type": "integer"
+    },
+    "issues": {
+      "items": {
+        "$ref": "#/$defs/CutReviewIssue"
+      },
+      "title": "Issues",
+      "type": "array"
+    },
+    "media_rendered": {
+      "default": false,
+      "title": "Media Rendered",
+      "type": "boolean"
+    },
+    "model_call_performed_by_cli": {
+      "default": false,
+      "title": "Model Call Performed By Cli",
+      "type": "boolean"
+    },
+    "network_performed": {
+      "default": false,
+      "title": "Network Performed",
+      "type": "boolean"
+    },
+    "opening_status": {
+      "pattern": "^(strong|review|weak|unknown)$",
+      "title": "Opening Status",
+      "type": "string"
+    },
+    "overall_assessment": {
+      "minLength": 1,
+      "title": "Overall Assessment",
+      "type": "string"
+    },
+    "preview_validation_fingerprint": {
+      "anyOf": [
+        {
+          "pattern": "^sha256:[0-9a-f]{64}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Preview Validation Fingerprint"
+    },
+    "preview_validation_ref": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Preview Validation Ref"
+    },
+    "project_id": {
+      "minLength": 1,
+      "title": "Project Id",
+      "type": "string"
+    },
+    "reviewed_media_scope": {
+      "pattern": "^(timeline_only|preview|final_export)$",
+      "title": "Reviewed Media Scope",
+      "type": "string"
+    },
+    "rhythm_media_qc_fingerprint": {
+      "anyOf": [
+        {
+          "pattern": "^sha256:[0-9a-f]{64}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Rhythm Media Qc Fingerprint"
+    },
+    "rhythm_media_qc_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Rhythm Media Qc Id"
+    },
+    "rhythm_plan_fingerprint": {
+      "anyOf": [
+        {
+          "pattern": "^sha256:[0-9a-f]{64}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Rhythm Plan Fingerprint"
+    },
+    "rhythm_plan_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Rhythm Plan Id"
+    },
+    "rhythm_status": {
+      "pattern": "^(aligned|review|conflict|unknown)$",
+      "title": "Rhythm Status",
+      "type": "string"
+    },
+    "schema_version": {
+      "default": "0.3",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "second_pass_action_count": {
+      "minimum": 0,
+      "title": "Second Pass Action Count",
+      "type": "integer"
+    },
+    "second_pass_actions": {
+      "items": {
+        "$ref": "#/$defs/SecondPassAction"
+      },
+      "title": "Second Pass Actions",
+      "type": "array"
+    },
+    "sound_decision_fingerprint": {
+      "anyOf": [
+        {
+          "pattern": "^sha256:[0-9a-f]{64}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Sound Decision Fingerprint"
+    },
+    "sound_decision_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Sound Decision Id"
+    },
+    "status": {
+      "pattern": "^(passed|warning|blocked)$",
+      "title": "Status",
+      "type": "string"
+    },
+    "timeline_fingerprint": {
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "title": "Timeline Fingerprint",
+      "type": "string"
+    },
+    "timeline_id": {
+      "minLength": 1,
+      "title": "Timeline Id",
+      "type": "string"
+    },
+    "timeline_mutated": {
+      "default": false,
+      "title": "Timeline Mutated",
+      "type": "boolean"
+    },
+    "timeline_ref": {
+      "minLength": 1,
+      "title": "Timeline Ref",
+      "type": "string"
+    },
+    "warnings": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Warnings",
+      "type": "array"
+    }
+  },
+  "required": [
+    "cut_review_id",
+    "project_id",
+    "timeline_id",
+    "timeline_ref",
+    "timeline_fingerprint",
+    "reviewed_media_scope",
+    "status",
+    "overall_assessment",
+    "opening_status",
+    "dead_space_status",
+    "ending_status",
+    "rhythm_status",
+    "audio_status",
+    "issue_count",
+    "high_priority_issue_count",
+    "second_pass_action_count",
+    "high_priority_action_count"
+  ],
+  "title": "CutReviewReport",
+  "type": "object"
+}

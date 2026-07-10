@@ -1,0 +1,380 @@
+{
+  "$defs": {
+    "OperatorArtifactStatus": {
+      "additionalProperties": false,
+      "properties": {
+        "artifact_id": {
+          "minLength": 1,
+          "title": "Artifact Id",
+          "type": "string"
+        },
+        "bound_to_current_context": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Bound To Current Context"
+        },
+        "ref": {
+          "minLength": 1,
+          "title": "Ref",
+          "type": "string"
+        },
+        "status": {
+          "pattern": "^(present|missing|stale_or_unknown)$",
+          "title": "Status",
+          "type": "string"
+        },
+        "summary": {
+          "minLength": 1,
+          "title": "Summary",
+          "type": "string"
+        }
+      },
+      "required": [
+        "artifact_id",
+        "ref",
+        "status",
+        "summary"
+      ],
+      "title": "OperatorArtifactStatus",
+      "type": "object"
+    },
+    "OperatorBgmInputGuidance": {
+      "additionalProperties": false,
+      "properties": {
+        "evidence_refs": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Evidence Refs",
+          "type": "array"
+        },
+        "guidance": {
+          "minLength": 1,
+          "title": "Guidance",
+          "type": "string"
+        },
+        "mode": {
+          "pattern": "^(direct_audio|video_audio_extract|source_embedded_audio|no_file_yet)$",
+          "title": "Mode",
+          "type": "string"
+        },
+        "status": {
+          "pattern": "^(available|missing|warning)$",
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "mode",
+        "status",
+        "guidance"
+      ],
+      "title": "OperatorBgmInputGuidance",
+      "type": "object"
+    },
+    "OperatorStage": {
+      "additionalProperties": false,
+      "properties": {
+        "blocking_refs": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Blocking Refs",
+          "type": "array"
+        },
+        "command": {
+          "minLength": 1,
+          "title": "Command",
+          "type": "string"
+        },
+        "evidence_refs": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Evidence Refs",
+          "type": "array"
+        },
+        "order": {
+          "minimum": 1,
+          "title": "Order",
+          "type": "integer"
+        },
+        "phase": {
+          "minLength": 1,
+          "title": "Phase",
+          "type": "string"
+        },
+        "source": {
+          "pattern": "^(workflow|acceptance|rhythm|bgm|state|operator)$",
+          "title": "Source",
+          "type": "string"
+        },
+        "stage_id": {
+          "minLength": 1,
+          "title": "Stage Id",
+          "type": "string"
+        },
+        "status": {
+          "pattern": "^(done|current|pending|blocked|warning)$",
+          "title": "Status",
+          "type": "string"
+        },
+        "summary": {
+          "minLength": 1,
+          "title": "Summary",
+          "type": "string"
+        }
+      },
+      "required": [
+        "stage_id",
+        "order",
+        "phase",
+        "status",
+        "command",
+        "summary",
+        "source"
+      ],
+      "title": "OperatorStage",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "acceptance_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Acceptance Id"
+    },
+    "artifact_count": {
+      "minimum": 0,
+      "title": "Artifact Count",
+      "type": "integer"
+    },
+    "artifact_map": {
+      "items": {
+        "$ref": "#/$defs/OperatorArtifactStatus"
+      },
+      "title": "Artifact Map",
+      "type": "array"
+    },
+    "automatic_music_selection": {
+      "default": false,
+      "title": "Automatic Music Selection",
+      "type": "boolean"
+    },
+    "bgm_input_guidance": {
+      "items": {
+        "$ref": "#/$defs/OperatorBgmInputGuidance"
+      },
+      "title": "Bgm Input Guidance",
+      "type": "array"
+    },
+    "bgm_rhythm_intelligence_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Bgm Rhythm Intelligence Id"
+    },
+    "blocked_stage_count": {
+      "minimum": 0,
+      "title": "Blocked Stage Count",
+      "type": "integer"
+    },
+    "commands_executed": {
+      "default": false,
+      "title": "Commands Executed",
+      "type": "boolean"
+    },
+    "done_stage_count": {
+      "minimum": 0,
+      "title": "Done Stage Count",
+      "type": "integer"
+    },
+    "edit_guidance_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Edit Guidance Id"
+    },
+    "edit_points_moved": {
+      "default": false,
+      "title": "Edit Points Moved",
+      "type": "boolean"
+    },
+    "forbidden_capabilities": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Forbidden Capabilities",
+      "type": "array"
+    },
+    "manual_guidance_refs": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Manual Guidance Refs",
+      "type": "array"
+    },
+    "media_rendered": {
+      "default": false,
+      "title": "Media Rendered",
+      "type": "boolean"
+    },
+    "model_call_performed_by_cli": {
+      "default": false,
+      "title": "Model Call Performed By Cli",
+      "type": "boolean"
+    },
+    "network_performed": {
+      "default": false,
+      "title": "Network Performed",
+      "type": "boolean"
+    },
+    "next_command": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Next Command"
+    },
+    "operator_runbook_id": {
+      "minLength": 1,
+      "title": "Operator Runbook Id",
+      "type": "string"
+    },
+    "pending_stage_count": {
+      "minimum": 0,
+      "title": "Pending Stage Count",
+      "type": "integer"
+    },
+    "present_artifact_count": {
+      "minimum": 0,
+      "title": "Present Artifact Count",
+      "type": "integer"
+    },
+    "project_id": {
+      "minLength": 1,
+      "title": "Project Id",
+      "type": "string"
+    },
+    "rhythm_plan_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Rhythm Plan Id"
+    },
+    "rhythm_qc_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Rhythm Qc Id"
+    },
+    "schema_version": {
+      "default": "0.3",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "stage_count": {
+      "minimum": 0,
+      "title": "Stage Count",
+      "type": "integer"
+    },
+    "stages": {
+      "items": {
+        "$ref": "#/$defs/OperatorStage"
+      },
+      "title": "Stages",
+      "type": "array"
+    },
+    "status": {
+      "pattern": "^(ready|in_progress|blocked|warning)$",
+      "title": "Status",
+      "type": "string"
+    },
+    "target": {
+      "pattern": "^(core|preview|delivery)$",
+      "title": "Target",
+      "type": "string"
+    },
+    "timeline_mutated": {
+      "default": false,
+      "title": "Timeline Mutated",
+      "type": "boolean"
+    },
+    "warning_stage_count": {
+      "minimum": 0,
+      "title": "Warning Stage Count",
+      "type": "integer"
+    },
+    "workflow_plan_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Workflow Plan Id"
+    }
+  },
+  "required": [
+    "operator_runbook_id",
+    "project_id",
+    "target",
+    "status",
+    "stage_count",
+    "done_stage_count",
+    "pending_stage_count",
+    "blocked_stage_count",
+    "warning_stage_count",
+    "artifact_count",
+    "present_artifact_count"
+  ],
+  "title": "OperatorRunbook",
+  "type": "object"
+}

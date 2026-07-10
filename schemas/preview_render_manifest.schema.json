@@ -1,0 +1,307 @@
+{
+  "$defs": {
+    "PreviewRenderedSegment": {
+      "additionalProperties": false,
+      "properties": {
+        "media_role": {
+          "pattern": "^(video|audio|both)$",
+          "title": "Media Role",
+          "type": "string"
+        },
+        "original_audio_rendered": {
+          "title": "Original Audio Rendered",
+          "type": "boolean"
+        },
+        "segment_id": {
+          "minLength": 1,
+          "title": "Segment Id",
+          "type": "string"
+        },
+        "source_id": {
+          "minLength": 1,
+          "title": "Source Id",
+          "type": "string"
+        },
+        "source_in": {
+          "minimum": 0,
+          "title": "Source In",
+          "type": "number"
+        },
+        "source_out": {
+          "exclusiveMinimum": 0,
+          "title": "Source Out",
+          "type": "number"
+        },
+        "source_ref": {
+          "minLength": 1,
+          "title": "Source Ref",
+          "type": "string"
+        },
+        "timeline_end": {
+          "exclusiveMinimum": 0,
+          "title": "Timeline End",
+          "type": "number"
+        },
+        "timeline_start": {
+          "minimum": 0,
+          "title": "Timeline Start",
+          "type": "number"
+        },
+        "video_rendered": {
+          "title": "Video Rendered",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "segment_id",
+        "source_id",
+        "source_ref",
+        "timeline_start",
+        "timeline_end",
+        "source_in",
+        "source_out",
+        "media_role",
+        "video_rendered",
+        "original_audio_rendered"
+      ],
+      "title": "PreviewRenderedSegment",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "actual_frame_rate": {
+      "anyOf": [
+        {
+          "exclusiveMinimum": 0,
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Actual Frame Rate"
+    },
+    "audio_codec": {
+      "minLength": 1,
+      "title": "Audio Codec",
+      "type": "string"
+    },
+    "audio_expected": {
+      "title": "Audio Expected",
+      "type": "boolean"
+    },
+    "audio_present": {
+      "title": "Audio Present",
+      "type": "boolean"
+    },
+    "bgm_fit_fingerprint": {
+      "anyOf": [
+        {
+          "pattern": "^sha256:[0-9a-f]{64}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Bgm Fit Fingerprint"
+    },
+    "bgm_fit_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Bgm Fit Id"
+    },
+    "bgm_fit_ref": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Bgm Fit Ref"
+    },
+    "bgm_included": {
+      "title": "Bgm Included",
+      "type": "boolean"
+    },
+    "ducking_applied": {
+      "title": "Ducking Applied",
+      "type": "boolean"
+    },
+    "duration": {
+      "exclusiveMinimum": 0,
+      "title": "Duration",
+      "type": "number"
+    },
+    "duration_delta_seconds": {
+      "title": "Duration Delta Seconds",
+      "type": "number"
+    },
+    "duration_tolerance_seconds": {
+      "minimum": 0,
+      "title": "Duration Tolerance Seconds",
+      "type": "number"
+    },
+    "expected_duration": {
+      "exclusiveMinimum": 0,
+      "title": "Expected Duration",
+      "type": "number"
+    },
+    "final_export": {
+      "default": false,
+      "title": "Final Export",
+      "type": "boolean"
+    },
+    "fps": {
+      "exclusiveMinimum": 0,
+      "title": "Fps",
+      "type": "integer"
+    },
+    "height": {
+      "exclusiveMinimum": 0,
+      "title": "Height",
+      "type": "integer"
+    },
+    "model_call_performed": {
+      "default": false,
+      "title": "Model Call Performed",
+      "type": "boolean"
+    },
+    "network_performed": {
+      "default": false,
+      "title": "Network Performed",
+      "type": "boolean"
+    },
+    "original_audio_included": {
+      "title": "Original Audio Included",
+      "type": "boolean"
+    },
+    "output_content_hash": {
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "title": "Output Content Hash",
+      "type": "string"
+    },
+    "output_ref": {
+      "minLength": 1,
+      "title": "Output Ref",
+      "type": "string"
+    },
+    "preview_id": {
+      "minLength": 1,
+      "title": "Preview Id",
+      "type": "string"
+    },
+    "project_id": {
+      "minLength": 1,
+      "title": "Project Id",
+      "type": "string"
+    },
+    "render_profile": {
+      "pattern": "^low_resolution_preview$",
+      "title": "Render Profile",
+      "type": "string"
+    },
+    "rendered_segments": {
+      "items": {
+        "$ref": "#/$defs/PreviewRenderedSegment"
+      },
+      "minItems": 1,
+      "title": "Rendered Segments",
+      "type": "array"
+    },
+    "requested_fps": {
+      "exclusiveMinimum": 0,
+      "title": "Requested Fps",
+      "type": "integer"
+    },
+    "requested_width": {
+      "exclusiveMinimum": 0,
+      "title": "Requested Width",
+      "type": "integer"
+    },
+    "schema_version": {
+      "default": "0.3",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "timeline_fingerprint": {
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "title": "Timeline Fingerprint",
+      "type": "string"
+    },
+    "timeline_id": {
+      "minLength": 1,
+      "title": "Timeline Id",
+      "type": "string"
+    },
+    "timeline_ref": {
+      "minLength": 1,
+      "title": "Timeline Ref",
+      "type": "string"
+    },
+    "video_codec": {
+      "minLength": 1,
+      "title": "Video Codec",
+      "type": "string"
+    },
+    "video_present": {
+      "title": "Video Present",
+      "type": "boolean"
+    },
+    "warnings": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Warnings",
+      "type": "array"
+    },
+    "width": {
+      "exclusiveMinimum": 0,
+      "title": "Width",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "preview_id",
+    "project_id",
+    "timeline_id",
+    "timeline_ref",
+    "timeline_fingerprint",
+    "output_ref",
+    "output_content_hash",
+    "expected_duration",
+    "duration",
+    "duration_delta_seconds",
+    "duration_tolerance_seconds",
+    "requested_width",
+    "requested_fps",
+    "width",
+    "height",
+    "fps",
+    "video_codec",
+    "video_present",
+    "audio_codec",
+    "audio_present",
+    "audio_expected",
+    "render_profile",
+    "rendered_segments",
+    "original_audio_included",
+    "bgm_included",
+    "ducking_applied"
+  ],
+  "title": "PreviewRenderManifest",
+  "type": "object"
+}

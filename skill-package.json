@@ -1,0 +1,16 @@
+{
+  "schema_version": "0.1",
+  "skill_name": "artist-portrait-editor",
+  "canonical_install_dir": "artist-portrait-editor",
+  "distribution_repositories": [
+    "video-skill"
+  ],
+  "local_development_dirs": [
+    "video skill"
+  ],
+  "excluded_distribution_paths": [
+    "runs",
+    "output",
+    ".artist-portrait"
+  ]
+}

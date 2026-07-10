@@ -1,0 +1,142 @@
+{
+  "$defs": {
+    "BgmRecommendationItem": {
+      "additionalProperties": false,
+      "properties": {
+        "confidence": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Confidence",
+          "type": "number"
+        },
+        "evidence_refs": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Evidence Refs",
+          "type": "array"
+        },
+        "fit_rationale": {
+          "minLength": 1,
+          "title": "Fit Rationale",
+          "type": "string"
+        },
+        "music_candidate_id": {
+          "minLength": 1,
+          "title": "Music Candidate Id",
+          "type": "string"
+        },
+        "rank": {
+          "minimum": 1,
+          "title": "Rank",
+          "type": "integer"
+        },
+        "recommendation_id": {
+          "minLength": 1,
+          "title": "Recommendation Id",
+          "type": "string"
+        },
+        "risk_notes": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Risk Notes",
+          "type": "array"
+        },
+        "timing_rationale": {
+          "minLength": 1,
+          "title": "Timing Rationale",
+          "type": "string"
+        }
+      },
+      "required": [
+        "recommendation_id",
+        "music_candidate_id",
+        "rank",
+        "fit_rationale",
+        "timing_rationale",
+        "confidence"
+      ],
+      "title": "BgmRecommendationItem",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "automatic_selection_performed": {
+      "default": false,
+      "title": "Automatic Selection Performed",
+      "type": "boolean"
+    },
+    "context_id": {
+      "minLength": 1,
+      "title": "Context Id",
+      "type": "string"
+    },
+    "method": {
+      "minLength": 1,
+      "title": "Method",
+      "type": "string"
+    },
+    "method_version": {
+      "minLength": 1,
+      "title": "Method Version",
+      "type": "string"
+    },
+    "model_call_performed_by_cli": {
+      "default": false,
+      "title": "Model Call Performed By Cli",
+      "type": "boolean"
+    },
+    "network_performed": {
+      "default": false,
+      "title": "Network Performed",
+      "type": "boolean"
+    },
+    "project_id": {
+      "minLength": 1,
+      "title": "Project Id",
+      "type": "string"
+    },
+    "recommendation_set_id": {
+      "minLength": 1,
+      "title": "Recommendation Set Id",
+      "type": "string"
+    },
+    "recommendations": {
+      "items": {
+        "$ref": "#/$defs/BgmRecommendationItem"
+      },
+      "minItems": 1,
+      "title": "Recommendations",
+      "type": "array"
+    },
+    "schema_version": {
+      "default": "0.3",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "selection_performed": {
+      "default": false,
+      "title": "Selection Performed",
+      "type": "boolean"
+    },
+    "warnings": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Warnings",
+      "type": "array"
+    }
+  },
+  "required": [
+    "recommendation_set_id",
+    "project_id",
+    "context_id",
+    "method",
+    "method_version",
+    "recommendations"
+  ],
+  "title": "BgmRecommendationSet",
+  "type": "object"
+}

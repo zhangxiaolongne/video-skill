@@ -1,0 +1,226 @@
+{
+  "$defs": {
+    "AcceptanceIssue": {
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "minLength": 1,
+          "title": "Code",
+          "type": "string"
+        },
+        "detail": {
+          "minLength": 1,
+          "title": "Detail",
+          "type": "string"
+        },
+        "next_action": {
+          "minLength": 1,
+          "title": "Next Action",
+          "type": "string"
+        },
+        "severity": {
+          "pattern": "^(error|warning)$",
+          "title": "Severity",
+          "type": "string"
+        }
+      },
+      "required": [
+        "code",
+        "severity",
+        "detail",
+        "next_action"
+      ],
+      "title": "AcceptanceIssue",
+      "type": "object"
+    },
+    "AcceptanceStage": {
+      "additionalProperties": false,
+      "properties": {
+        "artifact_refs": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Artifact Refs",
+          "type": "array"
+        },
+        "evidence_summary": {
+          "additionalProperties": true,
+          "title": "Evidence Summary",
+          "type": "object"
+        },
+        "issues": {
+          "items": {
+            "$ref": "#/$defs/AcceptanceIssue"
+          },
+          "title": "Issues",
+          "type": "array"
+        },
+        "required_for_core": {
+          "title": "Required For Core",
+          "type": "boolean"
+        },
+        "required_for_delivery": {
+          "title": "Required For Delivery",
+          "type": "boolean"
+        },
+        "stage_id": {
+          "minLength": 1,
+          "title": "Stage Id",
+          "type": "string"
+        },
+        "status": {
+          "pattern": "^(passed|warning|failed|not_applicable)$",
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "stage_id",
+        "status",
+        "required_for_core",
+        "required_for_delivery"
+      ],
+      "title": "AcceptanceStage",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "acceptance_id": {
+      "minLength": 1,
+      "title": "Acceptance Id",
+      "type": "string"
+    },
+    "acceptance_profile": {
+      "pattern": "^(standard|core|preview|delivery)$",
+      "title": "Acceptance Profile",
+      "type": "string"
+    },
+    "acceptance_score": {
+      "maximum": 1,
+      "minimum": 0,
+      "title": "Acceptance Score",
+      "type": "number"
+    },
+    "automatic_music_selection": {
+      "default": false,
+      "title": "Automatic Music Selection",
+      "type": "boolean"
+    },
+    "core_ready": {
+      "title": "Core Ready",
+      "type": "boolean"
+    },
+    "error_count": {
+      "minimum": 0,
+      "title": "Error Count",
+      "type": "integer"
+    },
+    "failed_stage_count": {
+      "minimum": 0,
+      "title": "Failed Stage Count",
+      "type": "integer"
+    },
+    "final_export_ready": {
+      "title": "Final Export Ready",
+      "type": "boolean"
+    },
+    "issue_count": {
+      "minimum": 0,
+      "title": "Issue Count",
+      "type": "integer"
+    },
+    "media_rendered": {
+      "default": false,
+      "title": "Media Rendered",
+      "type": "boolean"
+    },
+    "model_call_performed_by_cli": {
+      "default": false,
+      "title": "Model Call Performed By Cli",
+      "type": "boolean"
+    },
+    "network_performed": {
+      "default": false,
+      "title": "Network Performed",
+      "type": "boolean"
+    },
+    "passed_stage_count": {
+      "minimum": 0,
+      "title": "Passed Stage Count",
+      "type": "integer"
+    },
+    "preview_ready": {
+      "title": "Preview Ready",
+      "type": "boolean"
+    },
+    "profile_passed": {
+      "title": "Profile Passed",
+      "type": "boolean"
+    },
+    "project_id": {
+      "minLength": 1,
+      "title": "Project Id",
+      "type": "string"
+    },
+    "required_stage_ids": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Required Stage Ids",
+      "type": "array"
+    },
+    "schema_version": {
+      "default": "0.3",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "stage_count": {
+      "minimum": 0,
+      "title": "Stage Count",
+      "type": "integer"
+    },
+    "stages": {
+      "items": {
+        "$ref": "#/$defs/AcceptanceStage"
+      },
+      "title": "Stages",
+      "type": "array"
+    },
+    "status": {
+      "pattern": "^(passed|warning|failed)$",
+      "title": "Status",
+      "type": "string"
+    },
+    "warning_count": {
+      "minimum": 0,
+      "title": "Warning Count",
+      "type": "integer"
+    },
+    "warning_stage_count": {
+      "minimum": 0,
+      "title": "Warning Stage Count",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "acceptance_id",
+    "project_id",
+    "acceptance_profile",
+    "status",
+    "profile_passed",
+    "core_ready",
+    "preview_ready",
+    "final_export_ready",
+    "acceptance_score",
+    "stage_count",
+    "passed_stage_count",
+    "warning_stage_count",
+    "failed_stage_count",
+    "issue_count",
+    "error_count",
+    "warning_count"
+  ],
+  "title": "ProjectAcceptanceReport",
+  "type": "object"
+}

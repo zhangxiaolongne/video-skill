@@ -1,0 +1,107 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "commands_executed": {
+      "default": false,
+      "title": "Commands Executed",
+      "type": "boolean"
+    },
+    "edit_points_moved": {
+      "default": false,
+      "title": "Edit Points Moved",
+      "type": "boolean"
+    },
+    "errors": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Errors",
+      "type": "array"
+    },
+    "fcpxml_draft_id": {
+      "minLength": 1,
+      "title": "Fcpxml Draft Id",
+      "type": "string"
+    },
+    "import_verified": {
+      "default": false,
+      "title": "Import Verified",
+      "type": "boolean"
+    },
+    "media_rendered": {
+      "default": false,
+      "title": "Media Rendered",
+      "type": "boolean"
+    },
+    "nle_import_performed": {
+      "default": false,
+      "title": "Nle Import Performed",
+      "type": "boolean"
+    },
+    "plan_binding_passed": {
+      "title": "Plan Binding Passed",
+      "type": "boolean"
+    },
+    "project_binding_passed": {
+      "title": "Project Binding Passed",
+      "type": "boolean"
+    },
+    "project_id": {
+      "minLength": 1,
+      "title": "Project Id",
+      "type": "string"
+    },
+    "relink_required": {
+      "title": "Relink Required",
+      "type": "boolean"
+    },
+    "schema_version": {
+      "default": "0.3",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "status": {
+      "pattern": "^(passed|warning|failed)$",
+      "title": "Status",
+      "type": "string"
+    },
+    "timeline_mapping_coverage_passed": {
+      "title": "Timeline Mapping Coverage Passed",
+      "type": "boolean"
+    },
+    "timeline_mutated": {
+      "default": false,
+      "title": "Timeline Mutated",
+      "type": "boolean"
+    },
+    "validation_id": {
+      "minLength": 1,
+      "title": "Validation Id",
+      "type": "string"
+    },
+    "warnings": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Warnings",
+      "type": "array"
+    },
+    "xml_parse_passed": {
+      "title": "Xml Parse Passed",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "validation_id",
+    "project_id",
+    "fcpxml_draft_id",
+    "status",
+    "xml_parse_passed",
+    "project_binding_passed",
+    "plan_binding_passed",
+    "timeline_mapping_coverage_passed",
+    "relink_required"
+  ],
+  "title": "FcpxmlValidationReport",
+  "type": "object"
+}

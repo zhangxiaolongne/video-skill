@@ -1,0 +1,196 @@
+{
+  "$defs": {
+    "ClipBoundary": {
+      "additionalProperties": false,
+      "properties": {
+        "duration_seconds": {
+          "exclusiveMinimum": 0,
+          "title": "Duration Seconds",
+          "type": "number"
+        },
+        "end_seconds": {
+          "exclusiveMinimum": 0,
+          "title": "End Seconds",
+          "type": "number"
+        },
+        "start_seconds": {
+          "minimum": 0,
+          "title": "Start Seconds",
+          "type": "number"
+        }
+      },
+      "required": [
+        "start_seconds",
+        "end_seconds",
+        "duration_seconds"
+      ],
+      "title": "ClipBoundary",
+      "type": "object"
+    },
+    "ClipMethod": {
+      "enum": [
+        "fixed_window",
+        "pyscenedetect"
+      ],
+      "title": "ClipMethod",
+      "type": "string"
+    },
+    "ClipRiskFlag": {
+      "enum": [
+        "short_tail",
+        "inherited_source_risk",
+        "scene_detection_fallback"
+      ],
+      "title": "ClipRiskFlag",
+      "type": "string"
+    },
+    "EvidenceRef": {
+      "additionalProperties": false,
+      "properties": {
+        "ref": {
+          "minLength": 1,
+          "title": "Ref",
+          "type": "string"
+        },
+        "type": {
+          "minLength": 1,
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "ref"
+      ],
+      "title": "EvidenceRef",
+      "type": "object"
+    },
+    "MediaKind": {
+      "enum": [
+        "video",
+        "audio"
+      ],
+      "title": "MediaKind",
+      "type": "string"
+    },
+    "SourceRiskFlag": {
+      "enum": [
+        "unknown_provenance",
+        "low_provenance_confidence",
+        "rights_unknown",
+        "rights_restricted",
+        "decode_failed",
+        "conflicting_metadata",
+        "forbidden_by_user"
+      ],
+      "title": "SourceRiskFlag",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "boundary": {
+      "$ref": "#/$defs/ClipBoundary"
+    },
+    "boundary_confidence": {
+      "maximum": 1.0,
+      "minimum": 0.0,
+      "title": "Boundary Confidence",
+      "type": "number"
+    },
+    "clip_id": {
+      "minLength": 1,
+      "title": "Clip Id",
+      "type": "string"
+    },
+    "clip_index": {
+      "minimum": 0,
+      "title": "Clip Index",
+      "type": "integer"
+    },
+    "evidence": {
+      "items": {
+        "$ref": "#/$defs/EvidenceRef"
+      },
+      "title": "Evidence",
+      "type": "array"
+    },
+    "inherited_source_risk_flags": {
+      "items": {
+        "$ref": "#/$defs/SourceRiskFlag"
+      },
+      "title": "Inherited Source Risk Flags",
+      "type": "array"
+    },
+    "media_kind": {
+      "$ref": "#/$defs/MediaKind"
+    },
+    "method": {
+      "$ref": "#/$defs/ClipMethod"
+    },
+    "method_version": {
+      "minLength": 1,
+      "title": "Method Version",
+      "type": "string"
+    },
+    "notes": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Notes"
+    },
+    "risk_flags": {
+      "items": {
+        "$ref": "#/$defs/ClipRiskFlag"
+      },
+      "title": "Risk Flags",
+      "type": "array"
+    },
+    "schema_version": {
+      "default": "0.3",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "source_content_hash": {
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "title": "Source Content Hash",
+      "type": "string"
+    },
+    "source_fingerprint": {
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "title": "Source Fingerprint",
+      "type": "string"
+    },
+    "source_id": {
+      "minLength": 1,
+      "title": "Source Id",
+      "type": "string"
+    },
+    "source_location": {
+      "minLength": 1,
+      "title": "Source Location",
+      "type": "string"
+    }
+  },
+  "required": [
+    "clip_id",
+    "source_id",
+    "source_location",
+    "source_content_hash",
+    "source_fingerprint",
+    "clip_index",
+    "media_kind",
+    "boundary",
+    "method",
+    "method_version",
+    "boundary_confidence"
+  ],
+  "title": "ClipRecord",
+  "type": "object"
+}

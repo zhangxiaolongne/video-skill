@@ -1,0 +1,16 @@
+.DS_Store
+__pycache__/
+.pytest_cache/
+*.py[cod]
+.env
+.venv/
+venv/
+dist/
+build/
+*.egg-info/
+
+# Project-local media and evidence remain on disk and in `status` storage reports.
+# They must never inflate source commits or the distributed Skill package.
+/runs/
+/output/
+/.artist-portrait/

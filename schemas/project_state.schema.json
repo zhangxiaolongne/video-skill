@@ -1,0 +1,199 @@
+{
+  "$defs": {
+    "ActiveMode": {
+      "enum": [
+        "core",
+        "creative"
+      ],
+      "title": "ActiveMode",
+      "type": "string"
+    },
+    "Capabilities": {
+      "additionalProperties": false,
+      "properties": {
+        "beat_aubio": {
+          "default": false,
+          "title": "Beat Aubio",
+          "type": "boolean"
+        },
+        "beat_essentia": {
+          "default": false,
+          "title": "Beat Essentia",
+          "type": "boolean"
+        },
+        "beat_librosa": {
+          "default": false,
+          "title": "Beat Librosa",
+          "type": "boolean"
+        },
+        "beat_madmom": {
+          "default": false,
+          "title": "Beat Madmom",
+          "type": "boolean"
+        },
+        "faster_whisper": {
+          "default": false,
+          "title": "Faster Whisper",
+          "type": "boolean"
+        },
+        "ffmpeg": {
+          "default": false,
+          "title": "Ffmpeg",
+          "type": "boolean"
+        },
+        "ffprobe": {
+          "default": false,
+          "title": "Ffprobe",
+          "type": "boolean"
+        },
+        "opencv": {
+          "default": false,
+          "title": "Opencv",
+          "type": "boolean"
+        },
+        "pyscenedetect": {
+          "default": false,
+          "title": "Pyscenedetect",
+          "type": "boolean"
+        },
+        "text_model": {
+          "default": false,
+          "title": "Text Model",
+          "type": "boolean"
+        },
+        "vision_model": {
+          "default": false,
+          "title": "Vision Model",
+          "type": "boolean"
+        }
+      },
+      "title": "Capabilities",
+      "type": "object"
+    },
+    "OverallStatus": {
+      "enum": [
+        "new",
+        "ready",
+        "running",
+        "degraded",
+        "blocked"
+      ],
+      "title": "OverallStatus",
+      "type": "string"
+    },
+    "StepLedgerEntry": {
+      "additionalProperties": false,
+      "properties": {
+        "input_fingerprint": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Input Fingerprint"
+        },
+        "last_run_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Last Run Id"
+        },
+        "output_refs": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Output Refs",
+          "type": "array"
+        },
+        "status": {
+          "$ref": "#/$defs/StepStatus",
+          "default": "pending"
+        },
+        "warnings": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Warnings",
+          "type": "array"
+        }
+      },
+      "title": "StepLedgerEntry",
+      "type": "object"
+    },
+    "StepStatus": {
+      "enum": [
+        "pending",
+        "running",
+        "completed",
+        "completed_with_warnings",
+        "skipped",
+        "blocked",
+        "failed",
+        "invalidated"
+      ],
+      "title": "StepStatus",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "active_mode": {
+      "$ref": "#/$defs/ActiveMode",
+      "default": "core"
+    },
+    "capabilities": {
+      "$ref": "#/$defs/Capabilities"
+    },
+    "latest_run_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Latest Run Id"
+    },
+    "overall_status": {
+      "$ref": "#/$defs/OverallStatus",
+      "default": "ready"
+    },
+    "project_id": {
+      "title": "Project Id",
+      "type": "string"
+    },
+    "schema_version": {
+      "default": "0.3",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "steps": {
+      "additionalProperties": {
+        "$ref": "#/$defs/StepLedgerEntry"
+      },
+      "title": "Steps",
+      "type": "object"
+    },
+    "updated_at": {
+      "title": "Updated At",
+      "type": "string"
+    }
+  },
+  "required": [
+    "project_id"
+  ],
+  "title": "ProjectState",
+  "type": "object"
+}

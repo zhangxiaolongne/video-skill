@@ -1,0 +1,711 @@
+{
+  "$defs": {
+    "AudioTransition": {
+      "enum": [
+        "none",
+        "cut",
+        "crossfade",
+        "fade_in",
+        "fade_out",
+        "j_cut",
+        "l_cut"
+      ],
+      "title": "AudioTransition",
+      "type": "string"
+    },
+    "DownstreamRevisionFreshness": {
+      "additionalProperties": false,
+      "properties": {
+        "artifact_ref": {
+          "title": "Artifact Ref",
+          "type": "string"
+        },
+        "next_command": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Next Command"
+        },
+        "present": {
+          "title": "Present",
+          "type": "boolean"
+        },
+        "reason": {
+          "minLength": 1,
+          "title": "Reason",
+          "type": "string"
+        },
+        "status_if_candidate_promoted": {
+          "pattern": "^(unchanged|stale|requires_rerun|missing)$",
+          "title": "Status If Candidate Promoted",
+          "type": "string"
+        }
+      },
+      "required": [
+        "artifact_ref",
+        "present",
+        "status_if_candidate_promoted",
+        "reason"
+      ],
+      "title": "DownstreamRevisionFreshness",
+      "type": "object"
+    },
+    "EvidenceRef": {
+      "additionalProperties": false,
+      "properties": {
+        "ref": {
+          "minLength": 1,
+          "title": "Ref",
+          "type": "string"
+        },
+        "type": {
+          "minLength": 1,
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "ref"
+      ],
+      "title": "EvidenceRef",
+      "type": "object"
+    },
+    "MediaRole": {
+      "enum": [
+        "video",
+        "audio",
+        "both"
+      ],
+      "title": "MediaRole",
+      "type": "string"
+    },
+    "RevisionAppliedAction": {
+      "additionalProperties": false,
+      "properties": {
+        "action_id": {
+          "minLength": 1,
+          "title": "Action Id",
+          "type": "string"
+        },
+        "action_type": {
+          "minLength": 1,
+          "title": "Action Type",
+          "type": "string"
+        },
+        "baseline_timeline_end": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Baseline Timeline End"
+        },
+        "baseline_timeline_start": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Baseline Timeline Start"
+        },
+        "detail": {
+          "minLength": 1,
+          "title": "Detail",
+          "type": "string"
+        },
+        "duration_delta_seconds": {
+          "default": 0.0,
+          "title": "Duration Delta Seconds",
+          "type": "number"
+        },
+        "evidence_refs": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Evidence Refs",
+          "type": "array"
+        },
+        "reason_code": {
+          "minLength": 1,
+          "title": "Reason Code",
+          "type": "string"
+        },
+        "revised_timeline_end": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Revised Timeline End"
+        },
+        "revised_timeline_start": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Revised Timeline Start"
+        },
+        "segment_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Segment Id"
+        },
+        "status": {
+          "pattern": "^(applied|preserved|manual_only|skipped|conflict)$",
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "action_id",
+        "action_type",
+        "status",
+        "reason_code",
+        "detail"
+      ],
+      "title": "RevisionAppliedAction",
+      "type": "object"
+    },
+    "RevisionSegmentChange": {
+      "additionalProperties": false,
+      "properties": {
+        "action_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Action Ids",
+          "type": "array"
+        },
+        "baseline_timeline_end": {
+          "exclusiveMinimum": 0,
+          "title": "Baseline Timeline End",
+          "type": "number"
+        },
+        "baseline_timeline_start": {
+          "minimum": 0,
+          "title": "Baseline Timeline Start",
+          "type": "number"
+        },
+        "detail": {
+          "minLength": 1,
+          "title": "Detail",
+          "type": "string"
+        },
+        "duration_delta_seconds": {
+          "default": 0.0,
+          "title": "Duration Delta Seconds",
+          "type": "number"
+        },
+        "revised_segment_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Revised Segment Id"
+        },
+        "revised_timeline_end": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Revised Timeline End"
+        },
+        "revised_timeline_start": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Revised Timeline Start"
+        },
+        "source_segment_id": {
+          "minLength": 1,
+          "title": "Source Segment Id",
+          "type": "string"
+        },
+        "status": {
+          "pattern": "^(kept|trimmed|removed|moved|unchanged)$",
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "source_segment_id",
+        "status",
+        "baseline_timeline_start",
+        "baseline_timeline_end",
+        "detail"
+      ],
+      "title": "RevisionSegmentChange",
+      "type": "object"
+    },
+    "TimelineSegment": {
+      "additionalProperties": false,
+      "properties": {
+        "audio_transition": {
+          "$ref": "#/$defs/AudioTransition"
+        },
+        "clip_id": {
+          "minLength": 1,
+          "title": "Clip Id",
+          "type": "string"
+        },
+        "clip_overall_score": {
+          "anyOf": [
+            {
+              "maximum": 1,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Clip Overall Score"
+        },
+        "clip_score_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Clip Score Id"
+        },
+        "confidence": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Confidence",
+          "type": "number"
+        },
+        "continuity_note": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Continuity Note"
+        },
+        "creative_intent": {
+          "minLength": 1,
+          "title": "Creative Intent",
+          "type": "string"
+        },
+        "evidence": {
+          "items": {
+            "$ref": "#/$defs/EvidenceRef"
+          },
+          "minItems": 1,
+          "title": "Evidence",
+          "type": "array"
+        },
+        "keep_reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Keep Reason"
+        },
+        "media_role": {
+          "$ref": "#/$defs/MediaRole"
+        },
+        "reason": {
+          "minLength": 1,
+          "title": "Reason",
+          "type": "string"
+        },
+        "segment_id": {
+          "minLength": 1,
+          "title": "Segment Id",
+          "type": "string"
+        },
+        "selection_tier": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Selection Tier"
+        },
+        "source_id": {
+          "minLength": 1,
+          "title": "Source Id",
+          "type": "string"
+        },
+        "source_in": {
+          "minimum": 0,
+          "title": "Source In",
+          "type": "number"
+        },
+        "source_out": {
+          "exclusiveMinimum": 0,
+          "title": "Source Out",
+          "type": "number"
+        },
+        "structural_role": {
+          "$ref": "#/$defs/TimelineStructuralRole",
+          "default": "build"
+        },
+        "timeline_end": {
+          "exclusiveMinimum": 0,
+          "title": "Timeline End",
+          "type": "number"
+        },
+        "timeline_start": {
+          "minimum": 0,
+          "title": "Timeline Start",
+          "type": "number"
+        },
+        "track_id": {
+          "minLength": 1,
+          "title": "Track Id",
+          "type": "string"
+        },
+        "video_transition": {
+          "$ref": "#/$defs/VideoTransition"
+        }
+      },
+      "required": [
+        "segment_id",
+        "timeline_start",
+        "timeline_end",
+        "clip_id",
+        "source_id",
+        "source_in",
+        "source_out",
+        "track_id",
+        "media_role",
+        "video_transition",
+        "audio_transition",
+        "reason",
+        "evidence",
+        "creative_intent",
+        "confidence"
+      ],
+      "title": "TimelineSegment",
+      "type": "object"
+    },
+    "TimelineStructuralRole": {
+      "enum": [
+        "hook",
+        "build",
+        "payoff",
+        "bridge",
+        "context"
+      ],
+      "title": "TimelineStructuralRole",
+      "type": "string"
+    },
+    "VideoTransition": {
+      "enum": [
+        "none",
+        "hard_cut",
+        "crossfade",
+        "fade_in",
+        "fade_out",
+        "match_cut"
+      ],
+      "title": "VideoTransition",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "action_results": {
+      "items": {
+        "$ref": "#/$defs/RevisionAppliedAction"
+      },
+      "title": "Action Results",
+      "type": "array"
+    },
+    "applied_action_count": {
+      "minimum": 0,
+      "title": "Applied Action Count",
+      "type": "integer"
+    },
+    "automatic_bgm_fit": {
+      "default": false,
+      "title": "Automatic Bgm Fit",
+      "type": "boolean"
+    },
+    "automatic_music_selection": {
+      "default": false,
+      "title": "Automatic Music Selection",
+      "type": "boolean"
+    },
+    "baseline_segment_count": {
+      "minimum": 0,
+      "title": "Baseline Segment Count",
+      "type": "integer"
+    },
+    "baseline_timeline_fingerprint": {
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "title": "Baseline Timeline Fingerprint",
+      "type": "string"
+    },
+    "baseline_timeline_id": {
+      "minLength": 1,
+      "title": "Baseline Timeline Id",
+      "type": "string"
+    },
+    "baseline_timeline_ref": {
+      "minLength": 1,
+      "title": "Baseline Timeline Ref",
+      "type": "string"
+    },
+    "canonical_edit_points_moved": {
+      "default": false,
+      "title": "Canonical Edit Points Moved",
+      "type": "boolean"
+    },
+    "canonical_timeline_mutated": {
+      "default": false,
+      "title": "Canonical Timeline Mutated",
+      "type": "boolean"
+    },
+    "commands_executed": {
+      "default": false,
+      "title": "Commands Executed",
+      "type": "boolean"
+    },
+    "conflict_count": {
+      "minimum": 0,
+      "title": "Conflict Count",
+      "type": "integer"
+    },
+    "current_duration_seconds": {
+      "exclusiveMinimum": 0,
+      "title": "Current Duration Seconds",
+      "type": "number"
+    },
+    "downstream_freshness": {
+      "items": {
+        "$ref": "#/$defs/DownstreamRevisionFreshness"
+      },
+      "title": "Downstream Freshness",
+      "type": "array"
+    },
+    "duration_delta_seconds": {
+      "title": "Duration Delta Seconds",
+      "type": "number"
+    },
+    "image_generation_or_editing_used": {
+      "default": false,
+      "title": "Image Generation Or Editing Used",
+      "type": "boolean"
+    },
+    "manual_action_count": {
+      "minimum": 0,
+      "title": "Manual Action Count",
+      "type": "integer"
+    },
+    "media_rendered": {
+      "default": false,
+      "title": "Media Rendered",
+      "type": "boolean"
+    },
+    "model_call_performed_by_cli": {
+      "default": false,
+      "title": "Model Call Performed By Cli",
+      "type": "boolean"
+    },
+    "network_performed": {
+      "default": false,
+      "title": "Network Performed",
+      "type": "boolean"
+    },
+    "next_command": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Next Command"
+    },
+    "project_id": {
+      "minLength": 1,
+      "title": "Project Id",
+      "type": "string"
+    },
+    "revised_candidate_edit_points_changed": {
+      "default": false,
+      "title": "Revised Candidate Edit Points Changed",
+      "type": "boolean"
+    },
+    "revised_duration_seconds": {
+      "exclusiveMinimum": 0,
+      "title": "Revised Duration Seconds",
+      "type": "number"
+    },
+    "revised_segment_count": {
+      "minimum": 0,
+      "title": "Revised Segment Count",
+      "type": "integer"
+    },
+    "revised_segments": {
+      "items": {
+        "$ref": "#/$defs/TimelineSegment"
+      },
+      "minItems": 1,
+      "title": "Revised Segments",
+      "type": "array"
+    },
+    "revision_application_id": {
+      "minLength": 1,
+      "title": "Revision Application Id",
+      "type": "string"
+    },
+    "revision_plan_fingerprint": {
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "title": "Revision Plan Fingerprint",
+      "type": "string"
+    },
+    "revision_plan_id": {
+      "minLength": 1,
+      "title": "Revision Plan Id",
+      "type": "string"
+    },
+    "revision_plan_ref": {
+      "minLength": 1,
+      "title": "Revision Plan Ref",
+      "type": "string"
+    },
+    "schema_version": {
+      "default": "0.3",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "segment_changes": {
+      "items": {
+        "$ref": "#/$defs/RevisionSegmentChange"
+      },
+      "title": "Segment Changes",
+      "type": "array"
+    },
+    "selected_action_ids": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Selected Action Ids",
+      "type": "array"
+    },
+    "selected_version_id": {
+      "minLength": 1,
+      "title": "Selected Version Id",
+      "type": "string"
+    },
+    "skipped_action_count": {
+      "minimum": 0,
+      "title": "Skipped Action Count",
+      "type": "integer"
+    },
+    "status": {
+      "pattern": "^(ready|warning|blocked)$",
+      "title": "Status",
+      "type": "string"
+    },
+    "warnings": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Warnings",
+      "type": "array"
+    }
+  },
+  "required": [
+    "revision_application_id",
+    "project_id",
+    "status",
+    "revision_plan_id",
+    "revision_plan_ref",
+    "revision_plan_fingerprint",
+    "baseline_timeline_id",
+    "baseline_timeline_ref",
+    "baseline_timeline_fingerprint",
+    "selected_version_id",
+    "current_duration_seconds",
+    "revised_duration_seconds",
+    "duration_delta_seconds",
+    "baseline_segment_count",
+    "revised_segment_count",
+    "applied_action_count",
+    "manual_action_count",
+    "skipped_action_count",
+    "conflict_count",
+    "revised_segments"
+  ],
+  "title": "RevisionApplication",
+  "type": "object"
+}

@@ -1,0 +1,253 @@
+{
+  "$defs": {
+    "FinalExportValidationIssue": {
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "minLength": 1,
+          "title": "Code",
+          "type": "string"
+        },
+        "detail": {
+          "minLength": 1,
+          "title": "Detail",
+          "type": "string"
+        },
+        "severity": {
+          "pattern": "^(error|warning)$",
+          "title": "Severity",
+          "type": "string"
+        }
+      },
+      "required": [
+        "code",
+        "severity",
+        "detail"
+      ],
+      "title": "FinalExportValidationIssue",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "actual_duration": {
+      "minimum": 0,
+      "title": "Actual Duration",
+      "type": "number"
+    },
+    "actual_frame_rate": {
+      "anyOf": [
+        {
+          "exclusiveMinimum": 0,
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Actual Frame Rate"
+    },
+    "actual_height": {
+      "anyOf": [
+        {
+          "exclusiveMinimum": 0,
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Actual Height"
+    },
+    "actual_width": {
+      "anyOf": [
+        {
+          "exclusiveMinimum": 0,
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Actual Width"
+    },
+    "audio_codec": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Audio Codec"
+    },
+    "audio_expected": {
+      "title": "Audio Expected",
+      "type": "boolean"
+    },
+    "audio_present": {
+      "title": "Audio Present",
+      "type": "boolean"
+    },
+    "bgm_fit_fingerprint": {
+      "anyOf": [
+        {
+          "pattern": "^sha256:[0-9a-f]{64}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Bgm Fit Fingerprint"
+    },
+    "bgm_fit_ref": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Bgm Fit Ref"
+    },
+    "duration_delta_seconds": {
+      "title": "Duration Delta Seconds",
+      "type": "number"
+    },
+    "duration_tolerance_seconds": {
+      "minimum": 0,
+      "title": "Duration Tolerance Seconds",
+      "type": "number"
+    },
+    "error_count": {
+      "minimum": 0,
+      "title": "Error Count",
+      "type": "integer"
+    },
+    "expected_duration": {
+      "exclusiveMinimum": 0,
+      "title": "Expected Duration",
+      "type": "number"
+    },
+    "export_ref": {
+      "minLength": 1,
+      "title": "Export Ref",
+      "type": "string"
+    },
+    "issue_count": {
+      "minimum": 0,
+      "title": "Issue Count",
+      "type": "integer"
+    },
+    "issues": {
+      "items": {
+        "$ref": "#/$defs/FinalExportValidationIssue"
+      },
+      "title": "Issues",
+      "type": "array"
+    },
+    "manifest_ref": {
+      "minLength": 1,
+      "title": "Manifest Ref",
+      "type": "string"
+    },
+    "quality_status": {
+      "pattern": "^(passed|warning|failed)$",
+      "title": "Quality Status",
+      "type": "string"
+    },
+    "recovery_command": {
+      "minLength": 1,
+      "title": "Recovery Command",
+      "type": "string"
+    },
+    "requested_fps": {
+      "exclusiveMinimum": 0,
+      "title": "Requested Fps",
+      "type": "integer"
+    },
+    "requested_profile": {
+      "pattern": "^(review_720p|delivery_1080p)$",
+      "title": "Requested Profile",
+      "type": "string"
+    },
+    "requested_width": {
+      "exclusiveMinimum": 0,
+      "title": "Requested Width",
+      "type": "integer"
+    },
+    "schema_version": {
+      "default": "0.3",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "timeline_fingerprint": {
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "title": "Timeline Fingerprint",
+      "type": "string"
+    },
+    "timeline_ref": {
+      "minLength": 1,
+      "title": "Timeline Ref",
+      "type": "string"
+    },
+    "valid": {
+      "title": "Valid",
+      "type": "boolean"
+    },
+    "video_codec": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Video Codec"
+    },
+    "video_present": {
+      "title": "Video Present",
+      "type": "boolean"
+    },
+    "warning_count": {
+      "minimum": 0,
+      "title": "Warning Count",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "export_ref",
+    "manifest_ref",
+    "timeline_ref",
+    "timeline_fingerprint",
+    "expected_duration",
+    "actual_duration",
+    "duration_delta_seconds",
+    "duration_tolerance_seconds",
+    "requested_profile",
+    "requested_width",
+    "requested_fps",
+    "video_present",
+    "audio_present",
+    "audio_expected",
+    "quality_status",
+    "recovery_command",
+    "issue_count",
+    "error_count",
+    "warning_count",
+    "valid"
+  ],
+  "title": "FinalExportValidationReport",
+  "type": "object"
+}

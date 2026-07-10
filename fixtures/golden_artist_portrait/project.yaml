@@ -1,0 +1,42 @@
+schema_version: "0.3"
+
+project:
+  id: golden_artist_portrait_001
+  title: Golden Portrait Baseline
+  artist_name: Golden Artist
+  language: zh-CN
+
+creative_brief:
+  theme: 在排练、采访与舞台之间寻找人物的声音和节奏
+  audience: 熟悉人物的粉丝和普通观众
+  platform: bilibili
+  target_duration_seconds: 4
+  aspect_ratio: "16:9"
+  tone:
+    - restrained
+    - intimate
+    - evidence_led
+
+content_policy:
+  allow_role_dialogue: true
+  allow_real_person_role_mix: true
+  allow_unconfirmed_visual_material: false
+  allow_interview_audio: true
+  allow_music: true
+  allow_restricted_rights: false
+
+features:
+  transcription: off
+  scene_detection: off
+  visual_analysis: off
+  experimental_relations: false
+
+data_policy:
+  allow_remote_text_model: false
+  allow_remote_vision_model: false
+  include_absolute_paths_in_remote_requests: false
+
+paths:
+  media_dir: ./media
+  annotations_dir: ./annotations
+  output_dir: ./output

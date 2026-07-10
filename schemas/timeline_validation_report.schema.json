@@ -1,0 +1,151 @@
+{
+  "$defs": {
+    "ProposalId": {
+      "enum": [
+        "proposal_safe",
+        "proposal_advanced",
+        "proposal_risky"
+      ],
+      "title": "ProposalId",
+      "type": "string"
+    },
+    "TimelineValidationIssue": {
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "minLength": 1,
+          "title": "Code",
+          "type": "string"
+        },
+        "detail": {
+          "minLength": 1,
+          "title": "Detail",
+          "type": "string"
+        },
+        "segment_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Segment Id"
+        },
+        "severity": {
+          "pattern": "^(error|warning)$",
+          "title": "Severity",
+          "type": "string"
+        }
+      },
+      "required": [
+        "code",
+        "severity",
+        "detail"
+      ],
+      "title": "TimelineValidationIssue",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "actual_duration": {
+      "minimum": 0,
+      "title": "Actual Duration",
+      "type": "number"
+    },
+    "clip_scores_ref": {
+      "default": "",
+      "title": "Clip Scores Ref",
+      "type": "string"
+    },
+    "continuity_check_count": {
+      "default": 0,
+      "minimum": 0,
+      "title": "Continuity Check Count",
+      "type": "integer"
+    },
+    "dropped_clip_count": {
+      "default": 0,
+      "minimum": 0,
+      "title": "Dropped Clip Count",
+      "type": "integer"
+    },
+    "edit_brief_ref": {
+      "default": "",
+      "title": "Edit Brief Ref",
+      "type": "string"
+    },
+    "error_count": {
+      "minimum": 0,
+      "title": "Error Count",
+      "type": "integer"
+    },
+    "input_fingerprint": {
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "title": "Input Fingerprint",
+      "type": "string"
+    },
+    "issue_count": {
+      "minimum": 0,
+      "title": "Issue Count",
+      "type": "integer"
+    },
+    "issues": {
+      "items": {
+        "$ref": "#/$defs/TimelineValidationIssue"
+      },
+      "title": "Issues",
+      "type": "array"
+    },
+    "proposal_id": {
+      "$ref": "#/$defs/ProposalId"
+    },
+    "schema_version": {
+      "default": "0.3",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "segment_count": {
+      "minimum": 0,
+      "title": "Segment Count",
+      "type": "integer"
+    },
+    "structural_roles_present": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Structural Roles Present",
+      "type": "array"
+    },
+    "timeline_ref": {
+      "minLength": 1,
+      "title": "Timeline Ref",
+      "type": "string"
+    },
+    "valid": {
+      "title": "Valid",
+      "type": "boolean"
+    },
+    "warning_count": {
+      "minimum": 0,
+      "title": "Warning Count",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "timeline_ref",
+    "input_fingerprint",
+    "proposal_id",
+    "segment_count",
+    "actual_duration",
+    "issue_count",
+    "error_count",
+    "warning_count",
+    "valid"
+  ],
+  "title": "TimelineValidationReport",
+  "type": "object"
+}

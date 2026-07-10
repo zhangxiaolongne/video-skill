@@ -1,0 +1,232 @@
+{
+  "$defs": {
+    "ContentPolicy": {
+      "additionalProperties": false,
+      "properties": {
+        "allow_interview_audio": {
+          "title": "Allow Interview Audio",
+          "type": "boolean"
+        },
+        "allow_music": {
+          "title": "Allow Music",
+          "type": "boolean"
+        },
+        "allow_real_person_role_mix": {
+          "title": "Allow Real Person Role Mix",
+          "type": "boolean"
+        },
+        "allow_restricted_rights": {
+          "title": "Allow Restricted Rights",
+          "type": "boolean"
+        },
+        "allow_role_dialogue": {
+          "title": "Allow Role Dialogue",
+          "type": "boolean"
+        },
+        "allow_unconfirmed_visual_material": {
+          "title": "Allow Unconfirmed Visual Material",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "allow_role_dialogue",
+        "allow_real_person_role_mix",
+        "allow_unconfirmed_visual_material",
+        "allow_interview_audio",
+        "allow_music",
+        "allow_restricted_rights"
+      ],
+      "title": "ContentPolicy",
+      "type": "object"
+    },
+    "CreativeBrief": {
+      "additionalProperties": false,
+      "properties": {
+        "aspect_ratio": {
+          "minLength": 3,
+          "title": "Aspect Ratio",
+          "type": "string"
+        },
+        "audience": {
+          "minLength": 1,
+          "title": "Audience",
+          "type": "string"
+        },
+        "platform": {
+          "minLength": 1,
+          "title": "Platform",
+          "type": "string"
+        },
+        "target_duration_seconds": {
+          "exclusiveMinimum": 0,
+          "title": "Target Duration Seconds",
+          "type": "integer"
+        },
+        "theme": {
+          "minLength": 1,
+          "title": "Theme",
+          "type": "string"
+        },
+        "tone": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Tone",
+          "type": "array"
+        }
+      },
+      "required": [
+        "theme",
+        "audience",
+        "platform",
+        "target_duration_seconds",
+        "aspect_ratio"
+      ],
+      "title": "CreativeBrief",
+      "type": "object"
+    },
+    "DataPolicy": {
+      "additionalProperties": false,
+      "properties": {
+        "allow_remote_text_model": {
+          "default": false,
+          "title": "Allow Remote Text Model",
+          "type": "boolean"
+        },
+        "allow_remote_vision_model": {
+          "default": false,
+          "title": "Allow Remote Vision Model",
+          "type": "boolean"
+        },
+        "include_absolute_paths_in_remote_requests": {
+          "default": false,
+          "title": "Include Absolute Paths In Remote Requests",
+          "type": "boolean"
+        }
+      },
+      "title": "DataPolicy",
+      "type": "object"
+    },
+    "FeatureSwitch": {
+      "enum": [
+        "off",
+        "auto",
+        "required"
+      ],
+      "title": "FeatureSwitch",
+      "type": "string"
+    },
+    "Features": {
+      "additionalProperties": false,
+      "properties": {
+        "experimental_relations": {
+          "default": false,
+          "title": "Experimental Relations",
+          "type": "boolean"
+        },
+        "scene_detection": {
+          "$ref": "#/$defs/FeatureSwitch",
+          "default": "auto"
+        },
+        "transcription": {
+          "$ref": "#/$defs/FeatureSwitch",
+          "default": "auto"
+        },
+        "visual_analysis": {
+          "$ref": "#/$defs/FeatureSwitch",
+          "default": "off"
+        }
+      },
+      "title": "Features",
+      "type": "object"
+    },
+    "Paths": {
+      "additionalProperties": false,
+      "properties": {
+        "annotations_dir": {
+          "default": "./annotations",
+          "title": "Annotations Dir",
+          "type": "string"
+        },
+        "media_dir": {
+          "default": "./media",
+          "title": "Media Dir",
+          "type": "string"
+        },
+        "output_dir": {
+          "default": "./output",
+          "title": "Output Dir",
+          "type": "string"
+        }
+      },
+      "title": "Paths",
+      "type": "object"
+    },
+    "ProjectInfo": {
+      "additionalProperties": false,
+      "properties": {
+        "artist_name": {
+          "minLength": 1,
+          "title": "Artist Name",
+          "type": "string"
+        },
+        "id": {
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "language": {
+          "minLength": 2,
+          "title": "Language",
+          "type": "string"
+        },
+        "title": {
+          "minLength": 1,
+          "title": "Title",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "title",
+        "artist_name",
+        "language"
+      ],
+      "title": "ProjectInfo",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "content_policy": {
+      "$ref": "#/$defs/ContentPolicy"
+    },
+    "creative_brief": {
+      "$ref": "#/$defs/CreativeBrief"
+    },
+    "data_policy": {
+      "$ref": "#/$defs/DataPolicy"
+    },
+    "features": {
+      "$ref": "#/$defs/Features"
+    },
+    "paths": {
+      "$ref": "#/$defs/Paths"
+    },
+    "project": {
+      "$ref": "#/$defs/ProjectInfo"
+    },
+    "schema_version": {
+      "title": "Schema Version",
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema_version",
+    "project",
+    "creative_brief",
+    "content_policy"
+  ],
+  "title": "ProjectConfig",
+  "type": "object"
+}

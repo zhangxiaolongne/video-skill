@@ -1,0 +1,74 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "candidate_id": {
+      "minLength": 1,
+      "title": "Candidate Id",
+      "type": "string"
+    },
+    "edit_points_moved": {
+      "default": false,
+      "title": "Edit Points Moved",
+      "type": "boolean"
+    },
+    "media_rendered": {
+      "default": false,
+      "title": "Media Rendered",
+      "type": "boolean"
+    },
+    "model_call_performed_by_cli": {
+      "default": false,
+      "title": "Model Call Performed By Cli",
+      "type": "boolean"
+    },
+    "music_selected": {
+      "default": false,
+      "title": "Music Selected",
+      "type": "boolean"
+    },
+    "network_performed": {
+      "default": false,
+      "title": "Network Performed",
+      "type": "boolean"
+    },
+    "project_id": {
+      "minLength": 1,
+      "title": "Project Id",
+      "type": "string"
+    },
+    "recommendations": {
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Recommendations",
+      "type": "array"
+    },
+    "rejected_automatic_actions": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Rejected Automatic Actions",
+      "type": "array"
+    },
+    "rhythm_plan_id": {
+      "minLength": 1,
+      "title": "Rhythm Plan Id",
+      "type": "string"
+    },
+    "timeline_id": {
+      "minLength": 1,
+      "title": "Timeline Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "candidate_id",
+    "project_id",
+    "timeline_id",
+    "rhythm_plan_id",
+    "recommendations"
+  ],
+  "title": "RhythmAgentCandidate",
+  "type": "object"
+}

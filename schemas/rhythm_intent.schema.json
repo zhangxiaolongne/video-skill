@@ -1,0 +1,67 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "ending_style": {
+      "pattern": "^(clean_stop|fade_out|open_loop)$",
+      "title": "Ending Style",
+      "type": "string"
+    },
+    "intent_id": {
+      "minLength": 1,
+      "title": "Intent Id",
+      "type": "string"
+    },
+    "mode": {
+      "pattern": "^(speech_first|music_first|balanced)$",
+      "title": "Mode",
+      "type": "string"
+    },
+    "model_call_performed_by_cli": {
+      "default": false,
+      "title": "Model Call Performed By Cli",
+      "type": "boolean"
+    },
+    "network_performed": {
+      "default": false,
+      "title": "Network Performed",
+      "type": "boolean"
+    },
+    "notes": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Notes"
+    },
+    "pacing": {
+      "pattern": "^(calm|medium|fast)$",
+      "title": "Pacing",
+      "type": "string"
+    },
+    "text_density": {
+      "pattern": "^(none|low|medium|high)$",
+      "title": "Text Density",
+      "type": "string"
+    },
+    "transition_style": {
+      "pattern": "^(minimal|smooth|energetic)$",
+      "title": "Transition Style",
+      "type": "string"
+    }
+  },
+  "required": [
+    "intent_id",
+    "mode",
+    "pacing",
+    "text_density",
+    "transition_style",
+    "ending_style"
+  ],
+  "title": "RhythmIntent",
+  "type": "object"
+}

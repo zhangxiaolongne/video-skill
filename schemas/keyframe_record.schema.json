@@ -1,0 +1,136 @@
+{
+  "$defs": {
+    "EvidenceRef": {
+      "additionalProperties": false,
+      "properties": {
+        "ref": {
+          "minLength": 1,
+          "title": "Ref",
+          "type": "string"
+        },
+        "type": {
+          "minLength": 1,
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "ref"
+      ],
+      "title": "EvidenceRef",
+      "type": "object"
+    },
+    "KeyframeRiskFlag": {
+      "enum": [
+        "cache_missing"
+      ],
+      "title": "KeyframeRiskFlag",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "clip_fingerprint": {
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "title": "Clip Fingerprint",
+      "type": "string"
+    },
+    "clip_id": {
+      "minLength": 1,
+      "title": "Clip Id",
+      "type": "string"
+    },
+    "evidence": {
+      "items": {
+        "$ref": "#/$defs/EvidenceRef"
+      },
+      "title": "Evidence",
+      "type": "array"
+    },
+    "frame_index": {
+      "minimum": 0,
+      "title": "Frame Index",
+      "type": "integer"
+    },
+    "image_path": {
+      "minLength": 1,
+      "title": "Image Path",
+      "type": "string"
+    },
+    "keyframe_id": {
+      "minLength": 1,
+      "title": "Keyframe Id",
+      "type": "string"
+    },
+    "method": {
+      "minLength": 1,
+      "title": "Method",
+      "type": "string"
+    },
+    "method_version": {
+      "minLength": 1,
+      "title": "Method Version",
+      "type": "string"
+    },
+    "notes": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Notes"
+    },
+    "risk_flags": {
+      "items": {
+        "$ref": "#/$defs/KeyframeRiskFlag"
+      },
+      "title": "Risk Flags",
+      "type": "array"
+    },
+    "schema_version": {
+      "default": "0.3",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "source_content_hash": {
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "title": "Source Content Hash",
+      "type": "string"
+    },
+    "source_id": {
+      "minLength": 1,
+      "title": "Source Id",
+      "type": "string"
+    },
+    "source_location": {
+      "minLength": 1,
+      "title": "Source Location",
+      "type": "string"
+    },
+    "timestamp_seconds": {
+      "minimum": 0,
+      "title": "Timestamp Seconds",
+      "type": "number"
+    }
+  },
+  "required": [
+    "keyframe_id",
+    "clip_id",
+    "source_id",
+    "source_location",
+    "source_content_hash",
+    "clip_fingerprint",
+    "frame_index",
+    "timestamp_seconds",
+    "image_path",
+    "method",
+    "method_version"
+  ],
+  "title": "KeyframeRecord",
+  "type": "object"
+}

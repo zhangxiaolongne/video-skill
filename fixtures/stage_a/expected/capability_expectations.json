@@ -1,0 +1,8 @@
+{
+  "init_requires_ffmpeg": false,
+  "init_requires_ffprobe": false,
+  "scan_requires_ffmpeg": true,
+  "scan_requires_ffprobe": true,
+  "text_model_default": false,
+  "vision_model_default": false
+}

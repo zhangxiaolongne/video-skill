@@ -1,0 +1,241 @@
+{
+  "$defs": {
+    "AnalysisRiskFlag": {
+      "enum": [
+        "inherited_source_risk",
+        "keyframe_missing",
+        "transcript_missing",
+        "audio_missing",
+        "audio_only_clip",
+        "visual_analysis_not_run",
+        "short_clip"
+      ],
+      "title": "AnalysisRiskFlag",
+      "type": "string"
+    },
+    "Assertion": {
+      "additionalProperties": false,
+      "properties": {
+        "confidence": {
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Confidence",
+          "type": "number"
+        },
+        "evidence": {
+          "items": {
+            "$ref": "#/$defs/EvidenceRef"
+          },
+          "title": "Evidence",
+          "type": "array"
+        },
+        "level": {
+          "maximum": 4,
+          "minimum": 0,
+          "title": "Level",
+          "type": "integer"
+        },
+        "method": {
+          "minLength": 1,
+          "title": "Method",
+          "type": "string"
+        },
+        "user_confirmed": {
+          "default": false,
+          "title": "User Confirmed",
+          "type": "boolean"
+        },
+        "value": {
+          "anyOf": [
+            {},
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Value"
+        }
+      },
+      "required": [
+        "method",
+        "level",
+        "confidence"
+      ],
+      "title": "Assertion",
+      "type": "object"
+    },
+    "EvidenceRef": {
+      "additionalProperties": false,
+      "properties": {
+        "ref": {
+          "minLength": 1,
+          "title": "Ref",
+          "type": "string"
+        },
+        "type": {
+          "minLength": 1,
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "ref"
+      ],
+      "title": "EvidenceRef",
+      "type": "object"
+    },
+    "MediaKind": {
+      "enum": [
+        "video",
+        "audio"
+      ],
+      "title": "MediaKind",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "action_candidates": {
+      "$ref": "#/$defs/Assertion"
+    },
+    "analysis_fingerprint": {
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "title": "Analysis Fingerprint",
+      "type": "string"
+    },
+    "analysis_id": {
+      "minLength": 1,
+      "title": "Analysis Id",
+      "type": "string"
+    },
+    "camera_motion": {
+      "$ref": "#/$defs/Assertion"
+    },
+    "clip_fingerprint": {
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "title": "Clip Fingerprint",
+      "type": "string"
+    },
+    "clip_id": {
+      "minLength": 1,
+      "title": "Clip Id",
+      "type": "string"
+    },
+    "duration_seconds": {
+      "exclusiveMinimum": 0,
+      "title": "Duration Seconds",
+      "type": "number"
+    },
+    "emotion_candidates": {
+      "$ref": "#/$defs/Assertion"
+    },
+    "end_seconds": {
+      "exclusiveMinimum": 0,
+      "title": "End Seconds",
+      "type": "number"
+    },
+    "evidence": {
+      "items": {
+        "$ref": "#/$defs/EvidenceRef"
+      },
+      "title": "Evidence",
+      "type": "array"
+    },
+    "keyframe_refs": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Keyframe Refs",
+      "type": "array"
+    },
+    "material_type": {
+      "$ref": "#/$defs/Assertion"
+    },
+    "media_kind": {
+      "$ref": "#/$defs/MediaKind"
+    },
+    "notes": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Notes"
+    },
+    "original_audio_usability": {
+      "$ref": "#/$defs/Assertion"
+    },
+    "risk_flags": {
+      "items": {
+        "$ref": "#/$defs/AnalysisRiskFlag"
+      },
+      "title": "Risk Flags",
+      "type": "array"
+    },
+    "schema_version": {
+      "default": "0.3",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "shot_size": {
+      "$ref": "#/$defs/Assertion"
+    },
+    "source_content_hash": {
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "title": "Source Content Hash",
+      "type": "string"
+    },
+    "source_id": {
+      "minLength": 1,
+      "title": "Source Id",
+      "type": "string"
+    },
+    "source_location": {
+      "minLength": 1,
+      "title": "Source Location",
+      "type": "string"
+    },
+    "start_seconds": {
+      "minimum": 0,
+      "title": "Start Seconds",
+      "type": "number"
+    },
+    "transcript_refs": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Transcript Refs",
+      "type": "array"
+    },
+    "visual_quality": {
+      "$ref": "#/$defs/Assertion"
+    }
+  },
+  "required": [
+    "analysis_id",
+    "clip_id",
+    "source_id",
+    "source_location",
+    "source_content_hash",
+    "clip_fingerprint",
+    "analysis_fingerprint",
+    "media_kind",
+    "start_seconds",
+    "end_seconds",
+    "duration_seconds",
+    "material_type",
+    "shot_size",
+    "camera_motion",
+    "emotion_candidates",
+    "action_candidates",
+    "visual_quality",
+    "original_audio_usability"
+  ],
+  "title": "AnalysisRecord",
+  "type": "object"
+}
