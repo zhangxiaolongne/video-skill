@@ -7,8 +7,8 @@ This file records only current publication state and recent release facts. Full 
 - Latest published source baseline: `v0.30.0`
 - Release commit: `e80393915e0c850f119e9181d2bd5120f1504c4c`
 - Annotated tag object: `7ed5f14b7b7bfd12a62d508d23abfc7ac9b7b6be`
-- Publication ledger: this commit records the post-refactor, single-root
-  history baseline before force-pushing the remote.
+- Publication ledger: `9013abc83455ea9bfbbd6a7fd8299920a924636b` records the
+  post-refactor, single-root history baseline selected for remote publication.
 - Published scope: the V1 capability surface plus the complete architecture,
   JSON-governance, test, package-boundary, and history reset refactor.
 - Active local work: `V2-01 Real Video Aesthetic Baseline`, not yet released.
