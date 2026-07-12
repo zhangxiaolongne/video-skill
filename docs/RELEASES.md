@@ -11,7 +11,7 @@ This file records only current publication state and recent release facts. Full 
   post-refactor, single-root history baseline selected for remote publication.
 - Published scope: the V1 capability surface plus the complete architecture,
   JSON-governance, test, package-boundary, and history reset refactor.
-- Active local work: `V2-04 Highlight, Hook, And Ending Scoring`, completed
+- Active local work: `V2-05 Duration And Structure Recommendation`, completed
   locally and ready for one-version publication.
   Its current prerequisite batch is `ACCEPTANCE-STAGE-07 Real Media
   Truthfulness And Baseline Recovery`.
@@ -67,6 +67,9 @@ This file records only current publication state and recent release facts. Full 
   pure-audio/BGM units, applied no first/last position bonus, kept missing
   semantics neutral with zero confidence, and passed 243 tests plus all
   quality/package gates.
+- V2-05 generated exact 39/60/90-second plans for both real projects, preserved
+  the explicit 60-second standard target, bounded hook/build/payoff budgets,
+  and passed 243 tests plus all quality/package gates.
 
 - Architecture baseline validation passed on `2026-07-10`: `.venv/bin/python
   run_checks.py` completed successfully with `239 passed`, schema generation,

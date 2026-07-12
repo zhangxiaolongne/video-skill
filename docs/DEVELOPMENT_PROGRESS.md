@@ -16,11 +16,11 @@ issue tracker, or master strategy document.
 
 ## Current State
 
-- Current active gate: V2-04 Highlight, Hook, And Ending Scoring
+- Current active gate: V2-05 Duration And Structure Recommendation
 - Gate state: completed locally; ready for one-version publication
-- Completed published capability: `V2-03` Transcript / Vision / Audio Evidence Fusion
-- Current complete version: `V2-04 Highlight, Hook, And Ending Scoring`
-- Current batch: `V2-04` completed locally
+- Completed published capability: `V2-04` Highlight, Hook, And Ending Scoring
+- Current complete version: `V2-05 Duration And Structure Recommendation`
+- Current batch: `V2-05` completed locally
 - Latest published release baseline: `v0.30.0`
 - Current published capability work: V1-08 revision promotion and V1 release
   packaging
@@ -132,8 +132,6 @@ the active gate and immediate development direction.
 
 ## Next Major Decision
 
-Publish V2-04 after separate highlight/hook/ending rankings passed synthetic,
-45-candidate interview, and 25-visual-candidate stage validation. Rankings keep
-low confidence where transcript/semantic evidence is missing, and 25 stage
-audio-only units are excluded. All 243 tests and quality/package checks passed.
-V2-05 is next and is not active inside this batch.
+Publish V2-05 after synthetic and both real projects produced bounded 39/60/90
+second options with exact roles/tradeoffs and preserved 60-second user target.
+All 243 tests and quality/package checks passed. V2-06 is not active yet.

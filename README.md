@@ -79,8 +79,8 @@ release-candidate validation path:
 Current published capability work: `V1-08 Revision promotion, revised render
 readiness, and V1 release packaging` in the retained `v0.30.0` baseline.
 Current local acceptance stage: `ACCEPTANCE-STAGE-07 Real Media Truthfulness And Baseline Recovery`.
-Current V2-04 Highlight, Hook, And Ending Scoring is complete locally and
-awaiting one-version publication. V2-03 is published.
+Current V2-05 Duration And Structure Recommendation is complete locally and
+awaiting one-version publication. V2-04 is published.
 The latest published acceptance release remains `ACCEPTANCE-STAGE-06 Release
 candidate and publication` in `v0.28.0`; the latest published V1 capability
 release baseline is `v0.30.0`.
@@ -294,6 +294,11 @@ and ending candidates. Every candidate exposes eight editorial dimensions,
 confidence, rationale, unknowns, and risk penalty. Missing semantics use a
 neutral prior with zero confidence; pure-audio clips, first/last position, and
 loudness receive no false aesthetic promotion.
+`structure-recommend` converts current rankings and the edit brief into short,
+standard, and extended options with exact candidate ranges, hook/build/payoff
+roles, sacrifices, retained qualities, confidence, and coupled audio/text/BGM/
+transition risks. Standard preserves the explicit target duration; no timeline
+or media is changed.
 `propose` prepares a host-Agent handoff and can import an explicit quarantined
 ProposalSet candidate; it does not call paid APIs or access the network.
 

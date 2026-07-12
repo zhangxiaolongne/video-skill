@@ -99,6 +99,7 @@ def initial_steps() -> dict[str, StepLedgerEntry]:
         "reframe": StepLedgerEntry(),
         "evidence_map": StepLedgerEntry(),
         "editorial_score": StepLedgerEntry(),
+        "structure_recommendation": StepLedgerEntry(),
         "aesthetic_baseline_context": StepLedgerEntry(),
         "aesthetic_baseline": StepLedgerEntry(),
         "second_cut": StepLedgerEntry(),

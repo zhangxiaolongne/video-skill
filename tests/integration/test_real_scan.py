@@ -209,6 +209,20 @@ def test_real_media_acceptance_profiles_reach_delivery(tmp_path, capsys):
     assert candidate_score["emotion"]["confidence"] == 0.0
     assert candidate_score["hook_rank"] == 1
     assert candidate_score["ending_rank"] == 1
+    assert main(["structure-recommend", "--project", str(project_path), "--json"]) == 1
+    structure = json.loads(capsys.readouterr().out)["structure_recommendation"]
+    assert structure["recommended_option_id"] == "standard"
+    assert structure["explicit_standard_duration_seconds"] == 2.0
+    assert [item["option_id"] for item in structure["options"]] == [
+        "short", "standard", "extended"
+    ]
+    assert all(
+        item["estimated_duration_seconds"] <= item["target_duration_seconds"]
+        for item in structure["options"]
+    )
+    assert structure["timeline_mutated"] is False
+    assert structure["edit_points_applied"] is False
+    assert structure["media_rendered"] is False
     assert main(["score", "--project", str(project_path), "--quiet"]) in (0, 1)
     assert main(["propose", "--project", str(project_path), "--json"]) == 1
     capsys.readouterr()

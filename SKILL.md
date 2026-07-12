@@ -324,6 +324,12 @@ and risk dimensions plus separate highlight/hook/ending ranks. It excludes
 pure-audio units from visual ranking, gives no first/last bonus, and never
 converts loudness or missing semantics into aesthetic certainty.
 
+`structure-recommend` generates exactly three materially distinct duration and
+structure options from the current editorial scores and edit brief. Each option
+contains exact ranked ranges, hook/build/payoff allocation, sacrifices,
+retained qualities, confidence, and coupled downstream risks. It never applies
+the suggested ordering or changes timeline/media.
+
 Preview rendering may use local FFmpeg/ffprobe to extract timeline video
 ranges, retain original source audio, apply fitted BGM gain/fades/looping, and
 duck BGM under retained original audio. It must not choose music, fabricate beat

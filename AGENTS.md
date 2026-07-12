@@ -3,9 +3,18 @@
 Follow `artist_portrait_editor_revision5_optimized.md` as the governing V0
 engineering-freeze document.
 
-Current gate: V2-04 Highlight, Hook, And Ending Scoring. V2-03 Transcript /
-Vision / Audio Evidence Fusion is published. V2-04 is complete locally and
-awaiting publication as one version. V2-05 is not active yet.
+Current gate: V2-05 Duration And Structure Recommendation. V2-04 Highlight,
+Hook, And Ending Scoring is published. V2-05 is complete locally and awaiting
+publication as one version. V2-06 is not active yet.
+
+V2-05 may generate exactly three materially distinct short, standard, and
+extended structure recommendations from the current editorial score set and
+edit brief. Standard must preserve an explicit user/config duration. Each
+option must bind exact ranked ranges, hook/build/payoff roles, retained
+qualities, sacrifices, confidence, and coupled audio/BGM/text/transition risks.
+It must not exceed target duration, mutate timelines, apply edit points, render
+media, select music, call models, access the network, or claim recommendations
+are applied edits.
 
 V2-04 may score visual evidence-map units for hook, emotion, information
 density, visual usability, audio usability, rhythm, ending resonance, and risk;

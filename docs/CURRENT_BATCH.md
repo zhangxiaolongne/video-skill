@@ -2,58 +2,53 @@
 
 ## Batch Header
 
-- Batch ID: `V2-04`
-- Name: Highlight, Hook, And Ending Scoring
+- Batch ID: `V2-05`
+- Name: Duration And Structure Recommendation
 - Type: product capability milestone
 - Status: `completed`
-- Capability gate: `V2-04`
-- Prerequisite: published `V2-03 Transcript / Vision / Audio Evidence Fusion`
-- Publication: one commit/push only after complete version validation
+- Capability gate: `V2-05`
+- Prerequisite: published `V2-04 Highlight, Hook, And Ending Scoring`
+- Publication: one commit/push after complete validation
 
 ## Goal Delta
 
-Before V2-04, early technical clip scores cannot explain whether a range is a
-highlight, opening, or ending candidate. Missing semantics can be mistaken for
-negative evidence.
-
-After V2-04, every evidence-map unit has eight explicit editorial dimensions,
-risk penalty, evidence confidence, rationale, and independent highlight/hook/
-ending ranks. Rankings use only available evidence and never promote first/last
-position, loudness, or missing data into aesthetic truth.
+V2-04 ranks ranges but does not turn the distribution into viable edit lengths
+or structures. V2-05 produces short, standard, and extended recommendations
+bound to current rankings and user goals, with explicit retained candidates,
+sacrifices, role allocation, confidence, and downstream audio/text risks.
 
 ## Internal Acceptance Checklist
 
 | ID | Outcome | Acceptance | Status |
 |---|---|---|---|
-| `canonical_scores` | One scoring set | One canonical JSON and one Markdown report. | `completed` |
-| `fresh_map_binding` | Evidence freshness | Exact current evidence-map fingerprint is required. | `completed` |
-| `eight_dimensions` | Editorial dimensions | Hook, emotion, information, visual, audio, rhythm, ending, and risk exist per unit. | `completed` |
-| `unknown_neutrality` | Missing-evidence policy | Unknown semantics use neutral priors with zero confidence, not zero quality. | `completed` |
-| `risk_penalty` | Explicit penalties | Missing channels and conflict risks reduce confidence/ranking. | `completed` |
-| `highlight_rank` | Highlight ranking | Cross-domain score and rationale rank all eligible units. | `completed` |
-| `hook_rank` | Hook ranking | Opening candidates are not selected by source position. | `completed` |
-| `ending_rank` | Ending ranking | Ending candidates are not selected by source position. | `completed` |
-| `goal_alignment` | User-goal binding | Theme, audience, platform, and duration evidence remain bound. | `completed` |
-| `real_validation` | Cross-source closeout | Stage/interview rankings and full project checks pass. | `completed` |
+| `canonical_plan` | One recommendation plan | One canonical JSON and one report. | `completed` |
+| `fresh_score_binding` | Current ranking binding | Exact score-set and goal fingerprints are required. | `completed` |
+| `three_durations` | Materially distinct lengths | Short, standard, and extended targets differ materially. | `completed` |
+| `user_duration` | User target precedence | Explicit configured/user duration owns the standard option. | `completed` |
+| `score_distribution` | Evidence-based capacity | Candidate duration and confidence constrain recommendations. | `completed` |
+| `structure_roles` | Hook/build/payoff | Each option owns ordered structural roles. | `completed` |
+| `retained_ranges` | Concrete retention | Recommendations list exact ranked candidates and ranges. | `completed` |
+| `sacrifice_logic` | Explicit tradeoffs | Every option explains omissions and retained qualities. | `completed` |
+| `coupled_risks` | Audio/text/transition effects | Downstream pressures remain visible. | `completed` |
+| `real_validation` | Cross-source closeout | Stage/interview plans and full checks pass. | `completed` |
 
 ## Guardrails
 
-- Loudness is not emotion, applause, music, climax, or hook quality.
-- First and last source clips receive no positional bonus.
-- Missing transcript/vision semantics use neutral score with zero confidence.
-- Ranking confidence must expose evidence scarcity and conflict penalties.
-- No model call, network, paid API, render, timeline mutation, or music choice.
+- Do not mutate timelines, apply edits, render, select music, or call models.
+- Low-confidence ranking cannot become high-confidence duration advice.
+- Standard duration follows explicit user/config target when present.
+- Short/extended options must be materially distinct, not cosmetic variants.
+- Candidate ordering is a recommendation, not an applied edit.
 
 ## Closeout Evidence
 
-- Interview: 45 visual candidates; top highlight/hook/ending ranges are
-  independently ranked with evidence-limited confidence around `0.2523`.
-- Stage: 25 visual candidates; 25 pure-audio/BGM units are excluded from visual
-  ranking; top candidates remain evidence-limited at `0.1931-0.2523` confidence.
-- Position bonuses, loudness-as-emotion, and missing-as-zero flags are false.
-- Validation: 243 tests and all quality/package/release/diff checks passed.
+- Both real projects produce exact 39/60/90-second short/standard/extended
+  plans; standard preserves the configured 60-second target.
+- Hook/build/payoff budgets sum to each target and ending is ranking-derived,
+  not source-position-derived.
+- Recommendation confidence remains about 0.25 due missing semantics.
+- 243 tests and all quality/package/release/diff checks passed.
 
 ## Next Work
 
-Publish V2-04 as one version. Plan V2-05 duration/structure recommendation from
-the ranked distribution without starting it inside this batch.
+Publish V2-05 as one version. Plan V2-06 BGM mood/rhythm matching separately.
