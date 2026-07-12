@@ -250,6 +250,8 @@ def test_real_media_acceptance_profiles_reach_delivery(tmp_path, capsys):
         for element in option["elements"]
         if element["element_type"] == "subtitle"
     )
+    assert main(["first-cut-review", "--project", str(project_path), "--json"]) == 9
+    assert "missing current evidence" in capsys.readouterr().err
     assert main(["score", "--project", str(project_path), "--quiet"]) in (0, 1)
     assert main(["propose", "--project", str(project_path), "--json"]) == 1
     capsys.readouterr()

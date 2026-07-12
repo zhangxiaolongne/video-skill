@@ -79,7 +79,7 @@ release-candidate validation path:
 Current published capability work: `V1-08 Revision promotion, revised render
 readiness, and V1 release packaging` in the retained `v0.30.0` baseline.
 Current local acceptance stage: `ACCEPTANCE-STAGE-07 Real Media Truthfulness And Baseline Recovery`.
-Current V2-07 Text, Subtitle, And On-Screen Timing Plan is complete locally and awaiting publication. V2-06 is published.
+Current V2-08 First-Cut Aesthetic Self-Review is complete locally and awaiting publication. V2-07 is published.
 The latest published acceptance release remains `ACCEPTANCE-STAGE-06 Release
 candidate and publication` in `v0.28.0`; the latest published V1 capability
 release baseline is `v0.30.0`.
@@ -306,6 +306,10 @@ mixed video audio and technical energy as clean semantic music evidence.
 empty-space timing with reading and safe-region risk. Subtitle/emphasis content
 requires transcript evidence; missing text remains unavailable and is never
 invented or burned into media.
+`first-cut-review` audits the actual canonical final across nine domains and
+binds all current V2 evidence. It explicitly separates technical validity from
+aesthetic publishability and lists every planned/reframe-playback improvement
+that has not been applied to the canonical first cut.
 `propose` prepares a host-Agent handoff and can import an explicit quarantined
 ProposalSet candidate; it does not call paid APIs or access the network.
 

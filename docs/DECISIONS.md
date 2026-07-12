@@ -11,6 +11,15 @@ decision history is archived in [DECISIONS_HISTORY.md](archive/DECISIONS_HISTORY
 
 ## Active Decisions
 
+### DEC-048: First-cut review counts only canonical-final changes
+
+- Status: `active`
+- Decision: structure, BGM, text, and reframe artifacts remain planned or
+  independent evidence until a second-cut media file is actually rendered.
+  Technical delivery is the only domain that may be resolved by media QC alone.
+- Rationale: otherwise planning activity falsely inflates aesthetic maturity.
+- Revisit when: V2-09 renders and validates a supervised second cut.
+
 ### DEC-047: Text content requires supplied language evidence
 
 - Status: `active`

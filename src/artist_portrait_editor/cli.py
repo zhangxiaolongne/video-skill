@@ -91,6 +91,7 @@ from artist_portrait_editor.sound_decision import (
 )
 from artist_portrait_editor.structure_recommendation import StructureRecommendationError, build_structure_recommendation
 from artist_portrait_editor.text_planning import TextPlanningError, build_text_plan
+from artist_portrait_editor.first_cut_review import FirstCutReviewError, build_first_cut_self_review
 from artist_portrait_editor.second_cut import SecondCutError, build_second_cut_candidate
 from artist_portrait_editor.reframe import ReframeError, apply_reframe_selection
 from artist_portrait_editor.run_records import (
@@ -359,6 +360,11 @@ def build_parser() -> argparse.ArgumentParser:
     text_plan_sub.add_argument("--json", action="store_true")
     text_plan_sub.add_argument("--quiet", action="store_true")
     text_plan_sub.add_argument("--verbose", action="store_true")
+    first_cut_sub = subparsers.add_parser("first-cut-review")
+    first_cut_sub.add_argument("--project", required=True)
+    first_cut_sub.add_argument("--json", action="store_true")
+    first_cut_sub.add_argument("--quiet", action="store_true")
+    first_cut_sub.add_argument("--verbose", action="store_true")
 
     baseline_sub = subparsers.add_parser("baseline")
     baseline_sub.add_argument("--project", required=True)
@@ -2131,6 +2137,28 @@ def cmd_text_plan(args: argparse.Namespace) -> int:
     return int(ExitCode.success_with_warnings if warnings else ExitCode.success)
 
 
+def cmd_first_cut_review(args: argparse.Namespace) -> int:
+    if error := _validate_common_flags(args):
+        return int(error)
+    project_path = Path(args.project)
+    try:
+        canonical, report, review, warnings = build_first_cut_self_review(project_path)
+    except ConfigLoadError as exc:
+        print(str(exc), file=sys.stderr)
+        return int(ExitCode.invalid_project_config)
+    except (FirstCutReviewError, ValueError) as exc:
+        print(str(exc), file=sys.stderr)
+        return int(ExitCode.output_or_reference_validation_failed)
+    root = project_root(project_path)
+    payload = {"output": canonical.relative_to(root).as_posix(), "report": report.relative_to(root).as_posix(), "first_cut_review": review.model_dump(mode="json"), "warnings": warnings}
+    if args.json:
+        print(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True))
+    elif not args.quiet:
+        print(f"wrote {payload['output']}")
+        print(f"wrote {payload['report']}")
+    return int(ExitCode.success_with_warnings)
+
+
 def cmd_baseline(args: argparse.Namespace) -> int:
     if error := _validate_common_flags(args):
         return int(error)
@@ -2983,6 +3011,7 @@ def main(argv: list[str] | None = None) -> int:
         "structure-recommend": cmd_structure_recommend,
         "bgm-match": cmd_bgm_match,
         "text-plan": cmd_text_plan,
+        "first-cut-review": cmd_first_cut_review,
         "baseline": cmd_baseline,
         "second-cut": cmd_second_cut,
         "revise": cmd_revise,

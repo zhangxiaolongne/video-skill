@@ -101,6 +101,7 @@ def initial_steps() -> dict[str, StepLedgerEntry]:
         "editorial_score": StepLedgerEntry(),
         "structure_recommendation": StepLedgerEntry(),
         "text_plan": StepLedgerEntry(),
+        "first_cut_review": StepLedgerEntry(),
         "bgm_match": StepLedgerEntry(),
         "aesthetic_baseline_context": StepLedgerEntry(),
         "aesthetic_baseline": StepLedgerEntry(),

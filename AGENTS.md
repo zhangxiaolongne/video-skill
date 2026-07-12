@@ -3,9 +3,16 @@
 Follow `artist_portrait_editor_revision5_optimized.md` as the governing V0
 engineering-freeze document.
 
-Current gate: V2-07 Text, Subtitle, And On-Screen Timing Plan. V2-06 BGM Mood
-And Rhythm Matching is published. V2-07 is complete locally and awaiting
-publication as one version. V2-08 is not active yet.
+Current gate: V2-08 First-Cut Aesthetic Self-Review. V2-07 Text, Subtitle, And
+On-Screen Timing Plan is published. V2-08 is complete locally and awaiting
+publication as one version. V2-09 is not active yet.
+
+V2-08 may review the current canonical final across opening, middle pacing,
+emotion, BGM/voice, text, ending, transitions, composition, and technical
+delivery, binding V2 evidence and prior host-Agent findings. It must distinguish
+planned or independently rendered candidates from changes applied to the
+canonical final. It must not edit, render, mutate timelines, call models, access
+the network, select music, or promote technical validity to publishability.
 
 V2-07 may plan titles, evidence-backed subtitles/emphasis, pauses, empty-space
 reservations, reading density, sampled-frame safe-region review, and BGM/source

@@ -1,0 +1,274 @@
+{
+  "$defs": {
+    "FirstCutDomainReview": {
+      "additionalProperties": false,
+      "properties": {
+        "diagnosis": {
+          "minLength": 1,
+          "title": "Diagnosis",
+          "type": "string"
+        },
+        "domain": {
+          "enum": [
+            "opening",
+            "middle_pacing",
+            "emotion",
+            "bgm_voice",
+            "text",
+            "ending",
+            "transitions",
+            "composition",
+            "technical_delivery"
+          ],
+          "title": "Domain",
+          "type": "string"
+        },
+        "evidence_refs": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Evidence Refs",
+          "type": "array"
+        },
+        "required_change": {
+          "minLength": 1,
+          "title": "Required Change",
+          "type": "string"
+        },
+        "resolved_in_canonical_final": {
+          "default": false,
+          "title": "Resolved In Canonical Final",
+          "type": "boolean"
+        },
+        "severity": {
+          "enum": [
+            "none",
+            "low",
+            "medium",
+            "high",
+            "critical"
+          ],
+          "title": "Severity",
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "usable",
+            "review",
+            "conflict",
+            "unavailable"
+          ],
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "domain",
+        "status",
+        "severity",
+        "diagnosis",
+        "evidence_refs",
+        "required_change"
+      ],
+      "title": "FirstCutDomainReview",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "baseline_fingerprint": {
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "title": "Baseline Fingerprint",
+      "type": "string"
+    },
+    "baseline_ref": {
+      "title": "Baseline Ref",
+      "type": "string"
+    },
+    "bgm_match_fingerprint": {
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "title": "Bgm Match Fingerprint",
+      "type": "string"
+    },
+    "bgm_match_ref": {
+      "title": "Bgm Match Ref",
+      "type": "string"
+    },
+    "canonical_final_mutated": {
+      "default": false,
+      "title": "Canonical Final Mutated",
+      "type": "boolean"
+    },
+    "domains": {
+      "items": {
+        "$ref": "#/$defs/FirstCutDomainReview"
+      },
+      "maxItems": 9,
+      "minItems": 9,
+      "title": "Domains",
+      "type": "array"
+    },
+    "editorial_scores_fingerprint": {
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "title": "Editorial Scores Fingerprint",
+      "type": "string"
+    },
+    "editorial_scores_ref": {
+      "title": "Editorial Scores Ref",
+      "type": "string"
+    },
+    "edits_applied": {
+      "default": false,
+      "title": "Edits Applied",
+      "type": "boolean"
+    },
+    "final_hash": {
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "title": "Final Hash",
+      "type": "string"
+    },
+    "final_ref": {
+      "title": "Final Ref",
+      "type": "string"
+    },
+    "final_validation_ref": {
+      "title": "Final Validation Ref",
+      "type": "string"
+    },
+    "highest_priority_domain": {
+      "title": "Highest Priority Domain",
+      "type": "string"
+    },
+    "maturity_score": {
+      "maximum": 1,
+      "minimum": 0,
+      "title": "Maturity Score",
+      "type": "number"
+    },
+    "media_rendered": {
+      "default": false,
+      "title": "Media Rendered",
+      "type": "boolean"
+    },
+    "model_call_performed_by_cli": {
+      "default": false,
+      "title": "Model Call Performed By Cli",
+      "type": "boolean"
+    },
+    "network_performed": {
+      "default": false,
+      "title": "Network Performed",
+      "type": "boolean"
+    },
+    "next_actions": {
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Next Actions",
+      "type": "array"
+    },
+    "planned_but_unapplied": {
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Planned But Unapplied",
+      "type": "array"
+    },
+    "project_id": {
+      "title": "Project Id",
+      "type": "string"
+    },
+    "publishability": {
+      "enum": [
+        "publishable",
+        "conditional",
+        "not_publishable"
+      ],
+      "title": "Publishability",
+      "type": "string"
+    },
+    "reframe_application_fingerprint": {
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "title": "Reframe Application Fingerprint",
+      "type": "string"
+    },
+    "reframe_application_ref": {
+      "title": "Reframe Application Ref",
+      "type": "string"
+    },
+    "review_id": {
+      "title": "Review Id",
+      "type": "string"
+    },
+    "schema_version": {
+      "default": "0.3",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "second_cut_required": {
+      "title": "Second Cut Required",
+      "type": "boolean"
+    },
+    "structure_fingerprint": {
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "title": "Structure Fingerprint",
+      "type": "string"
+    },
+    "structure_ref": {
+      "title": "Structure Ref",
+      "type": "string"
+    },
+    "technical_delivery_valid": {
+      "title": "Technical Delivery Valid",
+      "type": "boolean"
+    },
+    "text_plan_fingerprint": {
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "title": "Text Plan Fingerprint",
+      "type": "string"
+    },
+    "text_plan_ref": {
+      "title": "Text Plan Ref",
+      "type": "string"
+    },
+    "warnings": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Warnings",
+      "type": "array"
+    }
+  },
+  "required": [
+    "review_id",
+    "project_id",
+    "final_ref",
+    "final_hash",
+    "final_validation_ref",
+    "baseline_ref",
+    "baseline_fingerprint",
+    "editorial_scores_ref",
+    "editorial_scores_fingerprint",
+    "structure_ref",
+    "structure_fingerprint",
+    "bgm_match_ref",
+    "bgm_match_fingerprint",
+    "text_plan_ref",
+    "text_plan_fingerprint",
+    "reframe_application_ref",
+    "reframe_application_fingerprint",
+    "publishability",
+    "maturity_score",
+    "technical_delivery_valid",
+    "second_cut_required",
+    "domains",
+    "highest_priority_domain",
+    "planned_but_unapplied",
+    "next_actions"
+  ],
+  "title": "FirstCutSelfReview",
+  "type": "object"
+}

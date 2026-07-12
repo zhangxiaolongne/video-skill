@@ -16,11 +16,11 @@ issue tracker, or master strategy document.
 
 ## Current State
 
-- Current active gate: V2-07 Text, Subtitle, And On-Screen Timing Plan
+- Current active gate: V2-08 First-Cut Aesthetic Self-Review
 - Gate state: completed locally; ready for one-version publication
-- Completed published capability: `V2-06` BGM Mood And Rhythm Matching
-- Current complete version: `V2-07 Text, Subtitle, And On-Screen Timing Plan`
-- Current batch: `V2-07` completed locally
+- Completed published capability: `V2-07` Text, Subtitle, And On-Screen Timing Plan
+- Current complete version: `V2-08 First-Cut Aesthetic Self-Review`
+- Current batch: `V2-08` completed locally
 - Latest published release baseline: `v0.30.0`
 - Current published capability work: V1-08 revision promotion and V1 release
   packaging
@@ -132,6 +132,6 @@ the active gate and immediate development direction.
 
 ## Next Major Decision
 
-Publish V2-07 after synthetic and both real projects proved title timing,
-unavailable transcript slots, safe-region risk, payoff text-free space, and no
-invented text. All 243 tests and quality/package checks passed. V2-08 is next.
+Publish V2-08 after both real projects bound nine domains to canonical finals,
+preserved technical/aesthetic separation, and exposed five unapplied V2
+improvement groups. All 243 tests and quality/package checks passed. V2-09 is next.

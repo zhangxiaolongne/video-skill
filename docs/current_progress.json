@@ -1,7 +1,7 @@
 {
   "schema_version": "1.5",
-  "capability_gate": "V2-07",
-  "milestone": "V2-07 Text, Subtitle, And On-Screen Timing Plan",
+  "capability_gate": "V2-08",
+  "milestone": "V2-08 First-Cut Aesthetic Self-Review",
   "documentation_system": {
     "master": "artist_portrait_editor_revision5_optimized.md",
     "current_progress": "docs/DEVELOPMENT_PROGRESS.md",
@@ -18,14 +18,14 @@
     "current_files_keep_only": "active decisions, current validation, active batch, and next development direction"
   },
   "active_batch": {
-    "id": "V2-07",
-    "name": "Text, Subtitle, And On-Screen Timing Plan",
+    "id": "V2-08",
+    "name": "First-Cut Aesthetic Self-Review",
     "status": "completed",
     "started": "2026-07-12",
-    "capability_gate": "V2-07",
+    "capability_gate": "V2-08",
     "acceptance_stage": null,
     "prerequisite_acceptance_stage": "ACCEPTANCE-STAGE-07_completed_locally",
-    "commit_policy": "v2_07_complete_and_ready_for_one_commit_push"
+    "commit_policy": "v2_08_complete_and_ready_for_one_commit_push"
   },
   "latest_release": {
     "tag": "v0.30.0",
@@ -40,13 +40,13 @@
     "full_pytest": ".venv/bin/python -m pytest passed with 243 passed",
     "project_checks": ".venv/bin/python run_checks.py passed with golden, BGM/rhythm, NLE round-trip, schema, package, install simulation, release-candidate, and diff checks",
     "real_benchmark": "stage baseline plus user-provided 448.333s actress interview contrast; interview final is chronological 60s at 1280x720 with six reviewed frames and a separate not-publishable aesthetic verdict",
-    "current_doc_followup": "V2-07 completed locally: option-specific title, unavailable subtitle-slot, payoff text-free, safe-region, reading, and audio-pressure plans for both real projects; 243 tests and all checks passed"
+    "current_doc_followup": "V2-08 completed locally: nine-domain canonical-first-cut reviews retain interview 0.38 and stage 0.34 not-publishable verdicts; only technical delivery is resolved; 243 tests and all checks passed"
   },
   "capability_summary": {
     "engineering_substrate": "published",
     "v1_aesthetic_foundation": "published",
     "real_video_aesthetic_maturity": "baseline_complete",
-    "current_gap": "V2-07 provides truthful text timing plans; V2-08 must perform evidence-bound first-cut aesthetic self-review across all domains"
+    "current_gap": "V2-08 identifies canonical first-cut failures; V2-09 must generate and render a concrete second-cut candidate rather than another plan"
   },
   "json_governance": {
     "canonical_rule": "JSON is kept only for canonical machine truth, boundary evidence, generated schema contracts, media validation, run audit, or release-critical evidence.",
@@ -111,39 +111,39 @@
   },
   "tasks": [
     {
-      "id": "canonical_text_plan",
+      "id": "canonical_review",
       "status": "completed"
     },
     {
-      "id": "fresh_structure_binding",
+      "id": "fresh_final_binding",
       "status": "completed"
     },
     {
-      "id": "title_timing",
+      "id": "nine_domains",
       "status": "completed"
     },
     {
-      "id": "subtitle_truth",
+      "id": "opening_review",
       "status": "completed"
     },
     {
-      "id": "emphasis_truth",
+      "id": "middle_review",
       "status": "completed"
     },
     {
-      "id": "reading_budget",
+      "id": "audio_text_review",
       "status": "completed"
     },
     {
-      "id": "safe_region",
+      "id": "ending_transition_review",
       "status": "completed"
     },
     {
-      "id": "pause_and_space",
+      "id": "composition_review",
       "status": "completed"
     },
     {
-      "id": "audio_pressure",
+      "id": "publishability",
       "status": "completed"
     },
     {

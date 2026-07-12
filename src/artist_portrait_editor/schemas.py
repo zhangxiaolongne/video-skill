@@ -69,6 +69,7 @@ from artist_portrait_editor.models.rhythm import (
 from artist_portrait_editor.models.transcript import TranscriptRecord
 from artist_portrait_editor.models.timeline import TimelineDraft, TimelineValidationReport
 from artist_portrait_editor.models.text_plan import TextTimingPlan
+from artist_portrait_editor.models.first_cut_review import FirstCutSelfReview
 from artist_portrait_editor.models.workflow import (
     WorkflowExecutionRecord,
     WorkflowExecutionReview,
@@ -139,6 +140,7 @@ def write_schema_files(output_dir: Path) -> None:
         "sound_decision.schema.json": SoundDecision.model_json_schema(),
         "structure_recommendation.schema.json": StructureRecommendation.model_json_schema(),
         "text_timing_plan.schema.json": TextTimingPlan.model_json_schema(),
+        "first_cut_self_review.schema.json": FirstCutSelfReview.model_json_schema(),
         "second_cut_candidate.schema.json": SecondCutCandidate.model_json_schema(),
         "clip_record.schema.json": ClipRecord.model_json_schema(),
         "cut_review_report.schema.json": CutReviewReport.model_json_schema(),

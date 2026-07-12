@@ -339,6 +339,11 @@ emphasis, pauses, and text-free landing space across all duration options. It
 validates reading density and marks sampled safe regions for manual playback
 review. Missing transcript yields unavailable slots, not invented text.
 
+`first-cut-review` reviews the current canonical final across nine editorial
+and audiovisual domains. It preserves earlier Host-Agent findings, binds newer
+V2 evidence, and refuses to count plans or independent playback candidates as
+applied first-cut improvements.
+
 Preview rendering may use local FFmpeg/ffprobe to extract timeline video
 ranges, retain original source audio, apply fitted BGM gain/fades/looping, and
 duck BGM under retained original audio. It must not choose music, fabricate beat
