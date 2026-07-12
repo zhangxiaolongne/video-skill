@@ -79,7 +79,7 @@ release-candidate validation path:
 Current published capability work: `V1-08 Revision promotion, revised render
 readiness, and V1 release packaging` in the retained `v0.30.0` baseline.
 Current local acceptance stage: `ACCEPTANCE-STAGE-07 Real Media Truthfulness And Baseline Recovery`.
-Current V2-06 BGM Mood And Rhythm Matching is complete locally and awaiting publication. V2-05 is published.
+Current V2-07 Text, Subtitle, And On-Screen Timing Plan is complete locally and awaiting publication. V2-06 is published.
 The latest published acceptance release remains `ACCEPTANCE-STAGE-06 Release
 candidate and publication` in `v0.28.0`; the latest published V1 capability
 release baseline is `v0.30.0`.
@@ -302,6 +302,10 @@ or media is changed.
 against current structure options and exposes mood/rhythm evidence plus
 ducking, text, and transition pressure. It never auto-selects music or treats
 mixed video audio and technical energy as clean semantic music evidence.
+`text-plan` creates option-specific title, subtitle-slot, emphasis, pause, and
+empty-space timing with reading and safe-region risk. Subtitle/emphasis content
+requires transcript evidence; missing text remains unavailable and is never
+invented or burned into media.
 `propose` prepares a host-Agent handoff and can import an explicit quarantined
 ProposalSet candidate; it does not call paid APIs or access the network.
 

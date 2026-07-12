@@ -100,6 +100,7 @@ def initial_steps() -> dict[str, StepLedgerEntry]:
         "evidence_map": StepLedgerEntry(),
         "editorial_score": StepLedgerEntry(),
         "structure_recommendation": StepLedgerEntry(),
+        "text_plan": StepLedgerEntry(),
         "bgm_match": StepLedgerEntry(),
         "aesthetic_baseline_context": StepLedgerEntry(),
         "aesthetic_baseline": StepLedgerEntry(),

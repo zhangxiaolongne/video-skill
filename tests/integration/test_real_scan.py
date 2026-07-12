@@ -232,6 +232,24 @@ def test_real_media_acceptance_profiles_reach_delivery(tmp_path, capsys):
     assert bgm_match["selected_candidate_id"] is None
     assert bgm_match["fabricated_mood"] is False
     assert bgm_match["fabricated_bpm_or_beats"] is False
+    assert main(["text-plan", "--project", str(project_path), "--json"]) == 1
+    text_plan = json.loads(capsys.readouterr().out)["text_plan"]
+    assert text_plan["transcript_coverage_ratio"] == 0.0
+    assert text_plan["invented_transcript"] is False
+    assert text_plan["invented_lyrics"] is False
+    assert text_plan["text_burned_into_media"] is False
+    assert text_plan["timeline_mutated"] is False
+    assert [item["option_id"] for item in text_plan["options"]] == [
+        "short", "standard", "extended"
+    ]
+    assert all(item["subtitle_count"] == 0 for item in text_plan["options"])
+    assert all(item["unavailable_subtitle_slot_count"] >= 1 for item in text_plan["options"])
+    assert all(
+        element["content"] is None and element["evidence_status"] == "unavailable"
+        for option in text_plan["options"]
+        for element in option["elements"]
+        if element["element_type"] == "subtitle"
+    )
     assert main(["score", "--project", str(project_path), "--quiet"]) in (0, 1)
     assert main(["propose", "--project", str(project_path), "--json"]) == 1
     capsys.readouterr()

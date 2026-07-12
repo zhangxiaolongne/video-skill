@@ -334,6 +334,11 @@ the suggested ordering or changes timeline/media.
 options. Mood and rhythm remain unknown without evidence; mixed video audio
 raises voice/ducking/text/transition pressure and is never clean BGM.
 
+`text-plan` creates timing plans for titles, evidence-backed subtitles and
+emphasis, pauses, and text-free landing space across all duration options. It
+validates reading density and marks sampled safe regions for manual playback
+review. Missing transcript yields unavailable slots, not invented text.
+
 Preview rendering may use local FFmpeg/ffprobe to extract timeline video
 ranges, retain original source audio, apply fitted BGM gain/fades/looping, and
 duck BGM under retained original audio. It must not choose music, fabricate beat

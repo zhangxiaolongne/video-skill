@@ -3,9 +3,16 @@
 Follow `artist_portrait_editor_revision5_optimized.md` as the governing V0
 engineering-freeze document.
 
-Current gate: V2-06 BGM Mood And Rhythm Matching. V2-05 Duration And Structure
-Recommendation is published. V2-06 is complete locally and awaiting publication
-as one version. V2-07 is not active yet.
+Current gate: V2-07 Text, Subtitle, And On-Screen Timing Plan. V2-06 BGM Mood
+And Rhythm Matching is published. V2-07 is complete locally and awaiting
+publication as one version. V2-08 is not active yet.
+
+V2-07 may plan titles, evidence-backed subtitles/emphasis, pauses, empty-space
+reservations, reading density, sampled-frame safe-region review, and BGM/source
+audio text pressure for all structure options. Missing transcript must create
+unavailable slots, never invented dialogue, lyrics, speakers, or emphasis.
+It must not burn text into media, mutate timelines, render, call models, access
+the network, select music, or claim sampled composition proves motion safety.
 
 V2-06 may compare direct audio, video-extracted mixed audio, source embedded
 audio, multiple candidates, and no-file-yet planning against current structure

@@ -1,7 +1,7 @@
 {
   "schema_version": "1.5",
-  "capability_gate": "V2-06",
-  "milestone": "V2-06 BGM Mood And Rhythm Matching",
+  "capability_gate": "V2-07",
+  "milestone": "V2-07 Text, Subtitle, And On-Screen Timing Plan",
   "documentation_system": {
     "master": "artist_portrait_editor_revision5_optimized.md",
     "current_progress": "docs/DEVELOPMENT_PROGRESS.md",
@@ -18,14 +18,14 @@
     "current_files_keep_only": "active decisions, current validation, active batch, and next development direction"
   },
   "active_batch": {
-    "id": "V2-06",
-    "name": "BGM Mood And Rhythm Matching",
+    "id": "V2-07",
+    "name": "Text, Subtitle, And On-Screen Timing Plan",
     "status": "completed",
     "started": "2026-07-12",
-    "capability_gate": "V2-06",
+    "capability_gate": "V2-07",
     "acceptance_stage": null,
     "prerequisite_acceptance_stage": "ACCEPTANCE-STAGE-07_completed_locally",
-    "commit_policy": "v2_06_complete_and_ready_for_one_commit_push"
+    "commit_policy": "v2_07_complete_and_ready_for_one_commit_push"
   },
   "latest_release": {
     "tag": "v0.30.0",
@@ -40,13 +40,13 @@
     "full_pytest": ".venv/bin/python -m pytest passed with 243 passed",
     "project_checks": ".venv/bin/python run_checks.py passed with golden, BGM/rhythm, NLE round-trip, schema, package, install simulation, release-candidate, and diff checks",
     "real_benchmark": "stage baseline plus user-provided 448.333s actress interview contrast; interview final is chronological 60s at 1280x720 with six reviewed frames and a separate not-publishable aesthetic verdict",
-    "current_doc_followup": "V2-05 completed locally: exact 39/60/90-second short/standard/extended plans for interview and stage with bounded hook/build/payoff budgets; 243 tests and all checks passed"
+    "current_doc_followup": "V2-07 completed locally: option-specific title, unavailable subtitle-slot, payoff text-free, safe-region, reading, and audio-pressure plans for both real projects; 243 tests and all checks passed"
   },
   "capability_summary": {
     "engineering_substrate": "published",
     "v1_aesthetic_foundation": "published",
     "real_video_aesthetic_maturity": "baseline_complete",
-    "current_gap": "V2-05 provides bounded duration/structure choices; V2-06 must match BGM mood/rhythm and downstream pressure without misclassifying mixed audio"
+    "current_gap": "V2-07 provides truthful text timing plans; V2-08 must perform evidence-bound first-cut aesthetic self-review across all domains"
   },
   "json_governance": {
     "canonical_rule": "JSON is kept only for canonical machine truth, boundary evidence, generated schema contracts, media validation, run audit, or release-critical evidence.",
@@ -111,39 +111,39 @@
   },
   "tasks": [
     {
-      "id": "canonical_match",
+      "id": "canonical_text_plan",
       "status": "completed"
     },
     {
-      "id": "input_modes",
+      "id": "fresh_structure_binding",
       "status": "completed"
     },
     {
-      "id": "structure_binding",
+      "id": "title_timing",
       "status": "completed"
     },
     {
-      "id": "mood_truth",
+      "id": "subtitle_truth",
       "status": "completed"
     },
     {
-      "id": "rhythm_truth",
+      "id": "emphasis_truth",
       "status": "completed"
     },
     {
-      "id": "mixed_audio",
+      "id": "reading_budget",
       "status": "completed"
     },
     {
-      "id": "ducking_pressure",
+      "id": "safe_region",
       "status": "completed"
     },
     {
-      "id": "text_pressure",
+      "id": "pause_and_space",
       "status": "completed"
     },
     {
-      "id": "transition_pressure",
+      "id": "audio_pressure",
       "status": "completed"
     },
     {

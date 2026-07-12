@@ -11,6 +11,17 @@ decision history is archived in [DECISIONS_HISTORY.md](archive/DECISIONS_HISTORY
 
 ## Active Decisions
 
+### DEC-047: Text content requires supplied language evidence
+
+- Status: `active`
+- Decision: title text may come from the edit brief, but subtitle, emphasis,
+  lyric, and speaker content require overlapping transcript or explicit user
+  evidence. Missing text produces an unavailable timed slot. Sampled
+  composition can require safe-region review but cannot prove motion safety.
+- Rationale: invented dialogue or lyrics would corrupt both editorial meaning
+  and reading-time validation.
+- Revisit when: validated transcript or explicit user text is imported.
+
 ### DEC-046: Editorial ranking separates neutral unknowns from quality
 
 - Status: `active`

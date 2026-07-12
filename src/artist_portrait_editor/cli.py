@@ -90,6 +90,7 @@ from artist_portrait_editor.sound_decision import (
     build_sound_decision_workspace,
 )
 from artist_portrait_editor.structure_recommendation import StructureRecommendationError, build_structure_recommendation
+from artist_portrait_editor.text_planning import TextPlanningError, build_text_plan
 from artist_portrait_editor.second_cut import SecondCutError, build_second_cut_candidate
 from artist_portrait_editor.reframe import ReframeError, apply_reframe_selection
 from artist_portrait_editor.run_records import (
@@ -353,6 +354,11 @@ def build_parser() -> argparse.ArgumentParser:
     structure_sub = subparsers.add_parser("structure-recommend")
     structure_sub.add_argument("--project", required=True); structure_sub.add_argument("--json", action="store_true"); structure_sub.add_argument("--quiet", action="store_true"); structure_sub.add_argument("--verbose", action="store_true")
     bgm_match_sub=subparsers.add_parser("bgm-match"); bgm_match_sub.add_argument("--project",required=True); bgm_match_sub.add_argument("--json",action="store_true"); bgm_match_sub.add_argument("--quiet",action="store_true"); bgm_match_sub.add_argument("--verbose",action="store_true")
+    text_plan_sub = subparsers.add_parser("text-plan")
+    text_plan_sub.add_argument("--project", required=True)
+    text_plan_sub.add_argument("--json", action="store_true")
+    text_plan_sub.add_argument("--quiet", action="store_true")
+    text_plan_sub.add_argument("--verbose", action="store_true")
 
     baseline_sub = subparsers.add_parser("baseline")
     baseline_sub.add_argument("--project", required=True)
@@ -2103,6 +2109,28 @@ def cmd_bgm_match(args:argparse.Namespace)->int:
     return int(ExitCode.success_with_warnings if warnings else ExitCode.success)
 
 
+def cmd_text_plan(args: argparse.Namespace) -> int:
+    if error := _validate_common_flags(args):
+        return int(error)
+    project_path = Path(args.project)
+    try:
+        canonical, report, plan, warnings = build_text_plan(project_path)
+    except ConfigLoadError as exc:
+        print(str(exc), file=sys.stderr)
+        return int(ExitCode.invalid_project_config)
+    except (TextPlanningError, ValueError) as exc:
+        print(str(exc), file=sys.stderr)
+        return int(ExitCode.output_or_reference_validation_failed)
+    root = project_root(project_path)
+    payload = {"output": canonical.relative_to(root).as_posix(), "report": report.relative_to(root).as_posix(), "text_plan": plan.model_dump(mode="json"), "warnings": warnings}
+    if args.json:
+        print(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True))
+    elif not args.quiet:
+        print(f"wrote {payload['output']}")
+        print(f"wrote {payload['report']}")
+    return int(ExitCode.success_with_warnings if warnings else ExitCode.success)
+
+
 def cmd_baseline(args: argparse.Namespace) -> int:
     if error := _validate_common_flags(args):
         return int(error)
@@ -2954,6 +2982,7 @@ def main(argv: list[str] | None = None) -> int:
         "editorial-score": cmd_editorial_score,
         "structure-recommend": cmd_structure_recommend,
         "bgm-match": cmd_bgm_match,
+        "text-plan": cmd_text_plan,
         "baseline": cmd_baseline,
         "second-cut": cmd_second_cut,
         "revise": cmd_revise,
