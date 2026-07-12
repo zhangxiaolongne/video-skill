@@ -38,6 +38,7 @@ from artist_portrait_editor.cut_review import (
     build_cut_review_workspace,
 )
 from artist_portrait_editor.editor_package import EditorPackageError, build_editor_package
+from artist_portrait_editor.editorial_scoring import EditorialScoringError, build_editorial_scores
 from artist_portrait_editor.bgm_recommendation import (
     BgmRecommendationError,
     import_bgm_recommendation_candidate,
@@ -341,6 +342,12 @@ def build_parser() -> argparse.ArgumentParser:
     evidence_map_sub.add_argument("--json", action="store_true")
     evidence_map_sub.add_argument("--quiet", action="store_true")
     evidence_map_sub.add_argument("--verbose", action="store_true")
+
+    editorial_score_sub = subparsers.add_parser("editorial-score")
+    editorial_score_sub.add_argument("--project", required=True)
+    editorial_score_sub.add_argument("--json", action="store_true")
+    editorial_score_sub.add_argument("--quiet", action="store_true")
+    editorial_score_sub.add_argument("--verbose", action="store_true")
 
     baseline_sub = subparsers.add_parser("baseline")
     baseline_sub.add_argument("--project", required=True)
@@ -2053,6 +2060,23 @@ def cmd_evidence_map(args: argparse.Namespace) -> int:
     return int(ExitCode.success_with_warnings if warnings else ExitCode.success)
 
 
+def cmd_editorial_score(args: argparse.Namespace) -> int:
+    if error := _validate_common_flags(args): return int(error)
+    project_path = Path(args.project)
+    try:
+        canonical, report, scores, warnings = build_editorial_scores(project_path)
+    except ConfigLoadError as exc:
+        print(str(exc), file=sys.stderr); return int(ExitCode.invalid_project_config)
+    except (EditorialScoringError, ValueError) as exc:
+        print(str(exc), file=sys.stderr); return int(ExitCode.output_or_reference_validation_failed)
+    root = project_root(project_path)
+    payload = {"output": canonical.relative_to(root).as_posix(), "report": report.relative_to(root).as_posix(), "editorial_scores": scores.model_dump(mode="json"), "warnings": warnings}
+    if args.json: print(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True))
+    elif not args.quiet:
+        print(f"wrote {payload['output']}"); print(f"wrote {payload['report']}")
+    return int(ExitCode.success_with_warnings if warnings else ExitCode.success)
+
+
 def cmd_baseline(args: argparse.Namespace) -> int:
     if error := _validate_common_flags(args):
         return int(error)
@@ -2901,6 +2925,7 @@ def main(argv: list[str] | None = None) -> int:
         "composition": cmd_composition,
         "reframe": cmd_reframe,
         "evidence-map": cmd_evidence_map,
+        "editorial-score": cmd_editorial_score,
         "baseline": cmd_baseline,
         "second-cut": cmd_second_cut,
         "revise": cmd_revise,

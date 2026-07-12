@@ -11,8 +11,8 @@ This file records only current publication state and recent release facts. Full 
   post-refactor, single-root history baseline selected for remote publication.
 - Published scope: the V1 capability surface plus the complete architecture,
   JSON-governance, test, package-boundary, and history reset refactor.
-- Active local work: `V2-03 Transcript / Vision / Audio Evidence Fusion`,
-  completed locally and ready for one-version publication.
+- Active local work: `V2-04 Highlight, Hook, And Ending Scoring`, completed
+  locally and ready for one-version publication.
   Its current prerequisite batch is `ACCEPTANCE-STAGE-07 Real Media
   Truthfulness And Baseline Recovery`.
 - Publication policy: do not publish the next capability release until the
@@ -62,6 +62,11 @@ This file records only current publication state and recent release facts. Full 
   Both correctly retain absent transcript, detected-scene, speech/music,
   applause, emotion, lyrics, and BPM evidence as degraded/unknown. Full checks
   passed with 243 tests and all quality/package gates.
+- V2-04 local validation ranked 45 interview and 25 stage visual candidates
+  independently for highlight, hook, and ending. It excluded 25 stage
+  pure-audio/BGM units, applied no first/last position bonus, kept missing
+  semantics neutral with zero confidence, and passed 243 tests plus all
+  quality/package gates.
 
 - Architecture baseline validation passed on `2026-07-10`: `.venv/bin/python
   run_checks.py` completed successfully with `239 passed`, schema generation,

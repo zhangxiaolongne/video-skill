@@ -318,6 +318,12 @@ goal artifacts. It preserves exact fingerprints and exposes partial/unavailable
 channels and semantic unknowns. It does not infer speech, music, applause,
 emotion, lyrics, BPM, or visual meaning from missing or merely technical data.
 
+`editorial-score` consumes the current canonical evidence map and creates one
+candidate set with hook, emotion, information, visual, audio, rhythm, ending,
+and risk dimensions plus separate highlight/hook/ending ranks. It excludes
+pure-audio units from visual ranking, gives no first/last bonus, and never
+converts loudness or missing semantics into aesthetic certainty.
+
 Preview rendering may use local FFmpeg/ffprobe to extract timeline video
 ranges, retain original source audio, apply fitted BGM gain/fades/looping, and
 duck BGM under retained original audio. It must not choose music, fabricate beat

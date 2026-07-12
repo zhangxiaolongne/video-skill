@@ -100,6 +100,15 @@
           "title": "End Seconds",
           "type": "number"
         },
+        "media_kind": {
+          "enum": [
+            "video",
+            "audio",
+            "image"
+          ],
+          "title": "Media Kind",
+          "type": "string"
+        },
         "scene_confidence": {
           "maximum": 1,
           "minimum": 0,
@@ -153,6 +162,7 @@
         "source_id",
         "source_content_hash",
         "clip_id",
+        "media_kind",
         "clip_fingerprint",
         "start_seconds",
         "end_seconds",

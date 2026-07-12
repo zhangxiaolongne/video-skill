@@ -195,6 +195,20 @@ def test_real_media_acceptance_profiles_reach_delivery(tmp_path, capsys):
     assert evidence["units"][0]["audio"]["facts"]["method"] == (
         "ffmpeg_volumedetect_silencedetect_v1"
     )
+    assert evidence["units"][0]["media_kind"] == "video"
+    assert main(["editorial-score", "--project", str(project_path), "--json"]) == 1
+    scores = json.loads(capsys.readouterr().out)["editorial_scores"]
+    assert scores["candidate_count"] == 1
+    assert scores["status"] == "degraded"
+    assert scores["first_clip_position_bonus"] is False
+    assert scores["last_clip_position_bonus"] is False
+    assert scores["loudness_treated_as_emotion"] is False
+    assert scores["missing_evidence_treated_as_zero_quality"] is False
+    candidate_score = scores["candidates"][0]
+    assert candidate_score["emotion"]["score"] == 0.5
+    assert candidate_score["emotion"]["confidence"] == 0.0
+    assert candidate_score["hook_rank"] == 1
+    assert candidate_score["ending_rank"] == 1
     assert main(["score", "--project", str(project_path), "--quiet"]) in (0, 1)
     assert main(["propose", "--project", str(project_path), "--json"]) == 1
     capsys.readouterr()

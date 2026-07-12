@@ -3,9 +3,18 @@
 Follow `artist_portrait_editor_revision5_optimized.md` as the governing V0
 engineering-freeze document.
 
-Current gate: V2-03 Transcript / Vision / Audio Evidence Fusion. V2-02 Frame
-Composition And Reframing is published. V2-03 is complete locally and awaiting
-publication as one version. V2-04 is not active yet.
+Current gate: V2-04 Highlight, Hook, And Ending Scoring. V2-03 Transcript /
+Vision / Audio Evidence Fusion is published. V2-04 is complete locally and
+awaiting publication as one version. V2-05 is not active yet.
+
+V2-04 may score visual evidence-map units for hook, emotion, information
+density, visual usability, audio usability, rhythm, ending resonance, and risk;
+produce separate highlight/hook/ending ranks; and bind current evidence-map and
+user-goal provenance. Unknown semantics must use neutral priors with zero
+confidence and explicit penalties. It must not rank pure-audio clips as visual
+candidates, grant first/last position bonuses, treat loudness as emotion,
+applause, music, climax, or hook quality, call models, access the network,
+render media, mutate timelines, or automatically select clips.
 
 V2-03 may align current source, clip/scene, transcript, keyframe/analysis,
 local audio energy/silence, edit-brief goal, and source/BGM conflict evidence

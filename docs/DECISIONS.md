@@ -11,6 +11,18 @@ decision history is archived in [DECISIONS_HISTORY.md](archive/DECISIONS_HISTORY
 
 ## Active Decisions
 
+### DEC-046: Editorial ranking separates neutral unknowns from quality
+
+- Status: `active`
+- Decision: every visual candidate has eight scored dimensions with evidence
+  status, confidence, rationale, and risk. Unknown semantics use a 0.5 neutral
+  prior with zero confidence and explicit penalties. Pure-audio units, source
+  position, and loudness cannot promote visual hook/highlight/ending rank.
+- Rationale: zero-scoring unknown evidence creates false negatives, while
+  rewarding loudness or source position creates false aesthetic certainty.
+- Revisit when: validated transcript/vision/audio semantics support replacing
+  neutral priors with evidence-backed judgments.
+
 ### DEC-045: Evidence fusion preserves missing and technical-only states
 
 - Status: `active`

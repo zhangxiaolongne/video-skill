@@ -2,61 +2,58 @@
 
 ## Batch Header
 
-- Batch ID: `V2-03`
-- Name: Transcript / Vision / Audio Evidence Fusion
+- Batch ID: `V2-04`
+- Name: Highlight, Hook, And Ending Scoring
 - Type: product capability milestone
 - Status: `completed`
-- Capability gate: `V2-03`
-- Prerequisite: published `V2-02 Frame Composition And Reframing`
-- Publication: one commit/push only after the complete version passes
+- Capability gate: `V2-04`
+- Prerequisite: published `V2-03 Transcript / Vision / Audio Evidence Fusion`
+- Publication: one commit/push only after complete version validation
 
 ## Goal Delta
 
-Before V2-03, transcript, keyframe, scene/clip, audio, composition, and user-goal
-facts live in separate artifacts. Missing evidence is easy to mistake for a
-negative finding.
+Before V2-04, early technical clip scores cannot explain whether a range is a
+highlight, opening, or ending candidate. Missing semantics can be mistaken for
+negative evidence.
 
-After V2-03, one canonical evidence map aligns those channels by source clip,
-binds every input fingerprint, exposes availability/confidence/degradation, and
-provides truthful downstream scoring inputs without inventing speech, visual
-semantics, applause, music, emotion, lyrics, or BPM.
+After V2-04, every evidence-map unit has eight explicit editorial dimensions,
+risk penalty, evidence confidence, rationale, and independent highlight/hook/
+ending ranks. Rankings use only available evidence and never promote first/last
+position, loudness, or missing data into aesthetic truth.
 
 ## Internal Acceptance Checklist
 
 | ID | Outcome | Acceptance | Status |
 |---|---|---|---|
-| `canonical_map` | One canonical map | One machine JSON plus one human report. | `completed` |
-| `time_alignment` | Clip time alignment | Every evidence unit binds exact source and clip ranges. | `completed` |
-| `input_provenance` | Fingerprint binding | Source/clip/transcript/keyframe/analysis/brief inputs are hashed. | `completed` |
-| `transcript_channel` | Transcript coverage | Text/timing coverage is measured; absence is unavailable, not silence. | `completed` |
-| `vision_channel` | Visual evidence | Keyframe/analysis coverage is visible without fabricated semantics. | `completed` |
-| `scene_channel` | Boundary evidence | Fixed-window versus detected-scene confidence remains explicit. | `completed` |
-| `audio_channel` | Local audio features | RMS/peak/silence evidence is computed locally with method provenance. | `completed` |
-| `semantic_unknowns` | Honest unknown states | Speech/music/applause/emotion/lyrics/BPM remain unknown without evidence. | `completed` |
-| `goal_and_conflict` | Goal/conflict binding | User goal and BGM/source-audio conflict risks bind each unit. | `completed` |
-| `real_validation` | Cross-source closeout | Stage/interview degradation contrast plus full project checks pass. | `completed` |
+| `canonical_scores` | One scoring set | One canonical JSON and one Markdown report. | `completed` |
+| `fresh_map_binding` | Evidence freshness | Exact current evidence-map fingerprint is required. | `completed` |
+| `eight_dimensions` | Editorial dimensions | Hook, emotion, information, visual, audio, rhythm, ending, and risk exist per unit. | `completed` |
+| `unknown_neutrality` | Missing-evidence policy | Unknown semantics use neutral priors with zero confidence, not zero quality. | `completed` |
+| `risk_penalty` | Explicit penalties | Missing channels and conflict risks reduce confidence/ranking. | `completed` |
+| `highlight_rank` | Highlight ranking | Cross-domain score and rationale rank all eligible units. | `completed` |
+| `hook_rank` | Hook ranking | Opening candidates are not selected by source position. | `completed` |
+| `ending_rank` | Ending ranking | Ending candidates are not selected by source position. | `completed` |
+| `goal_alignment` | User-goal binding | Theme, audience, platform, and duration evidence remain bound. | `completed` |
+| `real_validation` | Cross-source closeout | Stage/interview rankings and full project checks pass. | `completed` |
 
 ## Guardrails
 
-- No paid API, network access, hidden model call, package installation, or auto
-  music selection.
-- Audio energy is not music, applause, speech, emotion, or beat evidence.
-- A keyframe proves sampled pixels exist, not what those pixels mean.
-- Missing transcript is not silence and missing vision semantics is not a blank
-  frame.
-- Local media/cache/evidence remain outside Git and Skill packages.
+- Loudness is not emotion, applause, music, climax, or hook quality.
+- First and last source clips receive no positional bonus.
+- Missing transcript/vision semantics use neutral score with zero confidence.
+- Ranking confidence must expose evidence scarcity and conflict penalties.
+- No model call, network, paid API, render, timeline mutation, or music choice.
 
 ## Closeout Evidence
 
-- Interview: 45 units, transcript `0.0`, keyframes `1.0`, audio features `1.0`,
-  detected scenes `0.0`, status `degraded`.
-- Stage: 50 units, transcript `0.0`, keyframes `0.5`, audio features `1.0`,
-  detected scenes `0.0`, status `degraded`.
-- Both preserve speech/music/applause/emotion/lyrics/BPM as unknown.
-- Validation: `243 passed`; golden, BGM/rhythm, NLE, schema, package/install,
-  release candidate, and diff checks passed.
+- Interview: 45 visual candidates; top highlight/hook/ending ranges are
+  independently ranked with evidence-limited confidence around `0.2523`.
+- Stage: 25 visual candidates; 25 pure-audio/BGM units are excluded from visual
+  ranking; top candidates remain evidence-limited at `0.1931-0.2523` confidence.
+- Position bonuses, loudness-as-emotion, and missing-as-zero flags are false.
+- Validation: 243 tests and all quality/package/release/diff checks passed.
 
 ## Next Work
 
-Publish V2-03 as one version. Plan V2-04 scoring from the canonical evidence map
-without starting it inside this batch.
+Publish V2-04 as one version. Plan V2-05 duration/structure recommendation from
+the ranked distribution without starting it inside this batch.

@@ -16,11 +16,11 @@ issue tracker, or master strategy document.
 
 ## Current State
 
-- Current active gate: V2-03 Transcript / Vision / Audio Evidence Fusion
+- Current active gate: V2-04 Highlight, Hook, And Ending Scoring
 - Gate state: completed locally; ready for one-version publication
-- Completed published capability: `V2-02` Frame Composition And Reframing
-- Current complete version: `V2-03 Transcript / Vision / Audio Evidence Fusion`
-- Current batch: `V2-03` completed locally
+- Completed published capability: `V2-03` Transcript / Vision / Audio Evidence Fusion
+- Current complete version: `V2-04 Highlight, Hook, And Ending Scoring`
+- Current batch: `V2-04` completed locally
 - Latest published release baseline: `v0.30.0`
 - Current published capability work: V1-08 revision promotion and V1 release
   packaging
@@ -132,8 +132,8 @@ the active gate and immediate development direction.
 
 ## Next Major Decision
 
-Publish V2-03 as one version after its canonical maps passed synthetic media,
-45-unit interview, and 50-unit stage validation. Both real maps remain honestly
-degraded where transcript, detected scenes, and visual/audio semantics are
-missing. Full validation passed with 243 tests and all quality/package checks.
-V2-04 scoring is the next complete version and is not active in this batch.
+Publish V2-04 after separate highlight/hook/ending rankings passed synthetic,
+45-candidate interview, and 25-visual-candidate stage validation. Rankings keep
+low confidence where transcript/semantic evidence is missing, and 25 stage
+audio-only units are excluded. All 243 tests and quality/package checks passed.
+V2-05 is next and is not active inside this batch.

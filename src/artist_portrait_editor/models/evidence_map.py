@@ -25,6 +25,7 @@ class EvidenceMapUnit(BaseModel):
     source_id: str = Field(min_length=1)
     source_content_hash: str = Field(pattern=r"^sha256:[0-9a-f]{64}$")
     clip_id: str = Field(min_length=1)
+    media_kind: Literal["video", "audio", "image"]
     clip_fingerprint: str = Field(pattern=r"^sha256:[0-9a-f]{64}$")
     start_seconds: float = Field(ge=0)
     end_seconds: float = Field(gt=0)

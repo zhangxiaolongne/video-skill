@@ -1,0 +1,337 @@
+{
+  "$defs": {
+    "EditorialCandidateScore": {
+      "additionalProperties": false,
+      "properties": {
+        "audio_usability": {
+          "$ref": "#/$defs/EditorialDimension"
+        },
+        "candidate_id": {
+          "minLength": 1,
+          "title": "Candidate Id",
+          "type": "string"
+        },
+        "clip_id": {
+          "minLength": 1,
+          "title": "Clip Id",
+          "type": "string"
+        },
+        "emotion": {
+          "$ref": "#/$defs/EditorialDimension"
+        },
+        "end_seconds": {
+          "exclusiveMinimum": 0,
+          "title": "End Seconds",
+          "type": "number"
+        },
+        "ending_rank": {
+          "minimum": 1,
+          "title": "Ending Rank",
+          "type": "integer"
+        },
+        "ending_resonance": {
+          "$ref": "#/$defs/EditorialDimension"
+        },
+        "ending_score": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Ending Score",
+          "type": "number"
+        },
+        "highlight_rank": {
+          "minimum": 1,
+          "title": "Highlight Rank",
+          "type": "integer"
+        },
+        "highlight_score": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Highlight Score",
+          "type": "number"
+        },
+        "hook": {
+          "$ref": "#/$defs/EditorialDimension"
+        },
+        "hook_rank": {
+          "minimum": 1,
+          "title": "Hook Rank",
+          "type": "integer"
+        },
+        "hook_score": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Hook Score",
+          "type": "number"
+        },
+        "information_density": {
+          "$ref": "#/$defs/EditorialDimension"
+        },
+        "ranking_confidence": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Ranking Confidence",
+          "type": "number"
+        },
+        "rhythm": {
+          "$ref": "#/$defs/EditorialDimension"
+        },
+        "risk_penalty": {
+          "$ref": "#/$defs/EditorialDimension"
+        },
+        "source_id": {
+          "minLength": 1,
+          "title": "Source Id",
+          "type": "string"
+        },
+        "start_seconds": {
+          "minimum": 0,
+          "title": "Start Seconds",
+          "type": "number"
+        },
+        "unit_id": {
+          "minLength": 1,
+          "title": "Unit Id",
+          "type": "string"
+        },
+        "unknowns": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Unknowns",
+          "type": "array"
+        },
+        "user_goal_ref": {
+          "minLength": 1,
+          "title": "User Goal Ref",
+          "type": "string"
+        },
+        "visual_usability": {
+          "$ref": "#/$defs/EditorialDimension"
+        },
+        "warnings": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Warnings",
+          "type": "array"
+        }
+      },
+      "required": [
+        "candidate_id",
+        "unit_id",
+        "clip_id",
+        "source_id",
+        "start_seconds",
+        "end_seconds",
+        "hook",
+        "emotion",
+        "information_density",
+        "visual_usability",
+        "audio_usability",
+        "rhythm",
+        "ending_resonance",
+        "risk_penalty",
+        "highlight_score",
+        "hook_score",
+        "ending_score",
+        "ranking_confidence",
+        "highlight_rank",
+        "hook_rank",
+        "ending_rank",
+        "user_goal_ref"
+      ],
+      "title": "EditorialCandidateScore",
+      "type": "object"
+    },
+    "EditorialDimension": {
+      "additionalProperties": false,
+      "properties": {
+        "confidence": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Confidence",
+          "type": "number"
+        },
+        "evidence_refs": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Evidence Refs",
+          "type": "array"
+        },
+        "evidence_status": {
+          "enum": [
+            "available",
+            "partial",
+            "unavailable"
+          ],
+          "title": "Evidence Status",
+          "type": "string"
+        },
+        "rationale": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Rationale",
+          "type": "array"
+        },
+        "score": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Score",
+          "type": "number"
+        }
+      },
+      "required": [
+        "score",
+        "confidence",
+        "evidence_status",
+        "rationale"
+      ],
+      "title": "EditorialDimension",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "candidate_count": {
+      "minimum": 1,
+      "title": "Candidate Count",
+      "type": "integer"
+    },
+    "candidates": {
+      "items": {
+        "$ref": "#/$defs/EditorialCandidateScore"
+      },
+      "minItems": 1,
+      "title": "Candidates",
+      "type": "array"
+    },
+    "evidence_map_fingerprint": {
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "title": "Evidence Map Fingerprint",
+      "type": "string"
+    },
+    "evidence_map_id": {
+      "minLength": 1,
+      "title": "Evidence Map Id",
+      "type": "string"
+    },
+    "evidence_map_ref": {
+      "minLength": 1,
+      "title": "Evidence Map Ref",
+      "type": "string"
+    },
+    "first_clip_position_bonus": {
+      "default": false,
+      "title": "First Clip Position Bonus",
+      "type": "boolean"
+    },
+    "last_clip_position_bonus": {
+      "default": false,
+      "title": "Last Clip Position Bonus",
+      "type": "boolean"
+    },
+    "loudness_treated_as_emotion": {
+      "default": false,
+      "title": "Loudness Treated As Emotion",
+      "type": "boolean"
+    },
+    "media_rendered": {
+      "default": false,
+      "title": "Media Rendered",
+      "type": "boolean"
+    },
+    "missing_evidence_treated_as_zero_quality": {
+      "default": false,
+      "title": "Missing Evidence Treated As Zero Quality",
+      "type": "boolean"
+    },
+    "model_call_performed_by_cli": {
+      "default": false,
+      "title": "Model Call Performed By Cli",
+      "type": "boolean"
+    },
+    "network_performed": {
+      "default": false,
+      "title": "Network Performed",
+      "type": "boolean"
+    },
+    "project_id": {
+      "minLength": 1,
+      "title": "Project Id",
+      "type": "string"
+    },
+    "schema_version": {
+      "default": "0.3",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "score_set_id": {
+      "minLength": 1,
+      "title": "Score Set Id",
+      "type": "string"
+    },
+    "status": {
+      "enum": [
+        "ready",
+        "degraded",
+        "blocked"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "timeline_mutated": {
+      "default": false,
+      "title": "Timeline Mutated",
+      "type": "boolean"
+    },
+    "top_ending_ids": {
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Top Ending Ids",
+      "type": "array"
+    },
+    "top_highlight_ids": {
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Top Highlight Ids",
+      "type": "array"
+    },
+    "top_hook_ids": {
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Top Hook Ids",
+      "type": "array"
+    },
+    "warnings": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Warnings",
+      "type": "array"
+    }
+  },
+  "required": [
+    "score_set_id",
+    "project_id",
+    "evidence_map_id",
+    "evidence_map_ref",
+    "evidence_map_fingerprint",
+    "candidate_count",
+    "status",
+    "candidates",
+    "top_highlight_ids",
+    "top_hook_ids",
+    "top_ending_ids"
+  ],
+  "title": "EditorialScoreSet",
+  "type": "object"
+}

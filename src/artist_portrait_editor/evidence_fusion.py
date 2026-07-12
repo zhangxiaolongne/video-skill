@@ -79,6 +79,7 @@ def build_evidence_map(project_path: Path) -> tuple[Path, Path, EvidenceMap, lis
             unit_id="evidence_" + hashlib.sha256(clip.clip_id.encode()).hexdigest()[:20],
             source_id=clip.source_id, source_content_hash=clip.source_content_hash,
             clip_id=clip.clip_id, clip_fingerprint=analysis.clip_fingerprint if analysis else clip.source_fingerprint,
+            media_kind=clip.media_kind.value,
             start_seconds=clip.boundary.start_seconds, end_seconds=clip.boundary.end_seconds,
             scene_method=clip.method.value, scene_confidence=clip.boundary_confidence,
             transcript=transcript, vision=vision, audio=audio,
