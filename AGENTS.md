@@ -3,18 +3,28 @@
 Follow `artist_portrait_editor_revision5_optimized.md` as the governing V0
 engineering-freeze document.
 
+Before planning any new capability version, reread this file, the governing
+master principles/roadmap, `docs/CURRENT_BATCH.md`, `docs/DEVELOPMENT_PROGRESS.md`,
+`docs/ISSUES.md`, `docs/DECISIONS.md`, `docs/RELEASES.md`,
+`docs/current_progress.json`, current Git state, and the relevant implementation
+contracts. State the allowed scope, forbidden claims, user corrections, current
+conflicts, real-media acceptance, and non-counting support work before editing.
+
 Current gate: V3-02 Style Templates. V3-01 Multi-Version Creative Strategies is
 published. V3-02 is complete locally and awaiting publication as one version.
 V3-03 is not active yet.
 
-V3-02 may expose exactly six reusable stage portrait, interview portrait, event
-montage, short talking head, promotional film, and documentary portrait
-templates. Each template must own structure ratios, shot-duration/rhythm policy,
-source audio/BGM policy, subtitle density, transition restraint, composition,
-required evidence, acceptance checks, and hard incompatibilities. Project
-compatibility may use confirmed source types and lower-confidence creative-brief
-signals, but must not invent source classification, silently select/apply a
-template, mutate timelines, render, choose BGM, call models, or access network.
+V3-02 may expose an open, extensible creative grammar with separate content/form
+templates, aesthetic styles, creative techniques, emotional arcs, and
+`follow/bend/break` rule modes. It must cover broad person-centered media,
+cross-media combinations, custom/project-specific styles, intentional rupture,
+sound-image dislocation, delayed payoff, long-take breathing, and extreme
+reversal. Content compatibility may use confirmed source types and lower-
+confidence brief signals, but aesthetic style is not source classification.
+Every break technique must explain form, feeling, meaning, risk, playback
+verification, and fallback. It must not close the library to a fixed enum,
+invent semantics/source types, silently select/apply a combination, mutate
+timelines, render, choose BGM, call models, or access network from the CLI.
 
 V3-01 may generate exactly four materially distinct emotional-arc, high-energy,
 narrative-clarity, and portrait-highlight strategies from current real editorial

@@ -132,7 +132,8 @@ the active gate and immediate development direction.
 
 ## Next Major Decision
 
-Publish V3-02 after six complete templates rank specialized stage, interview,
-and event styles correctly across all three real projects while preserving
-evidence confidence and no-application boundaries. V3-03 revision semantics are
-next. All 256 tests and quality/package checks pass.
+Publish corrected V3-02 after all three projects expose an open style grammar
+with broad content forms, aesthetic styles, techniques, emotional arcs,
+`follow/bend/break`, custom extension, and extreme reversal while preserving
+evidence confidence and no-application boundaries. V3-03 is next only after
+this correction closes. All 257 tests and quality/package checks pass.

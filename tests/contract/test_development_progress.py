@@ -221,8 +221,8 @@ def test_machine_readable_progress_matches_current_dashboard():
     assert payload["capability_summary"]["v1_aesthetic_foundation"] == "published"
     assert payload["capability_summary"]["real_video_aesthetic_maturity"] == "baseline_complete"
     assert "Style Templates" in progress
-    assert payload["tasks"][0]["id"] == "six_template_library"
-    assert payload["tasks"][-1]["id"] == "three_class_validation"
+    assert payload["tasks"][0]["id"] == "open_content_forms"
+    assert payload["tasks"][-1]["id"] == "three_project_truth"
     assert len(payload["tasks"]) == 10
     assert all(task["status"] == "completed" for task in payload["tasks"])
 

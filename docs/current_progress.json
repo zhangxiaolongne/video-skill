@@ -37,16 +37,16 @@
   },
   "latest_local_validation": {
     "date": "2026-07-13",
-    "full_pytest": ".venv/bin/python -m pytest passed with 256 passed",
+    "full_pytest": ".venv/bin/python -m pytest passed with 257 passed",
     "project_checks": ".venv/bin/python run_checks.py passed with golden, BGM/rhythm, NLE round-trip, schema, package, install simulation, V2 release baseline, benchmark audit, and diff checks",
     "real_benchmark": "three-class pack covers stage and interview closed loops plus a four-source 189.74s CC0 event/promo input baseline with an explicit 30s goal",
-    "current_doc_followup": "V3-02 completed functionally: six complete templates rank stage portrait, interview portrait, and event montage as unique real-project best matches without selection or application"
+    "current_doc_followup": "V3-02 corrected functionally: open content forms, aesthetic styles, techniques, emotional arcs, follow/bend/break, custom extension, and extreme reversal replace the erroneous closed six-template boundary"
   },
   "capability_summary": {
     "engineering_substrate": "published",
     "v1_aesthetic_foundation": "published",
     "real_video_aesthetic_maturity": "baseline_complete",
-    "current_gap": "V3-02 supplies reusable templates but cannot yet translate natural-language revision intent into tracked applied editing actions"
+    "current_gap": "Corrected V3-02 exposes open creative grammar but host-generated custom styles still need a future validated import boundary and V3-03 revision semantics"
   },
   "json_governance": {
     "canonical_rule": "JSON is kept only for canonical machine truth, boundary evidence, generated schema contracts, media validation, run audit, or release-critical evidence.",
@@ -111,43 +111,43 @@
   },
   "tasks": [
     {
-      "id": "six_template_library",
+      "id": "open_content_forms",
       "status": "completed"
     },
     {
-      "id": "structure_contracts",
+      "id": "aesthetic_style_axis",
       "status": "completed"
     },
     {
-      "id": "rhythm_envelopes",
+      "id": "creative_technique_axis",
       "status": "completed"
     },
     {
-      "id": "audio_bgm_hierarchy",
+      "id": "emotional_arc_axis",
       "status": "completed"
     },
     {
-      "id": "text_density",
+      "id": "rule_modes",
       "status": "completed"
     },
     {
-      "id": "transition_composition",
+      "id": "break_explanation",
       "status": "completed"
     },
     {
-      "id": "evidence_aware_matching",
+      "id": "cross_media_mixing",
       "status": "completed"
     },
     {
-      "id": "specialized_precedence",
+      "id": "custom_extension",
       "status": "completed"
     },
     {
-      "id": "application_boundary",
+      "id": "combination_space",
       "status": "completed"
     },
     {
-      "id": "three_class_validation",
+      "id": "three_project_truth",
       "status": "completed"
     }
   ]

@@ -12,37 +12,38 @@
 
 ## Goal Delta
 
-V3-02 provides six reusable style templates and evaluates every template against
-real project source evidence and creative goals. Templates constrain structure,
-rhythm, audio/BGM, subtitle density, transitions, composition, evidence, and
-acceptance without silently applying a style.
+V3-02 provides an open composable style grammar. Content/output forms, aesthetic
+styles, creative techniques, emotional arcs, and rule modes remain independent
+and extensible, allowing cross-media, mixed-style, intentional rule breaking,
+and extreme reversal without silently applying or inventing meaning.
 
 ## Internal Acceptance Checklist
 
 | ID | Outcome | Acceptance | Status |
 |---|---|---|---|
-| `six_template_library` | Domain coverage | Six canonical production templates are complete. | `completed` |
-| `structure_contracts` | Structural constraints | Every template owns bounded hook/context/build/payoff ratios. | `completed` |
-| `rhythm_envelopes` | Pacing constraints | Shot-duration range and evidence-safe rhythm policy are explicit. | `completed` |
-| `audio_bgm_hierarchy` | Sound constraints | Source audio and BGM roles are defined per style. | `completed` |
-| `text_density` | Reading constraints | Subtitle density and maximum reading speed are bounded. | `completed` |
-| `transition_composition` | Visual restraint | Transition and framing policies remain style-specific. | `completed` |
-| `evidence_aware_matching` | Honest compatibility | Confirmed types and lower-confidence brief signals remain distinct. | `completed` |
-| `specialized_precedence` | Professional matching | Dedicated stage/interview/event templates beat generic templates. | `completed` |
-| `application_boundary` | User control | Best matches are advisory; selection/application remain null. | `completed` |
-| `three_class_validation` | Real coverage | Stage, interview, and event projects select the correct best match. | `completed` |
+| `open_content_forms` | Broad media scope | 16 extensible forms cover performance, fiction, process, event, cross-media, and fan creation. | `completed` |
+| `aesthetic_style_axis` | Real style vocabulary | 14 styles include idol, hot-blooded, inspirational, premium, cinematic, healing, romantic, melancholic, dreamy, epic, nostalgic, raw, and experimental. | `completed` |
+| `creative_technique_axis` | Nonlinear craft | 10 techniques include delay, rupture, sound-image dislocation, long holds, contrast, and extreme reversal. | `completed` |
+| `emotional_arc_axis` | Dynamic feeling | 10 arcs include suppression/explosion, fall/return, admiration/vulnerability, and extreme reframing. | `completed` |
+| `rule_modes` | Rules are tools | Every rule may be followed, bent, or deliberately broken. | `completed` |
+| `break_explanation` | Accountable freedom | Breaks bind form, feeling, meaning, risk, verification, and fallback. | `completed` |
+| `cross_media_mixing` | Non-exclusive composition | Mixed content forms and mixed aesthetic styles are supported. | `completed` |
+| `custom_extension` | No closed enum | Host/user project-specific forms and styles can extend the vocabulary. | `completed` |
+| `combination_space` | Full creative grammar | Type × style × strategy × technique × arc examples remain illustrative and unselected. | `completed` |
+| `three_project_truth` | Real validation | Stage, interview, and event projects expose open combinations without fabricated semantics or application. | `completed` |
 
 ## Guardrails
 
-- Templates must contain executable constraints, not labels alone.
-- `other` source type is unknown and cannot count as confirmed matching evidence.
-- Specialized templates must outrank generic styles when evidence supports them.
-- Do not select/apply templates, mutate timelines, render, or choose BGM.
-- Local CLI remains deterministic and offline.
+- Examples are seeds, never a closed product boundary.
+- Source/content form and aesthetic style are different axes.
+- Creative rules may be broken deliberately but never randomly or without explanation.
+- Do not invent evidence, select/apply combinations, mutate timelines, render, or choose BGM.
+- Local CLI remains deterministic and offline; host creativity may extend the vocabulary through a future validated boundary.
 
 ## Next Work
 
-Stage best-matches `stage_portrait`, interview best-matches
-`interview_portrait`, and confirmed public-event sources best-match
-`event_montage`. Stage/interview remain conditional because source type and/or
-transcript evidence is incomplete. V3-03 revision semantics are next.
+All three projects now expose 16 content forms, 14 aesthetic styles, 10
+techniques, 10 emotional arcs, six illustrative combinations, and
+`follow/bend/break`. Selection/application remain null and semantic confidence
+remains degraded. V3-03 is blocked until this corrected V3-02 passes full
+validation and publication.

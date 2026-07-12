@@ -264,6 +264,33 @@ decision history is archived in [DECISIONS_HISTORY.md](archive/DECISIONS_HISTORY
 - Revisit when: never for ordinary capability development; only release tags may
   add conventional patch-level version numbers.
 
+### DEC-071: Reread canonical rules before planning every capability version
+
+- Status: `active`
+- Decision: before planning a new version, reread the project agent rules,
+  governing master principles/roadmap, current batch/progress/issues/decisions/
+  releases/machine snapshot, Git state, and relevant implementation contracts;
+  state scope, prohibitions, user corrections, conflicts, real acceptance, and
+  non-counting support work before edits.
+- Rationale: planning from recent implementation memory caused V3-02 examples
+  to become a closed six-template product boundary contrary to the master.
+- Revisit when: the project replaces these canonical owners with one equivalent
+  rule source and automatic pre-plan audit.
+
+### DEC-072: Style is an open composable grammar, not a source-type enum
+
+- Status: `active`
+- Decision: model content/form, aesthetic style, creative strategy, technique,
+  emotional arc, and `follow/bend/break` rule mode as separate extensible axes.
+  Source types may inform content compatibility but cannot determine aesthetic
+  style. Break-mode creative choices require form, feeling, meaning, risk,
+  playback verification, and fallback.
+- Rationale: stage/interview/event describe source or output form, while idol,
+  hot-blooded, inspirational, restrained, cinematic, experimental, and extreme
+  reversal describe different creative dimensions.
+- Revisit when: a future host-Agent grammar can generate and validate these axes
+  without retaining a reusable local vocabulary.
+
 ## Archive Policy
 
 Archived decisions remain searchable in `docs/archive/DECISIONS_HISTORY.md`.

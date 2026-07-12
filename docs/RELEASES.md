@@ -41,10 +41,11 @@ This file records only current publication state and recent release facts. Full 
   clarity, and portrait-highlight strategies for both 60-second real projects.
   Each project has four distinct ordered range signatures; no strategy is
   selected, applied, rendered, or promoted beyond degraded evidence confidence.
-- V3-02 local validation provides six complete style templates. Specialized
-  matching selects stage portrait, interview portrait, and event montage as the
-  unique best matches for the three real project classes; no template is
-  selected, applied, rendered, or allowed to invent source classification.
+- V3-02 was reopened after rule review found that six source/output examples had
+  been incorrectly frozen as the complete style space. The corrected local
+  capability separates 16 content forms, 14 aesthetic styles, 10 creative
+  techniques, 10 emotional arcs, and `follow/bend/break`; no combination is
+  selected, applied, rendered, or allowed to invent semantics.
 
 - Architecture baseline validation passed on `2026-07-10`: `.venv/bin/python
   run_checks.py` completed successfully with `239 passed`, schema generation,

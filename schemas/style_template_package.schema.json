@@ -1,6 +1,93 @@
 {
   "$defs": {
-    "StyleTemplate": {
+    "AestheticStyle": {
+      "additionalProperties": false,
+      "properties": {
+        "bgm_character": {
+          "title": "Bgm Character",
+          "type": "string"
+        },
+        "color_direction": {
+          "title": "Color Direction",
+          "type": "string"
+        },
+        "emotional_palette": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Emotional Palette",
+          "type": "array"
+        },
+        "evidence_requirements": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Evidence Requirements",
+          "type": "array"
+        },
+        "failure_risks": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Failure Risks",
+          "type": "array"
+        },
+        "image_character": {
+          "title": "Image Character",
+          "type": "string"
+        },
+        "name": {
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "pacing_character": {
+          "title": "Pacing Character",
+          "type": "string"
+        },
+        "style_id": {
+          "minLength": 1,
+          "title": "Style Id",
+          "type": "string"
+        },
+        "suitable_intents": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Suitable Intents",
+          "type": "array"
+        },
+        "text_character": {
+          "title": "Text Character",
+          "type": "string"
+        },
+        "transition_character": {
+          "title": "Transition Character",
+          "type": "string"
+        }
+      },
+      "required": [
+        "style_id",
+        "name",
+        "emotional_palette",
+        "pacing_character",
+        "image_character",
+        "color_direction",
+        "bgm_character",
+        "text_character",
+        "transition_character",
+        "suitable_intents",
+        "failure_risks",
+        "evidence_requirements"
+      ],
+      "title": "AestheticStyle",
+      "type": "object"
+    },
+    "ContentFormTemplate": {
       "additionalProperties": false,
       "properties": {
         "acceptance_checks": {
@@ -15,8 +102,31 @@
           "title": "Bgm Policy",
           "type": "string"
         },
+        "brief_keywords": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Brief Keywords",
+          "type": "array"
+        },
         "composition_policy": {
           "title": "Composition Policy",
+          "type": "string"
+        },
+        "form_family": {
+          "enum": [
+            "performance",
+            "spoken",
+            "fiction",
+            "process",
+            "event",
+            "promotional",
+            "documentary",
+            "cross_media",
+            "fan_creation"
+          ],
+          "title": "Form Family",
           "type": "string"
         },
         "hard_incompatibilities": {
@@ -65,6 +175,7 @@
           "title": "Maximum Characters Per Second"
         },
         "name": {
+          "minLength": 1,
           "title": "Name",
           "type": "string"
         },
@@ -118,35 +229,21 @@
           "type": "string"
         },
         "template_id": {
-          "enum": [
-            "stage_portrait",
-            "interview_portrait",
-            "event_montage",
-            "short_talking_head",
-            "promotional_film",
-            "documentary_portrait"
-          ],
+          "minLength": 1,
           "title": "Template Id",
           "type": "string"
         },
         "transition_policy": {
           "title": "Transition Policy",
           "type": "string"
-        },
-        "transition_restraint": {
-          "enum": [
-            "strict",
-            "restrained",
-            "moderate"
-          ],
-          "title": "Transition Restraint",
-          "type": "string"
         }
       },
       "required": [
         "template_id",
         "name",
+        "form_family",
         "intended_source_types",
+        "brief_keywords",
         "intended_platforms",
         "intended_aspects",
         "structure",
@@ -155,14 +252,210 @@
         "source_audio_policy",
         "bgm_policy",
         "subtitle_density",
-        "transition_restraint",
         "transition_policy",
         "composition_policy",
         "required_evidence",
         "acceptance_checks",
         "hard_incompatibilities"
       ],
-      "title": "StyleTemplate",
+      "title": "ContentFormTemplate",
+      "type": "object"
+    },
+    "CreativeCombinationExample": {
+      "additionalProperties": false,
+      "properties": {
+        "aesthetic_style_id": {
+          "title": "Aesthetic Style Id",
+          "type": "string"
+        },
+        "combination_id": {
+          "title": "Combination Id",
+          "type": "string"
+        },
+        "concept": {
+          "title": "Concept",
+          "type": "string"
+        },
+        "content_template_id": {
+          "title": "Content Template Id",
+          "type": "string"
+        },
+        "creative_strategy_id": {
+          "title": "Creative Strategy Id",
+          "type": "string"
+        },
+        "emotional_arc_id": {
+          "title": "Emotional Arc Id",
+          "type": "string"
+        },
+        "illustrative_only": {
+          "default": true,
+          "title": "Illustrative Only",
+          "type": "boolean"
+        },
+        "intended_effect": {
+          "title": "Intended Effect",
+          "type": "string"
+        },
+        "meaning": {
+          "title": "Meaning",
+          "type": "string"
+        },
+        "risks": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Risks",
+          "type": "array"
+        },
+        "rule_modes": {
+          "additionalProperties": {
+            "enum": [
+              "follow",
+              "bend",
+              "break"
+            ],
+            "type": "string"
+          },
+          "title": "Rule Modes",
+          "type": "object"
+        },
+        "technique_ids": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Technique Ids",
+          "type": "array"
+        }
+      },
+      "required": [
+        "combination_id",
+        "content_template_id",
+        "aesthetic_style_id",
+        "creative_strategy_id",
+        "technique_ids",
+        "emotional_arc_id",
+        "rule_modes",
+        "concept",
+        "intended_effect",
+        "meaning",
+        "risks"
+      ],
+      "title": "CreativeCombinationExample",
+      "type": "object"
+    },
+    "CreativeTechnique": {
+      "additionalProperties": false,
+      "properties": {
+        "default_rule_mode": {
+          "enum": [
+            "follow",
+            "bend",
+            "break"
+          ],
+          "title": "Default Rule Mode",
+          "type": "string"
+        },
+        "expected_feeling": {
+          "title": "Expected Feeling",
+          "type": "string"
+        },
+        "fallback": {
+          "title": "Fallback",
+          "type": "string"
+        },
+        "form": {
+          "title": "Form",
+          "type": "string"
+        },
+        "meaning_requirement": {
+          "title": "Meaning Requirement",
+          "type": "string"
+        },
+        "name": {
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "playback_verification": {
+          "title": "Playback Verification",
+          "type": "string"
+        },
+        "principal_risk": {
+          "title": "Principal Risk",
+          "type": "string"
+        },
+        "technique_id": {
+          "minLength": 1,
+          "title": "Technique Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "technique_id",
+        "name",
+        "default_rule_mode",
+        "form",
+        "expected_feeling",
+        "meaning_requirement",
+        "principal_risk",
+        "playback_verification",
+        "fallback"
+      ],
+      "title": "CreativeTechnique",
+      "type": "object"
+    },
+    "EmotionalArc": {
+      "additionalProperties": false,
+      "properties": {
+        "arc_id": {
+          "minLength": 1,
+          "title": "Arc Id",
+          "type": "string"
+        },
+        "evidence_requirement": {
+          "title": "Evidence Requirement",
+          "type": "string"
+        },
+        "failure_mode": {
+          "title": "Failure Mode",
+          "type": "string"
+        },
+        "name": {
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "phases": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 2,
+          "title": "Phases",
+          "type": "array"
+        },
+        "reversal_strength": {
+          "enum": [
+            "none",
+            "subtle",
+            "strong",
+            "extreme"
+          ],
+          "title": "Reversal Strength",
+          "type": "string"
+        }
+      },
+      "required": [
+        "arc_id",
+        "name",
+        "phases",
+        "reversal_strength",
+        "evidence_requirement",
+        "failure_mode"
+      ],
+      "title": "EmotionalArc",
       "type": "object"
     },
     "TemplateCompatibility": {
@@ -219,14 +512,6 @@
           "type": "string"
         },
         "template_id": {
-          "enum": [
-            "stage_portrait",
-            "interview_portrait",
-            "event_montage",
-            "short_talking_head",
-            "promotional_film",
-            "documentary_portrait"
-          ],
           "title": "Template Id",
           "type": "string"
         }
@@ -245,13 +530,7 @@
       "additionalProperties": false,
       "properties": {
         "beat": {
-          "enum": [
-            "hook",
-            "context",
-            "build",
-            "payoff",
-            "outro"
-          ],
+          "minLength": 1,
           "title": "Beat",
           "type": "string"
         },
@@ -268,6 +547,7 @@
           "type": "number"
         },
         "purpose": {
+          "minLength": 1,
           "title": "Purpose",
           "type": "string"
         }
@@ -284,34 +564,49 @@
   },
   "additionalProperties": false,
   "properties": {
+    "aesthetic_styles": {
+      "items": {
+        "$ref": "#/$defs/AestheticStyle"
+      },
+      "minItems": 12,
+      "title": "Aesthetic Styles",
+      "type": "array"
+    },
     "automatic_bgm_selection": {
       "default": false,
       "title": "Automatic Bgm Selection",
       "type": "boolean"
     },
-    "best_match_template_ids": {
+    "best_match_content_template_ids": {
       "items": {
-        "enum": [
-          "stage_portrait",
-          "interview_portrait",
-          "event_montage",
-          "short_talking_head",
-          "promotional_film",
-          "documentary_portrait"
-        ],
         "type": "string"
       },
       "minItems": 1,
-      "title": "Best Match Template Ids",
+      "title": "Best Match Content Template Ids",
       "type": "array"
     },
-    "compatibility": {
+    "combination_examples": {
+      "items": {
+        "$ref": "#/$defs/CreativeCombinationExample"
+      },
+      "minItems": 6,
+      "title": "Combination Examples",
+      "type": "array"
+    },
+    "content_compatibility": {
       "items": {
         "$ref": "#/$defs/TemplateCompatibility"
       },
-      "maxItems": 6,
-      "minItems": 6,
-      "title": "Compatibility",
+      "minItems": 12,
+      "title": "Content Compatibility",
+      "type": "array"
+    },
+    "content_templates": {
+      "items": {
+        "$ref": "#/$defs/ContentFormTemplate"
+      },
+      "minItems": 12,
+      "title": "Content Templates",
       "type": "array"
     },
     "creative_strategy_fingerprint": {
@@ -339,6 +634,37 @@
       "default": null,
       "title": "Creative Strategy Ref"
     },
+    "creative_techniques": {
+      "items": {
+        "$ref": "#/$defs/CreativeTechnique"
+      },
+      "minItems": 8,
+      "title": "Creative Techniques",
+      "type": "array"
+    },
+    "custom_aesthetic_styles_supported": {
+      "default": true,
+      "title": "Custom Aesthetic Styles Supported",
+      "type": "boolean"
+    },
+    "custom_content_templates_supported": {
+      "default": true,
+      "title": "Custom Content Templates Supported",
+      "type": "boolean"
+    },
+    "emotional_arcs": {
+      "items": {
+        "$ref": "#/$defs/EmotionalArc"
+      },
+      "minItems": 8,
+      "title": "Emotional Arcs",
+      "type": "array"
+    },
+    "extreme_reversal_supported": {
+      "default": true,
+      "title": "Extreme Reversal Supported",
+      "type": "boolean"
+    },
     "invented_source_classification": {
       "default": false,
       "title": "Invented Source Classification",
@@ -347,6 +673,16 @@
     "media_rendered": {
       "default": false,
       "title": "Media Rendered",
+      "type": "boolean"
+    },
+    "mixed_aesthetic_styles_supported": {
+      "default": true,
+      "title": "Mixed Aesthetic Styles Supported",
+      "type": "boolean"
+    },
+    "mixed_content_forms_supported": {
+      "default": true,
+      "title": "Mixed Content Forms Supported",
       "type": "boolean"
     },
     "model_call_performed_by_cli": {
@@ -376,22 +712,26 @@
       "title": "Project Ref",
       "type": "string"
     },
+    "rule_modes_supported": {
+      "items": {
+        "enum": [
+          "follow",
+          "bend",
+          "break"
+        ],
+        "type": "string"
+      },
+      "title": "Rule Modes Supported",
+      "type": "array"
+    },
     "schema_version": {
       "default": "0.3",
       "title": "Schema Version",
       "type": "string"
     },
-    "selected_template_id": {
+    "selected_aesthetic_style_id": {
       "anyOf": [
         {
-          "enum": [
-            "stage_portrait",
-            "interview_portrait",
-            "event_montage",
-            "short_talking_head",
-            "promotional_film",
-            "documentary_portrait"
-          ],
           "type": "string"
         },
         {
@@ -399,7 +739,31 @@
         }
       ],
       "default": null,
-      "title": "Selected Template Id"
+      "title": "Selected Aesthetic Style Id"
+    },
+    "selected_combination_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Selected Combination Id"
+    },
+    "selected_content_template_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Selected Content Template Id"
     },
     "source_type_evidence_status": {
       "enum": [
@@ -433,15 +797,6 @@
       "title": "Template Applied",
       "type": "boolean"
     },
-    "templates": {
-      "items": {
-        "$ref": "#/$defs/StyleTemplate"
-      },
-      "maxItems": 6,
-      "minItems": 6,
-      "title": "Templates",
-      "type": "array"
-    },
     "timeline_mutated": {
       "default": false,
       "title": "Timeline Mutated",
@@ -462,9 +817,13 @@
     "project_fingerprint",
     "sources_ref",
     "sources_fingerprint",
-    "templates",
-    "compatibility",
-    "best_match_template_ids",
+    "content_templates",
+    "aesthetic_styles",
+    "creative_techniques",
+    "emotional_arcs",
+    "content_compatibility",
+    "best_match_content_template_ids",
+    "combination_examples",
     "source_type_evidence_status",
     "status"
   ],
