@@ -58,9 +58,17 @@
           "type": "string"
         },
         "target_duration_seconds": {
-          "exclusiveMinimum": 0,
-          "title": "Target Duration Seconds",
-          "type": "integer"
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Target Duration Seconds"
         },
         "theme": {
           "minLength": 1,
@@ -79,7 +87,6 @@
         "theme",
         "audience",
         "platform",
-        "target_duration_seconds",
         "aspect_ratio"
       ],
       "title": "CreativeBrief",

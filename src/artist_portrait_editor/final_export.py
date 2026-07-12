@@ -1,11 +1,26 @@
 from __future__ import annotations
 
 import hashlib
-import subprocess
+from dataclasses import dataclass
 from pathlib import Path
 from shutil import which
 
 from artist_portrait_editor.media.probe import probe_media
+from artist_portrait_editor.media.rendering import (
+    MediaRenderError,
+    atomic_json,
+    canvas_from_short_edge,
+    concat_files,
+    fingerprint_file,
+    mix_audio,
+    mux_tracks,
+    read_timeline,
+    render_audio_segment,
+    render_bgm_track,
+    render_black_video,
+    render_silence,
+    render_video_segment,
+)
 from artist_portrait_editor.media.scanner import hash_file, read_sources_jsonl
 from artist_portrait_editor.models.bgm import BgmFitPlan
 from artist_portrait_editor.models.final_export import (
@@ -15,40 +30,24 @@ from artist_portrait_editor.models.final_export import (
     FinalExportValidationReport,
 )
 from artist_portrait_editor.models.preview import PreviewRenderedSegment
-from artist_portrait_editor.preview import (
-    PreviewError,
-    _atomic_json,
-    _concat_files,
-    _fingerprint_file,
-    _mix_audio,
-    _read_timeline,
-    _render_audio_segment,
-    _render_bgm_track,
-    _render_silence,
-)
 
 
 class FinalExportError(ValueError):
     pass
 
 
+@dataclass(frozen=True)
+class _ExportProfileTemplate:
+    short_edge: int
+    fps: int
+    video_crf: int
+    audio_bitrate: str
+    intent: str
+
+
 EXPORT_PROFILES = {
-    "review_720p": FinalExportProfile(
-        name="review_720p",
-        width=1280,
-        fps=24,
-        video_crf=23,
-        audio_bitrate="160k",
-        intent="local review-quality final export candidate",
-    ),
-    "delivery_1080p": FinalExportProfile(
-        name="delivery_1080p",
-        width=1920,
-        fps=30,
-        video_crf=20,
-        audio_bitrate="192k",
-        intent="local high-quality delivery export candidate",
-    ),
+    "review_720p": _ExportProfileTemplate(720, 24, 23, "160k", "local review-quality final export candidate"),
+    "delivery_1080p": _ExportProfileTemplate(1080, 30, 20, "192k", "local high-quality delivery export candidate"),
 }
 
 
@@ -57,18 +56,34 @@ def render_final_export(
     root: Path,
     project_id: str,
     profile_name: str = "review_720p",
+    aspect_ratio: str = "16:9",
 ) -> tuple[Path, Path, Path, FinalExportManifest, FinalExportValidationReport]:
-    profile = EXPORT_PROFILES.get(profile_name)
-    if profile is None:
+    template = EXPORT_PROFILES.get(profile_name)
+    if template is None:
         raise FinalExportError("export --profile must be review_720p or delivery_1080p")
+    try:
+        canvas = canvas_from_short_edge(short_edge=template.short_edge, aspect_ratio=aspect_ratio, fps=template.fps)
+    except MediaRenderError as exc:
+        raise FinalExportError(str(exc)) from exc
+    profile = FinalExportProfile(
+        name=profile_name,
+        width=canvas.width,
+        height=canvas.height,
+        aspect_ratio=canvas.aspect_ratio,
+        fit_mode=canvas.fit_mode,
+        fps=template.fps,
+        video_crf=template.video_crf,
+        audio_bitrate=template.audio_bitrate,
+        intent=template.intent,
+    )
     if which("ffmpeg") is None or which("ffprobe") is None:
         raise FinalExportError("export requires ffmpeg and ffprobe")
     timeline_path = root / "output" / "timeline_draft.json"
     if not timeline_path.exists():
         raise FinalExportError("export requires output/timeline_draft.json")
     try:
-        timeline = _read_timeline(timeline_path)
-    except PreviewError as exc:
+        timeline = read_timeline(timeline_path)
+    except MediaRenderError as exc:
         raise FinalExportError(str(exc)) from exc
     if timeline.project_id != project_id:
         raise FinalExportError("timeline project_id mismatch")
@@ -104,28 +119,60 @@ def render_final_export(
         video_rendered = segment.media_role.value in {"video", "both"}
         original_audio = segment.media_role.value in {"audio", "both"} and source.media_probe.audio_present
         if video_rendered:
-            _render_export_video_segment(
-                source_path=source_path,
-                output_path=video_path,
-                source_in=segment.source_in,
-                duration=duration,
-                profile=profile,
-            )
+            try:
+                video_transition_rendered, video_transition_warning = render_video_segment(
+                    source_path=source_path,
+                    output_path=video_path,
+                    source_in=segment.source_in,
+                    duration=duration,
+                    canvas=canvas,
+                    video_transition=segment.video_transition.value,
+                    preset="medium",
+                    crf=profile.video_crf,
+                    timeout=300,
+                )
+            except MediaRenderError as exc:
+                raise FinalExportError(str(exc)) from exc
         else:
-            _render_export_black_video(output_path=video_path, duration=duration, profile=profile)
+            try:
+                video_transition_rendered, video_transition_warning = render_black_video(
+                    output_path=video_path,
+                    duration=duration,
+                    canvas=canvas,
+                    video_transition=segment.video_transition.value,
+                    preset="medium",
+                    crf=profile.video_crf,
+                    timeout=300,
+                )
+            except MediaRenderError as exc:
+                raise FinalExportError(str(exc)) from exc
             warnings.append(f"{segment.segment_id}: audio-only segment rendered with black video")
         if original_audio:
-            _render_audio_segment(
-                source_path=source_path,
-                output_path=audio_path,
-                source_in=segment.source_in,
-                duration=duration,
-            )
+            try:
+                audio_transition_rendered, audio_transition_warning = render_audio_segment(
+                    source_path=source_path,
+                    output_path=audio_path,
+                    source_in=segment.source_in,
+                    duration=duration,
+                    audio_transition=segment.audio_transition.value,
+                    timeout=300,
+                )
+            except MediaRenderError as exc:
+                raise FinalExportError(str(exc)) from exc
             original_audio_included = True
         else:
-            _render_silence(output_path=audio_path, duration=duration)
+            try:
+                render_silence(output_path=audio_path, duration=duration, timeout=300)
+            except MediaRenderError as exc:
+                raise FinalExportError(str(exc)) from exc
+            audio_transition_rendered = segment.audio_transition.value in {"none", "cut"}
+            audio_transition_warning = None
             if segment.media_role.value in {"audio", "both"}:
                 warnings.append(f"{segment.segment_id}: source has no retained audio stream")
+        if video_transition_warning:
+            warnings.append(f"{segment.segment_id}: {video_transition_warning}")
+        if audio_transition_warning:
+            warnings.append(f"{segment.segment_id}: {audio_transition_warning}")
         video_segments.append(video_path)
         audio_segments.append(audio_path)
         rendered_segments.append(
@@ -140,13 +187,20 @@ def render_final_export(
                 media_role=segment.media_role.value,
                 video_rendered=video_rendered,
                 original_audio_rendered=original_audio,
+                video_transition=segment.video_transition.value,
+                audio_transition=segment.audio_transition.value,
+                video_transition_rendered=video_transition_rendered,
+                audio_transition_rendered=audio_transition_rendered,
             )
         )
 
     video_track = cache_dir / "video_track.mp4"
     original_audio_track = cache_dir / "original_audio.wav"
-    _concat_files(video_segments, video_track, media_type="video")
-    _concat_files(audio_segments, original_audio_track, media_type="audio")
+    try:
+        concat_files(video_segments, video_track, media_type="video", timeout=300)
+        concat_files(audio_segments, original_audio_track, media_type="audio", timeout=300)
+    except MediaRenderError as exc:
+        raise FinalExportError(str(exc)) from exc
 
     bgm_fit_path = root / ".artist-portrait" / "data" / "bgm_fit.json"
     bgm_fit: BgmFitPlan | None = None
@@ -154,44 +208,44 @@ def render_final_export(
     bgm_track: Path | None = None
     if bgm_fit_path.exists():
         bgm_fit = BgmFitPlan.model_validate_json(bgm_fit_path.read_text(encoding="utf-8"))
-        bgm_fit_fingerprint = _fingerprint_file(bgm_fit_path)
+        bgm_fit_fingerprint = fingerprint_file(bgm_fit_path)
         bgm_track = cache_dir / "bgm_track.wav"
         try:
-            _render_bgm_track(
+            render_bgm_track(
                 root=root,
                 project_id=project_id,
                 plan=bgm_fit,
                 output_path=bgm_track,
+                timeout=300,
             )
-        except PreviewError as exc:
+        except MediaRenderError as exc:
             raise FinalExportError(str(exc)) from exc
     else:
         warnings.append("no current BGM fit plan; export uses original audio or silence only")
 
     mixed_audio = cache_dir / "mixed_audio.wav"
     if bgm_track is not None and bgm_fit is not None:
-        _mix_audio(
+        mix_audio(
             original_audio=original_audio_track,
             bgm_audio=bgm_track,
             output_path=mixed_audio,
             ducking_intervals=[(item.start, item.end, item.gain_db) for item in bgm_fit.ducking_intervals],
+            timeout=300,
         )
     else:
         mixed_audio = original_audio_track
 
     export_id = _export_id(
         timeline.timeline_id,
-        _fingerprint_file(timeline_path),
+        fingerprint_file(timeline_path),
         bgm_fit_fingerprint,
         profile.name,
     )
     output_path = output_dir / "final_export.mp4"
-    _mux_final_export(
-        video_track=video_track,
-        audio_track=mixed_audio,
-        output_path=output_path,
-        audio_bitrate=profile.audio_bitrate,
-    )
+    try:
+        mux_tracks(video_track=video_track, audio_track=mixed_audio, output_path=output_path, audio_bitrate=profile.audio_bitrate, timeout=300)
+    except MediaRenderError as exc:
+        raise FinalExportError(str(exc)) from exc
     output_hash = hash_file(output_path)
     _, media_probe = probe_media(output_path)
     expected_duration = round(timeline.actual_duration, 3)
@@ -204,7 +258,7 @@ def render_final_export(
         project_id=project_id,
         timeline_id=timeline.timeline_id,
         timeline_ref=timeline_path.relative_to(root).as_posix(),
-        timeline_fingerprint=_fingerprint_file(timeline_path),
+        timeline_fingerprint=fingerprint_file(timeline_path),
         bgm_fit_ref=bgm_fit_path.relative_to(root).as_posix() if bgm_fit is not None else None,
         bgm_fit_id=bgm_fit.fit_id if bgm_fit is not None else None,
         bgm_fit_fingerprint=bgm_fit_fingerprint,
@@ -216,7 +270,7 @@ def render_final_export(
         duration_tolerance_seconds=0.35,
         requested_profile=profile,
         width=media_probe.width or profile.width,
-        height=media_probe.height or profile.width,
+        height=media_probe.height or profile.height,
         actual_frame_rate=round(media_probe.frame_rate, 3) if media_probe.frame_rate else None,
         video_codec=media_probe.video_codec or "unknown",
         video_present=media_probe.video_codec is not None,
@@ -230,9 +284,9 @@ def render_final_export(
         ducking_applied=bool(bgm_fit.ducking_intervals) if bgm_fit is not None else False,
         warnings=sorted(set(warnings)),
     )
-    _atomic_json(manifest_path, manifest.model_dump(mode="json"))
+    atomic_json(manifest_path, manifest.model_dump(mode="json"))
     validation = validate_final_export(root=root, manifest=manifest)
-    _atomic_json(validation_path, validation.model_dump(mode="json"))
+    atomic_json(validation_path, validation.model_dump(mode="json"))
     return output_path, manifest_path, validation_path, manifest, validation
 
 
@@ -416,7 +470,7 @@ def validate_final_export(*, root: Path, manifest: FinalExportManifest) -> Final
     if not timeline_path.exists():
         issues.append(_issue("final_export_timeline_missing", "error", "timeline is missing"))
     else:
-        timeline_hash = _fingerprint_file(timeline_path)
+        timeline_hash = fingerprint_file(timeline_path)
         if timeline_hash != manifest.timeline_fingerprint:
             issues.append(_issue("final_export_timeline_stale", "error", "timeline fingerprint changed"))
     if manifest.bgm_fit_ref:
@@ -424,7 +478,7 @@ def validate_final_export(*, root: Path, manifest: FinalExportManifest) -> Final
         if not bgm_fit_path.exists():
             issues.append(_issue("final_export_bgm_fit_missing", "error", "BGM fit plan is missing"))
         else:
-            fit_hash = _fingerprint_file(bgm_fit_path)
+            fit_hash = fingerprint_file(bgm_fit_path)
             if fit_hash != manifest.bgm_fit_fingerprint:
                 issues.append(_issue("final_export_bgm_fit_stale", "error", "BGM fit fingerprint changed"))
     duration_delta = round(actual_duration - manifest.expected_duration, 3)
@@ -443,6 +497,8 @@ def validate_final_export(*, root: Path, manifest: FinalExportManifest) -> Final
         issues.append(_issue("final_export_video_missing", "error", "final export has no video stream"))
     if actual_width != manifest.requested_profile.width:
         issues.append(_issue("final_export_width_mismatch", "error", "final export width differs from requested profile"))
+    if actual_height != manifest.requested_profile.height:
+        issues.append(_issue("final_export_height_mismatch", "error", "final export height differs from requested profile"))
     if actual_frame_rate is not None and abs(actual_frame_rate - manifest.requested_profile.fps) > 0.25:
         issues.append(_issue("final_export_fps_mismatch", "warning", "final export frame rate differs from profile"))
     if manifest.audio_expected and not audio_present:
@@ -465,6 +521,8 @@ def validate_final_export(*, root: Path, manifest: FinalExportManifest) -> Final
         duration_tolerance_seconds=manifest.duration_tolerance_seconds,
         requested_profile=manifest.requested_profile.name,
         requested_width=manifest.requested_profile.width,
+        requested_height=manifest.requested_profile.height,
+        requested_aspect_ratio=manifest.requested_profile.aspect_ratio,
         requested_fps=manifest.requested_profile.fps,
         actual_width=actual_width,
         actual_height=actual_height,
@@ -503,7 +561,7 @@ def render_final_export_review(report: FinalExportValidationReport) -> str:
         f"- Expected duration: `{report.expected_duration:.3f}s`",
         f"- Actual duration: `{report.actual_duration:.3f}s`",
         f"- Duration delta: `{report.duration_delta_seconds:.3f}s`",
-        f"- Requested profile: `{report.requested_width}px @ {report.requested_fps}fps`",
+        f"- Requested profile: `{report.requested_width}x{report.requested_height}` (`{report.requested_aspect_ratio}`) @ {report.requested_fps}fps",
         f"- Actual size: `{report.actual_width}x{report.actual_height}`",
         f"- Actual frame rate: `{report.actual_frame_rate}`",
         f"- Video present: `{str(report.video_present).lower()}`",
@@ -528,69 +586,6 @@ def render_final_export_review(report: FinalExportValidationReport) -> str:
             ]
         )
     return "\n".join(lines) + "\n"
-
-
-def _render_export_video_segment(
-    *,
-    source_path: Path,
-    output_path: Path,
-    source_in: float,
-    duration: float,
-    profile: FinalExportProfile,
-) -> None:
-    _run_export_ffmpeg(
-        [
-            "ffmpeg", "-y", "-hide_banner", "-loglevel", "error",
-            "-ss", f"{source_in:.3f}", "-t", f"{duration:.3f}", "-i", str(source_path),
-            "-an", "-vf", f"scale={profile.width}:-2,fps={profile.fps},format=yuv420p",
-            "-c:v", "libx264", "-preset", "medium", "-crf", str(profile.video_crf),
-            str(output_path),
-        ],
-        output_path,
-    )
-
-
-def _render_export_black_video(
-    *,
-    output_path: Path,
-    duration: float,
-    profile: FinalExportProfile,
-) -> None:
-    _run_export_ffmpeg(
-        [
-            "ffmpeg", "-y", "-hide_banner", "-loglevel", "error",
-            "-f", "lavfi", "-i", f"color=c=black:s={profile.width}x{profile.width}:d={duration:.3f}:r={profile.fps}",
-            "-an", "-vf", "format=yuv420p", "-c:v", "libx264",
-            "-preset", "medium", "-crf", str(profile.video_crf), str(output_path),
-        ],
-        output_path,
-    )
-
-
-def _mux_final_export(
-    *,
-    video_track: Path,
-    audio_track: Path,
-    output_path: Path,
-    audio_bitrate: str,
-) -> None:
-    _run_export_ffmpeg(
-        [
-            "ffmpeg", "-y", "-hide_banner", "-loglevel", "error",
-            "-i", str(video_track), "-i", str(audio_track), "-shortest",
-            "-map", "0:v:0", "-map", "1:a:0",
-            "-c:v", "copy", "-c:a", "aac", "-b:a", audio_bitrate, "-movflags", "+faststart",
-            str(output_path),
-        ],
-        output_path,
-    )
-
-
-def _run_export_ffmpeg(command: list[str], output_path: Path) -> None:
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    result = subprocess.run(command, capture_output=True, text=True, timeout=300)
-    if result.returncode != 0 or not output_path.exists():
-        raise FinalExportError((result.stderr or "ffmpeg export command failed").strip())
 
 
 def _export_id(
@@ -628,6 +623,8 @@ def _validation(
         duration_tolerance_seconds=0.35,
         requested_profile="review_720p",
         requested_width=1280,
+        requested_height=720,
+        requested_aspect_ratio="16:9",
         requested_fps=24,
         actual_width=None,
         actual_height=None,

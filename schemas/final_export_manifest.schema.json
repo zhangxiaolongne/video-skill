@@ -3,14 +3,29 @@
     "FinalExportProfile": {
       "additionalProperties": false,
       "properties": {
+        "aspect_ratio": {
+          "pattern": "^[1-9][0-9]*:[1-9][0-9]*$",
+          "title": "Aspect Ratio",
+          "type": "string"
+        },
         "audio_bitrate": {
           "pattern": "^[0-9]+k$",
           "title": "Audio Bitrate",
           "type": "string"
         },
+        "fit_mode": {
+          "pattern": "^contain$",
+          "title": "Fit Mode",
+          "type": "string"
+        },
         "fps": {
           "exclusiveMinimum": 0,
           "title": "Fps",
+          "type": "integer"
+        },
+        "height": {
+          "exclusiveMinimum": 0,
+          "title": "Height",
           "type": "integer"
         },
         "intent": {
@@ -38,6 +53,9 @@
       "required": [
         "name",
         "width",
+        "height",
+        "aspect_ratio",
+        "fit_mode",
         "fps",
         "video_crf",
         "audio_bitrate",
@@ -49,6 +67,15 @@
     "PreviewRenderedSegment": {
       "additionalProperties": false,
       "properties": {
+        "audio_transition": {
+          "minLength": 1,
+          "title": "Audio Transition",
+          "type": "string"
+        },
+        "audio_transition_rendered": {
+          "title": "Audio Transition Rendered",
+          "type": "boolean"
+        },
         "media_role": {
           "pattern": "^(video|audio|both)$",
           "title": "Media Role",
@@ -96,6 +123,15 @@
         "video_rendered": {
           "title": "Video Rendered",
           "type": "boolean"
+        },
+        "video_transition": {
+          "minLength": 1,
+          "title": "Video Transition",
+          "type": "string"
+        },
+        "video_transition_rendered": {
+          "title": "Video Transition Rendered",
+          "type": "boolean"
         }
       },
       "required": [
@@ -108,7 +144,11 @@
         "source_out",
         "media_role",
         "video_rendered",
-        "original_audio_rendered"
+        "original_audio_rendered",
+        "video_transition",
+        "audio_transition",
+        "video_transition_rendered",
+        "audio_transition_rendered"
       ],
       "title": "PreviewRenderedSegment",
       "type": "object"

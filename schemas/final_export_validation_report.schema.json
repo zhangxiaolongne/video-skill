@@ -170,9 +170,19 @@
       "title": "Recovery Command",
       "type": "string"
     },
+    "requested_aspect_ratio": {
+      "pattern": "^[1-9][0-9]*:[1-9][0-9]*$",
+      "title": "Requested Aspect Ratio",
+      "type": "string"
+    },
     "requested_fps": {
       "exclusiveMinimum": 0,
       "title": "Requested Fps",
+      "type": "integer"
+    },
+    "requested_height": {
+      "exclusiveMinimum": 0,
+      "title": "Requested Height",
       "type": "integer"
     },
     "requested_profile": {
@@ -237,6 +247,8 @@
     "duration_tolerance_seconds",
     "requested_profile",
     "requested_width",
+    "requested_height",
+    "requested_aspect_ratio",
     "requested_fps",
     "video_present",
     "audio_present",

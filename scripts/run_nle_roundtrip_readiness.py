@@ -62,8 +62,10 @@ def run_roundtrip(workspace: Path) -> dict:
     cli("analyze", "--project", str(project), "--quiet")
     cli("map", "--project", str(project), "--quiet")
     brief = cli("brief", "--project", str(project), "--json", expect=(0, 1))
-    if brief["edit_brief"]["duration_source"] != "system_recommended":
-        raise SystemExit("NLE round-trip edit brief did not recommend duration")
+    if brief["edit_brief"]["duration_source"] != "user_specified":
+        raise SystemExit("NLE round-trip edit brief did not honor configured duration")
+    if brief["edit_brief"]["selected_duration_seconds"] != 3.0:
+        raise SystemExit("NLE round-trip edit brief selected the wrong configured duration")
     assert_false(brief["edit_brief"]["media_rendered"], "edit brief rendered media")
     assert_false(brief["edit_brief"]["network_performed"], "edit brief accessed network")
     scores = cli("score", "--project", str(project), "--json", expect=(0, 1))

@@ -17,7 +17,7 @@ def snapshot() -> dict:
 
 def current_batch_rows() -> list[tuple[str, str]]:
     pattern = re.compile(
-        r"^\| `([A-Z][A-Z0-9_-]*-\d{2})` \|.*\| "
+        r"^\| `([a-z][a-z0-9_]*)` \|.*\| "
         r"`(planned|in_progress|completed|blocked|dropped)` \|",
         re.MULTILINE,
     )
@@ -206,8 +206,8 @@ def test_machine_readable_progress_matches_current_dashboard():
     assert payload["milestone"] in progress
     assert payload["active_batch"]["id"] in progress
     assert payload["active_batch"]["id"] == "V2-01"
-    assert payload["active_batch"]["status"] == "planned"
     assert payload["active_batch"]["acceptance_stage"] is None
+    assert payload["active_batch"]["status"] == "completed"
     assert payload["latest_release"]["tag"] == "v0.30.0"
     assert payload["latest_release"]["status"] == "published"
     assert payload["latest_release"]["release_commit"] == (
@@ -221,11 +221,12 @@ def test_machine_readable_progress_matches_current_dashboard():
     )
     assert payload["capability_summary"]["engineering_substrate"] == "published"
     assert payload["capability_summary"]["v1_aesthetic_foundation"] == "published"
-    assert payload["capability_summary"]["real_video_aesthetic_maturity"] == "planned"
+    assert payload["capability_summary"]["real_video_aesthetic_maturity"] == "baseline_complete"
     assert "Real Video Aesthetic Baseline" in progress
-    assert payload["tasks"][0]["id"] == "V201-01"
-    assert payload["tasks"][-1]["id"] == "V201-13"
-    assert all(task["status"] == "planned" for task in payload["tasks"])
+    assert payload["tasks"][0]["id"] == "real_evidence"
+    assert payload["tasks"][-1]["id"] == "cross_source_acceptance"
+    assert len(payload["tasks"]) == 10
+    assert all(task["status"] == "completed" for task in payload["tasks"])
 
 
 def test_version_progress_batch_contract_is_hard_enforced():

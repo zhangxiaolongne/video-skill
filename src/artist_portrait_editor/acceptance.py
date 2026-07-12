@@ -24,7 +24,7 @@ from artist_portrait_editor.models.proposal import ProposalSet
 from artist_portrait_editor.models.proposal_validation import ProposalValidationReport
 from artist_portrait_editor.models.rhythm import RhythmMediaQcReport, RhythmPlan
 from artist_portrait_editor.models.sound import SoundDecision
-from artist_portrait_editor.models.state import ProjectState, StepStatus
+from artist_portrait_editor.models.state import OverallStatus, ProjectState, StepStatus
 from artist_portrait_editor.models.timeline import TimelineDraft, TimelineValidationReport
 from artist_portrait_editor.run_records import write_json
 
@@ -178,6 +178,16 @@ def _state_stage(state: ProjectState | None) -> AcceptanceStage:
     init_status = state.steps.get("init")
     if init_status is None or init_status.status not in {StepStatus.completed, StepStatus.completed_with_warnings}:
         return _stage("workspace_state", "failed", True, True, [".artist-portrait/state.json"], [_issue("init_not_completed", "error", "init has not completed", "artist-portrait init --project <project.yaml>")])
+    if state.overall_status == OverallStatus.blocked:
+        return _stage(
+            "workspace_state",
+            "failed",
+            True,
+            True,
+            [".artist-portrait/state.json"],
+            [_issue("workspace_blocked", "error", "workspace overall status is blocked", "artist-portrait doctor --project <project.yaml>")],
+            {"overall_status": state.overall_status.value},
+        )
     return _stage("workspace_state", "passed", True, True, [".artist-portrait/state.json"], [], {"overall_status": state.overall_status.value})
 
 

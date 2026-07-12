@@ -64,6 +64,7 @@ def preview_workspace(
             project_id=config.project.id,
             width=width,
             fps=fps,
+            aspect_ratio=config.creative_brief.aspect_ratio,
         )
     except PreviewError as exc:
         raise WorkspacePreviewError(str(exc)) from exc

@@ -10,7 +10,7 @@ creative_brief:
   theme: 在排练、采访与舞台之间寻找人物的声音和节奏
   audience: 熟悉人物的粉丝和普通观众
   platform: bilibili
-  target_duration_seconds: 4
+  target_duration_seconds: 3
   aspect_ratio: "16:9"
   tone:
     - restrained

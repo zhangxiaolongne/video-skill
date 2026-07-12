@@ -6,9 +6,20 @@ import sys
 from pathlib import Path
 
 from artist_portrait_editor.acceptance import build_project_acceptance_report
+from artist_portrait_editor.aesthetic_baseline import (
+    AestheticBaselineError,
+    import_aesthetic_baseline,
+    prepare_aesthetic_baseline_handoff,
+)
 from artist_portrait_editor.capabilities import detect_capabilities
 from artist_portrait_editor.clip_scoring import ClipScoringError, score_workspace
 from artist_portrait_editor.cleanup import cleanup_workspace
+from artist_portrait_editor.composition import (
+    CompositionEvidenceError,
+    build_composition_evidence,
+    import_composition_review,
+    render_reframe_candidate_preview,
+)
 from artist_portrait_editor.edit_brief import EditBriefError, build_edit_brief_workspace
 from artist_portrait_editor.bgm import (
     BgmError,
@@ -75,6 +86,7 @@ from artist_portrait_editor.sound_decision import (
     SoundDecisionError,
     build_sound_decision_workspace,
 )
+from artist_portrait_editor.second_cut import SecondCutError, build_second_cut_candidate
 from artist_portrait_editor.run_records import (
     environment_snapshot,
     new_run_id,
@@ -305,6 +317,29 @@ def build_parser() -> argparse.ArgumentParser:
     cut_review_sub.add_argument("--json", action="store_true")
     cut_review_sub.add_argument("--quiet", action="store_true")
     cut_review_sub.add_argument("--verbose", action="store_true")
+
+    composition_sub = subparsers.add_parser("composition")
+    composition_sub.add_argument("--project", required=True)
+    composition_sub.add_argument("--samples", type=int, choices=(4, 6, 9), default=9)
+    composition_sub.add_argument("--agent-output")
+    composition_sub.add_argument("--preview-candidate")
+    composition_sub.add_argument("--json", action="store_true")
+    composition_sub.add_argument("--quiet", action="store_true")
+    composition_sub.add_argument("--verbose", action="store_true")
+
+    baseline_sub = subparsers.add_parser("baseline")
+    baseline_sub.add_argument("--project", required=True)
+    baseline_sub.add_argument("--agent-output")
+    baseline_sub.add_argument("--json", action="store_true")
+    baseline_sub.add_argument("--quiet", action="store_true")
+    baseline_sub.add_argument("--verbose", action="store_true")
+
+    second_cut_sub = subparsers.add_parser("second-cut")
+    second_cut_sub.add_argument("--project", required=True)
+    second_cut_sub.add_argument("--concept-id", required=True)
+    second_cut_sub.add_argument("--json", action="store_true")
+    second_cut_sub.add_argument("--quiet", action="store_true")
+    second_cut_sub.add_argument("--verbose", action="store_true")
 
     revise_sub = subparsers.add_parser("revise")
     revise_sub.add_argument("--project", required=True)
@@ -1881,6 +1916,143 @@ def cmd_cut_review(args: argparse.Namespace) -> int:
     return int(ExitCode.success_with_warnings if warnings else ExitCode.success)
 
 
+def cmd_composition(args: argparse.Namespace) -> int:
+    if error := _validate_common_flags(args):
+        return int(error)
+    project_path = Path(args.project)
+    try:
+        if args.agent_output and args.preview_candidate:
+            print("--agent-output and --preview-candidate are mutually exclusive", file=sys.stderr)
+            return int(ExitCode.invalid_arguments)
+        if args.preview_candidate:
+            preview_path, preview = render_reframe_candidate_preview(
+                project_path,
+                candidate_id=args.preview_candidate,
+            )
+            payload = {
+                "preview": preview_path.relative_to(project_root(project_path)).as_posix(),
+                "reframe_preview": preview,
+            }
+            if args.json:
+                print(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True))
+            elif not args.quiet:
+                print(f"wrote {payload['preview']}")
+            return int(ExitCode.success)
+        if args.agent_output:
+            canonical_path, report_path, review, warnings = import_composition_review(
+                project_path,
+                candidate_path=Path(args.agent_output),
+            )
+            root = project_root(project_path)
+            payload = {
+                "output": canonical_path.relative_to(root).as_posix(),
+                "report": report_path.relative_to(root).as_posix(),
+                "composition_review": review.model_dump(mode="json"),
+                "warnings": warnings,
+            }
+            if args.json:
+                print(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True))
+            elif not args.quiet:
+                print(f"wrote {payload['output']}")
+                print(f"wrote {payload['report']}")
+            return int(ExitCode.success_with_warnings if warnings else ExitCode.success)
+        contact_sheet, handoff_path, handoff, warnings = build_composition_evidence(
+            project_path,
+            sample_count=args.samples,
+        )
+    except ConfigLoadError as exc:
+        print(str(exc), file=sys.stderr)
+        return int(ExitCode.invalid_project_config)
+    except (CompositionEvidenceError, ValueError) as exc:
+        print(str(exc), file=sys.stderr)
+        return int(ExitCode.output_or_reference_validation_failed)
+    root = project_root(project_path)
+    payload = {
+        "contact_sheet": contact_sheet.relative_to(root).as_posix(),
+        "handoff": handoff_path.relative_to(root).as_posix(),
+        "composition_evidence": handoff,
+        "warnings": warnings,
+    }
+    if args.json:
+        print(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True))
+    elif not args.quiet:
+        print(f"wrote {payload['contact_sheet']}")
+        print(f"wrote {payload['handoff']}")
+    return int(ExitCode.success_with_warnings if warnings else ExitCode.success)
+
+
+def cmd_baseline(args: argparse.Namespace) -> int:
+    if error := _validate_common_flags(args):
+        return int(error)
+    project_path = Path(args.project)
+    try:
+        if args.agent_output:
+            canonical, report, baseline, warnings = import_aesthetic_baseline(
+                project_path, candidate_path=Path(args.agent_output)
+            )
+            root = project_root(project_path)
+            payload = {
+                "output": canonical.relative_to(root).as_posix(),
+                "report": report.relative_to(root).as_posix(),
+                "aesthetic_baseline": baseline.model_dump(mode="json"),
+                "warnings": warnings,
+            }
+        else:
+            handoff_path, handoff, warnings = prepare_aesthetic_baseline_handoff(project_path)
+            root = project_root(project_path)
+            payload = {
+                "handoff": handoff_path.relative_to(root).as_posix(),
+                "aesthetic_baseline_context": handoff,
+                "warnings": warnings,
+            }
+    except ConfigLoadError as exc:
+        print(str(exc), file=sys.stderr)
+        return int(ExitCode.invalid_project_config)
+    except (AestheticBaselineError, ValueError) as exc:
+        print(str(exc), file=sys.stderr)
+        return int(ExitCode.output_or_reference_validation_failed)
+    if args.json:
+        print(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True))
+    elif not args.quiet:
+        for key in ("handoff", "output", "report"):
+            if key in payload:
+                print(f"wrote {payload[key]}")
+        for warning in warnings:
+            print(f"warning: {warning}", file=sys.stderr)
+    return int(ExitCode.success_with_warnings if warnings else ExitCode.success)
+
+
+def cmd_second_cut(args: argparse.Namespace) -> int:
+    if error := _validate_common_flags(args):
+        return int(error)
+    project_path = Path(args.project)
+    try:
+        json_path, report_path, candidate, warnings = build_second_cut_candidate(
+            project_path, concept_id=args.concept_id
+        )
+    except ConfigLoadError as exc:
+        print(str(exc), file=sys.stderr)
+        return int(ExitCode.invalid_project_config)
+    except (SecondCutError, ValueError) as exc:
+        print(str(exc), file=sys.stderr)
+        return int(ExitCode.output_or_reference_validation_failed)
+    root = project_root(project_path)
+    payload = {
+        "output": json_path.relative_to(root).as_posix(),
+        "report": report_path.relative_to(root).as_posix(),
+        "status": candidate.status,
+        "second_cut_candidate": candidate.model_dump(mode="json"),
+        "warnings": warnings,
+    }
+    if args.json:
+        print(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True))
+    elif not args.quiet:
+        print(f"second-cut candidate {candidate.status}")
+        print(f"wrote {payload['output']}")
+        print(f"wrote {payload['report']}")
+    return int(ExitCode.success_with_warnings if warnings else ExitCode.success)
+
+
 def cmd_revise(args: argparse.Namespace) -> int:
     if error := _validate_common_flags(args):
         return int(error)
@@ -2654,6 +2826,9 @@ def main(argv: list[str] | None = None) -> int:
         "timeline": cmd_timeline,
         "sound": cmd_sound,
         "cut-review": cmd_cut_review,
+        "composition": cmd_composition,
+        "baseline": cmd_baseline,
+        "second-cut": cmd_second_cut,
         "revise": cmd_revise,
         "apply-revision": cmd_apply_revision,
         "promote-revision": cmd_promote_revision,

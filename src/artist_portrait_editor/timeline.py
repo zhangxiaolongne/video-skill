@@ -79,7 +79,7 @@ def build_timeline_draft(
             )
         if source.forbidden_by_user:
             raise TimelineBuildError(f"selected proposal uses forbidden source: {source.source_id}")
-        if source.rights_status.value == RightsStatus.restricted:
+        if source.rights_status.value == RightsStatus.restricted and not config.content_policy.allow_restricted_rights:
             raise TimelineBuildError(
                 f"selected proposal uses restricted-rights source: {source.source_id}"
             )
@@ -87,7 +87,7 @@ def build_timeline_draft(
         source = source_by_id.get(clip.source_id)
         if source is None or source.forbidden_by_user:
             continue
-        if source.rights_status.value == RightsStatus.restricted:
+        if source.rights_status.value == RightsStatus.restricted and not config.content_policy.allow_restricted_rights:
             continue
         usable_clips.append((clip, source, score_by_clip.get(clip.clip_id)))
     if not proposal.required_clip_ids:
@@ -267,6 +267,7 @@ def validate_timeline_draft(
     sources: list[SourceRecord],
     edit_brief: EditBrief | None = None,
     clip_scores: list[ClipScoreRecord] | None = None,
+    allow_restricted_rights: bool = False,
     timeline_ref: str,
     input_fingerprint: str,
 ) -> TimelineValidationReport:
@@ -325,7 +326,7 @@ def validate_timeline_draft(
                     segment.segment_id,
                 )
             )
-        if source.rights_status.value == RightsStatus.restricted:
+        if source.rights_status.value == RightsStatus.restricted and not allow_restricted_rights:
             issues.append(
                 _issue(
                     "timeline_restricted_rights",
@@ -505,11 +506,14 @@ def _select_aesthetic_clips(
     target_duration: float,
 ) -> list[tuple[ClipRecord, SourceRecord, ClipScoreRecord | None]]:
     required = set(required_clip_ids)
+    required_order = {clip_id: index for index, clip_id in enumerate(required_clip_ids)}
     ordered = sorted(
         usable_clips,
         key=lambda item: (
             0 if item[0].clip_id in required else 1,
-            -_score_value(item[2]),
+            required_order.get(item[0].clip_id, 0)
+            if item[0].clip_id in required
+            else -_score_value(item[2]),
             item[0].boundary.start_seconds,
             item[0].clip_id,
         ),
@@ -533,21 +537,28 @@ def _role_segment_specs(
     selected_clips: list[tuple[ClipRecord, SourceRecord, ClipScoreRecord | None]],
     target_duration: float,
 ) -> list[tuple[TimelineStructuralRole, ClipRecord, SourceRecord, ClipScoreRecord | None, float]]:
-    roles = [
-        (TimelineStructuralRole.hook, 0.25),
-        (TimelineStructuralRole.build, 0.50),
-        (TimelineStructuralRole.payoff, 0.25),
-    ]
-    if target_duration < 1.2:
-        roles = [
-            (TimelineStructuralRole.hook, 0.35),
-            (TimelineStructuralRole.payoff, 0.65),
-        ]
+    if not selected_clips:
+        return []
+    structural_clips = (
+        selected_clips
+        if len(selected_clips) >= 3
+        else [selected_clips[min(index, len(selected_clips) - 1)] for index in range(3)]
+    )
+    segment_count = len(structural_clips)
+    durations = _quantized_role_durations(
+        target_duration,
+        [1 / segment_count] * segment_count,
+    )
     specs: list[tuple[TimelineStructuralRole, ClipRecord, SourceRecord, ClipScoreRecord | None, float]] = []
-    durations = _quantized_role_durations(target_duration, [ratio for _, ratio in roles])
-    for index, (role, _ratio) in enumerate(roles):
-        clip, source, score = selected_clips[min(index, len(selected_clips) - 1)]
-        specs.append((role, clip, source, score, durations[index]))
+    for index, ((clip, source, score), duration) in enumerate(zip(structural_clips, durations)):
+        role = (
+            TimelineStructuralRole.hook
+            if index == 0
+            else TimelineStructuralRole.payoff
+            if index == segment_count - 1
+            else TimelineStructuralRole.build
+        )
+        specs.append((role, clip, source, score, duration))
     return specs
 
 

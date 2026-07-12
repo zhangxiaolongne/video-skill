@@ -31,6 +31,11 @@ SKILL_VALIDATE = (
 PACKAGE_PREFLIGHT = ROOT / "scripts" / "skill_package_preflight.py"
 SIMULATE_INSTALL = ROOT / "scripts" / "simulate_skill_install.py"
 RELEASE_READINESS = ROOT / "scripts" / "run_release_candidate.py"
+QUALITY_PASSES = (
+    ROOT / "scripts" / "run_golden_baseline.py",
+    ROOT / "scripts" / "run_bgm_rhythm_quality.py",
+    ROOT / "scripts" / "run_nle_roundtrip_readiness.py",
+)
 
 
 def run(command: list[str], *, allowed: tuple[int, ...] = (0,)) -> str:
@@ -85,6 +90,16 @@ def validate_release_readiness() -> None:
         raise SystemExit("release readiness audit reported a forbidden side effect")
 
 
+def validate_quality_passes(temp_root: Path) -> None:
+    for script in QUALITY_PASSES:
+        run([
+            str(PYTHON),
+            str(script),
+            "--workspace",
+            str(temp_root / script.stem.removeprefix("run_")),
+        ])
+
+
 def clean_test_caches() -> None:
     shutil.rmtree(ROOT / ".pytest_cache", ignore_errors=True)
     for path in ROOT.rglob("__pycache__"):
@@ -102,7 +117,8 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     try:
-        with tempfile.TemporaryDirectory(prefix="artist-portrait-schemas-") as temp_dir:
+        with tempfile.TemporaryDirectory(prefix="artist-portrait-checks-") as temp_dir:
+            temp_root = Path(temp_dir)
             run(
                 [
                     str(PYTHON),
@@ -120,7 +136,7 @@ def main(argv: list[str] | None = None) -> int:
                     "artist_portrait_editor.cli",
                     "generate-schema",
                     "--output-dir",
-                    temp_dir,
+                    str(temp_root / "schemas"),
                 ]
             )
         run([str(PYTHON), "-m", "compileall", "-q", "src", "scripts", "tests"])
@@ -128,6 +144,8 @@ def main(argv: list[str] | None = None) -> int:
         validate_package()
         if not args.skip_pytest:
             run([str(PYTHON), "-m", "pytest"])
+        with tempfile.TemporaryDirectory(prefix="artist-portrait-quality-") as quality_dir:
+            validate_quality_passes(Path(quality_dir))
         validate_release_readiness()
         run(["git", "diff", "--check"])
     finally:

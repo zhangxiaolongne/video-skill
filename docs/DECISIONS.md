@@ -129,6 +129,83 @@ decision history is archived in [DECISIONS_HISTORY.md](archive/DECISIONS_HISTORY
 - Revisit when: a future editor integration executes real, observable actions
   and requires an independently auditable boundary.
 
+### DEC-065: Render every output against one explicit canvas contract
+
+- Status: `active`
+- Decision: preview and final export share one public rendering boundary. Every
+  segment is normalized to explicit width, height, aspect ratio, frame rate,
+  pixel format, and `contain` fit before concatenation. Supported timeline fades
+  must be rendered and recorded; unsupported overlaps must warn instead of being
+  reported as applied.
+- Rationale: width-only scaling produced a technically passing `1920x3414`
+  portrait export and made mixed-aspect concatenation and transition claims
+  unreliable.
+- Revisit when: V2 introduces supervised crop/reframe and true overlapping
+  crossfades.
+
+### DEC-066: Validate reframing per shot instead of assuming one global crop
+
+- Status: `active`
+- Decision: a reframe candidate binds exact final-media evidence, sampled frame
+  ids, source canvas, pixel crop geometry, target ratio, protected-region
+  policy, confidence, and risks. Candidate previews are explicit review images;
+  they do not mutate the timeline or prove a final crop was applied. Different
+  subject positions require different candidates.
+- Rationale: the first real fixed-center candidate passed geometry validation
+  but retained title branding; the corrected center crop then clipped left and
+  right subject positions. Visual preview proved that one global crop is unsafe.
+- Revisit when: supervised per-segment crop selection and playback validation
+  can generate an executable second-cut candidate.
+
+### DEC-067: Keep range judgment and edit concepts in one aesthetic baseline
+
+- Status: `active`
+- Decision: V2-01 uses one canonical aesthetic baseline to bind every current
+  timeline/source range to visual and local audio evidence, then compares
+  exactly three materially different duration concepts. Concept selection stays
+  null and the baseline does not mutate or render media.
+- Rationale: separate highlight, duration, and concept JSON reports would
+  recreate fragmented orchestration and invite contradictory creative claims.
+- Revisit when: explicit user concept selection opens a supervised second-cut
+  application boundary.
+
+### DEC-068: Technical acceptance cannot imply aesthetic publishability
+
+- Status: `active`
+- Decision: media validation, rhythm compatibility, and delivery acceptance are
+  inputs to aesthetic review, never substitutes for it. A valid export may be
+  explicitly classified `not_publishable`, and unsupported legacy labels must
+  be superseded inside the canonical aesthetic baseline.
+- Rationale: the real benchmark passed delivery at `0.929` while retaining a
+  promotional card, dominant broadcast framing, weak opening, uniform pacing,
+  unresolved dual-music risk, and an unverified ending.
+- Revisit when: real benchmark acceptance proves repeated agreement between
+  technical gates and independent aesthetic review.
+
+### DEC-069: Project-config duration is an explicit user requirement
+
+- Status: `active`
+- Decision: duration precedence is CLI override, then
+  `creative_brief.target_duration_seconds`, then system recommendation. A
+  selected aesthetic concept controls editorial direction but cannot silently
+  replace an explicit project duration.
+- Rationale: the real project specified 60 seconds, while the old brief path
+  ignored it and generated 43.29/72.15/115.44-second proportional options.
+- Revisit when: configuration distinguishes hard duration, preferred duration,
+  and recommendation-only modes explicitly.
+
+### DEC-070: Advance complete V2 versions, not numbered internal subversions
+
+- Status: `active`
+- Decision: external planning, execution, and progress reporting advance one
+  complete version such as `V2-02`. Internal acceptance checks may remain in the
+  batch ledger but must use descriptive ids and must not be presented as
+  `V2-02-01`, `V201-01`, or independent versions.
+- Rationale: subversion-style progress encouraged fragmented implementation and
+  made supporting fields/tests look like product releases.
+- Revisit when: never for ordinary capability development; only release tags may
+  add conventional patch-level version numbers.
+
 ## Archive Policy
 
 Archived decisions remain searchable in `docs/archive/DECISIONS_HISTORY.md`.

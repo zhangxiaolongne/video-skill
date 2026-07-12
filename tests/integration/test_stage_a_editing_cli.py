@@ -295,6 +295,70 @@ def test_sound_decision_warns_for_video_extracted_mixed_audio(tmp_path, capsys):
     assert any("mixed audio" in warning for warning in decision["warnings"])
 
 
+def test_sound_decision_warns_for_source_embedded_mixed_audio(tmp_path, capsys):
+    project_path = build_valid_proposal_project(tmp_path, capsys)
+    assert main(["timeline", "--project", str(project_path), "--proposal", "proposal_safe", "--quiet"]) in (0, 1)
+    source_id = read_sources_jsonl(tmp_path / ".artist-portrait" / "data" / "sources.jsonl")[0].source_id
+    source_media = tmp_path / "media" / "clean.mp4"
+    source_media.parent.mkdir(parents=True, exist_ok=True)
+    subprocess.run([
+        "ffmpeg", "-y", "-hide_banner", "-loglevel", "error",
+        "-f", "lavfi", "-i", "testsrc=size=64x64:rate=24:duration=1",
+        "-f", "lavfi", "-i", "sine=frequency=440:duration=1",
+        "-shortest", "-c:v", "libx264", "-pix_fmt", "yuv420p", "-c:a", "aac", str(source_media),
+    ], check=True)
+    assert main([
+        "bgm", "import", "--project", str(project_path), "--source-id", source_id,
+        "--rights-status", "owned", "--quiet",
+    ]) == 1
+
+    code = main(["sound", "--project", str(project_path), "--json"])
+    decision = json.loads(capsys.readouterr().out)["sound_decision"]
+    modes = {item["mode"]: item for item in decision["input_modes"]}
+
+    assert code == 1
+    assert modes["source_embedded_audio"]["status"] == "warning"
+    assert decision["source_embedded_audio_candidate_count"] == 1
+    assert decision["mixed_audio_warning_count"] == 1
+
+
+def test_timeline_build_and_review_honor_restricted_rights_override(tmp_path, capsys):
+    project_path = build_valid_proposal_project(tmp_path, capsys)
+    project_path.write_text(
+        project_path.read_text(encoding="utf-8").replace(
+            "allow_restricted_rights: false", "allow_restricted_rights: true"
+        ),
+        encoding="utf-8",
+    )
+    sources_path = tmp_path / ".artist-portrait" / "data" / "sources.jsonl"
+    sources = read_sources_jsonl(sources_path)
+    sources[0].rights_status.value = RightsStatus.restricted
+    sources_path.write_text("".join(item.model_dump_json() + "\n" for item in sources), encoding="utf-8")
+
+    assert main(["timeline", "--project", str(project_path), "--proposal", "proposal_safe", "--quiet"]) in (0, 1)
+    assert main(["review", "--project", str(project_path), "--scope", "timeline", "--quiet"]) in (0, 1)
+    validation = json.loads((tmp_path / ".artist-portrait" / "data" / "timeline_validation.json").read_text(encoding="utf-8"))
+
+    assert "timeline_restricted_rights" not in {item["code"] for item in validation["issues"]}
+
+
+def test_acceptance_rejects_blocked_workspace_state(tmp_path, capsys):
+    project_path = tmp_path / "project.yaml"
+    project_path.write_text((FIXTURES / "valid_project.yaml").read_text(encoding="utf-8"), encoding="utf-8")
+    assert main(["init", "--project", str(project_path), "--quiet"]) in (0, 1)
+    state_path = tmp_path / ".artist-portrait" / "state.json"
+    state = json.loads(state_path.read_text(encoding="utf-8"))
+    state["overall_status"] = "blocked"
+    state_path.write_text(json.dumps(state, indent=2) + "\n", encoding="utf-8")
+
+    assert main(["acceptance", "--project", str(project_path), "--profile", "core", "--json"]) != 0
+    report = json.loads(capsys.readouterr().out)["acceptance"]
+    workspace_stage = next(item for item in report["stages"] if item["stage_id"] == "workspace_state")
+
+    assert workspace_stage["status"] == "failed"
+    assert {item["code"] for item in workspace_stage["issues"]} == {"workspace_blocked"}
+
+
 def test_cut_review_requires_sound_decision(tmp_path, capsys):
     project_path = build_valid_proposal_project(tmp_path, capsys)
     assert (
@@ -1763,5 +1827,3 @@ def test_acceptance_cli_fails_when_core_pipeline_is_missing(tmp_path, capsys):
     assert accepted["core_ready"] is False
     stages = {stage["stage_id"]: stage for stage in accepted["acceptance"]["stages"]}
     assert stages["source_scan"]["status"] == "failed"
-
-

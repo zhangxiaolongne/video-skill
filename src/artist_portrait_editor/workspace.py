@@ -2422,6 +2422,7 @@ def timeline_workspace(
         sources=sources,
         edit_brief=edit_brief,
         clip_scores=clip_scores,
+        allow_restricted_rights=config.content_policy.allow_restricted_rights,
         timeline_ref=timeline_ref,
         input_fingerprint=input_fingerprint,
     )
@@ -2619,6 +2620,7 @@ def review_timeline_workspace(
         sources=sources,
         edit_brief=edit_brief,
         clip_scores=clip_scores,
+        allow_restricted_rights=config.content_policy.allow_restricted_rights,
         timeline_ref=timeline_path.relative_to(root).as_posix(),
         input_fingerprint=input_fingerprint,
     )

@@ -3,7 +3,17 @@
 Follow `artist_portrait_editor_revision5_optimized.md` as the governing V0
 engineering-freeze document.
 
-Current gate: V2-01 Real Video Aesthetic Baseline.
+Current gate: V2-01 Real Video Aesthetic Baseline. It is complete locally and
+awaiting publication as one version. The next complete version is V2-02 Frame
+Composition And Reframing, but it is not active yet.
+
+Current prerequisite acceptance stage: ACCEPTANCE-STAGE-07 Real Media
+Truthfulness And Baseline Recovery. It may refactor preview/final rendering into
+one public local-media boundary, enforce explicit aspect-aware canvases, render
+supported timeline fades, warn for unsupported overlapping transitions, migrate
+superseded state steps, and rebuild the primary real benchmark. It must preserve
+local source/output/cache evidence, keep mixed video audio classified as mixed,
+and must not claim technical delivery acceptance is mature aesthetic acceptance.
 
 V2-01 may plan and generate deterministic real-video aesthetic baseline
 artifacts from a real local project, existing pipeline evidence, host-Agent
@@ -17,6 +27,23 @@ hidden network/provider calls, not fabricate unseen content understanding, not
 treat extracted mixed video audio as clean BGM, not claim second-cut edits or
 rendered media were applied unless they actually were, and not count isolated
 fields, schemas, tests, refactors, or bug fixes as version tasks.
+
+Within V2-01, `baseline` may prepare one visible host-Agent handoff and import
+one quarantined canonical aesthetic baseline that covers every current timeline
+range and compares exactly three materially distinct duration concepts. It must
+leave concept selection null and must not mutate timelines, move edit points,
+render media, select music, call models from the CLI, or access the network.
+The same canonical baseline may bind current sound, rhythm, cut-review, and
+final-validation evidence to make a nine-domain audiovisual decision and an
+honest first-cut publishability review. Technical validity, rhythm `passed`, or
+delivery acceptance must never be promoted to aesthetic publishability.
+
+V2-01 `second-cut` requires an exact user-supplied concept id from the current
+aesthetic baseline. It may generate one canonical supervised candidate plan
+covering selection, structure, trims, per-shot reframes, source audio, BGM,
+text, transitions, pauses, ending, and verification. It must not silently pick
+a concept, mutate the canonical timeline, apply edit points/reframes, select or
+fit music, render media, call models from the CLI, or access the network.
 
 V1-01 may generate deterministic edit-brief artifacts from local project config,
 source ledger, optional clip ledger, and optional analysis ledger. It may accept
@@ -478,6 +505,10 @@ gate-progress, acceptance, or closeout fragments. Do not create a second task
 list, issue list, decision log, or release ledger elsewhere.
 
 ## Mandatory Development Batch Contract
+
+External development cadence advances one complete named version at a time
+(`V2-02`, then `V2-03`). Internal acceptance rows are not subversions and must
+not be named or reported as `V2-02-01`, `V202-01`, or separate releases.
 
 Every implementation batch must advance a named product, capability, or
 release milestone toward the final usable video-editing skill.

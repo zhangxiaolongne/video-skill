@@ -59,7 +59,17 @@ def load_state(root: Path) -> ProjectState | None:
     path = state_path(root)
     if not path.exists():
         return None
-    return ProjectState.model_validate_json(path.read_text(encoding="utf-8"))
+    state = ProjectState.model_validate_json(path.read_text(encoding="utf-8"))
+    superseded = {
+        "fcpxml_repair_approval_request",
+        "fcpxml_repair_approval_record",
+        "fcpxml_repair_dry_run",
+        "fcpxml_repair_execution_review",
+    }
+    if superseded.intersection(state.steps):
+        state.steps = {name: entry for name, entry in state.steps.items() if name not in superseded}
+        save_state(root, state)
+    return state
 
 
 def save_state(root: Path, state: ProjectState) -> None:

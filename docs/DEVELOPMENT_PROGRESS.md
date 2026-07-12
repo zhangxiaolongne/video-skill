@@ -17,14 +17,17 @@ issue tracker, or master strategy document.
 ## Current State
 
 - Current active gate: V2-01 Real Video Aesthetic Baseline
-- Current batch: `V2-01` Real Video Aesthetic Baseline, status `planned`
+- Gate state: completed locally, awaiting publication
+- Completed capability: `V2-01` Real Video Aesthetic Baseline
+- Next complete version: `V2-02 Frame Composition And Reframing`
+- Current batch: `V2-01` completed locally; not yet committed or published
 - Latest published release baseline: `v0.30.0`
 - Current published capability work: V1-08 revision promotion and V1 release
   packaging
-- Current acceptance stage: `ACCEPTANCE-STAGE-06` completed and published in
-  `v0.30.0`
-- Next release policy: no commit, tag, or push until V2-01 closes as a real
-  capability version and the user approves publication
+- Current acceptance stage: `ACCEPTANCE-STAGE-07` completed locally with full
+  checks and current real-project delivery acceptance
+- Next release policy: no commit, tag, or push until V2-01 closes as one
+  coherent capability version and the user approves publication
 
 ## Capability Dashboard
 
@@ -50,21 +53,39 @@ V2-01 task by itself.
 
 ## Current Batch Focus
 
-`V2-01` must produce a real-video aesthetic baseline from actual footage. The
-countable tasks live only in `docs/CURRENT_BATCH.md`; this dashboard summarizes
-the outcome:
+`ACCEPTANCE-STAGE-07` made the existing real-media pipeline truthful. V2-01 is
+now complete locally, and its acceptance outcomes live only in `docs/CURRENT_BATCH.md`.
+The recovered baseline now:
 
-- bind a real benchmark source;
-- recommend duration from evidence;
-- map highlights and weak areas;
-- audit final-frame composition, source-layout intrusion, and safe reframing;
-- plan multiple edit concepts;
-- define hook/build/payoff;
-- pair BGM and source audio with rhythm;
-- plan subtitle/text timing and transitions;
-- review the first-cut aesthetic gap;
-- produce a second-cut candidate plan;
-- write a real-video acceptance report.
+- owns exact aspect-aware preview and final canvases;
+- normalizes mixed source dimensions before concatenation;
+- renders supported timeline fades and records execution truth;
+- treats every `mixed_audio=true` candidate as a sound risk;
+- applies restricted-rights policy consistently;
+- rejects blocked workspace state during acceptance;
+- migrates superseded state steps;
+- shares one public rendering boundary;
+- rebuilds the primary real benchmark against current contracts;
+- runs golden, BGM/rhythm, and NLE quality passes in full checks.
+- binds all 8 real timeline/source ranges into one highlight/weak-area map with
+  explicit visual/audio uncertainty;
+- compares materially different `43.29s`, `72.15s`, and `115.44s` edit concepts
+  without selecting one or mutating the timeline.
+- judges source audio, BGM, speech/vocal, text, cuts, transitions, pauses,
+  composition, and ending together instead of accepting isolated rhythm checks;
+- records the technically valid first cut as aesthetically `not_publishable`
+  at a `0.34` maturity baseline with six ranked second-cut problems.
+- exposes an explicit second-cut concept-selection command and cross-domain
+  candidate planner with a real user-selected candidate.
+- records the user's `concept_emotional_short` choice in a real 60-second
+  second-cut plan with 11 ordered actions and complete ownership of all ranked
+  first-cut issues; actions remain unapplied.
+- validates the same contracts against a user-provided 448.333-second actress
+  interview without importing stage-specific crop or BGM assumptions;
+- fixes configured-duration precedence, bounded short-platform recommendations,
+  full downstream invalidation, and required-proposal clip ordering;
+- passes 243 tests plus golden, BGM/rhythm, NLE, package/install, schema, release
+  readiness, and diff validation.
 
 ## Long-Range Direction
 
@@ -102,14 +123,16 @@ the active gate and immediate development direction.
   a mature human editor.
 - Real BGM judgment remains limited until source-audio, candidate music, beat
   evidence, and visual pacing are evaluated together.
-- The primary benchmark currently preserves large source branding/layout bands
-  around the performance in its portrait output; V2 must judge frame usability
-  before treating an MP4 as an aesthetic result.
+- The recovered primary benchmark passes technical delivery acceptance at exact
+  `1080x1920`, but still preserves large source branding/layout bands around the
+  performance. V2 must judge and alter frame usability before calling it an
+  aesthetic result.
 - V2-01 must use real footage evidence; synthetic fixtures alone no longer prove
   progress.
 
 ## Next Major Decision
 
-Proceed with `V2-01 Real Video Aesthetic Baseline`. Do not open another release
-preparation loop until V2-01 has real aesthetic evidence and a validated
-candidate direction.
+Publish the completed V2-01 version only when the user approves commit/push.
+The next development run must plan and execute the complete `V2-02 Frame
+Composition And Reframing` version, with internal checks kept descriptive and
+never reported as numbered subversions.

@@ -268,7 +268,42 @@ Use:
 ```bash
 artist-portrait preview --project ./project.yaml --width 480 --fps 12
 artist-portrait review --project ./project.yaml --scope preview
+artist-portrait composition --project ./project.yaml --samples 9
+artist-portrait composition --project ./project.yaml --agent-output ./composition_review_candidate.json
+artist-portrait composition --project ./project.yaml --preview-candidate <candidate-id>
+artist-portrait baseline --project ./project.yaml
+artist-portrait baseline --project ./project.yaml --agent-output ./aesthetic_baseline_candidate.json
+artist-portrait second-cut --project ./project.yaml --concept-id <concept-id>
 ```
+
+Preview and final export resolve an explicit canvas from the project aspect
+ratio, normalize every segment with `contain` fit before concatenation, and
+record whether each timeline transition was actually rendered. A valid media
+export proves technical delivery only; crop/reframe composition and aesthetic
+quality still require the host-Agent review gate.
+
+`composition` requires a current valid final export. It extracts deterministic
+representative frames into rebuildable local cache, writes
+`output/composition_contact_sheet.jpg`, and prepares
+`output/composition_review_handoff.json` with exact media/timeline fingerprints.
+It does not call a model, access the network, generate imagery, or apply a crop.
+An explicit review candidate is byte-quarantined and must cover every supplied
+sample, match all media fingerprints/timestamps, and contain bounded crop
+geometry. `--preview-candidate` renders review-only cropped frame evidence; it
+does not change the timeline or final export.
+
+`baseline` joins the current timeline, duration options, clip/audio evidence,
+and reviewed composition samples into one visible host-Agent boundary. The
+candidate must cover each exact timeline/source range once, preserve uncertainty,
+and compare short, standard, and extended concepts. The user selects the
+direction later. It also reviews source audio, BGM, vocal continuity, text,
+cuts, transitions, pauses, composition, and ending together, then records an
+honest first-cut publishability verdict. Import does not apply edits or render media.
+
+`second-cut` is the explicit concept-selection boundary. It rejects unknown or
+omitted concept ids and writes one canonical supervised candidate plan covering
+selection, structure, trims, per-shot reframes, audio/BGM, text, transitions,
+pauses, ending, and verification. Planned actions are never reported as applied.
 
 Preview rendering may use local FFmpeg/ffprobe to extract timeline video
 ranges, retain original source audio, apply fitted BGM gain/fades/looping, and

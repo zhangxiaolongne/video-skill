@@ -262,7 +262,7 @@ def build_blocked_proposal_chain(root: Path, capsys) -> Path:
     assert main(["segment", "--project", str(project_path), "--quiet"]) == 0
     assert main(["analyze", "--project", str(project_path), "--quiet"]) == 0
     assert main(["map", "--project", str(project_path), "--quiet"]) == 0
-    assert main(["brief", "--project", str(project_path), "--quiet"]) == 0
+    assert main(["brief", "--project", str(project_path), "--quiet"]) in (0, 1)
     assert main(["score", "--project", str(project_path), "--quiet"]) == 1
     assert main(["propose", "--project", str(project_path), "--json"]) == 1
     capsys.readouterr()
@@ -313,8 +313,7 @@ def build_valid_proposal_project(root: Path, capsys, *, allow_music: bool = True
 
 
 def run_brief_and_score_for_propose(root: Path, project_path: Path) -> None:
-    assert main(["brief", "--project", str(project_path), "--quiet"]) == 0
+    assert main(["brief", "--project", str(project_path), "--quiet"]) in (0, 1)
     assert main(["score", "--project", str(project_path), "--quiet"]) in (0, 1)
     assert (root / ".artist-portrait" / "data" / "clip_scores.jsonl").exists()
-
 

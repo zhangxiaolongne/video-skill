@@ -37,6 +37,7 @@ def test_render_final_export_without_bgm_uses_original_audio(tmp_path):
     assert manifest.model_call_performed is False
     assert manifest.render_profile == "review_720p"
     assert manifest.width == 1280
+    assert manifest.height == 720
     assert manifest.bgm_included is False
     assert manifest.original_audio_included is True
     assert manifest.audio_present is True
@@ -51,14 +52,18 @@ def test_render_final_export_delivery_profile_records_profile(tmp_path):
         root=tmp_path,
         project_id="project-test",
         profile_name="delivery_1080p",
+        aspect_ratio="9:16",
     )
 
     assert manifest.render_profile == "delivery_1080p"
-    assert manifest.requested_profile.width == 1920
+    assert manifest.requested_profile.width == 1080
+    assert manifest.requested_profile.height == 1920
+    assert manifest.requested_profile.aspect_ratio == "9:16"
     assert manifest.requested_profile.fps == 30
-    assert manifest.width == 1920
+    assert (manifest.width, manifest.height) == (1080, 1920)
     assert validation.requested_profile == "delivery_1080p"
-    assert validation.requested_width == 1920
+    assert validation.requested_width == 1080
+    assert validation.requested_height == 1920
     assert validation.valid is True
 
 

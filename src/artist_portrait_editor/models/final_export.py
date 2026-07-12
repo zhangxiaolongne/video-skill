@@ -11,6 +11,9 @@ class FinalExportProfile(BaseModel):
 
     name: str = Field(pattern=r"^(review_720p|delivery_1080p)$")
     width: int = Field(gt=0)
+    height: int = Field(gt=0)
+    aspect_ratio: str = Field(pattern=r"^[1-9][0-9]*:[1-9][0-9]*$")
+    fit_mode: str = Field(pattern=r"^contain$")
     fps: int = Field(gt=0)
     video_crf: int = Field(ge=0, le=51)
     audio_bitrate: str = Field(pattern=r"^[0-9]+k$")
@@ -86,6 +89,8 @@ class FinalExportValidationReport(BaseModel):
     duration_tolerance_seconds: float = Field(ge=0)
     requested_profile: str = Field(pattern=r"^(review_720p|delivery_1080p)$")
     requested_width: int = Field(gt=0)
+    requested_height: int = Field(gt=0)
+    requested_aspect_ratio: str = Field(pattern=r"^[1-9][0-9]*:[1-9][0-9]*$")
     requested_fps: int = Field(gt=0)
     actual_width: int | None = Field(default=None, gt=0)
     actual_height: int | None = Field(default=None, gt=0)

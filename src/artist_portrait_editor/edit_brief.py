@@ -62,29 +62,41 @@ def build_edit_brief_workspace(
     analyses = read_analysis_jsonl(analysis_path) if analysis_path.exists() else []
     evidence = _evidence_summary(sources, clips, analyses)
     target_platform = (platform or config.creative_brief.platform).strip()
-    warnings = _brief_warnings(evidence, target_duration_seconds)
+    config_duration = (
+        float(config.creative_brief.target_duration_seconds)
+        if config.creative_brief.target_duration_seconds is not None
+        else 0.0
+    )
+    effective_target_duration = (
+        float(target_duration_seconds)
+        if target_duration_seconds is not None
+        else config_duration
+        if config_duration > 0
+        else None
+    )
+    warnings = _brief_warnings(evidence, effective_target_duration)
     options = _duration_options(
         sources=sources,
         evidence=evidence,
         platform=target_platform,
-        config_duration=float(config.creative_brief.target_duration_seconds),
+        config_duration=config_duration,
     )
     selected_option = _select_duration_option(
         options=options,
-        requested_seconds=target_duration_seconds,
+        requested_seconds=effective_target_duration,
         total_video_duration=evidence.total_video_duration_seconds,
         platform=target_platform,
     )
-    duration_source = "user_specified" if target_duration_seconds is not None else "system_recommended"
-    if target_duration_seconds is not None:
+    duration_source = "user_specified" if effective_target_duration is not None else "system_recommended"
+    if effective_target_duration is not None:
         options = [
             *options,
             DurationOption(
                 option_id="user_specified",
                 label="User specified cut",
-                duration_seconds=round(float(target_duration_seconds), 3),
+                duration_seconds=round(effective_target_duration, 3),
                 duration_ratio_to_video=_ratio(
-                    float(target_duration_seconds),
+                    effective_target_duration,
                     evidence.total_video_duration_seconds,
                 ),
                 primary_platform_fit=[target_platform],
@@ -93,7 +105,7 @@ def build_edit_brief_workspace(
                     "The user supplied a target duration, so the deterministic recommender does not override it.",
                 ],
                 risks=_requested_duration_risks(
-                    float(target_duration_seconds),
+                    effective_target_duration,
                     evidence.total_video_duration_seconds,
                 ),
             ),
@@ -129,8 +141,8 @@ def build_edit_brief_workspace(
         audience=config.creative_brief.audience,
         tone=config.creative_brief.tone,
         duration_source=duration_source,
-        requested_duration_seconds=round(float(target_duration_seconds), 3)
-        if target_duration_seconds is not None
+        requested_duration_seconds=round(effective_target_duration, 3)
+        if effective_target_duration is not None
         else None,
         selected_option_id=selected_option.option_id,
         selected_duration_seconds=selected_option.duration_seconds,
@@ -323,10 +335,23 @@ def invalidate_downstream_steps_for_brief(
         "propose",
         "timeline",
         "review_timeline",
+        "sound",
+        "cut_review",
+        "composition",
+        "composition_review",
+        "composition_preview",
+        "aesthetic_baseline_context",
+        "aesthetic_baseline",
+        "second_cut",
+        "revision",
+        "revision_application",
+        "revision_promotion",
         "bgm_recommend",
         "review_bgm_recommendation",
         "bgm_fit",
         "rhythm",
+        "rhythm_qc",
+        "edit_guidance",
         "preview",
         "review_preview",
         "final_export",
@@ -444,7 +469,8 @@ def _duration_options(
         extended = max(extended, min(total, 120.0))
     if "tiktok" in platform_norm or "douyin" in platform_norm or "reels" in platform_norm:
         short = min(short, 45.0)
-        standard = min(standard, 75.0)
+        standard = min(standard, 60.0)
+        extended = min(extended, 90.0)
     if evidence.total_video_duration_seconds > 0:
         short = min(short, evidence.total_video_duration_seconds)
         standard = min(max(standard, short), evidence.total_video_duration_seconds)

@@ -18,6 +18,10 @@ class PreviewRenderedSegment(BaseModel):
     media_role: str = Field(pattern=r"^(video|audio|both)$")
     video_rendered: bool
     original_audio_rendered: bool
+    video_transition: str = Field(min_length=1)
+    audio_transition: str = Field(min_length=1)
+    video_transition_rendered: bool
+    audio_transition_rendered: bool
 
 
 class PreviewRenderManifest(BaseModel):
@@ -42,6 +46,9 @@ class PreviewRenderManifest(BaseModel):
     duration_delta_seconds: float
     duration_tolerance_seconds: float = Field(ge=0)
     requested_width: int = Field(gt=0)
+    requested_height: int = Field(gt=0)
+    requested_aspect_ratio: str = Field(pattern=r"^[1-9][0-9]*:[1-9][0-9]*$")
+    fit_mode: str = Field(pattern=r"^contain$")
     requested_fps: int = Field(gt=0)
     width: int = Field(gt=0)
     height: int = Field(gt=0)
@@ -89,6 +96,8 @@ class PreviewValidationReport(BaseModel):
     duration_delta_seconds: float
     duration_tolerance_seconds: float = Field(ge=0)
     requested_width: int = Field(gt=0)
+    requested_height: int = Field(gt=0)
+    requested_aspect_ratio: str = Field(pattern=r"^[1-9][0-9]*:[1-9][0-9]*$")
     requested_fps: int = Field(gt=0)
     actual_width: int | None = Field(default=None, gt=0)
     actual_height: int | None = Field(default=None, gt=0)

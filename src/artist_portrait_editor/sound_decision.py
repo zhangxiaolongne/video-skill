@@ -179,12 +179,13 @@ def build_sound_decision(
 ) -> SoundDecision:
     candidates = ledger.candidates if ledger else []
     direct = [item for item in candidates if item.input_mode == BgmInputMode.direct_audio]
-    mixed = [item for item in candidates if item.input_mode == BgmInputMode.video_audio_extract]
+    video_extracted = [item for item in candidates if item.input_mode == BgmInputMode.video_audio_extract]
     embedded = [item for item in candidates if item.input_mode == BgmInputMode.source_embedded_audio]
+    mixed = [item for item in candidates if item.mixed_audio]
     source_audio_segments = [item for item in timeline.segments if item.media_role.value in {"audio", "both"}]
     warnings: list[str] = []
     if mixed:
-        warnings.append("video-extracted audio is mixed audio and must not be treated as clean BGM")
+        warnings.append("video-derived or source-embedded mixed audio must not be treated as clean BGM")
     if allow_music and not candidates:
         warnings.append("no BGM candidate has been imported yet")
     if fit is None and candidates and allow_music:
@@ -198,11 +199,16 @@ def build_sound_decision(
         _candidate_mode("direct_bgm", direct, "Use project-local uploaded audio only after explicit import and fit."),
         _candidate_mode(
             "video_extracted_mixed_audio",
-            mixed,
+            video_extracted,
             "Treat uploaded-video extracted audio as mixed audio; require human review or separation before using it as clean BGM.",
             mixed_audio=True,
         ),
-        _candidate_mode("source_embedded_audio", embedded, "Reuse embedded source audio only with source provenance and rights preserved."),
+        _candidate_mode(
+            "source_embedded_audio",
+            embedded,
+            "Reuse embedded source audio only with source provenance and rights preserved; mixed tracks require review or separation.",
+            mixed_audio=any(item.mixed_audio for item in embedded),
+        ),
         SoundInputModeDecision(
             mode="silence",
             status="available",
@@ -290,7 +296,7 @@ def build_sound_decision(
         source_audio_segment_count=len(source_audio_segments),
         bgm_candidate_count=len(candidates),
         direct_audio_candidate_count=len(direct),
-        video_extracted_mixed_audio_candidate_count=len(mixed),
+        video_extracted_mixed_audio_candidate_count=len(video_extracted),
         source_embedded_audio_candidate_count=len(embedded),
         fitted_bgm_candidate_id=fit.music_candidate_id if fit else None,
         beat_status=beat_status,

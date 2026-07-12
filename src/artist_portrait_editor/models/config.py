@@ -29,7 +29,7 @@ class CreativeBrief(BaseModel):
     theme: str = Field(min_length=1)
     audience: str = Field(min_length=1)
     platform: str = Field(min_length=1)
-    target_duration_seconds: int = Field(gt=0)
+    target_duration_seconds: int | None = Field(default=None, gt=0)
     aspect_ratio: str = Field(min_length=3)
     tone: list[str] = Field(default_factory=list)
 

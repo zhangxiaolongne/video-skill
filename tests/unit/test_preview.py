@@ -31,12 +31,12 @@ pytestmark = pytest.mark.skipif(
 )
 
 
-def make_video(path, duration=1.5, frequency=440):
+def make_video(path, duration=1.5, frequency=440, size="64x64"):
     path.parent.mkdir(parents=True, exist_ok=True)
     subprocess.run(
         [
             "ffmpeg", "-y", "-hide_banner", "-loglevel", "error",
-            "-f", "lavfi", "-i", f"testsrc=size=64x64:rate=24:duration={duration}",
+            "-f", "lavfi", "-i", f"testsrc=size={size}:rate=24:duration={duration}",
             "-f", "lavfi", "-i", f"sine=frequency={frequency}:duration={duration}",
             "-shortest", "-c:v", "libx264", "-pix_fmt", "yuv420p", "-c:a", "aac",
             str(path),
@@ -172,8 +172,50 @@ def test_render_preview_records_bounded_controls(tmp_path):
     assert manifest.requested_width == 320
     assert manifest.requested_fps == 10
     assert manifest.width == 320
+    assert manifest.height == 180
+    assert manifest.requested_height == 180
+    assert manifest.requested_aspect_ratio == "16:9"
+    assert manifest.fit_mode == "contain"
+    assert manifest.rendered_segments[0].video_transition_rendered is True
+    assert manifest.rendered_segments[0].audio_transition_rendered is True
     assert validation.requested_width == 320
     assert validation.requested_fps == 10
+    assert validation.valid is True
+
+
+def test_render_preview_normalizes_mixed_source_aspects_before_concat(tmp_path):
+    write_source_and_timeline(tmp_path, duration=1.5)
+    second_media = tmp_path / "media" / "source-landscape.mp4"
+    make_video(second_media, duration=0.75, frequency=550, size="96x54")
+    source = SourceRecord(
+        source_id="source-2",
+        locations=["media/source-landscape.mp4"],
+        primary_location="media/source-landscape.mp4",
+        content_hash=hash_file(second_media),
+        media_kind=MediaKind.video,
+        media_probe=MediaProbe(duration=0.75, width=96, height=54, frame_rate=24, video_codec="h264", audio_present=True, audio_codec="aac"),
+        source_type=Assertion(value="other", method="test", level=4, confidence=1),
+        rights_status=Assertion(value=RightsStatus.owned, method="test", level=4, confidence=1),
+        provenance_confidence=1,
+        provenance_method="test",
+    )
+    sources_path = tmp_path / ".artist-portrait" / "data" / "sources.jsonl"
+    sources_path.write_text(sources_path.read_text(encoding="utf-8") + source.model_dump_json() + "\n", encoding="utf-8")
+    timeline_path = tmp_path / "output" / "timeline_draft.json"
+    timeline = TimelineDraft.model_validate_json(timeline_path.read_text(encoding="utf-8"))
+    first = timeline.segments[0].model_copy(update={"timeline_end": 0.75, "source_out": 0.75})
+    second = first.model_copy(update={
+        "segment_id": "segment_002", "source_id": "source-2", "clip_id": "clip-2",
+        "timeline_start": 0.75, "timeline_end": 1.5, "source_in": 0, "source_out": 0.75,
+        "video_transition": VideoTransition.hard_cut, "audio_transition": AudioTransition.cut,
+    })
+    timeline.segments = [first, second]
+    timeline_path.write_text(timeline.model_dump_json(indent=2), encoding="utf-8")
+
+    _, _, _, manifest, validation = render_preview(root=tmp_path, project_id="project-test", width=320, fps=12, aspect_ratio="9:16")
+
+    assert (manifest.width, manifest.height) == (320, 570)
+    assert len(manifest.rendered_segments) == 2
     assert validation.valid is True
 
 

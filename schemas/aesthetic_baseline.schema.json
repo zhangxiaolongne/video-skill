@@ -1,0 +1,844 @@
+{
+  "$defs": {
+    "AestheticEditConcept": {
+      "additionalProperties": false,
+      "properties": {
+        "build_strategy": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Build Strategy",
+          "type": "array"
+        },
+        "composition_strategy": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Composition Strategy",
+          "type": "array"
+        },
+        "concept_id": {
+          "pattern": "^concept_[a-z0-9_]+$",
+          "title": "Concept Id",
+          "type": "string"
+        },
+        "confidence": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Confidence",
+          "type": "number"
+        },
+        "duration_option_id": {
+          "pattern": "^(short_cut|standard_cut|extended_cut|user_specified)$",
+          "title": "Duration Option Id",
+          "type": "string"
+        },
+        "hook_strategy": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Hook Strategy",
+          "type": "array"
+        },
+        "materially_distinct_from": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Materially Distinct From",
+          "type": "array"
+        },
+        "name": {
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "payoff_strategy": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Payoff Strategy",
+          "type": "array"
+        },
+        "requires_source_expansion": {
+          "default": false,
+          "title": "Requires Source Expansion",
+          "type": "boolean"
+        },
+        "rhythm_transition_strategy": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Rhythm Transition Strategy",
+          "type": "array"
+        },
+        "risks": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Risks",
+          "type": "array"
+        },
+        "selected_segment_ids": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Selected Segment Ids",
+          "type": "array"
+        },
+        "sound_bgm_strategy": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Sound Bgm Strategy",
+          "type": "array"
+        },
+        "strengths": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Strengths",
+          "type": "array"
+        },
+        "target_duration_seconds": {
+          "exclusiveMinimum": 0,
+          "title": "Target Duration Seconds",
+          "type": "number"
+        },
+        "text_strategy": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Text Strategy",
+          "type": "array"
+        }
+      },
+      "required": [
+        "concept_id",
+        "name",
+        "duration_option_id",
+        "target_duration_seconds",
+        "selected_segment_ids",
+        "hook_strategy",
+        "build_strategy",
+        "payoff_strategy",
+        "composition_strategy",
+        "sound_bgm_strategy",
+        "text_strategy",
+        "rhythm_transition_strategy",
+        "strengths",
+        "risks",
+        "confidence"
+      ],
+      "title": "AestheticEditConcept",
+      "type": "object"
+    },
+    "AestheticRangeAssessment": {
+      "additionalProperties": false,
+      "properties": {
+        "audio_evidence": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Audio Evidence",
+          "type": "array"
+        },
+        "category": {
+          "pattern": "^(highlight|supporting|weak|reject)$",
+          "title": "Category",
+          "type": "string"
+        },
+        "clip_id": {
+          "minLength": 1,
+          "title": "Clip Id",
+          "type": "string"
+        },
+        "clip_overall_score": {
+          "anyOf": [
+            {
+              "maximum": 1,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Clip Overall Score"
+        },
+        "confidence": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Confidence",
+          "type": "number"
+        },
+        "keep_or_drop": {
+          "pattern": "^(keep|trim|replace|drop|review)$",
+          "title": "Keep Or Drop",
+          "type": "string"
+        },
+        "rationale": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Rationale",
+          "type": "array"
+        },
+        "reframe_candidate_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Reframe Candidate Ids",
+          "type": "array"
+        },
+        "sample_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Sample Ids",
+          "type": "array"
+        },
+        "segment_id": {
+          "minLength": 1,
+          "title": "Segment Id",
+          "type": "string"
+        },
+        "source_id": {
+          "minLength": 1,
+          "title": "Source Id",
+          "type": "string"
+        },
+        "source_in": {
+          "minimum": 0,
+          "title": "Source In",
+          "type": "number"
+        },
+        "source_out": {
+          "exclusiveMinimum": 0,
+          "title": "Source Out",
+          "type": "number"
+        },
+        "structural_role": {
+          "pattern": "^(hook|build|payoff|bridge|context)$",
+          "title": "Structural Role",
+          "type": "string"
+        },
+        "timeline_end": {
+          "exclusiveMinimum": 0,
+          "title": "Timeline End",
+          "type": "number"
+        },
+        "timeline_start": {
+          "minimum": 0,
+          "title": "Timeline Start",
+          "type": "number"
+        },
+        "uncertainty": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Uncertainty",
+          "type": "array"
+        },
+        "visual_evidence": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Visual Evidence",
+          "type": "array"
+        }
+      },
+      "required": [
+        "segment_id",
+        "structural_role",
+        "timeline_start",
+        "timeline_end",
+        "source_id",
+        "clip_id",
+        "source_in",
+        "source_out",
+        "category",
+        "visual_evidence",
+        "audio_evidence",
+        "keep_or_drop",
+        "rationale",
+        "confidence"
+      ],
+      "title": "AestheticRangeAssessment",
+      "type": "object"
+    },
+    "AudiovisualDomainDecision": {
+      "additionalProperties": false,
+      "properties": {
+        "confidence": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Confidence",
+          "type": "number"
+        },
+        "decision": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Decision",
+          "type": "array"
+        },
+        "dependencies": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Dependencies",
+          "type": "array"
+        },
+        "domain": {
+          "pattern": "^(source_audio|bgm|speech_vocal|text|cuts|transitions|pauses|composition|ending)$",
+          "title": "Domain",
+          "type": "string"
+        },
+        "evidence": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Evidence",
+          "type": "array"
+        },
+        "risks": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Risks",
+          "type": "array"
+        },
+        "status": {
+          "pattern": "^(usable|review|conflict|unavailable)$",
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "domain",
+        "status",
+        "evidence",
+        "decision",
+        "confidence"
+      ],
+      "title": "AudiovisualDomainDecision",
+      "type": "object"
+    },
+    "AudiovisualRhythmDecision": {
+      "additionalProperties": false,
+      "properties": {
+        "beat_sync_available": {
+          "default": false,
+          "title": "Beat Sync Available",
+          "type": "boolean"
+        },
+        "clean_bgm_available": {
+          "default": false,
+          "title": "Clean Bgm Available",
+          "type": "boolean"
+        },
+        "concept_impacts": {
+          "additionalProperties": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "minProperties": 3,
+          "title": "Concept Impacts",
+          "type": "object"
+        },
+        "decision_id": {
+          "minLength": 1,
+          "title": "Decision Id",
+          "type": "string"
+        },
+        "domains": {
+          "items": {
+            "$ref": "#/$defs/AudiovisualDomainDecision"
+          },
+          "maxItems": 9,
+          "minItems": 9,
+          "title": "Domains",
+          "type": "array"
+        },
+        "edits_applied": {
+          "default": false,
+          "title": "Edits Applied",
+          "type": "boolean"
+        },
+        "overall_status": {
+          "pattern": "^(usable|review|blocked)$",
+          "title": "Overall Status",
+          "type": "string"
+        },
+        "priority_sequence": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Priority Sequence",
+          "type": "array"
+        },
+        "transcript_timing_available": {
+          "default": false,
+          "title": "Transcript Timing Available",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "decision_id",
+        "overall_status",
+        "domains",
+        "priority_sequence",
+        "concept_impacts"
+      ],
+      "title": "AudiovisualRhythmDecision",
+      "type": "object"
+    },
+    "FirstCutAestheticIssue": {
+      "additionalProperties": false,
+      "properties": {
+        "audience_impact": {
+          "minLength": 1,
+          "title": "Audience Impact",
+          "type": "string"
+        },
+        "diagnosis": {
+          "minLength": 1,
+          "title": "Diagnosis",
+          "type": "string"
+        },
+        "domain": {
+          "pattern": "^(opening|selection|composition|pacing|audio|text|transition|ending|publishability)$",
+          "title": "Domain",
+          "type": "string"
+        },
+        "evidence_refs": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Evidence Refs",
+          "type": "array"
+        },
+        "issue_id": {
+          "minLength": 1,
+          "title": "Issue Id",
+          "type": "string"
+        },
+        "priority": {
+          "minimum": 1,
+          "title": "Priority",
+          "type": "integer"
+        },
+        "required_change": {
+          "minLength": 1,
+          "title": "Required Change",
+          "type": "string"
+        },
+        "severity": {
+          "pattern": "^(critical|high|medium|low)$",
+          "title": "Severity",
+          "type": "string"
+        },
+        "timeline_end": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Timeline End"
+        },
+        "timeline_start": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Timeline Start"
+        }
+      },
+      "required": [
+        "issue_id",
+        "priority",
+        "severity",
+        "domain",
+        "diagnosis",
+        "evidence_refs",
+        "audience_impact",
+        "required_change"
+      ],
+      "title": "FirstCutAestheticIssue",
+      "type": "object"
+    },
+    "FirstCutAestheticReview": {
+      "additionalProperties": false,
+      "properties": {
+        "edits_applied": {
+          "default": false,
+          "title": "Edits Applied",
+          "type": "boolean"
+        },
+        "highest_impact_issue_id": {
+          "minLength": 1,
+          "title": "Highest Impact Issue Id",
+          "type": "string"
+        },
+        "issues": {
+          "items": {
+            "$ref": "#/$defs/FirstCutAestheticIssue"
+          },
+          "minItems": 1,
+          "title": "Issues",
+          "type": "array"
+        },
+        "maturity_score": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Maturity Score",
+          "type": "number"
+        },
+        "publishability": {
+          "pattern": "^(publishable|conditional|not_publishable)$",
+          "title": "Publishability",
+          "type": "string"
+        },
+        "review_id": {
+          "minLength": 1,
+          "title": "Review Id",
+          "type": "string"
+        },
+        "second_cut_required": {
+          "default": true,
+          "title": "Second Cut Required",
+          "type": "boolean"
+        },
+        "strongest_elements": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Strongest Elements",
+          "type": "array"
+        },
+        "superseded_legacy_claims": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Superseded Legacy Claims",
+          "type": "array"
+        },
+        "technical_delivery_status": {
+          "pattern": "^(valid|invalid|unknown)$",
+          "title": "Technical Delivery Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "review_id",
+        "technical_delivery_status",
+        "publishability",
+        "maturity_score",
+        "strongest_elements",
+        "issues",
+        "highest_impact_issue_id"
+      ],
+      "title": "FirstCutAestheticReview",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "audiovisual_rhythm_decision": {
+      "$ref": "#/$defs/AudiovisualRhythmDecision"
+    },
+    "automatic_bgm_fit": {
+      "default": false,
+      "title": "Automatic Bgm Fit",
+      "type": "boolean"
+    },
+    "automatic_concept_selection": {
+      "default": false,
+      "title": "Automatic Concept Selection",
+      "type": "boolean"
+    },
+    "automatic_music_selection": {
+      "default": false,
+      "title": "Automatic Music Selection",
+      "type": "boolean"
+    },
+    "baseline_id": {
+      "minLength": 1,
+      "title": "Baseline Id",
+      "type": "string"
+    },
+    "clip_scores_fingerprint": {
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "title": "Clip Scores Fingerprint",
+      "type": "string"
+    },
+    "clip_scores_ref": {
+      "minLength": 1,
+      "title": "Clip Scores Ref",
+      "type": "string"
+    },
+    "composition_review_fingerprint": {
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "title": "Composition Review Fingerprint",
+      "type": "string"
+    },
+    "composition_review_id": {
+      "minLength": 1,
+      "title": "Composition Review Id",
+      "type": "string"
+    },
+    "composition_review_ref": {
+      "minLength": 1,
+      "title": "Composition Review Ref",
+      "type": "string"
+    },
+    "conclusions": {
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Conclusions",
+      "type": "array"
+    },
+    "cut_review_fingerprint": {
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "title": "Cut Review Fingerprint",
+      "type": "string"
+    },
+    "cut_review_id": {
+      "minLength": 1,
+      "title": "Cut Review Id",
+      "type": "string"
+    },
+    "cut_review_ref": {
+      "minLength": 1,
+      "title": "Cut Review Ref",
+      "type": "string"
+    },
+    "edit_brief_fingerprint": {
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "title": "Edit Brief Fingerprint",
+      "type": "string"
+    },
+    "edit_brief_ref": {
+      "minLength": 1,
+      "title": "Edit Brief Ref",
+      "type": "string"
+    },
+    "edit_concepts": {
+      "items": {
+        "$ref": "#/$defs/AestheticEditConcept"
+      },
+      "maxItems": 3,
+      "minItems": 3,
+      "title": "Edit Concepts",
+      "type": "array"
+    },
+    "edit_points_moved": {
+      "default": false,
+      "title": "Edit Points Moved",
+      "type": "boolean"
+    },
+    "final_validation_fingerprint": {
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "title": "Final Validation Fingerprint",
+      "type": "string"
+    },
+    "final_validation_ref": {
+      "minLength": 1,
+      "title": "Final Validation Ref",
+      "type": "string"
+    },
+    "first_cut_review": {
+      "$ref": "#/$defs/FirstCutAestheticReview"
+    },
+    "image_generation_or_editing_used": {
+      "default": false,
+      "title": "Image Generation Or Editing Used",
+      "type": "boolean"
+    },
+    "media_rendered": {
+      "default": false,
+      "title": "Media Rendered",
+      "type": "boolean"
+    },
+    "method": {
+      "minLength": 1,
+      "title": "Method",
+      "type": "string"
+    },
+    "method_version": {
+      "minLength": 1,
+      "title": "Method Version",
+      "type": "string"
+    },
+    "model_call_performed_by_cli": {
+      "default": false,
+      "title": "Model Call Performed By Cli",
+      "type": "boolean"
+    },
+    "network_performed": {
+      "default": false,
+      "title": "Network Performed",
+      "type": "boolean"
+    },
+    "project_id": {
+      "minLength": 1,
+      "title": "Project Id",
+      "type": "string"
+    },
+    "range_assessments": {
+      "items": {
+        "$ref": "#/$defs/AestheticRangeAssessment"
+      },
+      "minItems": 1,
+      "title": "Range Assessments",
+      "type": "array"
+    },
+    "reviewed_only_supplied_evidence": {
+      "default": true,
+      "title": "Reviewed Only Supplied Evidence",
+      "type": "boolean"
+    },
+    "rhythm_plan_fingerprint": {
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "title": "Rhythm Plan Fingerprint",
+      "type": "string"
+    },
+    "rhythm_plan_id": {
+      "minLength": 1,
+      "title": "Rhythm Plan Id",
+      "type": "string"
+    },
+    "rhythm_plan_ref": {
+      "minLength": 1,
+      "title": "Rhythm Plan Ref",
+      "type": "string"
+    },
+    "schema_version": {
+      "default": "0.3",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "selected_concept_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Selected Concept Id"
+    },
+    "sound_decision_fingerprint": {
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "title": "Sound Decision Fingerprint",
+      "type": "string"
+    },
+    "sound_decision_id": {
+      "minLength": 1,
+      "title": "Sound Decision Id",
+      "type": "string"
+    },
+    "sound_decision_ref": {
+      "minLength": 1,
+      "title": "Sound Decision Ref",
+      "type": "string"
+    },
+    "timeline_fingerprint": {
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "title": "Timeline Fingerprint",
+      "type": "string"
+    },
+    "timeline_id": {
+      "minLength": 1,
+      "title": "Timeline Id",
+      "type": "string"
+    },
+    "timeline_mutated": {
+      "default": false,
+      "title": "Timeline Mutated",
+      "type": "boolean"
+    },
+    "timeline_ref": {
+      "minLength": 1,
+      "title": "Timeline Ref",
+      "type": "string"
+    },
+    "warnings": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Warnings",
+      "type": "array"
+    }
+  },
+  "required": [
+    "baseline_id",
+    "project_id",
+    "timeline_id",
+    "timeline_ref",
+    "timeline_fingerprint",
+    "edit_brief_ref",
+    "edit_brief_fingerprint",
+    "clip_scores_ref",
+    "clip_scores_fingerprint",
+    "composition_review_ref",
+    "composition_review_fingerprint",
+    "composition_review_id",
+    "sound_decision_ref",
+    "sound_decision_fingerprint",
+    "sound_decision_id",
+    "rhythm_plan_ref",
+    "rhythm_plan_fingerprint",
+    "rhythm_plan_id",
+    "cut_review_ref",
+    "cut_review_fingerprint",
+    "cut_review_id",
+    "final_validation_ref",
+    "final_validation_fingerprint",
+    "method",
+    "method_version",
+    "range_assessments",
+    "edit_concepts",
+    "audiovisual_rhythm_decision",
+    "first_cut_review",
+    "conclusions"
+  ],
+  "title": "AestheticBaseline",
+  "type": "object"
+}

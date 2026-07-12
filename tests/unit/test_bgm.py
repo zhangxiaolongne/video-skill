@@ -213,6 +213,7 @@ def test_source_embedded_audio_import(tmp_path):
     )
 
     assert candidate.input_mode == BgmInputMode.source_embedded_audio
+    assert candidate.mixed_audio is True
     assert candidate.source_ref == "source_id:source-1"
     assert candidate.rights_status == RightsStatus.owned
 

@@ -286,6 +286,99 @@ def test_real_media_acceptance_profiles_reach_delivery(tmp_path, capsys):
     )
     assert main(["rhythm", "--project", str(project_path), "--qc", "--quiet"]) in (0, 1)
     assert main(["cut-review", "--project", str(project_path), "--quiet"]) in (0, 1)
+    assert main(["composition", "--project", str(project_path), "--samples", "4", "--json"]) == 0
+    composition = json.loads(capsys.readouterr().out)["composition_evidence"]
+    assert composition["sample_count"] == 4
+    assert len(composition["samples"]) == 4
+    assert composition["canvas"] == {
+        "width": 1280,
+        "height": 720,
+        "aspect_ratio": "16:9",
+        "fit_mode": "contain",
+    }
+    assert composition["model_call_performed_by_cli"] is False
+    assert composition["network_performed"] is False
+    assert (tmp_path / composition["contact_sheet_ref"]).is_file()
+    review_candidate = {
+        "review_id": "composition_review_test",
+        "project_id": composition["project_id"],
+        "composition_evidence_id": composition["composition_evidence_id"],
+        "timeline_id": composition["timeline_id"],
+        "timeline_fingerprint": composition["timeline_fingerprint"],
+        "final_export_ref": composition["final_export_ref"],
+        "final_export_hash": composition["final_export_hash"],
+        "contact_sheet_ref": composition["contact_sheet_ref"],
+        "contact_sheet_hash": composition["contact_sheet_hash"],
+        "method": "codex_host_agent_fixture_review",
+        "method_version": "test-v1",
+        "aesthetic_status": "needs_reframe",
+        "frame_reviews": [
+            {
+                "sample_id": item["sample_id"],
+                "timestamp_seconds": item["timestamp_seconds"],
+                "performer_prominence": 0.4,
+                "branding_intrusion": 0.5,
+                "dead_space": 0.3,
+                "crop_safety": "conditional",
+                "usability": "reframe_required",
+                "observations": ["synthetic fixture composition review"],
+                "confidence": 0.8,
+            }
+            for item in composition["samples"]
+        ],
+        "reframe_candidates": [
+            {
+                "candidate_id": "reframe_full_frame",
+                "name": "Full-frame geometry fixture",
+                "status": "candidate",
+                "source_width": 1280,
+                "source_height": 720,
+                "crop_box": {"x": 0, "y": 0, "width": 1280, "height": 720},
+                "target_aspect_ratio": "16:9",
+                "applicable_sample_ids": [item["sample_id"] for item in composition["samples"]],
+                "protected_region_policy": "Keep the generated test subject inside frame.",
+                "benefits": ["Proves validated geometry and binding."],
+                "risks": ["Does not improve synthetic composition."],
+                "confidence": 0.8,
+            },
+            {
+                "candidate_id": "reframe_single_sample",
+                "name": "Single-sample preview fixture",
+                "status": "conditional",
+                "source_width": 1280,
+                "source_height": 720,
+                "crop_box": {"x": 320, "y": 180, "width": 640, "height": 360},
+                "target_aspect_ratio": "16:9",
+                "applicable_sample_ids": [composition["samples"][0]["sample_id"]],
+                "protected_region_policy": "Keep the generated subject centered.",
+                "benefits": ["Exercises a single-frame candidate preview."],
+                "risks": ["Synthetic evidence only."],
+                "confidence": 0.7,
+            }
+        ],
+        "recommended_candidate_id": "reframe_full_frame",
+        "conclusions": ["Synthetic media remains regression evidence only."],
+        "warnings": ["fixture review is not real aesthetic acceptance"],
+    }
+    candidate_path = tmp_path / "composition_candidate.json"
+    candidate_path.write_text(json.dumps(review_candidate, indent=2) + "\n", encoding="utf-8")
+    assert main([
+        "composition", "--project", str(project_path),
+        "--agent-output", str(candidate_path), "--json",
+    ]) == 1
+    imported = json.loads(capsys.readouterr().out)
+    assert imported["composition_review"]["crop_applied"] is False
+    assert imported["composition_review"]["media_rendered"] is False
+    assert imported["output"] == ".artist-portrait/data/composition_review.json"
+    assert (tmp_path / imported["report"]).is_file()
+    assert main([
+        "composition", "--project", str(project_path),
+        "--preview-candidate", "reframe_single_sample", "--json",
+    ]) == 0
+    reframe_preview = json.loads(capsys.readouterr().out)["reframe_preview"]
+    assert reframe_preview["candidate_preview_rendered"] is True
+    assert reframe_preview["crop_applied_to_final"] is False
+    assert (tmp_path / reframe_preview["preview_ref"]).is_file()
     assert main(["acceptance", "--project", str(project_path), "--profile", "delivery", "--json"]) == 0
     delivery = json.loads(capsys.readouterr().out)
     stages = {stage["stage_id"]: stage for stage in delivery["acceptance"]["stages"]}

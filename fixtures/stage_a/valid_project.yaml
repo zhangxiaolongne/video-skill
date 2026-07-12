@@ -10,7 +10,6 @@ creative_brief:
   theme: 不同媒介中的声音、身体与情绪
   audience: 熟悉人物的粉丝和普通观众
   platform: bilibili
-  target_duration_seconds: 180
   aspect_ratio: "16:9"
   tone:
     - restrained

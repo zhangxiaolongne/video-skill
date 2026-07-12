@@ -3,6 +3,15 @@
     "PreviewRenderedSegment": {
       "additionalProperties": false,
       "properties": {
+        "audio_transition": {
+          "minLength": 1,
+          "title": "Audio Transition",
+          "type": "string"
+        },
+        "audio_transition_rendered": {
+          "title": "Audio Transition Rendered",
+          "type": "boolean"
+        },
         "media_role": {
           "pattern": "^(video|audio|both)$",
           "title": "Media Role",
@@ -50,6 +59,15 @@
         "video_rendered": {
           "title": "Video Rendered",
           "type": "boolean"
+        },
+        "video_transition": {
+          "minLength": 1,
+          "title": "Video Transition",
+          "type": "string"
+        },
+        "video_transition_rendered": {
+          "title": "Video Transition Rendered",
+          "type": "boolean"
         }
       },
       "required": [
@@ -62,7 +80,11 @@
         "source_out",
         "media_role",
         "video_rendered",
-        "original_audio_rendered"
+        "original_audio_rendered",
+        "video_transition",
+        "audio_transition",
+        "video_transition_rendered",
+        "audio_transition_rendered"
       ],
       "title": "PreviewRenderedSegment",
       "type": "object"
@@ -165,6 +187,11 @@
       "title": "Final Export",
       "type": "boolean"
     },
+    "fit_mode": {
+      "pattern": "^contain$",
+      "title": "Fit Mode",
+      "type": "string"
+    },
     "fps": {
       "exclusiveMinimum": 0,
       "title": "Fps",
@@ -222,9 +249,19 @@
       "title": "Rendered Segments",
       "type": "array"
     },
+    "requested_aspect_ratio": {
+      "pattern": "^[1-9][0-9]*:[1-9][0-9]*$",
+      "title": "Requested Aspect Ratio",
+      "type": "string"
+    },
     "requested_fps": {
       "exclusiveMinimum": 0,
       "title": "Requested Fps",
+      "type": "integer"
+    },
+    "requested_height": {
+      "exclusiveMinimum": 0,
+      "title": "Requested Height",
       "type": "integer"
     },
     "requested_width": {
@@ -287,6 +324,9 @@
     "duration_delta_seconds",
     "duration_tolerance_seconds",
     "requested_width",
+    "requested_height",
+    "requested_aspect_ratio",
+    "fit_mode",
     "requested_fps",
     "width",
     "height",

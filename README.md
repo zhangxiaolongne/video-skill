@@ -23,7 +23,8 @@ outcomes live in `docs/archive/RELEASES_HISTORY.md`.
 
 ## Current Gate
 
-Current V2-01 Real Video Aesthetic Baseline planning builds on the published
+Current V2-01 Real Video Aesthetic Baseline planning is preceded by the
+Stage 07 baseline-recovery work and builds on the published
 V1-08 revision promotion and release packaging work. The published system
 allows deterministic project
 setup, local media scanning, fixed-window clip segmentation, optional
@@ -51,16 +52,8 @@ user revision-loop planning in `.artist-portrait/data/revision_plan.json` and
 explicit revised-candidate promotion in
 `.artist-portrait/data/revision_promotion.json` and
 `output/revision_promotion.md`,
-deterministic
-proposal context packets, text-model gate packets, deterministic proposal request packets,
-proposal adapter preflight packets, provider registry packets, local mock
-adapter handshake packets, execution approval request packets, execution
-approval record packets, execution readiness plan packets, execution input
-bundle packets, provider call dry-run packets, execution authorization packets,
-provider response intake plan packets, provider output quarantine packets,
-provider response validation plan packets, promotion authorization/validation
-packets, canonical write transaction plan packets, provider result envelope
-packets, a local host-Agent handoff, quarantined candidate import, atomic
+deterministic proposal context, a visible local host-Agent handoff,
+quarantined candidate import, atomic
 canonical proposal promotion, proposal contract validation, deterministic
 proposal review, explicit timeline generation, multi-source BGM fitting,
 explicit BGM fit controls, local BGM technical analysis, validated local
@@ -71,14 +64,13 @@ controlled local final MP4 export, project acceptance reporting,
 profile-specific acceptance gates, generated real-media fixture acceptance
 checks, direct actionable next commands in acceptance reports, BGM/edit rhythm planning,
 rhythm media QC, rhythm manual repair planning, guided workflow planning,
-workflow execution evidence review, workflow evidence repair planning, workflow
-repair approval/dry-run packaging, workflow repair execution evidence review,
-release hardening audit, workflow repair evidence refresh guidance, BGM rhythm
+workflow execution evidence review, workflow evidence repair planning,
+release hardening audit, BGM rhythm
 intelligence, phrase-level manual edit guidance, operator runbook usability,
 editor package handoff, NLE interchange planning, supervised FCPXML draft
 writing, explicit FCPXML import-review evidence validation, and FCPXML
 import/relink repair planning,
-FCPXML repair execution evidence review, the golden real-project baseline, the
+the golden real-project baseline, the
 BGM/rhythm quality pass, the supervised NLE round-trip readiness pass, and the
 release-candidate validation path:
 
@@ -86,7 +78,9 @@ release-candidate validation path:
 
 Current published capability work: `V1-08 Revision promotion, revised render
 readiness, and V1 release packaging` in the retained `v0.30.0` baseline.
-Current active planning gate: `V2-01 Real Video Aesthetic Baseline`.
+Current local acceptance stage: `ACCEPTANCE-STAGE-07 Real Media Truthfulness And Baseline Recovery`.
+V2-01 Real Video Aesthetic Baseline is complete locally. Next complete version:
+`V2-02 Frame Composition And Reframing`.
 The latest published acceptance release remains `ACCEPTANCE-STAGE-06 Release
 candidate and publication` in `v0.28.0`; the latest published V1 capability
 release baseline is `v0.30.0`.
@@ -254,6 +248,12 @@ python3 -m venv .venv
 .venv/bin/artist-portrait bgm fit --project ./project.yaml --candidate <candidate-id> --fit-mode auto --fade-in-seconds 0.5 --fade-out-seconds 1.0 --ducking-gain-db -9
 .venv/bin/artist-portrait bgm review --project ./project.yaml
 .venv/bin/artist-portrait preview --project ./project.yaml --width 480 --fps 12
+.venv/bin/artist-portrait composition --project ./project.yaml --samples 9
+.venv/bin/artist-portrait composition --project ./project.yaml --agent-output ./composition_review_candidate.json
+.venv/bin/artist-portrait composition --project ./project.yaml --preview-candidate <candidate-id>
+.venv/bin/artist-portrait baseline --project ./project.yaml
+.venv/bin/artist-portrait baseline --project ./project.yaml --agent-output ./aesthetic_baseline_candidate.json
+.venv/bin/artist-portrait second-cut --project ./project.yaml --concept-id <concept-id>
 .venv/bin/artist-portrait review --project ./project.yaml --scope project
 .venv/bin/artist-portrait review --project ./project.yaml --scope proposal
 .venv/bin/artist-portrait review --project ./project.yaml --scope timeline
@@ -266,6 +266,17 @@ python3 -m venv .venv
 ```
 
 Commands such as `relate` and final `run` remain intentionally blocked.
+`baseline` prepares one evidence-bound host-Agent handoff from the current
+timeline, edit brief, clip scores, and composition review. Its explicit
+candidate must cover every range and compare exactly three materially different
+short, standard, and extended concepts. Import writes one canonical JSON plus
+one Markdown report. The same baseline binds sound/rhythm/final evidence for a
+nine-domain audiovisual decision and separates technical delivery from first-cut
+publishability; it never selects a concept, moves edits, or renders media.
+`second-cut` requires an exact concept id from that baseline. It converts the
+chosen direction into ordered selection, structure, trim, per-shot reframe,
+source-audio, BGM, text, transition, pause, ending, and verification actions,
+while leaving the canonical timeline and media unchanged.
 `propose` prepares a host-Agent handoff and can import an explicit quarantined
 ProposalSet candidate; it does not call paid APIs or access the network.
 

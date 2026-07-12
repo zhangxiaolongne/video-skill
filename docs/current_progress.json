@@ -20,10 +20,11 @@
   "active_batch": {
     "id": "V2-01",
     "name": "Real Video Aesthetic Baseline",
-    "status": "planned",
-    "started": "2026-07-04",
+    "status": "completed",
+    "started": "2026-07-11",
     "capability_gate": "V2-01",
     "acceptance_stage": null,
+    "prerequisite_acceptance_stage": "ACCEPTANCE-STAGE-07_completed_locally",
     "commit_policy": "commit_tag_and_push_only_after_v2_01_capability_and_validation_close_as_one_version"
   },
   "latest_release": {
@@ -35,17 +36,17 @@
     "scope": "Single-root architecture baseline preserving the V1 capability surface and completing the refactor"
   },
   "latest_local_validation": {
-    "date": "2026-07-10",
-    "full_pytest": ".venv/bin/python -m pytest passed with 239 passed",
-    "project_checks": ".venv/bin/python run_checks.py passed after proposal/workflow/acceptance/FCPXML/BGM JSON-chain convergence and workspace diagnostics extraction",
-    "release_candidate": ".venv/bin/python scripts/run_release_candidate.py --allow-dirty --json passed before the single-root history reset; rerun after publication ledger commit",
-    "current_doc_followup": "Single-root v0.30.0 architecture baseline is ready for force-push publication; object verification passed locally"
+    "date": "2026-07-12",
+    "full_pytest": ".venv/bin/python -m pytest passed with 243 passed",
+    "project_checks": ".venv/bin/python run_checks.py passed with golden, BGM/rhythm, NLE round-trip, schema, package, install simulation, release-candidate, and diff checks",
+    "real_benchmark": "stage baseline plus user-provided 448.333s actress interview contrast; interview final is chronological 60s at 1280x720 with six reviewed frames and a separate not-publishable aesthetic verdict",
+    "current_doc_followup": "V2-01 completed locally as one version; 243 tests plus golden, BGM/rhythm, NLE, package/install, schema, release readiness, and diff validation passed; no commit or push performed"
   },
   "capability_summary": {
     "engineering_substrate": "published",
     "v1_aesthetic_foundation": "published",
-    "real_video_aesthetic_maturity": "planned",
-    "current_gap": "end-to-end proof exists, but mature aesthetic editing, final-frame composition, and safe reframing on real footage are not yet proven"
+    "real_video_aesthetic_maturity": "baseline_complete",
+    "current_gap": "V2-01 can expose real aesthetic failures across stage and interview sources; V2-02 must turn supervised frame composition and reframing into applied playback-validated media"
   },
   "json_governance": {
     "canonical_rule": "JSON is kept only for canonical machine truth, boundary evidence, generated schema contracts, media validation, run audit, or release-critical evidence.",
@@ -110,56 +111,44 @@
   },
   "tasks": [
     {
-      "id": "V201-01",
-      "status": "planned"
+      "id": "real_evidence",
+      "status": "completed"
     },
     {
-      "id": "V201-02",
-      "status": "planned"
+      "id": "duration_contract",
+      "status": "completed"
     },
     {
-      "id": "V201-03",
-      "status": "planned"
+      "id": "composition_audit",
+      "status": "completed"
     },
     {
-      "id": "V201-04",
-      "status": "planned"
+      "id": "supervised_reframe",
+      "status": "completed"
     },
     {
-      "id": "V201-05",
-      "status": "planned"
+      "id": "range_map",
+      "status": "completed"
     },
     {
-      "id": "V201-06",
-      "status": "planned"
+      "id": "concept_comparison",
+      "status": "completed"
     },
     {
-      "id": "V201-07",
-      "status": "planned"
+      "id": "audiovisual_decision",
+      "status": "completed"
     },
     {
-      "id": "V201-08",
-      "status": "planned"
+      "id": "first_cut_review",
+      "status": "completed"
     },
     {
-      "id": "V201-09",
-      "status": "planned"
+      "id": "second_cut_plan",
+      "status": "completed"
     },
     {
-      "id": "V201-10",
-      "status": "planned"
-    },
-    {
-      "id": "V201-11",
-      "status": "planned"
-    },
-    {
-      "id": "V201-12",
-      "status": "planned"
-    },
-    {
-      "id": "V201-13",
-      "status": "planned"
+      "id": "cross_source_acceptance",
+      "status": "completed"
     }
   ]
 }

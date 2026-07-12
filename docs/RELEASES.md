@@ -11,11 +11,43 @@ This file records only current publication state and recent release facts. Full 
   post-refactor, single-root history baseline selected for remote publication.
 - Published scope: the V1 capability surface plus the complete architecture,
   JSON-governance, test, package-boundary, and history reset refactor.
-- Active local work: `V2-01 Real Video Aesthetic Baseline`, not yet released.
+- Active local work: `V2-01 Real Video Aesthetic Baseline`, completed locally
+  but not yet released.
+  Its current prerequisite batch is `ACCEPTANCE-STAGE-07 Real Media
+  Truthfulness And Baseline Recovery`.
 - Publication policy: do not publish the next capability release until the
   release candidate has passed full local validation and the user approves it.
 
 ## Current Validation
+
+- Real benchmark recovery on `2026-07-11`: the 240.5-second Chen Haoyu source
+  rebuilt a 72.15-second, 8-segment timeline and exact `1080x1920 @ 30fps`
+  delivery export. Delivery acceptance passed with score `0.929`, no failed
+  stage, current preview/final/rhythm QC, and one explicit BGM review warning.
+- V2-01 composition validation on `2026-07-11`: 9 bound real frames received a
+  quarantined host-Agent composition review; center, left-close, right-profile,
+  and conditional-wide crop classes produced review-only contact sheets. Full
+  `run_checks.py` passed with `243 passed` plus golden, BGM/rhythm, NLE,
+  package/install, release-candidate, schema, and diff checks.
+- Range-map/concept-comparison work on `2026-07-11` initially had only syntax, exact
+  artifact-binding, JSON/schema, and real-data static verification so far. Full
+  regression and release validation are intentionally deferred to V2-01 close;
+  the earlier `243 passed` result does not validate these newer changes.
+- Audiovisual/first-cut work binds nine audiovisual domains and an honest first-cut
+  review into the same aesthetic baseline. Static real-project validation marks
+  the technically valid cut `not_publishable` at maturity `0.34`; these changes
+  are also awaiting the deferred V2-01 full regression pass.
+- The second-cut outcome has an explicit `second-cut --concept-id` supervised planning
+  boundary. This is active capability work, not a release or applied edit.
+- The user then selected `concept_emotional_short`; its real second-cut plan
+  targets the project-configured 60 seconds, contains 11 ordered actions, and
+  owns every ranked first-cut issue. No planned action has been applied, and the
+  root edit-brief duration bug was subsequently resolved as `ISSUE-020`.
+- V2-01 closeout on `2026-07-12` added the user-provided actress-interview
+  contrast benchmark, fixed duration precedence/recommendation and required clip
+  ordering, resolved `ISSUE-020`, and passed 243 tests plus golden, BGM/rhythm,
+  NLE, package/install, schema, release-readiness, and diff validation. No commit,
+  tag, or push has been performed.
 
 - Architecture baseline validation passed on `2026-07-10`: `.venv/bin/python
   run_checks.py` completed successfully with `239 passed`, schema generation,

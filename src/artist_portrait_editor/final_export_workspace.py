@@ -62,6 +62,7 @@ def final_export_workspace(
             root=root,
             project_id=config.project.id,
             profile_name=profile,
+            aspect_ratio=config.creative_brief.aspect_ratio,
         )
     except FinalExportError as exc:
         raise WorkspacePreviewError(str(exc)) from exc

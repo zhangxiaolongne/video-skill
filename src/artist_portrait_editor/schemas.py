@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 
 from artist_portrait_editor.models.acceptance import ProjectAcceptanceReport
+from artist_portrait_editor.models.aesthetic_baseline import AestheticBaseline
 from artist_portrait_editor.models.analysis import AnalysisRecord
 from artist_portrait_editor.models.bgm import (
     BgmAnalysisReport,
@@ -22,6 +23,7 @@ from artist_portrait_editor.models.bgm_recommendation import (
 from artist_portrait_editor.models.clip import ClipRecord
 from artist_portrait_editor.models.clip_score import ClipScoreRecord
 from artist_portrait_editor.models.config import ProjectConfig
+from artist_portrait_editor.models.composition import CompositionReview
 from artist_portrait_editor.models.cut_review import CutReviewReport
 from artist_portrait_editor.models.edit_brief import EditBrief
 from artist_portrait_editor.models.editor_package import EditorPackage
@@ -50,6 +52,7 @@ from artist_portrait_editor.models.revision_promotion import RevisionPromotion
 from artist_portrait_editor.models.source import SourceRecord
 from artist_portrait_editor.models.state import ProjectState
 from artist_portrait_editor.models.sound import SoundDecision
+from artist_portrait_editor.models.second_cut import SecondCutCandidate
 from artist_portrait_editor.models.rhythm import (
     EditGuidanceReport,
     RhythmAgentCandidate,
@@ -71,6 +74,7 @@ def write_schema_files(output_dir: Path) -> None:
     output_dir.mkdir(parents=True, exist_ok=True)
     schemas = {
         "analysis_record.schema.json": AnalysisRecord.model_json_schema(),
+        "aesthetic_baseline.schema.json": AestheticBaseline.model_json_schema(),
         "project_acceptance_report.schema.json": ProjectAcceptanceReport.model_json_schema(),
         "bgm_analysis_report.schema.json": BgmAnalysisReport.model_json_schema(),
         "bgm_beat_grid.schema.json": BgmBeatGrid.model_json_schema(),
@@ -87,6 +91,7 @@ def write_schema_files(output_dir: Path) -> None:
             BgmRecommendationValidationReport.model_json_schema()
         ),
         "clip_score_record.schema.json": ClipScoreRecord.model_json_schema(),
+        "composition_review.schema.json": CompositionReview.model_json_schema(),
         "editor_package.schema.json": EditorPackage.model_json_schema(),
         "edit_brief.schema.json": EditBrief.model_json_schema(),
         "fcpxml_draft.schema.json": FcpxmlDraft.model_json_schema(),
@@ -121,6 +126,7 @@ def write_schema_files(output_dir: Path) -> None:
         "proposal_validation_report.schema.json": ProposalValidationReport.model_json_schema(),
         "source_record.schema.json": SourceRecord.model_json_schema(),
         "sound_decision.schema.json": SoundDecision.model_json_schema(),
+        "second_cut_candidate.schema.json": SecondCutCandidate.model_json_schema(),
         "clip_record.schema.json": ClipRecord.model_json_schema(),
         "cut_review_report.schema.json": CutReviewReport.model_json_schema(),
         "keyframe_record.schema.json": KeyframeRecord.model_json_schema(),

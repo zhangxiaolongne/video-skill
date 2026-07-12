@@ -14,22 +14,37 @@ here only when they block a current or planned milestone.
 
 ## Active Issues
 
+### ISSUE-020: Edit brief ignores project-config target duration
+
+- Status: `resolved`
+- Severity: high
+- Owner: `V2-01 duration contract repair`
+- Blocking condition: none. Duration precedence is now CLI override, project
+  config, then recommendation; config may omit duration explicitly.
+- Impact: downstream duration options, concepts, and timelines can be generated
+  from proportional source length despite an explicit project requirement.
+- Resolution condition: met by optional config duration, corrected brief and
+  second-cut precedence, bounded short-platform recommendations, full downstream
+  invalidation, rebuilt real evidence, and complete V2-01 validation.
+- Related decision: `DEC-069`
+
 ### ISSUE-019: Repository shape mixes source, rebuildable data, and history cost
 
-- Status: `open`
+- Status: `resolved`
 - Severity: high
 - Owner: `V2 supporting re-architecture`
-- Blocking condition: the local checkout is `589 MB`, although current source,
-  tests, schemas, and docs total under `5 MB`. Local `runs/` evidence is
-  `113 MB`, virtualenv is `38 MB`, and historical Git objects are `434 MB`.
-  There is currently no rebuildable run-cache directory to remove.
+- Blocking condition: none for distribution or Git. After rebuilding the
+  72.15-second real final, segment cache, BGM cache, and composition frames, the
+  current local workspace is about `564 MB`; `runs/` accounts for about
+  `523 MB`, virtualenv about `38 MB`, executable source/docs/tests/schemas only
+  a few MB, and `.git` about `1 MB`.
 - Impact: routine use, installation, review, and future capability work become
   slower and make the Skill appear much larger than its actual executable source.
-- Resolution condition: preserve local cache and selected source/output evidence
-  unless the user explicitly requests deletion; keep all local evidence out of
-  commits/packages, consolidate verification around pytest, split high-coupling
-  orchestration and test helpers, then separately rewrite Git history only after
-  explicit approval for force-push consequences.
+- Resolution condition: met by the single-root `v0.30.0` history baseline,
+  package exclusions, visible local-storage diagnostics, and the rule that local
+  cache/source/output evidence is preserved unless the user explicitly cleans
+  it. Large local run storage is expected and must not be confused with Skill or
+  Git package size.
 - Related decisions: `DEC-001`, `DEC-003`, `DEC-060`
 
 ### ISSUE-018: Real-video export preserves unusable source layout
@@ -39,13 +54,16 @@ here only when they block a current or planned milestone.
 - Owner: `V2-01 Real Video Aesthetic Baseline`
 - Blocking condition: the primary benchmark's 1080x1920 export retains large
   persistent source title/branding bands above and below the actual performance;
-  the performer occupies only a small central area in sampled frames.
+  the performer occupies only a small central area in sampled frames. V2-01
+  proves this across 9 bound frames and supplies visually reviewed
+  per-shot crop candidates, but none has been applied to the timeline or final.
 - Impact: a technically valid portrait MP4 can still be visually unpublishable.
   Existing timeline, BGM, rhythm, and export checks do not evaluate final-frame
   composition or safe reframing.
-- Resolution condition: V2-01 records a reproducible final-frame composition
-  audit and manual-safe crop/reframe candidates; V2-02 turns validated candidates
-  into supervised frame-composition controls and render evidence.
+- Resolution condition: composition audit and candidate planning are complete;
+  V2-01 binds selected candidates into an explicit second-cut plan; V2-02 must
+  produce playback-validated applied media before
+  the issue can close.
 - Related decision: `DEC-062`
 
 ### ISSUE-016: Final acceptance usability is not complete
