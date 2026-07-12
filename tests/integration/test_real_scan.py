@@ -178,6 +178,23 @@ def test_real_media_acceptance_profiles_reach_delivery(tmp_path, capsys):
     assert main(["analyze", "--project", str(project_path), "--quiet"]) == 0
     assert main(["map", "--project", str(project_path), "--quiet"]) == 0
     assert main(["brief", "--project", str(project_path), "--quiet"]) == 0
+    assert main(["evidence-map", "--project", str(project_path), "--json"]) == 1
+    evidence = json.loads(capsys.readouterr().out)["evidence_map"]
+    assert evidence["unit_count"] == 1
+    assert evidence["audio_feature_coverage_ratio"] == 1.0
+    assert evidence["keyframe_coverage_ratio"] == 1.0
+    assert evidence["transcript_coverage_ratio"] == 0.0
+    assert evidence["scene_detection_ratio"] == 0.0
+    assert evidence["overall_status"] == "degraded"
+    assert evidence["fabricated_semantics"] is False
+    assert evidence["model_call_performed_by_cli"] is False
+    assert evidence["network_performed"] is False
+    assert "spoken_words" in evidence["global_unknowns"]
+    assert "music_presence" in evidence["global_unknowns"]
+    assert evidence["units"][0]["transcript"]["missing_reason"]
+    assert evidence["units"][0]["audio"]["facts"]["method"] == (
+        "ffmpeg_volumedetect_silencedetect_v1"
+    )
     assert main(["score", "--project", str(project_path), "--quiet"]) in (0, 1)
     assert main(["propose", "--project", str(project_path), "--json"]) == 1
     capsys.readouterr()

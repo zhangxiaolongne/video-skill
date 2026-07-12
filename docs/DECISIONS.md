@@ -11,6 +11,19 @@ decision history is archived in [DECISIONS_HISTORY.md](archive/DECISIONS_HISTORY
 
 ## Active Decisions
 
+### DEC-045: Evidence fusion preserves missing and technical-only states
+
+- Status: `active`
+- Decision: V2 evidence fusion owns one clip-aligned canonical map. Each channel
+  records availability, confidence, refs, facts, limitations, and missing
+  reason. Missing transcript is not silence, keyframes are not visual semantics,
+  and local energy/silence features do not classify speech, music, applause,
+  emotion, lyrics, or BPM.
+- Rationale: downstream aesthetic scoring is invalid if absence and unknowns are
+  silently converted into zero-valued content judgments.
+- Revisit when: validated local/host transcript, vision, or audio-semantic
+  evidence can replace an unknown channel with provenance.
+
 ### DEC-044: Reframing is an explicit non-destructive playback boundary
 
 - Status: `active`

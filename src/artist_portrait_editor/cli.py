@@ -21,6 +21,7 @@ from artist_portrait_editor.composition import (
     render_reframe_candidate_preview,
 )
 from artist_portrait_editor.edit_brief import EditBriefError, build_edit_brief_workspace
+from artist_portrait_editor.evidence_fusion import EvidenceFusionError, build_evidence_map
 from artist_portrait_editor.bgm import (
     BgmError,
     analyze_candidates,
@@ -334,6 +335,12 @@ def build_parser() -> argparse.ArgumentParser:
     reframe_sub.add_argument("--json", action="store_true")
     reframe_sub.add_argument("--quiet", action="store_true")
     reframe_sub.add_argument("--verbose", action="store_true")
+
+    evidence_map_sub = subparsers.add_parser("evidence-map")
+    evidence_map_sub.add_argument("--project", required=True)
+    evidence_map_sub.add_argument("--json", action="store_true")
+    evidence_map_sub.add_argument("--quiet", action="store_true")
+    evidence_map_sub.add_argument("--verbose", action="store_true")
 
     baseline_sub = subparsers.add_parser("baseline")
     baseline_sub.add_argument("--project", required=True)
@@ -2019,6 +2026,33 @@ def cmd_reframe(args: argparse.Namespace) -> int:
     return int(ExitCode.success_with_warnings if warnings else ExitCode.success)
 
 
+def cmd_evidence_map(args: argparse.Namespace) -> int:
+    if error := _validate_common_flags(args):
+        return int(error)
+    project_path = Path(args.project)
+    try:
+        canonical, report, evidence_map, warnings = build_evidence_map(project_path)
+    except ConfigLoadError as exc:
+        print(str(exc), file=sys.stderr)
+        return int(ExitCode.invalid_project_config)
+    except (EvidenceFusionError, ValueError) as exc:
+        print(str(exc), file=sys.stderr)
+        return int(ExitCode.output_or_reference_validation_failed)
+    root = project_root(project_path)
+    payload = {
+        "output": canonical.relative_to(root).as_posix(),
+        "report": report.relative_to(root).as_posix(),
+        "evidence_map": evidence_map.model_dump(mode="json"),
+        "warnings": warnings,
+    }
+    if args.json:
+        print(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True))
+    elif not args.quiet:
+        print(f"wrote {payload['output']}")
+        print(f"wrote {payload['report']}")
+    return int(ExitCode.success_with_warnings if warnings else ExitCode.success)
+
+
 def cmd_baseline(args: argparse.Namespace) -> int:
     if error := _validate_common_flags(args):
         return int(error)
@@ -2866,6 +2900,7 @@ def main(argv: list[str] | None = None) -> int:
         "cut-review": cmd_cut_review,
         "composition": cmd_composition,
         "reframe": cmd_reframe,
+        "evidence-map": cmd_evidence_map,
         "baseline": cmd_baseline,
         "second-cut": cmd_second_cut,
         "revise": cmd_revise,

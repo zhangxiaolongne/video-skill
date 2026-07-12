@@ -16,11 +16,11 @@ issue tracker, or master strategy document.
 
 ## Current State
 
-- Current active gate: V2-02 Frame Composition And Reframing
+- Current active gate: V2-03 Transcript / Vision / Audio Evidence Fusion
 - Gate state: completed locally; ready for one-version publication
-- Completed published capability: `V2-01` Real Video Aesthetic Baseline
-- Current complete version: `V2-02 Frame Composition And Reframing`
-- Current batch: `V2-02` completed locally
+- Completed published capability: `V2-02` Frame Composition And Reframing
+- Current complete version: `V2-03 Transcript / Vision / Audio Evidence Fusion`
+- Current batch: `V2-03` completed locally
 - Latest published release baseline: `v0.30.0`
 - Current published capability work: V1-08 revision promotion and V1 release
   packaging
@@ -132,8 +132,8 @@ the active gate and immediate development direction.
 
 ## Next Major Decision
 
-Publish complete V2-02 as one commit after its 60-second interview native-frame
-contrast, 72.10-second stage reframe playback, 243 tests, quality passes,
-package/install simulation, documentation consistency, release candidate, and
-diff validation. The next complete version is V2-03 evidence fusion and is not
-active inside this batch.
+Publish V2-03 as one version after its canonical maps passed synthetic media,
+45-unit interview, and 50-unit stage validation. Both real maps remain honestly
+degraded where transcript, detected scenes, and visual/audio semantics are
+missing. Full validation passed with 243 tests and all quality/package checks.
+V2-04 scoring is the next complete version and is not active in this batch.

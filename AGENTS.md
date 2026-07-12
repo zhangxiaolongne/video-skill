@@ -3,9 +3,18 @@
 Follow `artist_portrait_editor_revision5_optimized.md` as the governing V0
 engineering-freeze document.
 
-Current gate: V2-02 Frame Composition And Reframing. V2-01 Real Video Aesthetic
-Baseline is published. V2-02 is complete locally and awaiting publication as
-one version. V2-03 is not active yet.
+Current gate: V2-03 Transcript / Vision / Audio Evidence Fusion. V2-02 Frame
+Composition And Reframing is published. V2-03 is complete locally and awaiting
+publication as one version. V2-04 is not active yet.
+
+V2-03 may align current source, clip/scene, transcript, keyframe/analysis,
+local audio energy/silence, edit-brief goal, and source/BGM conflict evidence
+into one canonical evidence map plus one Markdown report. Every unit must bind
+exact source/clip ranges and input fingerprints and expose channel availability,
+confidence, limitations, unknowns, and degradation. It must not treat missing
+transcript as silence, keyframes as visual semantics, or audio energy as proof
+of speech, music, applause, emotion, lyrics, or BPM. It must not call models,
+access the network, use paid APIs, select music, or fabricate missing evidence.
 
 V2-02 may import one explicit per-segment reframe selection bound to the current
 timeline, final export, composition review, contact sheet, and selection bytes.

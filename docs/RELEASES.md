@@ -11,8 +11,8 @@ This file records only current publication state and recent release facts. Full 
   post-refactor, single-root history baseline selected for remote publication.
 - Published scope: the V1 capability surface plus the complete architecture,
   JSON-governance, test, package-boundary, and history reset refactor.
-- Active local work: `V2-02 Frame Composition And Reframing`, completed locally
-  and ready for one-version publication.
+- Active local work: `V2-03 Transcript / Vision / Audio Evidence Fusion`,
+  completed locally and ready for one-version publication.
   Its current prerequisite batch is `ACCEPTANCE-STAGE-07 Real Media
   Truthfulness And Baseline Recovery`.
 - Publication policy: do not publish the next capability release until the
@@ -56,6 +56,12 @@ This file records only current publication state and recent release facts. Full 
   promo-card preservation. Both retain audio and leave canonical final/timeline
   files untouched. Stage conditional performer and crop-jump risks remain
   warnings, not aesthetic acceptance claims.
+- V2-03 local validation created one canonical evidence map per project. The
+  interview map has 45 units with full keyframe/audio technical coverage; the
+  stage map has 50 units with half keyframe and full audio technical coverage.
+  Both correctly retain absent transcript, detected-scene, speech/music,
+  applause, emotion, lyrics, and BPM evidence as degraded/unknown. Full checks
+  passed with 243 tests and all quality/package gates.
 
 - Architecture baseline validation passed on `2026-07-10`: `.venv/bin/python
   run_checks.py` completed successfully with `239 passed`, schema generation,

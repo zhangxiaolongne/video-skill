@@ -312,6 +312,12 @@ blocks rejected candidates and protected-region loss, preserves final audio,
 records performer-containment and crop-jump risks, and writes an independent
 playback candidate without replacing canonical media.
 
+`evidence-map` creates one canonical clip-aligned evidence map from current
+source, scene/clip, transcript, keyframe/analysis, local audio, and edit-brief
+goal artifacts. It preserves exact fingerprints and exposes partial/unavailable
+channels and semantic unknowns. It does not infer speech, music, applause,
+emotion, lyrics, BPM, or visual meaning from missing or merely technical data.
+
 Preview rendering may use local FFmpeg/ffprobe to extract timeline video
 ranges, retain original source audio, apply fitted BGM gain/fades/looping, and
 duck BGM under retained original audio. It must not choose music, fabricate beat

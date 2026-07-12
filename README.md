@@ -79,8 +79,8 @@ release-candidate validation path:
 Current published capability work: `V1-08 Revision promotion, revised render
 readiness, and V1 release packaging` in the retained `v0.30.0` baseline.
 Current local acceptance stage: `ACCEPTANCE-STAGE-07 Real Media Truthfulness And Baseline Recovery`.
-Current V2-02 Frame Composition And Reframing is complete locally and awaiting
-one-version publication. V2-01 Real Video Aesthetic Baseline is published.
+Current V2-03 Transcript / Vision / Audio Evidence Fusion is complete locally
+and awaiting one-version publication. V2-02 is published.
 The latest published acceptance release remains `ACCEPTANCE-STAGE-06 Release
 candidate and publication` in `v0.28.0`; the latest published V1 capability
 release baseline is `v0.30.0`.
@@ -283,6 +283,12 @@ timeline/final/composition fingerprints, blocks rejected candidates and
 protected-region loss, preserves final audio, audits crop-center jumps, and
 renders independent `output/reframe_playback.mp4` evidence without overwriting
 the canonical timeline or final export.
+`evidence-map` aligns clip/scene boundaries, transcript timing, keyframe and
+analysis coverage, local FFmpeg audio energy/silence features, and edit-brief
+goals into one canonical map. Every channel records availability, confidence,
+limitations, unknown semantics, and degradation. Missing transcript is not
+silence; a keyframe is not visual understanding; audio energy is not proof of
+speech, music, applause, emotion, lyrics, or BPM.
 `propose` prepares a host-Agent handoff and can import an explicit quarantined
 ProposalSet candidate; it does not call paid APIs or access the network.
 

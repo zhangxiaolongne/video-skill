@@ -27,6 +27,7 @@ from artist_portrait_editor.models.composition import CompositionReview
 from artist_portrait_editor.models.reframe import ReframeApplication, ReframeSelection
 from artist_portrait_editor.models.cut_review import CutReviewReport
 from artist_portrait_editor.models.edit_brief import EditBrief
+from artist_portrait_editor.models.evidence_map import EvidenceMap
 from artist_portrait_editor.models.editor_package import EditorPackage
 from artist_portrait_editor.models.fcpxml import (
     FcpxmlDraft,
@@ -97,6 +98,7 @@ def write_schema_files(output_dir: Path) -> None:
         "reframe_selection.schema.json": ReframeSelection.model_json_schema(),
         "editor_package.schema.json": EditorPackage.model_json_schema(),
         "edit_brief.schema.json": EditBrief.model_json_schema(),
+        "evidence_map.schema.json": EvidenceMap.model_json_schema(),
         "fcpxml_draft.schema.json": FcpxmlDraft.model_json_schema(),
         "fcpxml_import_review.schema.json": FcpxmlImportReview.model_json_schema(),
         "fcpxml_import_review_candidate.schema.json": (

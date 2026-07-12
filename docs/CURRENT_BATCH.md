@@ -2,68 +2,61 @@
 
 ## Batch Header
 
-- Batch ID: `V2-02`
-- Name: Frame Composition And Reframing
+- Batch ID: `V2-03`
+- Name: Transcript / Vision / Audio Evidence Fusion
 - Type: product capability milestone
 - Status: `completed`
-- Capability gate: `V2-02`
-- Prerequisite: `V2-01 Real Video Aesthetic Baseline` published on `main`
-- Commit/push policy: publish only when the complete V2-02 version passes real
-  stage/interview playback validation and the full project check suite
+- Capability gate: `V2-03`
+- Prerequisite: published `V2-02 Frame Composition And Reframing`
+- Publication: one commit/push only after the complete version passes
 
 ## Goal Delta
 
-Before V2-02, the skill can review real frames and propose geometry-bound
-reframes, but it cannot apply a supervised per-segment selection to playable
-media. Candidate contact sheets are evidence, not an edited video.
+Before V2-03, transcript, keyframe, scene/clip, audio, composition, and user-goal
+facts live in separate artifacts. Missing evidence is easy to mistake for a
+negative finding.
 
-After V2-02, an explicit selection map can render one independent playback
-candidate from the current final/timeline/composition evidence, preserve audio,
-validate every crop and protected region, record shot-to-shot crop changes, and
-prove output duration/canvas/streams without mutating the canonical timeline or
-final export.
+After V2-03, one canonical evidence map aligns those channels by source clip,
+binds every input fingerprint, exposes availability/confidence/degradation, and
+provides truthful downstream scoring inputs without inventing speech, visual
+semantics, applause, music, emotion, lyrics, or BPM.
 
 ## Internal Acceptance Checklist
 
-These are acceptance checks inside the single V2-02 version. They are not
-subversions and must never be reported as V2-02-01-style progress.
-
-| ID | Independent outcome | Acceptance | Status |
+| ID | Outcome | Acceptance | Status |
 |---|---|---|---|
-| `explicit_selection` | Explicit segment selection | Every applied segment binds a user/host-approved candidate id; no implicit top-candidate selection. | `completed` |
-| `fresh_bindings` | Current evidence bindings | Timeline, final media, composition review, contact sheet, and selection bytes are fingerprint-bound. | `completed` |
-| `segment_applicability` | Sample-to-segment applicability | Candidate sample evidence must map to the selected timeline segment; rejected candidates are blocked. | `completed` |
-| `protected_regions` | Protected-region safety | Crop validation checks performer/protected boxes and records conditional/manual risks. | `completed` |
-| `playback_render` | Real per-segment render | Render crop/scale per selected segment while preserving original candidate audio. | `completed` |
-| `crop_change_audit` | Shot-change audit | Record candidate changes, crop-center jumps, and unsupported within-segment shot variability. | `completed` |
-| `non_destructive_output` | Independent candidate output | Write separate playback media and canonical application evidence without replacing timeline/final. | `completed` |
-| `media_qc` | Playback media QC | Validate hash, duration, canvas, frame rate, video/audio streams, and application truth. | `completed` |
-| `cross_source_truth` | Stage/interview contrast | Stage applies visible reframes; interview preserves native full-frame composition without fake changes. | `completed` |
-| `version_validation` | Complete V2-02 validation | Full tests, quality passes, package/install, release readiness, docs, and diff checks pass. | `completed` |
+| `canonical_map` | One canonical map | One machine JSON plus one human report. | `completed` |
+| `time_alignment` | Clip time alignment | Every evidence unit binds exact source and clip ranges. | `completed` |
+| `input_provenance` | Fingerprint binding | Source/clip/transcript/keyframe/analysis/brief inputs are hashed. | `completed` |
+| `transcript_channel` | Transcript coverage | Text/timing coverage is measured; absence is unavailable, not silence. | `completed` |
+| `vision_channel` | Visual evidence | Keyframe/analysis coverage is visible without fabricated semantics. | `completed` |
+| `scene_channel` | Boundary evidence | Fixed-window versus detected-scene confidence remains explicit. | `completed` |
+| `audio_channel` | Local audio features | RMS/peak/silence evidence is computed locally with method provenance. | `completed` |
+| `semantic_unknowns` | Honest unknown states | Speech/music/applause/emotion/lyrics/BPM remain unknown without evidence. | `completed` |
+| `goal_and_conflict` | Goal/conflict binding | User goal and BGM/source-audio conflict risks bind each unit. | `completed` |
+| `real_validation` | Cross-source closeout | Stage/interview degradation contrast plus full project checks pass. | `completed` |
 
 ## Guardrails
 
-- Reframe selection must be explicit and visible.
-- Never apply a rejected crop candidate.
-- A frame-sample candidate cannot prove full-motion safety; conditional risks
-  remain visible until playback review.
-- Preserve source/final/timeline/contact-sheet provenance and content hashes.
-- Do not mutate `output/timeline_draft.json` or the canonical final export.
-- Do not select or fit music, fabricate beats, call models from the CLI, access
-  the network, or use paid providers.
-- Local playback candidates and media cache remain outside Git/Skill packages.
+- No paid API, network access, hidden model call, package installation, or auto
+  music selection.
+- Audio energy is not music, applause, speech, emotion, or beat evidence.
+- A keyframe proves sampled pixels exist, not what those pixels mean.
+- Missing transcript is not silence and missing vision semantics is not a blank
+  frame.
+- Local media/cache/evidence remain outside Git and Skill packages.
 
 ## Closeout Evidence
 
-- Interview: 60.00 seconds, `1280x720`, six explicit full-frame choices, audio
-  retained, zero crop-center movement, `passed`.
-- Stage: 72.10 seconds, `1080x1920`, seven visible reframes and one explicit
-  promo-card preservation, audio retained, conditional subject/crop-jump risks
-  remain warnings.
-- Validation: `243 passed`; golden, BGM/rhythm, NLE round-trip, schemas,
-  package/install simulation, release candidate, and diff checks passed.
+- Interview: 45 units, transcript `0.0`, keyframes `1.0`, audio features `1.0`,
+  detected scenes `0.0`, status `degraded`.
+- Stage: 50 units, transcript `0.0`, keyframes `0.5`, audio features `1.0`,
+  detected scenes `0.0`, status `degraded`.
+- Both preserve speech/music/applause/emotion/lyrics/BPM as unknown.
+- Validation: `243 passed`; golden, BGM/rhythm, NLE, schema, package/install,
+  release candidate, and diff checks passed.
 
 ## Next Work
 
-Publish V2-02 as one version. Then plan the complete V2-03 evidence-fusion
-version; do not start it inside this batch.
+Publish V2-03 as one version. Plan V2-04 scoring from the canonical evidence map
+without starting it inside this batch.

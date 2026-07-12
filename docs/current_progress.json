@@ -1,7 +1,7 @@
 {
   "schema_version": "1.5",
-  "capability_gate": "V2-02",
-  "milestone": "V2-02 Frame Composition And Reframing",
+  "capability_gate": "V2-03",
+  "milestone": "V2-03 Transcript / Vision / Audio Evidence Fusion",
   "documentation_system": {
     "master": "artist_portrait_editor_revision5_optimized.md",
     "current_progress": "docs/DEVELOPMENT_PROGRESS.md",
@@ -18,14 +18,14 @@
     "current_files_keep_only": "active decisions, current validation, active batch, and next development direction"
   },
   "active_batch": {
-    "id": "V2-02",
-    "name": "Frame Composition And Reframing",
+    "id": "V2-03",
+    "name": "Transcript / Vision / Audio Evidence Fusion",
     "status": "completed",
     "started": "2026-07-12",
-    "capability_gate": "V2-02",
+    "capability_gate": "V2-03",
     "acceptance_stage": null,
     "prerequisite_acceptance_stage": "ACCEPTANCE-STAGE-07_completed_locally",
-    "commit_policy": "v2_02_complete_and_ready_for_one_commit_push"
+    "commit_policy": "v2_03_complete_and_ready_for_one_commit_push"
   },
   "latest_release": {
     "tag": "v0.30.0",
@@ -40,13 +40,13 @@
     "full_pytest": ".venv/bin/python -m pytest passed with 243 passed",
     "project_checks": ".venv/bin/python run_checks.py passed with golden, BGM/rhythm, NLE round-trip, schema, package, install simulation, release-candidate, and diff checks",
     "real_benchmark": "stage baseline plus user-provided 448.333s actress interview contrast; interview final is chronological 60s at 1280x720 with six reviewed frames and a separate not-publishable aesthetic verdict",
-    "current_doc_followup": "V2-02 completed locally: 60-second interview no-op contrast and 72.10-second stage reframe playback; 243 tests plus golden, BGM/rhythm, NLE, package/install, schema, release readiness, and diff validation passed"
+    "current_doc_followup": "V2-03 completed locally: canonical 45-unit interview and 50-unit stage evidence maps preserve missing transcript, scene, and semantic evidence as degraded/unknown; 243 tests and all quality/package checks passed"
   },
   "capability_summary": {
     "engineering_substrate": "published",
     "v1_aesthetic_foundation": "published",
     "real_video_aesthetic_maturity": "baseline_complete",
-    "current_gap": "V2-02 can render supervised provenance-bound reframes; V2-03 must fuse transcript, vision, and audio evidence without fabricating missing semantics"
+    "current_gap": "V2-03 provides truthful clip-aligned evidence; V2-04 must score highlight, hook, and ending candidates from only available evidence"
   },
   "json_governance": {
     "canonical_rule": "JSON is kept only for canonical machine truth, boundary evidence, generated schema contracts, media validation, run audit, or release-critical evidence.",
@@ -111,43 +111,43 @@
   },
   "tasks": [
     {
-      "id": "explicit_selection",
+      "id": "canonical_map",
       "status": "completed"
     },
     {
-      "id": "fresh_bindings",
+      "id": "time_alignment",
       "status": "completed"
     },
     {
-      "id": "segment_applicability",
+      "id": "input_provenance",
       "status": "completed"
     },
     {
-      "id": "protected_regions",
+      "id": "transcript_channel",
       "status": "completed"
     },
     {
-      "id": "playback_render",
+      "id": "vision_channel",
       "status": "completed"
     },
     {
-      "id": "crop_change_audit",
+      "id": "scene_channel",
       "status": "completed"
     },
     {
-      "id": "non_destructive_output",
+      "id": "audio_channel",
       "status": "completed"
     },
     {
-      "id": "media_qc",
+      "id": "semantic_unknowns",
       "status": "completed"
     },
     {
-      "id": "cross_source_truth",
+      "id": "goal_and_conflict",
       "status": "completed"
     },
     {
-      "id": "version_validation",
+      "id": "real_validation",
       "status": "completed"
     }
   ]
