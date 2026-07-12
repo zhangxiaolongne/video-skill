@@ -11,7 +11,7 @@ This file records only current publication state and recent release facts. Full 
   post-refactor, single-root history baseline selected for remote publication.
 - Published scope: the V1 capability surface plus the complete architecture,
   JSON-governance, test, package-boundary, and history reset refactor.
-- Active local work: `V2-08 First-Cut Aesthetic Self-Review`, completed locally.
+- Active local work: `V2-09 Second-Cut Candidate Generation`, completed locally.
   Its current prerequisite batch is `ACCEPTANCE-STAGE-07 Real Media
   Truthfulness And Baseline Recovery`.
 - Publication policy: do not publish the next capability release until the
@@ -69,6 +69,11 @@ This file records only current publication state and recent release facts. Full 
 - V2-05 generated exact 39/60/90-second plans for both real projects, preserved
   the explicit 60-second standard target, bounded hook/build/payoff budgets,
   and passed 243 tests plus all quality/package gates.
+- V2-09 applies an explicit standard option into independent 60-second second
+  cuts for the interview and stage projects. Both retain source audio and pass
+  canvas/frame-rate/stream/duration QC without overwriting the canonical first
+  cut. Missing transcript, candidate-specific reframes, fine pacing, and mature
+  publishability remain unresolved by design.
 
 - Architecture baseline validation passed on `2026-07-10`: `.venv/bin/python
   run_checks.py` completed successfully with `239 passed`, schema generation,

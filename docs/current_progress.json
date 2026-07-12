@@ -1,7 +1,7 @@
 {
   "schema_version": "1.5",
-  "capability_gate": "V2-08",
-  "milestone": "V2-08 First-Cut Aesthetic Self-Review",
+  "capability_gate": "V2-09",
+  "milestone": "V2-09 Second-Cut Candidate Generation",
   "documentation_system": {
     "master": "artist_portrait_editor_revision5_optimized.md",
     "current_progress": "docs/DEVELOPMENT_PROGRESS.md",
@@ -18,14 +18,14 @@
     "current_files_keep_only": "active decisions, current validation, active batch, and next development direction"
   },
   "active_batch": {
-    "id": "V2-08",
-    "name": "First-Cut Aesthetic Self-Review",
+    "id": "V2-09",
+    "name": "Second-Cut Candidate Generation",
     "status": "completed",
     "started": "2026-07-12",
-    "capability_gate": "V2-08",
+    "capability_gate": "V2-09",
     "acceptance_stage": null,
     "prerequisite_acceptance_stage": "ACCEPTANCE-STAGE-07_completed_locally",
-    "commit_policy": "v2_08_complete_and_ready_for_one_commit_push"
+    "commit_policy": "v2_09_complete_and_ready_for_one_commit_push"
   },
   "latest_release": {
     "tag": "v0.30.0",
@@ -36,17 +36,17 @@
     "scope": "Single-root architecture baseline preserving the V1 capability surface and completing the refactor"
   },
   "latest_local_validation": {
-    "date": "2026-07-12",
-    "full_pytest": ".venv/bin/python -m pytest passed with 243 passed",
+    "date": "2026-07-13",
+    "full_pytest": ".venv/bin/python -m pytest passed with 244 passed",
     "project_checks": ".venv/bin/python run_checks.py passed with golden, BGM/rhythm, NLE round-trip, schema, package, install simulation, release-candidate, and diff checks",
-    "real_benchmark": "stage baseline plus user-provided 448.333s actress interview contrast; interview final is chronological 60s at 1280x720 with six reviewed frames and a separate not-publishable aesthetic verdict",
-    "current_doc_followup": "V2-08 completed locally: nine-domain canonical-first-cut reviews retain interview 0.38 and stage 0.34 not-publishable verdicts; only technical delivery is resolved; 243 tests and all checks passed"
+    "real_benchmark": "explicit standard second cuts rendered at 60 seconds for interview 1280x720@24fps and stage 1080x1920@30fps; both retain source audio and preserve canonical first cuts",
+    "current_doc_followup": "V2-09 completed functionally: real source ranges are reordered into independent playable second cuts with media QC and nine-domain comparison; semantic continuity, text, composition, and fine pacing remain unresolved"
   },
   "capability_summary": {
     "engineering_substrate": "published",
     "v1_aesthetic_foundation": "published",
     "real_video_aesthetic_maturity": "baseline_complete",
-    "current_gap": "V2-08 identifies canonical first-cut failures; V2-09 must generate and render a concrete second-cut candidate rather than another plan"
+    "current_gap": "V2-09 produces playable second cuts but lacks transcript-backed continuity, candidate-specific composition approval, fine rhythm trimming, and a third real benchmark class"
   },
   "json_governance": {
     "canonical_rule": "JSON is kept only for canonical machine truth, boundary evidence, generated schema contracts, media validation, run audit, or release-critical evidence.",
@@ -111,43 +111,43 @@
   },
   "tasks": [
     {
-      "id": "canonical_review",
+      "id": "explicit_option",
       "status": "completed"
     },
     {
-      "id": "fresh_final_binding",
+      "id": "fresh_bindings",
       "status": "completed"
     },
     {
-      "id": "nine_domains",
+      "id": "candidate_timeline",
       "status": "completed"
     },
     {
-      "id": "opening_review",
+      "id": "real_reorder",
       "status": "completed"
     },
     {
-      "id": "middle_review",
+      "id": "source_audio",
       "status": "completed"
     },
     {
-      "id": "audio_text_review",
+      "id": "bgm_truth",
       "status": "completed"
     },
     {
-      "id": "ending_transition_review",
+      "id": "text_truth",
       "status": "completed"
     },
     {
-      "id": "composition_review",
+      "id": "independent_render",
       "status": "completed"
     },
     {
-      "id": "publishability",
+      "id": "media_qc",
       "status": "completed"
     },
     {
-      "id": "real_validation",
+      "id": "first_second_comparison",
       "status": "completed"
     }
   ]

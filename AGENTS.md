@@ -3,9 +3,17 @@
 Follow `artist_portrait_editor_revision5_optimized.md` as the governing V0
 engineering-freeze document.
 
-Current gate: V2-08 First-Cut Aesthetic Self-Review. V2-07 Text, Subtitle, And
-On-Screen Timing Plan is published. V2-08 is complete locally and awaiting
-publication as one version. V2-09 is not active yet.
+Current gate: V2-09 Second-Cut Candidate Generation. V2-08 First-Cut Aesthetic
+Self-Review is published. V2-09 is complete locally and awaiting publication as
+one version. V2-10 is not active yet.
+
+V2-09 may require an explicit short, standard, or extended structure option;
+build an independent source-range timeline; reorder and render real local video
+with retained source audio; validate duration, canvas, frame rate, and streams;
+and compare first and second cuts across nine editorial/audiovisual domains. It
+must not overwrite the canonical timeline or first-cut final, silently select a
+structure or BGM candidate, apply unapproved reframes/text, call models, access
+the network, or promote technical validity to mature aesthetic publishability.
 
 V2-08 may review the current canonical final across opening, middle pacing,
 emotion, BGM/voice, text, ending, transitions, composition, and technical

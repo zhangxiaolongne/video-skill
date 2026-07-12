@@ -1,0 +1,409 @@
+{
+  "$defs": {
+    "SecondCutComparison": {
+      "additionalProperties": false,
+      "properties": {
+        "domain": {
+          "enum": [
+            "duration_structure",
+            "opening",
+            "middle_pacing",
+            "ending",
+            "source_audio_bgm",
+            "text",
+            "composition",
+            "semantic_continuity",
+            "technical_delivery"
+          ],
+          "title": "Domain",
+          "type": "string"
+        },
+        "evidence_refs": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Evidence Refs",
+          "type": "array"
+        },
+        "finding": {
+          "minLength": 1,
+          "title": "Finding",
+          "type": "string"
+        },
+        "next_action": {
+          "minLength": 1,
+          "title": "Next Action",
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "improved",
+            "preserved",
+            "unresolved",
+            "regressed"
+          ],
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "domain",
+        "status",
+        "finding",
+        "evidence_refs",
+        "next_action"
+      ],
+      "title": "SecondCutComparison",
+      "type": "object"
+    },
+    "SecondCutSegment": {
+      "additionalProperties": false,
+      "properties": {
+        "candidate_id": {
+          "title": "Candidate Id",
+          "type": "string"
+        },
+        "original_audio_rendered": {
+          "title": "Original Audio Rendered",
+          "type": "boolean"
+        },
+        "ranking_confidence": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Ranking Confidence",
+          "type": "number"
+        },
+        "ranking_score": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Ranking Score",
+          "type": "number"
+        },
+        "reframe_applied": {
+          "default": false,
+          "title": "Reframe Applied",
+          "type": "boolean"
+        },
+        "role": {
+          "enum": [
+            "hook",
+            "build",
+            "payoff"
+          ],
+          "title": "Role",
+          "type": "string"
+        },
+        "segment_id": {
+          "title": "Segment Id",
+          "type": "string"
+        },
+        "source_id": {
+          "title": "Source Id",
+          "type": "string"
+        },
+        "source_in": {
+          "minimum": 0,
+          "title": "Source In",
+          "type": "number"
+        },
+        "source_out": {
+          "exclusiveMinimum": 0,
+          "title": "Source Out",
+          "type": "number"
+        },
+        "source_ref": {
+          "title": "Source Ref",
+          "type": "string"
+        },
+        "text_applied": {
+          "default": false,
+          "title": "Text Applied",
+          "type": "boolean"
+        },
+        "timeline_end": {
+          "exclusiveMinimum": 0,
+          "title": "Timeline End",
+          "type": "number"
+        },
+        "timeline_start": {
+          "minimum": 0,
+          "title": "Timeline Start",
+          "type": "number"
+        }
+      },
+      "required": [
+        "segment_id",
+        "candidate_id",
+        "role",
+        "source_id",
+        "source_ref",
+        "source_in",
+        "source_out",
+        "timeline_start",
+        "timeline_end",
+        "ranking_score",
+        "ranking_confidence",
+        "original_audio_rendered"
+      ],
+      "title": "SecondCutSegment",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "actual_duration_seconds": {
+      "exclusiveMinimum": 0,
+      "title": "Actual Duration Seconds",
+      "type": "number"
+    },
+    "added_bgm_applied": {
+      "default": false,
+      "title": "Added Bgm Applied",
+      "type": "boolean"
+    },
+    "audio_present": {
+      "title": "Audio Present",
+      "type": "boolean"
+    },
+    "automatic_music_selection": {
+      "default": false,
+      "title": "Automatic Music Selection",
+      "type": "boolean"
+    },
+    "bgm_match_fingerprint": {
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "title": "Bgm Match Fingerprint",
+      "type": "string"
+    },
+    "bgm_match_ref": {
+      "title": "Bgm Match Ref",
+      "type": "string"
+    },
+    "candidate_timeline": {
+      "items": {
+        "$ref": "#/$defs/SecondCutSegment"
+      },
+      "minItems": 1,
+      "title": "Candidate Timeline",
+      "type": "array"
+    },
+    "canonical_final_overwritten": {
+      "default": false,
+      "title": "Canonical Final Overwritten",
+      "type": "boolean"
+    },
+    "canonical_timeline_mutated": {
+      "default": false,
+      "title": "Canonical Timeline Mutated",
+      "type": "boolean"
+    },
+    "comparisons": {
+      "items": {
+        "$ref": "#/$defs/SecondCutComparison"
+      },
+      "maxItems": 9,
+      "minItems": 9,
+      "title": "Comparisons",
+      "type": "array"
+    },
+    "duration_delta_seconds": {
+      "title": "Duration Delta Seconds",
+      "type": "number"
+    },
+    "editorial_scores_fingerprint": {
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "title": "Editorial Scores Fingerprint",
+      "type": "string"
+    },
+    "editorial_scores_ref": {
+      "title": "Editorial Scores Ref",
+      "type": "string"
+    },
+    "first_cut_hash": {
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "title": "First Cut Hash",
+      "type": "string"
+    },
+    "first_cut_ref": {
+      "title": "First Cut Ref",
+      "type": "string"
+    },
+    "first_cut_review_fingerprint": {
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "title": "First Cut Review Fingerprint",
+      "type": "string"
+    },
+    "first_cut_review_ref": {
+      "title": "First Cut Review Ref",
+      "type": "string"
+    },
+    "frame_rate": {
+      "exclusiveMinimum": 0,
+      "title": "Frame Rate",
+      "type": "number"
+    },
+    "height": {
+      "exclusiveMinimum": 0,
+      "title": "Height",
+      "type": "integer"
+    },
+    "media_valid": {
+      "title": "Media Valid",
+      "type": "boolean"
+    },
+    "model_call_performed_by_cli": {
+      "default": false,
+      "title": "Model Call Performed By Cli",
+      "type": "boolean"
+    },
+    "network_performed": {
+      "default": false,
+      "title": "Network Performed",
+      "type": "boolean"
+    },
+    "output_hash": {
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "title": "Output Hash",
+      "type": "string"
+    },
+    "output_ref": {
+      "title": "Output Ref",
+      "type": "string"
+    },
+    "project_id": {
+      "title": "Project Id",
+      "type": "string"
+    },
+    "publishability": {
+      "enum": [
+        "not_publishable",
+        "conditional",
+        "publishable"
+      ],
+      "title": "Publishability",
+      "type": "string"
+    },
+    "reframes_applied": {
+      "default": false,
+      "title": "Reframes Applied",
+      "type": "boolean"
+    },
+    "render_id": {
+      "title": "Render Id",
+      "type": "string"
+    },
+    "schema_version": {
+      "default": "0.3",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "selected_option_id": {
+      "enum": [
+        "short",
+        "standard",
+        "extended"
+      ],
+      "title": "Selected Option Id",
+      "type": "string"
+    },
+    "selection_explicit": {
+      "default": true,
+      "title": "Selection Explicit",
+      "type": "boolean"
+    },
+    "source_audio_retained": {
+      "title": "Source Audio Retained",
+      "type": "boolean"
+    },
+    "sources_fingerprint": {
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "title": "Sources Fingerprint",
+      "type": "string"
+    },
+    "sources_ref": {
+      "title": "Sources Ref",
+      "type": "string"
+    },
+    "structure_fingerprint": {
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "title": "Structure Fingerprint",
+      "type": "string"
+    },
+    "structure_ref": {
+      "title": "Structure Ref",
+      "type": "string"
+    },
+    "target_duration_seconds": {
+      "exclusiveMinimum": 0,
+      "title": "Target Duration Seconds",
+      "type": "number"
+    },
+    "text_applied": {
+      "default": false,
+      "title": "Text Applied",
+      "type": "boolean"
+    },
+    "text_plan_fingerprint": {
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "title": "Text Plan Fingerprint",
+      "type": "string"
+    },
+    "text_plan_ref": {
+      "title": "Text Plan Ref",
+      "type": "string"
+    },
+    "video_present": {
+      "title": "Video Present",
+      "type": "boolean"
+    },
+    "warnings": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Warnings",
+      "type": "array"
+    },
+    "width": {
+      "exclusiveMinimum": 0,
+      "title": "Width",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "render_id",
+    "project_id",
+    "selected_option_id",
+    "structure_ref",
+    "structure_fingerprint",
+    "first_cut_review_ref",
+    "first_cut_review_fingerprint",
+    "editorial_scores_ref",
+    "editorial_scores_fingerprint",
+    "bgm_match_ref",
+    "bgm_match_fingerprint",
+    "text_plan_ref",
+    "text_plan_fingerprint",
+    "sources_ref",
+    "sources_fingerprint",
+    "first_cut_ref",
+    "first_cut_hash",
+    "output_ref",
+    "output_hash",
+    "target_duration_seconds",
+    "actual_duration_seconds",
+    "duration_delta_seconds",
+    "width",
+    "height",
+    "frame_rate",
+    "video_present",
+    "audio_present",
+    "media_valid",
+    "candidate_timeline",
+    "source_audio_retained",
+    "comparisons",
+    "publishability"
+  ],
+  "title": "SecondCutRender",
+  "type": "object"
+}

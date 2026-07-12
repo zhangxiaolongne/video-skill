@@ -16,17 +16,17 @@ issue tracker, or master strategy document.
 
 ## Current State
 
-- Current active gate: V2-08 First-Cut Aesthetic Self-Review
+- Current active gate: V2-09 Second-Cut Candidate Generation
 - Gate state: completed locally; ready for one-version publication
-- Completed published capability: `V2-07` Text, Subtitle, And On-Screen Timing Plan
-- Current complete version: `V2-08 First-Cut Aesthetic Self-Review`
-- Current batch: `V2-08` completed locally
+- Completed published capability: `V2-08` First-Cut Aesthetic Self-Review
+- Current complete version: `V2-09 Second-Cut Candidate Generation`
+- Current batch: `V2-09` completed locally
 - Latest published release baseline: `v0.30.0`
 - Current published capability work: V1-08 revision promotion and V1 release
   packaging
 - Current acceptance stage: `ACCEPTANCE-STAGE-07` completed locally with full
   checks and current real-project delivery acceptance
-- Next release policy: no commit or push until complete V2-02 validation closes
+- Next release policy: no commit or push until complete V2-09 validation closes
   as one coherent capability version
 
 ## Capability Dashboard
@@ -132,6 +132,7 @@ the active gate and immediate development direction.
 
 ## Next Major Decision
 
-Publish V2-08 after both real projects bound nine domains to canonical finals,
-preserved technical/aesthetic separation, and exposed five unapplied V2
-improvement groups. All 243 tests and quality/package checks passed. V2-09 is next.
+Publish V2-09 after both real projects render explicit standard 60-second
+second cuts, preserve first-cut evidence, pass media QC, and retain unresolved
+semantic/composition/text risks. All 244 tests and quality/package checks pass.
+V2-10 benchmark expansion is next.
