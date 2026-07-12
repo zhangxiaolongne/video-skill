@@ -192,7 +192,7 @@ def test_issue_decision_and_release_ledgers_have_required_contracts():
     assert "Current Release State" in releases
     assert "Current Validation" in releases
     assert "Do not recreate per-version readiness" in releases
-    assert "v0.30.0" in releases
+    assert "v0.40.0" in releases
     assert "docs/archive/DECISIONS_HISTORY.md" not in releases
     assert "Full\nrelease history" not in releases
 
@@ -202,17 +202,15 @@ def test_machine_readable_progress_matches_current_dashboard():
     payload = snapshot()
 
     assert payload["schema_version"] == "1.5"
-    assert payload["capability_gate"] == "V2-10"
+    assert payload["capability_gate"] == "V2-11"
     assert payload["milestone"] in progress
     assert payload["active_batch"]["id"] in progress
-    assert payload["active_batch"]["id"] == "V2-10"
+    assert payload["active_batch"]["id"] == "V2-11"
     assert payload["active_batch"]["acceptance_stage"] is None
     assert payload["active_batch"]["status"] == "completed"
-    assert payload["latest_release"]["tag"] == "v0.30.0"
+    assert payload["latest_release"]["tag"] == "v0.40.0"
     assert payload["latest_release"]["status"] == "published"
-    assert payload["latest_release"]["release_commit"] == (
-        "e80393915e0c850f119e9181d2bd5120f1504c4c"
-    )
+    assert payload["latest_release"]["release_commit"] is None
     assert payload["archive_policy"]["decision_history"] == (
         "docs/archive/DECISIONS_HISTORY.md"
     )
@@ -222,9 +220,9 @@ def test_machine_readable_progress_matches_current_dashboard():
     assert payload["capability_summary"]["engineering_substrate"] == "published"
     assert payload["capability_summary"]["v1_aesthetic_foundation"] == "published"
     assert payload["capability_summary"]["real_video_aesthetic_maturity"] == "baseline_complete"
-    assert "Real Video Benchmark Pack" in progress
-    assert payload["tasks"][0]["id"] == "three_class_coverage"
-    assert payload["tasks"][-1]["id"] == "reproducible_report"
+    assert "V2 Release" in progress
+    assert payload["tasks"][0]["id"] == "capability_freeze"
+    assert payload["tasks"][-1]["id"] == "git_publication"
     assert len(payload["tasks"]) == 10
     assert all(task["status"] == "completed" for task in payload["tasks"])
 

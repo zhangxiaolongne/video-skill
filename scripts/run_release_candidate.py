@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import re
 import subprocess
@@ -22,6 +23,9 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="Allow a dirty working tree for pre-publication local validation.",
     )
+    parser.add_argument("--target-version", help="Audit this release version instead of the published ledger version.")
+    parser.add_argument("--allow-missing-tag", action="store_true", help="Allow the target tag to be absent during the pre-commit audit.")
+    parser.add_argument("--benchmark-pack", type=Path, help="Require and validate a local V2 real-video benchmark pack.")
     parser.add_argument(
         "--write-artifacts",
         action="store_true",
@@ -29,7 +33,12 @@ def main(argv: list[str] | None = None) -> int:
     )
     args = parser.parse_args(argv)
 
-    manifest = build_manifest(allow_dirty=args.allow_dirty)
+    manifest = build_manifest(
+        allow_dirty=args.allow_dirty,
+        target_version_override=args.target_version,
+        allow_missing_tag=args.allow_missing_tag,
+        benchmark_pack_path=args.benchmark_pack,
+    )
     if args.write_artifacts:
         write_manifest(manifest)
     if args.json:
@@ -40,12 +49,15 @@ def main(argv: list[str] | None = None) -> int:
     return 0 if manifest["status"] in {"passed", "warning"} else 1
 
 
-def build_manifest(*, allow_dirty: bool) -> dict:
+def build_manifest(
+    *, allow_dirty: bool, target_version_override: str | None = None,
+    allow_missing_tag: bool = False, benchmark_pack_path: Path | None = None,
+) -> dict:
     progress = json.loads((ROOT / "docs" / "current_progress.json").read_text(encoding="utf-8"))
     latest_release = progress.get("latest_release") or {}
-    target_tag = str(latest_release.get("tag") or "")
+    target_tag = "v" + target_version_override if target_version_override else str(latest_release.get("tag") or "")
     target_version = target_tag.removeprefix("v")
-    expected_release_commit = str(latest_release.get("release_commit") or "")
+    expected_release_commit = str(latest_release.get("release_commit") or "") if not target_version_override else ""
     milestone = str(progress.get("milestone") or "")
     gate = str(progress.get("capability_gate") or "")
     pyproject = (ROOT / "pyproject.toml").read_text(encoding="utf-8")
@@ -69,10 +81,13 @@ def build_manifest(*, allow_dirty: bool) -> dict:
         else None
     )
 
+    benchmark = validate_benchmark_pack(benchmark_pack_path) if benchmark_pack_path else None
     checks = {
-        "version_matches_published_release": bool(target_version) and version == target_version,
-        "published_release_tag_exists": target_tag_exists,
-        "published_release_commit_matches_ledger": target_tag_commit == expected_release_commit,
+        "version_matches_target_release": bool(target_version) and version == target_version,
+        "target_release_tag_exists_or_is_precommit": target_tag_exists or allow_missing_tag,
+        "published_release_commit_matches_ledger": (
+            target_tag_commit == expected_release_commit if expected_release_commit else True
+        ),
         "current_batch_records_active_gate": bool(gate) and f"Capability gate: `{gate}`" in current_batch,
         "release_ledger_records_published_and_active_state": target_tag in releases and f"Active local work: `{milestone}`" in releases,
         "preflight_ok": preflight.get("error_count") == 0,
@@ -81,6 +96,8 @@ def build_manifest(*, allow_dirty: bool) -> dict:
         "origin_is_video_skill": remote.endswith("zhangxiaolongne/video-skill.git"),
         "working_tree_clean_or_allowed": (not dirty) or allow_dirty,
     }
+    if benchmark is not None:
+        checks.update(benchmark["checks"])
     guardrails = {
         "paid_api_required": False,
         "network_required_for_local_validation": False,
@@ -122,6 +139,44 @@ def build_manifest(*, allow_dirty: bool) -> dict:
             "preflight_warnings": (install.get("package_preflight") or {}).get("warning_count"),
         },
         "guardrails": guardrails,
+        "benchmark_pack": benchmark,
+    }
+
+
+def validate_benchmark_pack(path: Path) -> dict:
+    resolved = path.expanduser().resolve()
+    payload = json.loads(resolved.read_text(encoding="utf-8"))
+    required = {"stage_person", "interview_talking_head", "event_promo_mix"}
+    benchmarks = payload.get("benchmarks") or []
+    classes = {item.get("benchmark_class") for item in benchmarks}
+    closed = [item for item in benchmarks if item.get("acceptance_status") == "closed_loop"]
+    media_results = []
+    for item in closed:
+        project_path = Path(str(item.get("project_ref") or ""))
+        root = project_path.parent
+        artifact_path = root / ".artist-portrait" / "data" / "second_cut_render.json"
+        valid = False
+        if artifact_path.exists():
+            artifact = json.loads(artifact_path.read_text(encoding="utf-8"))
+            media_path = root / str(artifact.get("output_ref") or "")
+            expected_hash = artifact.get("output_hash")
+            actual_hash = "sha256:" + hashlib.sha256(media_path.read_bytes()).hexdigest() if media_path.is_file() else None
+            valid = bool(artifact.get("media_valid") and expected_hash == actual_hash)
+        media_results.append({"benchmark_class": item.get("benchmark_class"), "valid_current_media": valid})
+    checks = {
+        "v2_benchmark_three_class_coverage": classes == required and payload.get("class_coverage_complete") is True,
+        "v2_benchmark_has_closed_loop": len(closed) >= 1,
+        "v2_benchmark_closed_loop_media_current": bool(media_results) and all(item["valid_current_media"] for item in media_results),
+        "v2_benchmark_synthetic_not_counted": payload.get("synthetic_fixture_counted_as_real") is False,
+        "v2_benchmark_media_not_distributable": payload.get("distributable_media_included") is False,
+        "v2_benchmark_cli_offline": payload.get("network_performed_by_cli") is False,
+        "v2_benchmark_incomplete_state_visible": payload.get("status") in {"degraded", "ready"} and int(payload.get("input_baseline_count") or 0) >= 1,
+    }
+    return {
+        "path": str(resolved), "pack_id": payload.get("pack_id"),
+        "status": payload.get("status"), "closed_loop_count": len(closed),
+        "input_baseline_count": payload.get("input_baseline_count"),
+        "media_results": media_results, "checks": checks,
     }
 
 

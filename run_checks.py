@@ -83,7 +83,17 @@ def validate_package() -> None:
 
 
 def validate_release_readiness() -> None:
-    payload = run_json([str(PYTHON), str(RELEASE_READINESS), "--allow-dirty", "--json"])
+    progress = json.loads((ROOT / "docs" / "current_progress.json").read_text(encoding="utf-8"))
+    target_tag = str((progress.get("latest_release") or {}).get("tag") or "")
+    tags = set(run(["git", "tag", "--list"]).splitlines())
+    command = [str(PYTHON), str(RELEASE_READINESS), "--allow-dirty"]
+    if target_tag and target_tag not in tags:
+        command.append("--allow-missing-tag")
+    benchmark = ROOT / "runs" / "benchmark_pack" / "output" / "real_video_benchmark_pack.json"
+    if benchmark.exists():
+        command.extend(["--benchmark-pack", str(benchmark)])
+    command.append("--json")
+    payload = run_json(command)
     if payload.get("status") not in {"passed", "warning"}:
         raise SystemExit("release readiness audit failed")
     if any(value is not False for value in (payload.get("guardrails") or {}).values()):

@@ -4,14 +4,14 @@ This file records only current publication state and recent release facts. Full 
 
 ## Current Release State
 
-- Latest published source baseline: `v0.30.0`
-- Release commit: `e80393915e0c850f119e9181d2bd5120f1504c4c`
-- Annotated tag object: `7ed5f14b7b7bfd12a62d508d23abfc7ac9b7b6be`
+- Latest published source baseline: `v0.40.0`
+- Release commit: resolved by annotated tag `v0.40.0`
+- Annotated tag: `v0.40.0`
 - Publication ledger: `9013abc83455ea9bfbbd6a7fd8299920a924636b` records the
   post-refactor, single-root history baseline selected for remote publication.
-- Published scope: the V1 capability surface plus the complete architecture,
-  JSON-governance, test, package-boundary, and history reset refactor.
-- Active local work: `V2-10 Real Video Benchmark Pack`, completed locally.
+- Published scope: V1 engineering substrate plus the V2 real-video aesthetic
+  baseline from evidence fusion through second-cut candidates and benchmarks.
+- Active local work: `V2-11 V2 Release`, completed locally.
   Its current prerequisite batch is `ACCEPTANCE-STAGE-07 Real Media
   Truthfulness And Baseline Recovery`.
 - Publication policy: do not publish the next capability release until the
@@ -78,6 +78,11 @@ This file records only current publication state and recent release facts. Full 
   interview bind valid first/second-cut loops; a new four-source, 189.74-second
   CC0 street-festival project provides the event/promo input baseline. The pack
   remains degraded because that third class has no second-cut loop yet.
+- V2-11 freezes version `0.40.0`, adds two-phase release auditing, verifies the
+  current hashes of both closed-loop second cuts, preserves the degraded/input-
+  only benchmark truth, and validates local-only package/provider boundaries.
+  Pre-tag validation passes 251 tests plus golden, BGM/rhythm, NLE, package,
+  install, benchmark, release-candidate, and diff checks.
 
 - Architecture baseline validation passed on `2026-07-10`: `.venv/bin/python
   run_checks.py` completed successfully with `239 passed`, schema generation,
@@ -91,7 +96,8 @@ This file records only current publication state and recent release facts. Full 
 
 | Release | Scope | Publication |
 | --- | --- | --- |
-| `v0.30.0` | Single-root architecture baseline | Current retained Git baseline |
+| `v0.40.0` | V2 real-video aesthetic baseline | Current release |
+| `v0.30.0` | Single-root V1 architecture baseline | Previous retained baseline |
 | Pre-`v0.30.0` | Historical releases | Details retained as Markdown archive only |
 
 ## Release Closeout Requirements

@@ -2,47 +2,47 @@
 
 ## Batch Header
 
-- Batch ID: `V2-10`
-- Name: Real Video Benchmark Pack
+- Batch ID: `V2-11`
+- Name: V2 Release
 - Type: product capability milestone
 - Status: `completed`
-- Capability gate: `V2-10`
-- Prerequisite: published `V2-09 Second-Cut Candidate Generation`
+- Capability gate: `V2-11`
+- Prerequisite: published `V2-10 Real Video Benchmark Pack`
 - Publication: one commit/push only after complete validation
 
 ## Goal Delta
 
-V2-10 establishes one repeatable real-video benchmark pack across stage person,
-interview/talking head, and event/promo mix. Each class binds real inputs, goals,
-a ten-domain checklist, failure examples, and acceptance status. Incomplete
-loops remain visible and synthetic fixtures cannot count as real evidence.
+V2-11 freezes the V2 real-video aesthetic baseline as version `0.40.0`. The
+release audits the complete evidence chain, current second-cut media hashes,
+three-class benchmark truth, local-only package boundary, offline/provider
+guardrails, version metadata, documentation, Git tag, and remote publication.
 
 ## Internal Acceptance Checklist
 
 | ID | Outcome | Acceptance | Status |
 |---|---|---|---|
-| `three_class_coverage` | Distinct real classes | Stage, interview, and event/promo are all required. | `completed` |
-| `source_provenance` | Verifiable input truth | Sources bind hashes, rights, duration, and local project refs. | `completed` |
-| `multi_source_event` | New input pressure | Four real CC0 event files exercise multi-source scanning. | `completed` |
-| `goal_binding` | Comparable briefs | Every benchmark binds platform, duration, aspect, and creative goal. | `completed` |
-| `ten_domain_checklist` | Shared aesthetic rubric | Every class uses the same ten review domains. | `completed` |
-| `failure_examples` | Regression evidence | High-risk and unavailable behavior remains explicit. | `completed` |
-| `closed_loop_binding` | Real edit evidence | Two classes bind first review and valid second-cut media. | `completed` |
-| `quality_matrix` | Cross-format truth | Source count, duration, rights, outputs, and QC are comparable. | `completed` |
-| `cross_case_findings` | Type-specific judgment | Interview, stage, and event risks remain distinct. | `completed` |
-| `reproducible_report` | One canonical pack | One JSON/schema and one human report reproduce acceptance. | `completed` |
+| `capability_freeze` | Stable V2 scope | V2-01 through V2-10 boundaries are frozen for release. | `completed` |
+| `evidence_chain` | End-to-end audit | Input through first review, second cut, and benchmark refs remain bound. | `completed` |
+| `benchmark_release` | Three-class proof | Required classes and incomplete event loop remain visible. | `completed` |
+| `media_hash_audit` | Current real outputs | Every closed-loop second-cut hash matches current media. | `completed` |
+| `package_isolation` | Small distribution | Runs, outputs, sources, and caches remain outside the Skill package. | `completed` |
+| `offline_provider_audit` | Free/local boundary | Local validation needs no paid API, model call, or network. | `completed` |
+| `document_consistency` | One release truth | Master, dashboard, tasks, release ledger, and machine state agree. | `completed` |
+| `version_boundary` | New V2 baseline | Package and runtime report `0.40.0`. | `completed` |
+| `two_phase_candidate` | Correct publication gate | Pre-tag and post-tag release audits are distinct and strict. | `completed` |
+| `git_publication` | Source and tag | One V2 source commit and annotated `v0.40.0` tag publish together. | `completed` |
 
 ## Guardrails
 
-- Require three genuinely distinct real-video classes.
-- Do not count synthetic fixtures or relabeled duplicate footage as real coverage.
-- Keep media local and excluded from Skill/Git publication.
-- CLI remains local-only; host-fetched public sources require explicit provenance.
-- Technical validity remains separate from aesthetic maturity.
+- Release only source, contracts, tests, and durable documentation.
+- Preserve `degraded`, `not_publishable`, and input-only benchmark truth.
+- Validate local second-cut hashes before tagging.
+- Local validation remains offline and free of hidden provider calls.
+- Do not begin V3 capability work inside V2 release hardening.
 
 ## Next Work
 
-The pack covers all three required classes. Stage and interview have valid real
-first/second-cut loops; event/promo has four CC0 real sources totaling 189.74s,
-an explicit 30s goal, and an honest input-only acceptance state. The pack is
-`degraded`, not mature. V2-11 release hardening is next.
+V2 closes as a truthful aesthetic baseline, not a mature editor. Stage and
+interview have current real second cuts; event/promo remains input-only; the
+three-class pack remains `degraded`. Version `0.40.0` is ready for one source
+commit, annotated tag, post-tag audit, and remote publication.

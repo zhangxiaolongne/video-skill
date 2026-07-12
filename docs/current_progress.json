@@ -1,7 +1,7 @@
 {
   "schema_version": "1.5",
-  "capability_gate": "V2-10",
-  "milestone": "V2-10 Real Video Benchmark Pack",
+  "capability_gate": "V2-11",
+  "milestone": "V2-11 V2 Release",
   "documentation_system": {
     "master": "artist_portrait_editor_revision5_optimized.md",
     "current_progress": "docs/DEVELOPMENT_PROGRESS.md",
@@ -18,35 +18,35 @@
     "current_files_keep_only": "active decisions, current validation, active batch, and next development direction"
   },
   "active_batch": {
-    "id": "V2-10",
-    "name": "Real Video Benchmark Pack",
+    "id": "V2-11",
+    "name": "V2 Release",
     "status": "completed",
     "started": "2026-07-12",
-    "capability_gate": "V2-10",
+    "capability_gate": "V2-11",
     "acceptance_stage": null,
     "prerequisite_acceptance_stage": "ACCEPTANCE-STAGE-07_completed_locally",
-    "commit_policy": "v2_10_complete_and_ready_for_one_commit_push"
+    "commit_policy": "v2_11_one_source_commit_annotated_v0_40_0_tag_and_push"
   },
   "latest_release": {
-    "tag": "v0.30.0",
+    "tag": "v0.40.0",
     "status": "published",
-    "release_commit": "e80393915e0c850f119e9181d2bd5120f1504c4c",
-    "tag_object": "7ed5f14b7b7bfd12a62d508d23abfc7ac9b7b6be",
+    "release_commit": null,
+    "tag_object": null,
     "remote_main_publication_ledger": "9013abc83455ea9bfbbd6a7fd8299920a924636b",
-    "scope": "Single-root architecture baseline preserving the V1 capability surface and completing the refactor"
+    "scope": "V2 real-video aesthetic baseline with evidence fusion, editorial ranking, duration and audiovisual planning, first-cut review, second-cut media, and three-class benchmarks"
   },
   "latest_local_validation": {
     "date": "2026-07-13",
-    "full_pytest": ".venv/bin/python -m pytest passed with 249 passed",
-    "project_checks": ".venv/bin/python run_checks.py passed with golden, BGM/rhythm, NLE round-trip, schema, package, install simulation, release-candidate, and diff checks",
+    "full_pytest": ".venv/bin/python -m pytest passed with 251 passed",
+    "project_checks": ".venv/bin/python run_checks.py passed with golden, BGM/rhythm, NLE round-trip, schema, package, install simulation, V2 benchmark release-candidate, and diff checks",
     "real_benchmark": "three-class pack covers stage and interview closed loops plus a four-source 189.74s CC0 event/promo input baseline with an explicit 30s goal",
-    "current_doc_followup": "V2-10 completed functionally: one reproducible pack binds real source provenance, goals, ten-domain checklists, failure examples, and honest acceptance states across all required classes"
+    "current_doc_followup": "V2-11 completed functionally: version 0.40.0 and two-phase release audit preserve current media hashes, benchmark degradation, package isolation, and offline provider boundaries"
   },
   "capability_summary": {
     "engineering_substrate": "published",
     "v1_aesthetic_foundation": "published",
     "real_video_aesthetic_maturity": "baseline_complete",
-    "current_gap": "V2 benchmark coverage is complete but degraded: the event/promo class lacks a second-cut loop and no class has transcript-backed continuity or mature aesthetic acceptance"
+    "current_gap": "V2 is releasable as a degraded aesthetic baseline, not a mature editor; V3 must close transcript-backed continuity, candidate-specific composition, fine pacing, and event/promo second-cut iteration"
   },
   "json_governance": {
     "canonical_rule": "JSON is kept only for canonical machine truth, boundary evidence, generated schema contracts, media validation, run audit, or release-critical evidence.",
@@ -111,43 +111,43 @@
   },
   "tasks": [
     {
-      "id": "three_class_coverage",
+      "id": "capability_freeze",
       "status": "completed"
     },
     {
-      "id": "source_provenance",
+      "id": "evidence_chain",
       "status": "completed"
     },
     {
-      "id": "multi_source_event",
+      "id": "benchmark_release",
       "status": "completed"
     },
     {
-      "id": "goal_binding",
+      "id": "media_hash_audit",
       "status": "completed"
     },
     {
-      "id": "ten_domain_checklist",
+      "id": "package_isolation",
       "status": "completed"
     },
     {
-      "id": "failure_examples",
+      "id": "offline_provider_audit",
       "status": "completed"
     },
     {
-      "id": "closed_loop_binding",
+      "id": "document_consistency",
       "status": "completed"
     },
     {
-      "id": "quality_matrix",
+      "id": "version_boundary",
       "status": "completed"
     },
     {
-      "id": "cross_case_findings",
+      "id": "two_phase_candidate",
       "status": "completed"
     },
     {
-      "id": "reproducible_report",
+      "id": "git_publication",
       "status": "completed"
     }
   ]

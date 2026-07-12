@@ -3,9 +3,17 @@
 Follow `artist_portrait_editor_revision5_optimized.md` as the governing V0
 engineering-freeze document.
 
-Current gate: V2-10 Real Video Benchmark Pack. V2-09 Second-Cut Candidate
-Generation is published. V2-10 is complete locally and awaiting publication as
-one version. V2-11 is not active yet.
+Current gate: V2-11 V2 Release. V2-10 Real Video Benchmark Pack is published.
+V2-11 is complete locally and awaiting publication as version `0.40.0`. V3-01
+is not active yet.
+
+V2-11 may freeze and audit the V2 evidence chain, validate current real
+benchmark classes and closed-loop second-cut media hashes, verify local-only
+packaging and forbidden-provider boundaries, advance the package version, and
+publish one source commit plus annotated release tag. It must not package local
+media, claim the degraded benchmark pack is mature, conceal the event/promo
+input-only state, render new edits, call models, or require network access for
+local validation.
 
 V2-10 may aggregate exactly the stage-person, interview/talking-head, and
 event/promo-mix real-video classes into one benchmark pack. Each class must bind

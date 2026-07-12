@@ -16,17 +16,17 @@ issue tracker, or master strategy document.
 
 ## Current State
 
-- Current active gate: V2-10 Real Video Benchmark Pack
+- Current active gate: V2-11 V2 Release
 - Gate state: completed locally; ready for one-version publication
-- Completed published capability: `V2-09` Second-Cut Candidate Generation
-- Current complete version: `V2-10 Real Video Benchmark Pack`
-- Current batch: `V2-10` completed locally
-- Latest published release baseline: `v0.30.0`
+- Completed published capability: `V2-10` Real Video Benchmark Pack
+- Current complete version: `V2-11 V2 Release`
+- Current batch: `V2-11` completed locally
+- Latest published release baseline: `v0.40.0`
 - Current published capability work: V1-08 revision promotion and V1 release
   packaging
 - Current acceptance stage: `ACCEPTANCE-STAGE-07` completed locally with full
   checks and current real-project delivery acceptance
-- Next release policy: no commit or push until complete V2-10 validation closes
+- Next release policy: publish one V2 source commit and annotated `v0.40.0` tag only after complete V2-11 validation
   as one coherent capability version
 
 ## Capability Dashboard
@@ -132,8 +132,7 @@ the active gate and immediate development direction.
 
 ## Next Major Decision
 
-Publish V2-10 after one benchmark pack covers stage, interview, and event/promo
-with real source evidence, shared checks, failure examples, and honest acceptance
-states. Stage/interview are closed loops; the four-source CC0 event benchmark is
-input-only. All 249 tests and quality/package checks pass. V2-11 release
-hardening is next.
+Publish V2 as `v0.40.0` after full checks, current closed-loop media hashes,
+three-class benchmark truth, package isolation, offline boundaries, pre-tag
+candidate audit, annotated tag, and post-tag audit all pass. The pre-tag suite
+passes with 251 tests. V3-01 is next but not active.
