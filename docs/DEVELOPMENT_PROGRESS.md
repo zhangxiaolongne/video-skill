@@ -16,11 +16,11 @@ issue tracker, or master strategy document.
 
 ## Current State
 
-- Current active gate: V2-05 Duration And Structure Recommendation
+- Current active gate: V2-06 BGM Mood And Rhythm Matching
 - Gate state: completed locally; ready for one-version publication
-- Completed published capability: `V2-04` Highlight, Hook, And Ending Scoring
-- Current complete version: `V2-05 Duration And Structure Recommendation`
-- Current batch: `V2-05` completed locally
+- Completed published capability: `V2-05` Duration And Structure Recommendation
+- Current complete version: `V2-06 BGM Mood And Rhythm Matching`
+- Current batch: `V2-06` completed locally
 - Latest published release baseline: `v0.30.0`
 - Current published capability work: V1-08 revision promotion and V1 release
   packaging
@@ -132,6 +132,6 @@ the active gate and immediate development direction.
 
 ## Next Major Decision
 
-Publish V2-05 after synthetic and both real projects produced bounded 39/60/90
-second options with exact roles/tradeoffs and preserved 60-second user target.
-All 243 tests and quality/package checks passed. V2-06 is not active yet.
+Close V2-06 after interview no-file planning and stage mixed-audio multi-candidate
+matching pass full validation. Current stage mood/rhythm remain unknown with
+high downstream pressure; no automatic selection occurs.

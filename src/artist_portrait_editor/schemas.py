@@ -20,6 +20,7 @@ from artist_portrait_editor.models.bgm_recommendation import (
     BgmRecommendationSet,
     BgmRecommendationValidationReport,
 )
+from artist_portrait_editor.models.bgm_match import BgmMatchReport
 from artist_portrait_editor.models.clip import ClipRecord
 from artist_portrait_editor.models.clip_score import ClipScoreRecord
 from artist_portrait_editor.models.config import ProjectConfig
@@ -81,6 +82,7 @@ def write_schema_files(output_dir: Path) -> None:
         "aesthetic_baseline.schema.json": AestheticBaseline.model_json_schema(),
         "project_acceptance_report.schema.json": ProjectAcceptanceReport.model_json_schema(),
         "bgm_analysis_report.schema.json": BgmAnalysisReport.model_json_schema(),
+        "bgm_match_report.schema.json": BgmMatchReport.model_json_schema(),
         "bgm_beat_grid.schema.json": BgmBeatGrid.model_json_schema(),
         "bgm_candidate_ledger.schema.json": BgmCandidateLedger.model_json_schema(),
         "bgm_fit_plan.schema.json": BgmFitPlan.model_json_schema(),

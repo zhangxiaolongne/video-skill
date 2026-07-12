@@ -223,6 +223,15 @@ def test_real_media_acceptance_profiles_reach_delivery(tmp_path, capsys):
     assert structure["timeline_mutated"] is False
     assert structure["edit_points_applied"] is False
     assert structure["media_rendered"] is False
+    assert main(["bgm-match", "--project", str(project_path), "--json"]) == 1
+    bgm_match = json.loads(capsys.readouterr().out)["bgm_match"]
+    assert bgm_match["input_state"] == "no_file_yet"
+    assert bgm_match["candidate_count"] == 0
+    assert bgm_match["status"] == "planning_only"
+    assert bgm_match["automatic_music_selection"] is False
+    assert bgm_match["selected_candidate_id"] is None
+    assert bgm_match["fabricated_mood"] is False
+    assert bgm_match["fabricated_bpm_or_beats"] is False
     assert main(["score", "--project", str(project_path), "--quiet"]) in (0, 1)
     assert main(["propose", "--project", str(project_path), "--json"]) == 1
     capsys.readouterr()

@@ -330,6 +330,10 @@ contains exact ranked ranges, hook/build/payoff allocation, sacrifices,
 retained qualities, confidence, and coupled downstream risks. It never applies
 the suggested ordering or changes timeline/media.
 
+`bgm-match` evaluates every explicit BGM input state against current structure
+options. Mood and rhythm remain unknown without evidence; mixed video audio
+raises voice/ducking/text/transition pressure and is never clean BGM.
+
 Preview rendering may use local FFmpeg/ffprobe to extract timeline video
 ranges, retain original source audio, apply fitted BGM gain/fades/looping, and
 duck BGM under retained original audio. It must not choose music, fabricate beat

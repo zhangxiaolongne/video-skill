@@ -1,7 +1,7 @@
 {
   "schema_version": "1.5",
-  "capability_gate": "V2-05",
-  "milestone": "V2-05 Duration And Structure Recommendation",
+  "capability_gate": "V2-06",
+  "milestone": "V2-06 BGM Mood And Rhythm Matching",
   "documentation_system": {
     "master": "artist_portrait_editor_revision5_optimized.md",
     "current_progress": "docs/DEVELOPMENT_PROGRESS.md",
@@ -18,14 +18,14 @@
     "current_files_keep_only": "active decisions, current validation, active batch, and next development direction"
   },
   "active_batch": {
-    "id": "V2-05",
-    "name": "Duration And Structure Recommendation",
+    "id": "V2-06",
+    "name": "BGM Mood And Rhythm Matching",
     "status": "completed",
     "started": "2026-07-12",
-    "capability_gate": "V2-05",
+    "capability_gate": "V2-06",
     "acceptance_stage": null,
     "prerequisite_acceptance_stage": "ACCEPTANCE-STAGE-07_completed_locally",
-    "commit_policy": "v2_05_complete_and_ready_for_one_commit_push"
+    "commit_policy": "v2_06_complete_and_ready_for_one_commit_push"
   },
   "latest_release": {
     "tag": "v0.30.0",
@@ -111,39 +111,39 @@
   },
   "tasks": [
     {
-      "id": "canonical_plan",
+      "id": "canonical_match",
       "status": "completed"
     },
     {
-      "id": "fresh_score_binding",
+      "id": "input_modes",
       "status": "completed"
     },
     {
-      "id": "three_durations",
+      "id": "structure_binding",
       "status": "completed"
     },
     {
-      "id": "user_duration",
+      "id": "mood_truth",
       "status": "completed"
     },
     {
-      "id": "score_distribution",
+      "id": "rhythm_truth",
       "status": "completed"
     },
     {
-      "id": "structure_roles",
+      "id": "mixed_audio",
       "status": "completed"
     },
     {
-      "id": "retained_ranges",
+      "id": "ducking_pressure",
       "status": "completed"
     },
     {
-      "id": "sacrifice_logic",
+      "id": "text_pressure",
       "status": "completed"
     },
     {
-      "id": "coupled_risks",
+      "id": "transition_pressure",
       "status": "completed"
     },
     {

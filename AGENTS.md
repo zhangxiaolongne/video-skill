@@ -3,9 +3,16 @@
 Follow `artist_portrait_editor_revision5_optimized.md` as the governing V0
 engineering-freeze document.
 
-Current gate: V2-05 Duration And Structure Recommendation. V2-04 Highlight,
-Hook, And Ending Scoring is published. V2-05 is complete locally and awaiting
-publication as one version. V2-06 is not active yet.
+Current gate: V2-06 BGM Mood And Rhythm Matching. V2-05 Duration And Structure
+Recommendation is published. V2-06 is complete locally and awaiting publication
+as one version. V2-07 is not active yet.
+
+V2-06 may compare direct audio, video-extracted mixed audio, source embedded
+audio, multiple candidates, and no-file-yet planning against current structure
+options. It may expose mood/rhythm status and ducking/text/transition pressure.
+It must not select or fit music, treat mixed video audio as clean BGM, fabricate
+mood/speech/vocals/BPM/beats/phrases, call models, access network, render, or
+mutate timelines.
 
 V2-05 may generate exactly three materially distinct short, standard, and
 extended structure recommendations from the current editorial score set and

@@ -79,8 +79,7 @@ release-candidate validation path:
 Current published capability work: `V1-08 Revision promotion, revised render
 readiness, and V1 release packaging` in the retained `v0.30.0` baseline.
 Current local acceptance stage: `ACCEPTANCE-STAGE-07 Real Media Truthfulness And Baseline Recovery`.
-Current V2-05 Duration And Structure Recommendation is complete locally and
-awaiting one-version publication. V2-04 is published.
+Current V2-06 BGM Mood And Rhythm Matching is complete locally and awaiting publication. V2-05 is published.
 The latest published acceptance release remains `ACCEPTANCE-STAGE-06 Release
 candidate and publication` in `v0.28.0`; the latest published V1 capability
 release baseline is `v0.30.0`.
@@ -299,6 +298,10 @@ standard, and extended options with exact candidate ranges, hook/build/payoff
 roles, sacrifices, retained qualities, confidence, and coupled audio/text/BGM/
 transition risks. Standard preserves the explicit target duration; no timeline
 or media is changed.
+`bgm-match` evaluates direct/extracted/embedded/multiple/no-file BGM states
+against current structure options and exposes mood/rhythm evidence plus
+ducking, text, and transition pressure. It never auto-selects music or treats
+mixed video audio and technical energy as clean semantic music evidence.
 `propose` prepares a host-Agent handoff and can import an explicit quarantined
 ProposalSet candidate; it does not call paid APIs or access the network.
 

@@ -11,8 +11,7 @@ This file records only current publication state and recent release facts. Full 
   post-refactor, single-root history baseline selected for remote publication.
 - Published scope: the V1 capability surface plus the complete architecture,
   JSON-governance, test, package-boundary, and history reset refactor.
-- Active local work: `V2-05 Duration And Structure Recommendation`, completed
-  locally and ready for one-version publication.
+- Active local work: `V2-06 BGM Mood And Rhythm Matching`, completed locally.
   Its current prerequisite batch is `ACCEPTANCE-STAGE-07 Real Media
   Truthfulness And Baseline Recovery`.
 - Publication policy: do not publish the next capability release until the
