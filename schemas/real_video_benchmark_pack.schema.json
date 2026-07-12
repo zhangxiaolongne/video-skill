@@ -1,0 +1,372 @@
+{
+  "$defs": {
+    "BenchmarkCase": {
+      "additionalProperties": false,
+      "properties": {
+        "acceptance_status": {
+          "enum": [
+            "closed_loop",
+            "input_baseline",
+            "blocked"
+          ],
+          "title": "Acceptance Status",
+          "type": "string"
+        },
+        "acceptance_summary": {
+          "minLength": 1,
+          "title": "Acceptance Summary",
+          "type": "string"
+        },
+        "benchmark_class": {
+          "enum": [
+            "stage_person",
+            "interview_talking_head",
+            "event_promo_mix"
+          ],
+          "title": "Benchmark Class",
+          "type": "string"
+        },
+        "benchmark_id": {
+          "title": "Benchmark Id",
+          "type": "string"
+        },
+        "checklist": {
+          "items": {
+            "$ref": "#/$defs/BenchmarkCheck"
+          },
+          "maxItems": 10,
+          "minItems": 10,
+          "title": "Checklist",
+          "type": "array"
+        },
+        "failure_examples": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Failure Examples",
+          "type": "array"
+        },
+        "first_cut_present": {
+          "title": "First Cut Present",
+          "type": "boolean"
+        },
+        "model_call_performed_by_cli": {
+          "default": false,
+          "title": "Model Call Performed By Cli",
+          "type": "boolean"
+        },
+        "network_performed_by_cli": {
+          "default": false,
+          "title": "Network Performed By Cli",
+          "type": "boolean"
+        },
+        "project_id": {
+          "title": "Project Id",
+          "type": "string"
+        },
+        "project_ref": {
+          "title": "Project Ref",
+          "type": "string"
+        },
+        "rights_statuses": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Rights Statuses",
+          "type": "array"
+        },
+        "second_cut_dimensions": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Second Cut Dimensions"
+        },
+        "second_cut_duration_seconds": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Second Cut Duration Seconds"
+        },
+        "second_cut_media_valid": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Second Cut Media Valid"
+        },
+        "second_cut_present": {
+          "title": "Second Cut Present",
+          "type": "boolean"
+        },
+        "second_cut_publishability": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Second Cut Publishability"
+        },
+        "source_count": {
+          "minimum": 1,
+          "title": "Source Count",
+          "type": "integer"
+        },
+        "source_duration_seconds": {
+          "exclusiveMinimum": 0,
+          "title": "Source Duration Seconds",
+          "type": "number"
+        },
+        "source_hashes": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Source Hashes",
+          "type": "array"
+        },
+        "source_scan_current": {
+          "title": "Source Scan Current",
+          "type": "boolean"
+        },
+        "target_duration_seconds": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Target Duration Seconds"
+        },
+        "target_platform": {
+          "title": "Target Platform",
+          "type": "string"
+        },
+        "title": {
+          "title": "Title",
+          "type": "string"
+        }
+      },
+      "required": [
+        "benchmark_id",
+        "benchmark_class",
+        "project_id",
+        "project_ref",
+        "title",
+        "target_platform",
+        "source_count",
+        "source_duration_seconds",
+        "source_hashes",
+        "rights_statuses",
+        "source_scan_current",
+        "first_cut_present",
+        "second_cut_present",
+        "checklist",
+        "failure_examples",
+        "acceptance_status",
+        "acceptance_summary"
+      ],
+      "title": "BenchmarkCase",
+      "type": "object"
+    },
+    "BenchmarkCheck": {
+      "additionalProperties": false,
+      "properties": {
+        "domain": {
+          "enum": [
+            "input_integrity",
+            "goal_binding",
+            "selection",
+            "structure",
+            "pacing",
+            "source_audio_bgm",
+            "text",
+            "composition",
+            "semantic_continuity",
+            "technical_delivery"
+          ],
+          "title": "Domain",
+          "type": "string"
+        },
+        "evidence_refs": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Evidence Refs",
+          "type": "array"
+        },
+        "finding": {
+          "minLength": 1,
+          "title": "Finding",
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "passed",
+            "warning",
+            "failed",
+            "unavailable"
+          ],
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "domain",
+        "status",
+        "finding"
+      ],
+      "title": "BenchmarkCheck",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "benchmarks": {
+      "items": {
+        "$ref": "#/$defs/BenchmarkCase"
+      },
+      "minItems": 3,
+      "title": "Benchmarks",
+      "type": "array"
+    },
+    "blocked_count": {
+      "minimum": 0,
+      "title": "Blocked Count",
+      "type": "integer"
+    },
+    "class_coverage_complete": {
+      "title": "Class Coverage Complete",
+      "type": "boolean"
+    },
+    "closed_loop_count": {
+      "minimum": 0,
+      "title": "Closed Loop Count",
+      "type": "integer"
+    },
+    "covered_classes": {
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 3,
+      "minItems": 3,
+      "title": "Covered Classes",
+      "type": "array"
+    },
+    "cross_case_findings": {
+      "items": {
+        "type": "string"
+      },
+      "minItems": 3,
+      "title": "Cross Case Findings",
+      "type": "array"
+    },
+    "distributable_media_included": {
+      "default": false,
+      "title": "Distributable Media Included",
+      "type": "boolean"
+    },
+    "generated_at": {
+      "title": "Generated At",
+      "type": "string"
+    },
+    "input_baseline_count": {
+      "minimum": 0,
+      "title": "Input Baseline Count",
+      "type": "integer"
+    },
+    "known_blind_spots": {
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Known Blind Spots",
+      "type": "array"
+    },
+    "model_call_performed_by_cli": {
+      "default": false,
+      "title": "Model Call Performed By Cli",
+      "type": "boolean"
+    },
+    "network_performed_by_cli": {
+      "default": false,
+      "title": "Network Performed By Cli",
+      "type": "boolean"
+    },
+    "pack_id": {
+      "title": "Pack Id",
+      "type": "string"
+    },
+    "required_classes": {
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 3,
+      "minItems": 3,
+      "title": "Required Classes",
+      "type": "array"
+    },
+    "schema_version": {
+      "default": "0.3",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "status": {
+      "enum": [
+        "ready",
+        "degraded",
+        "blocked"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "synthetic_fixture_counted_as_real": {
+      "default": false,
+      "title": "Synthetic Fixture Counted As Real",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "pack_id",
+    "generated_at",
+    "required_classes",
+    "covered_classes",
+    "benchmarks",
+    "class_coverage_complete",
+    "closed_loop_count",
+    "input_baseline_count",
+    "blocked_count",
+    "cross_case_findings",
+    "known_blind_spots",
+    "status"
+  ],
+  "title": "RealVideoBenchmarkPack",
+  "type": "object"
+}

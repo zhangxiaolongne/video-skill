@@ -71,6 +71,21 @@ def test_scan_deduplicates_identical_media_content(tmp_path):
     assert record.media_kind == MediaKind.video
 
 
+@pytest.mark.parametrize("extension", [".ogv", ".webm"])
+def test_scan_accepts_open_video_formats(tmp_path, extension):
+    project_path = write_project(tmp_path)
+    media_dir = tmp_path / "media"
+    media_dir.mkdir()
+    (media_dir / f"event{extension}").write_bytes(b"open-video-content")
+    config = load_project_config(project_path)
+
+    result = scan_project_sources(root=tmp_path, config=config, probe_fn=fake_video_probe)
+
+    assert result.errors == []
+    assert len(result.records) == 1
+    assert result.records[0].primary_location == f"media/event{extension}"
+
+
 def test_stable_source_id_depends_on_project_and_content_hash_only():
     content_hash = "sha256:" + "a" * 64
 

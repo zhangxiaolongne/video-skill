@@ -16,17 +16,17 @@ issue tracker, or master strategy document.
 
 ## Current State
 
-- Current active gate: V2-09 Second-Cut Candidate Generation
+- Current active gate: V2-10 Real Video Benchmark Pack
 - Gate state: completed locally; ready for one-version publication
-- Completed published capability: `V2-08` First-Cut Aesthetic Self-Review
-- Current complete version: `V2-09 Second-Cut Candidate Generation`
-- Current batch: `V2-09` completed locally
+- Completed published capability: `V2-09` Second-Cut Candidate Generation
+- Current complete version: `V2-10 Real Video Benchmark Pack`
+- Current batch: `V2-10` completed locally
 - Latest published release baseline: `v0.30.0`
 - Current published capability work: V1-08 revision promotion and V1 release
   packaging
 - Current acceptance stage: `ACCEPTANCE-STAGE-07` completed locally with full
   checks and current real-project delivery acceptance
-- Next release policy: no commit or push until complete V2-09 validation closes
+- Next release policy: no commit or push until complete V2-10 validation closes
   as one coherent capability version
 
 ## Capability Dashboard
@@ -132,7 +132,8 @@ the active gate and immediate development direction.
 
 ## Next Major Decision
 
-Publish V2-09 after both real projects render explicit standard 60-second
-second cuts, preserve first-cut evidence, pass media QC, and retain unresolved
-semantic/composition/text risks. All 244 tests and quality/package checks pass.
-V2-10 benchmark expansion is next.
+Publish V2-10 after one benchmark pack covers stage, interview, and event/promo
+with real source evidence, shared checks, failure examples, and honest acceptance
+states. Stage/interview are closed loops; the four-source CC0 event benchmark is
+input-only. All 249 tests and quality/package checks pass. V2-11 release
+hardening is next.

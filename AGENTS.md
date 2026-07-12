@@ -3,9 +3,17 @@
 Follow `artist_portrait_editor_revision5_optimized.md` as the governing V0
 engineering-freeze document.
 
-Current gate: V2-09 Second-Cut Candidate Generation. V2-08 First-Cut Aesthetic
-Self-Review is published. V2-09 is complete locally and awaiting publication as
-one version. V2-10 is not active yet.
+Current gate: V2-10 Real Video Benchmark Pack. V2-09 Second-Cut Candidate
+Generation is published. V2-10 is complete locally and awaiting publication as
+one version. V2-11 is not active yet.
+
+V2-10 may aggregate exactly the stage-person, interview/talking-head, and
+event/promo-mix real-video classes into one benchmark pack. Each class must bind
+real source fingerprints, goal, ten-domain aesthetic checklist, failure
+examples, and acceptance status. At least one class must bind a valid real
+first/second-cut loop. It must not count synthetic fixtures as real evidence,
+package benchmark media, hide incomplete loops, call models, access the network
+from the CLI, or promote technical validity to aesthetic maturity.
 
 V2-09 may require an explicit short, standard, or extended structure option;
 build an independent source-range timeline; reorder and render real local video

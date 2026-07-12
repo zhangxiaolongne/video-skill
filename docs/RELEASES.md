@@ -11,7 +11,7 @@ This file records only current publication state and recent release facts. Full 
   post-refactor, single-root history baseline selected for remote publication.
 - Published scope: the V1 capability surface plus the complete architecture,
   JSON-governance, test, package-boundary, and history reset refactor.
-- Active local work: `V2-09 Second-Cut Candidate Generation`, completed locally.
+- Active local work: `V2-10 Real Video Benchmark Pack`, completed locally.
   Its current prerequisite batch is `ACCEPTANCE-STAGE-07 Real Media
   Truthfulness And Baseline Recovery`.
 - Publication policy: do not publish the next capability release until the
@@ -74,6 +74,10 @@ This file records only current publication state and recent release facts. Full 
   canvas/frame-rate/stream/duration QC without overwriting the canonical first
   cut. Missing transcript, candidate-specific reframes, fine pacing, and mature
   publishability remain unresolved by design.
+- V2-10 adds one reproducible three-class real-video benchmark pack. Stage and
+  interview bind valid first/second-cut loops; a new four-source, 189.74-second
+  CC0 street-festival project provides the event/promo input baseline. The pack
+  remains degraded because that third class has no second-cut loop yet.
 
 - Architecture baseline validation passed on `2026-07-10`: `.venv/bin/python
   run_checks.py` completed successfully with `239 passed`, schema generation,

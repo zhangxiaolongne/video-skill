@@ -79,7 +79,7 @@ release-candidate validation path:
 Current published capability work: `V1-08 Revision promotion, revised render
 readiness, and V1 release packaging` in the retained `v0.30.0` baseline.
 Current local acceptance stage: `ACCEPTANCE-STAGE-07 Real Media Truthfulness And Baseline Recovery`.
-Current V2-09 Second-Cut Candidate Generation is complete locally and awaiting publication. V2-08 is published.
+Current V2-10 Real Video Benchmark Pack is complete locally and awaiting publication. V2-09 is published.
 The latest published acceptance release remains `ACCEPTANCE-STAGE-06 Release
 candidate and publication` in `v0.28.0`; the latest published V1 capability
 release baseline is `v0.30.0`.

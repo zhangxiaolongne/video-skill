@@ -1,7 +1,7 @@
 {
   "schema_version": "1.5",
-  "capability_gate": "V2-09",
-  "milestone": "V2-09 Second-Cut Candidate Generation",
+  "capability_gate": "V2-10",
+  "milestone": "V2-10 Real Video Benchmark Pack",
   "documentation_system": {
     "master": "artist_portrait_editor_revision5_optimized.md",
     "current_progress": "docs/DEVELOPMENT_PROGRESS.md",
@@ -18,14 +18,14 @@
     "current_files_keep_only": "active decisions, current validation, active batch, and next development direction"
   },
   "active_batch": {
-    "id": "V2-09",
-    "name": "Second-Cut Candidate Generation",
+    "id": "V2-10",
+    "name": "Real Video Benchmark Pack",
     "status": "completed",
     "started": "2026-07-12",
-    "capability_gate": "V2-09",
+    "capability_gate": "V2-10",
     "acceptance_stage": null,
     "prerequisite_acceptance_stage": "ACCEPTANCE-STAGE-07_completed_locally",
-    "commit_policy": "v2_09_complete_and_ready_for_one_commit_push"
+    "commit_policy": "v2_10_complete_and_ready_for_one_commit_push"
   },
   "latest_release": {
     "tag": "v0.30.0",
@@ -37,16 +37,16 @@
   },
   "latest_local_validation": {
     "date": "2026-07-13",
-    "full_pytest": ".venv/bin/python -m pytest passed with 244 passed",
+    "full_pytest": ".venv/bin/python -m pytest passed with 249 passed",
     "project_checks": ".venv/bin/python run_checks.py passed with golden, BGM/rhythm, NLE round-trip, schema, package, install simulation, release-candidate, and diff checks",
-    "real_benchmark": "explicit standard second cuts rendered at 60 seconds for interview 1280x720@24fps and stage 1080x1920@30fps; both retain source audio and preserve canonical first cuts",
-    "current_doc_followup": "V2-09 completed functionally: real source ranges are reordered into independent playable second cuts with media QC and nine-domain comparison; semantic continuity, text, composition, and fine pacing remain unresolved"
+    "real_benchmark": "three-class pack covers stage and interview closed loops plus a four-source 189.74s CC0 event/promo input baseline with an explicit 30s goal",
+    "current_doc_followup": "V2-10 completed functionally: one reproducible pack binds real source provenance, goals, ten-domain checklists, failure examples, and honest acceptance states across all required classes"
   },
   "capability_summary": {
     "engineering_substrate": "published",
     "v1_aesthetic_foundation": "published",
     "real_video_aesthetic_maturity": "baseline_complete",
-    "current_gap": "V2-09 produces playable second cuts but lacks transcript-backed continuity, candidate-specific composition approval, fine rhythm trimming, and a third real benchmark class"
+    "current_gap": "V2 benchmark coverage is complete but degraded: the event/promo class lacks a second-cut loop and no class has transcript-backed continuity or mature aesthetic acceptance"
   },
   "json_governance": {
     "canonical_rule": "JSON is kept only for canonical machine truth, boundary evidence, generated schema contracts, media validation, run audit, or release-critical evidence.",
@@ -111,43 +111,43 @@
   },
   "tasks": [
     {
-      "id": "explicit_option",
+      "id": "three_class_coverage",
       "status": "completed"
     },
     {
-      "id": "fresh_bindings",
+      "id": "source_provenance",
       "status": "completed"
     },
     {
-      "id": "candidate_timeline",
+      "id": "multi_source_event",
       "status": "completed"
     },
     {
-      "id": "real_reorder",
+      "id": "goal_binding",
       "status": "completed"
     },
     {
-      "id": "source_audio",
+      "id": "ten_domain_checklist",
       "status": "completed"
     },
     {
-      "id": "bgm_truth",
+      "id": "failure_examples",
       "status": "completed"
     },
     {
-      "id": "text_truth",
+      "id": "closed_loop_binding",
       "status": "completed"
     },
     {
-      "id": "independent_render",
+      "id": "quality_matrix",
       "status": "completed"
     },
     {
-      "id": "media_qc",
+      "id": "cross_case_findings",
       "status": "completed"
     },
     {
-      "id": "first_second_comparison",
+      "id": "reproducible_report",
       "status": "completed"
     }
   ]

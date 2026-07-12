@@ -27,6 +27,8 @@ SUPPORTED_MEDIA_EXTENSIONS = {
     ".mov",
     ".mkv",
     ".m4v",
+    ".ogv",
+    ".webm",
     ".mp3",
     ".wav",
 }

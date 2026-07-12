@@ -47,6 +47,7 @@ from artist_portrait_editor.bgm_recommendation import (
     select_bgm_recommendation_for_fit,
 )
 from artist_portrait_editor.bgm_matching import BgmMatchingError, build_bgm_match
+from artist_portrait_editor.benchmark_pack import BenchmarkPackError, build_benchmark_pack
 from artist_portrait_editor.exit_codes import ExitCode
 from artist_portrait_editor.final_export_workspace import (
     final_export_workspace,
@@ -372,6 +373,12 @@ def build_parser() -> argparse.ArgumentParser:
     second_cut_render_sub.add_argument("--json", action="store_true")
     second_cut_render_sub.add_argument("--quiet", action="store_true")
     second_cut_render_sub.add_argument("--verbose", action="store_true")
+    benchmark_pack_sub = subparsers.add_parser("benchmark-pack")
+    benchmark_pack_sub.add_argument("--benchmark", action="append", required=True)
+    benchmark_pack_sub.add_argument("--output-dir", required=True)
+    benchmark_pack_sub.add_argument("--json", action="store_true")
+    benchmark_pack_sub.add_argument("--quiet", action="store_true")
+    benchmark_pack_sub.add_argument("--verbose", action="store_true")
 
     baseline_sub = subparsers.add_parser("baseline")
     baseline_sub.add_argument("--project", required=True)
@@ -2195,6 +2202,26 @@ def cmd_second_cut_render(args: argparse.Namespace) -> int:
     return int(ExitCode.success_with_warnings if warnings else ExitCode.success)
 
 
+def cmd_benchmark_pack(args: argparse.Namespace) -> int:
+    if error := _validate_common_flags(args):
+        return int(error)
+    try:
+        canonical, report, pack, warnings = build_benchmark_pack(args.benchmark, Path(args.output_dir))
+    except (BenchmarkPackError, ConfigLoadError, ValueError) as exc:
+        print(str(exc), file=sys.stderr)
+        return int(ExitCode.output_or_reference_validation_failed)
+    payload = {
+        "output": str(canonical), "report": str(report),
+        "benchmark_pack": pack.model_dump(mode="json"), "warnings": warnings,
+    }
+    if args.json:
+        print(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True))
+    elif not args.quiet:
+        print(f"wrote {canonical}")
+        print(f"wrote {report}")
+    return int(ExitCode.success_with_warnings if warnings else ExitCode.success)
+
+
 def cmd_baseline(args: argparse.Namespace) -> int:
     if error := _validate_common_flags(args):
         return int(error)
@@ -3049,6 +3076,7 @@ def main(argv: list[str] | None = None) -> int:
         "text-plan": cmd_text_plan,
         "first-cut-review": cmd_first_cut_review,
         "second-cut-render": cmd_second_cut_render,
+        "benchmark-pack": cmd_benchmark_pack,
         "baseline": cmd_baseline,
         "second-cut": cmd_second_cut,
         "revise": cmd_revise,
