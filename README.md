@@ -79,7 +79,7 @@ release-candidate validation path:
 Current published capability work: `V1-08 Revision promotion, revised render
 readiness, and V1 release packaging` in the retained `v0.30.0` baseline.
 Current local acceptance stage: `ACCEPTANCE-STAGE-07 Real Media Truthfulness And Baseline Recovery`.
-Current V3-01 Multi-Version Creative Strategies is complete locally and awaiting publication. V2 is published as `v0.40.0`.
+Current V3-02 Style Templates is complete locally and awaiting publication. V3-01 is published; V2 remains `v0.40.0`.
 The latest published acceptance release remains `ACCEPTANCE-STAGE-06 Release
 candidate and publication` in `v0.28.0`; the latest published V1 capability
 release baseline is `v0.40.0`.

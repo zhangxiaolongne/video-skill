@@ -58,6 +58,7 @@ from artist_portrait_editor.models.revision_promotion import RevisionPromotion
 from artist_portrait_editor.models.source import SourceRecord
 from artist_portrait_editor.models.state import ProjectState
 from artist_portrait_editor.models.sound import SoundDecision
+from artist_portrait_editor.models.style_template import StyleTemplatePackage
 from artist_portrait_editor.models.structure_recommendation import StructureRecommendation
 from artist_portrait_editor.models.second_cut import SecondCutCandidate
 from artist_portrait_editor.models.rhythm import (
@@ -143,6 +144,7 @@ def write_schema_files(output_dir: Path) -> None:
         "proposal_validation_report.schema.json": ProposalValidationReport.model_json_schema(),
         "source_record.schema.json": SourceRecord.model_json_schema(),
         "sound_decision.schema.json": SoundDecision.model_json_schema(),
+        "style_template_package.schema.json": StyleTemplatePackage.model_json_schema(),
         "structure_recommendation.schema.json": StructureRecommendation.model_json_schema(),
         "text_timing_plan.schema.json": TextTimingPlan.model_json_schema(),
         "first_cut_self_review.schema.json": FirstCutSelfReview.model_json_schema(),

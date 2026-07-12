@@ -3,9 +3,18 @@
 Follow `artist_portrait_editor_revision5_optimized.md` as the governing V0
 engineering-freeze document.
 
-Current gate: V3-01 Multi-Version Creative Strategies. V2-11 is published as
-`v0.40.0`. V3-01 is complete locally and awaiting publication as one version.
-V3-02 is not active yet.
+Current gate: V3-02 Style Templates. V3-01 Multi-Version Creative Strategies is
+published. V3-02 is complete locally and awaiting publication as one version.
+V3-03 is not active yet.
+
+V3-02 may expose exactly six reusable stage portrait, interview portrait, event
+montage, short talking head, promotional film, and documentary portrait
+templates. Each template must own structure ratios, shot-duration/rhythm policy,
+source audio/BGM policy, subtitle density, transition restraint, composition,
+required evidence, acceptance checks, and hard incompatibilities. Project
+compatibility may use confirmed source types and lower-confidence creative-brief
+signals, but must not invent source classification, silently select/apply a
+template, mutate timelines, render, choose BGM, call models, or access network.
 
 V3-01 may generate exactly four materially distinct emotional-arc, high-energy,
 narrative-clarity, and portrait-highlight strategies from current real editorial

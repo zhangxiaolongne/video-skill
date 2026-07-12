@@ -1,7 +1,7 @@
 {
   "schema_version": "1.5",
-  "capability_gate": "V3-01",
-  "milestone": "V3-01 Multi-Version Creative Strategies",
+  "capability_gate": "V3-02",
+  "milestone": "V3-02 Style Templates",
   "documentation_system": {
     "master": "artist_portrait_editor_revision5_optimized.md",
     "current_progress": "docs/DEVELOPMENT_PROGRESS.md",
@@ -18,14 +18,14 @@
     "current_files_keep_only": "active decisions, current validation, active batch, and next development direction"
   },
   "active_batch": {
-    "id": "V3-01",
-    "name": "Multi-Version Creative Strategies",
+    "id": "V3-02",
+    "name": "Style Templates",
     "status": "completed",
     "started": "2026-07-12",
-    "capability_gate": "V3-01",
+    "capability_gate": "V3-02",
     "acceptance_stage": null,
     "prerequisite_acceptance_stage": "ACCEPTANCE-STAGE-07_completed_locally",
-    "commit_policy": "v3_01_complete_and_ready_for_one_commit_push"
+    "commit_policy": "v3_02_complete_and_ready_for_one_commit_push"
   },
   "latest_release": {
     "tag": "v0.40.0",
@@ -37,16 +37,16 @@
   },
   "latest_local_validation": {
     "date": "2026-07-13",
-    "full_pytest": ".venv/bin/python -m pytest passed with 253 passed",
+    "full_pytest": ".venv/bin/python -m pytest passed with 256 passed",
     "project_checks": ".venv/bin/python run_checks.py passed with golden, BGM/rhythm, NLE round-trip, schema, package, install simulation, V2 release baseline, benchmark audit, and diff checks",
     "real_benchmark": "three-class pack covers stage and interview closed loops plus a four-source 189.74s CC0 event/promo input baseline with an explicit 30s goal",
-    "current_doc_followup": "V3-01 completed functionally: stage and interview each produce four distinct 60-second strategy signatures with explicit audiovisual policies, sacrifices, and semantic degradation"
+    "current_doc_followup": "V3-02 completed functionally: six complete templates rank stage portrait, interview portrait, and event montage as unique real-project best matches without selection or application"
   },
   "capability_summary": {
     "engineering_substrate": "published",
     "v1_aesthetic_foundation": "published",
     "real_video_aesthetic_maturity": "baseline_complete",
-    "current_gap": "V3-01 creates distinct strategies but does not yet provide reusable style templates, strategy selection/application, rendered A/B versions, or mature semantic confidence"
+    "current_gap": "V3-02 supplies reusable templates but cannot yet translate natural-language revision intent into tracked applied editing actions"
   },
   "json_governance": {
     "canonical_rule": "JSON is kept only for canonical machine truth, boundary evidence, generated schema contracts, media validation, run audit, or release-critical evidence.",
@@ -111,43 +111,43 @@
   },
   "tasks": [
     {
-      "id": "four_strategy_contract",
+      "id": "six_template_library",
       "status": "completed"
     },
     {
-      "id": "distinct_range_signatures",
+      "id": "structure_contracts",
       "status": "completed"
     },
     {
-      "id": "shared_duration",
+      "id": "rhythm_envelopes",
       "status": "completed"
     },
     {
-      "id": "evidence_weighting",
+      "id": "audio_bgm_hierarchy",
       "status": "completed"
     },
     {
-      "id": "ordering_logic",
+      "id": "text_density",
       "status": "completed"
     },
     {
-      "id": "audiovisual_policy",
+      "id": "transition_composition",
       "status": "completed"
     },
     {
-      "id": "sacrifice_accounting",
+      "id": "evidence_aware_matching",
       "status": "completed"
     },
     {
-      "id": "semantic_degradation",
+      "id": "specialized_precedence",
       "status": "completed"
     },
     {
-      "id": "selection_boundary",
+      "id": "application_boundary",
       "status": "completed"
     },
     {
-      "id": "real_cross_project_validation",
+      "id": "three_class_validation",
       "status": "completed"
     }
   ]

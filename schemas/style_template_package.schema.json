@@ -1,0 +1,473 @@
+{
+  "$defs": {
+    "StyleTemplate": {
+      "additionalProperties": false,
+      "properties": {
+        "acceptance_checks": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 6,
+          "title": "Acceptance Checks",
+          "type": "array"
+        },
+        "bgm_policy": {
+          "title": "Bgm Policy",
+          "type": "string"
+        },
+        "composition_policy": {
+          "title": "Composition Policy",
+          "type": "string"
+        },
+        "hard_incompatibilities": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Hard Incompatibilities",
+          "type": "array"
+        },
+        "intended_aspects": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Intended Aspects",
+          "type": "array"
+        },
+        "intended_platforms": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Intended Platforms",
+          "type": "array"
+        },
+        "intended_source_types": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Intended Source Types",
+          "type": "array"
+        },
+        "maximum_characters_per_second": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Maximum Characters Per Second"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "required_evidence": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Required Evidence",
+          "type": "array"
+        },
+        "rhythm_policy": {
+          "title": "Rhythm Policy",
+          "type": "string"
+        },
+        "shot_duration_range_seconds": {
+          "maxItems": 2,
+          "minItems": 2,
+          "prefixItems": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            }
+          ],
+          "title": "Shot Duration Range Seconds",
+          "type": "array"
+        },
+        "source_audio_policy": {
+          "title": "Source Audio Policy",
+          "type": "string"
+        },
+        "structure": {
+          "items": {
+            "$ref": "#/$defs/TemplateStructureBeat"
+          },
+          "minItems": 3,
+          "title": "Structure",
+          "type": "array"
+        },
+        "subtitle_density": {
+          "enum": [
+            "none",
+            "minimal",
+            "restrained",
+            "moderate",
+            "dense"
+          ],
+          "title": "Subtitle Density",
+          "type": "string"
+        },
+        "template_id": {
+          "enum": [
+            "stage_portrait",
+            "interview_portrait",
+            "event_montage",
+            "short_talking_head",
+            "promotional_film",
+            "documentary_portrait"
+          ],
+          "title": "Template Id",
+          "type": "string"
+        },
+        "transition_policy": {
+          "title": "Transition Policy",
+          "type": "string"
+        },
+        "transition_restraint": {
+          "enum": [
+            "strict",
+            "restrained",
+            "moderate"
+          ],
+          "title": "Transition Restraint",
+          "type": "string"
+        }
+      },
+      "required": [
+        "template_id",
+        "name",
+        "intended_source_types",
+        "intended_platforms",
+        "intended_aspects",
+        "structure",
+        "shot_duration_range_seconds",
+        "rhythm_policy",
+        "source_audio_policy",
+        "bgm_policy",
+        "subtitle_density",
+        "transition_restraint",
+        "transition_policy",
+        "composition_policy",
+        "required_evidence",
+        "acceptance_checks",
+        "hard_incompatibilities"
+      ],
+      "title": "StyleTemplate",
+      "type": "object"
+    },
+    "TemplateCompatibility": {
+      "additionalProperties": false,
+      "properties": {
+        "application_constraints": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Application Constraints",
+          "type": "array"
+        },
+        "compatibility_score": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Compatibility Score",
+          "type": "number"
+        },
+        "confidence": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Confidence",
+          "type": "number"
+        },
+        "conflicts": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Conflicts",
+          "type": "array"
+        },
+        "matched_signals": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Matched Signals",
+          "type": "array"
+        },
+        "missing_evidence": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Missing Evidence",
+          "type": "array"
+        },
+        "status": {
+          "enum": [
+            "compatible",
+            "conditional",
+            "incompatible"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "template_id": {
+          "enum": [
+            "stage_portrait",
+            "interview_portrait",
+            "event_montage",
+            "short_talking_head",
+            "promotional_film",
+            "documentary_portrait"
+          ],
+          "title": "Template Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "template_id",
+        "compatibility_score",
+        "confidence",
+        "status",
+        "application_constraints"
+      ],
+      "title": "TemplateCompatibility",
+      "type": "object"
+    },
+    "TemplateStructureBeat": {
+      "additionalProperties": false,
+      "properties": {
+        "beat": {
+          "enum": [
+            "hook",
+            "context",
+            "build",
+            "payoff",
+            "outro"
+          ],
+          "title": "Beat",
+          "type": "string"
+        },
+        "maximum_ratio": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Maximum Ratio",
+          "type": "number"
+        },
+        "minimum_ratio": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Minimum Ratio",
+          "type": "number"
+        },
+        "purpose": {
+          "title": "Purpose",
+          "type": "string"
+        }
+      },
+      "required": [
+        "beat",
+        "minimum_ratio",
+        "maximum_ratio",
+        "purpose"
+      ],
+      "title": "TemplateStructureBeat",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "automatic_bgm_selection": {
+      "default": false,
+      "title": "Automatic Bgm Selection",
+      "type": "boolean"
+    },
+    "best_match_template_ids": {
+      "items": {
+        "enum": [
+          "stage_portrait",
+          "interview_portrait",
+          "event_montage",
+          "short_talking_head",
+          "promotional_film",
+          "documentary_portrait"
+        ],
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Best Match Template Ids",
+      "type": "array"
+    },
+    "compatibility": {
+      "items": {
+        "$ref": "#/$defs/TemplateCompatibility"
+      },
+      "maxItems": 6,
+      "minItems": 6,
+      "title": "Compatibility",
+      "type": "array"
+    },
+    "creative_strategy_fingerprint": {
+      "anyOf": [
+        {
+          "pattern": "^sha256:[0-9a-f]{64}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Creative Strategy Fingerprint"
+    },
+    "creative_strategy_ref": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Creative Strategy Ref"
+    },
+    "invented_source_classification": {
+      "default": false,
+      "title": "Invented Source Classification",
+      "type": "boolean"
+    },
+    "media_rendered": {
+      "default": false,
+      "title": "Media Rendered",
+      "type": "boolean"
+    },
+    "model_call_performed_by_cli": {
+      "default": false,
+      "title": "Model Call Performed By Cli",
+      "type": "boolean"
+    },
+    "network_performed_by_cli": {
+      "default": false,
+      "title": "Network Performed By Cli",
+      "type": "boolean"
+    },
+    "package_id": {
+      "title": "Package Id",
+      "type": "string"
+    },
+    "project_fingerprint": {
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "title": "Project Fingerprint",
+      "type": "string"
+    },
+    "project_id": {
+      "title": "Project Id",
+      "type": "string"
+    },
+    "project_ref": {
+      "title": "Project Ref",
+      "type": "string"
+    },
+    "schema_version": {
+      "default": "0.3",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "selected_template_id": {
+      "anyOf": [
+        {
+          "enum": [
+            "stage_portrait",
+            "interview_portrait",
+            "event_montage",
+            "short_talking_head",
+            "promotional_film",
+            "documentary_portrait"
+          ],
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Selected Template Id"
+    },
+    "source_type_evidence_status": {
+      "enum": [
+        "confirmed",
+        "partial",
+        "unavailable"
+      ],
+      "title": "Source Type Evidence Status",
+      "type": "string"
+    },
+    "sources_fingerprint": {
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "title": "Sources Fingerprint",
+      "type": "string"
+    },
+    "sources_ref": {
+      "title": "Sources Ref",
+      "type": "string"
+    },
+    "status": {
+      "enum": [
+        "ready",
+        "degraded",
+        "blocked"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "template_applied": {
+      "default": false,
+      "title": "Template Applied",
+      "type": "boolean"
+    },
+    "templates": {
+      "items": {
+        "$ref": "#/$defs/StyleTemplate"
+      },
+      "maxItems": 6,
+      "minItems": 6,
+      "title": "Templates",
+      "type": "array"
+    },
+    "timeline_mutated": {
+      "default": false,
+      "title": "Timeline Mutated",
+      "type": "boolean"
+    },
+    "warnings": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Warnings",
+      "type": "array"
+    }
+  },
+  "required": [
+    "package_id",
+    "project_id",
+    "project_ref",
+    "project_fingerprint",
+    "sources_ref",
+    "sources_fingerprint",
+    "templates",
+    "compatibility",
+    "best_match_template_ids",
+    "source_type_evidence_status",
+    "status"
+  ],
+  "title": "StyleTemplatePackage",
+  "type": "object"
+}
