@@ -305,6 +305,13 @@ omitted concept ids and writes one canonical supervised candidate plan covering
 selection, structure, trims, per-shot reframes, audio/BGM, text, transitions,
 pauses, ending, and verification. Planned actions are never reported as applied.
 
+`reframe` is the supervised application boundary. Its byte-visible selection
+must cover every timeline segment, bind current timeline/final/composition
+fingerprints, and explicitly choose a candidate or preserve the frame. It
+blocks rejected candidates and protected-region loss, preserves final audio,
+records performer-containment and crop-jump risks, and writes an independent
+playback candidate without replacing canonical media.
+
 Preview rendering may use local FFmpeg/ffprobe to extract timeline video
 ranges, retain original source audio, apply fitted BGM gain/fades/looping, and
 duck BGM under retained original audio. It must not choose music, fabricate beat

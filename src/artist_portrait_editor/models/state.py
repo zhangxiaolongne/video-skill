@@ -96,6 +96,7 @@ def initial_steps() -> dict[str, StepLedgerEntry]:
         "composition": StepLedgerEntry(),
         "composition_review": StepLedgerEntry(),
         "composition_preview": StepLedgerEntry(),
+        "reframe": StepLedgerEntry(),
         "aesthetic_baseline_context": StepLedgerEntry(),
         "aesthetic_baseline": StepLedgerEntry(),
         "second_cut": StepLedgerEntry(),

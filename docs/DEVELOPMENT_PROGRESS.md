@@ -16,18 +16,18 @@ issue tracker, or master strategy document.
 
 ## Current State
 
-- Current active gate: V2-01 Real Video Aesthetic Baseline
-- Gate state: completed locally, awaiting publication
-- Completed capability: `V2-01` Real Video Aesthetic Baseline
-- Next complete version: `V2-02 Frame Composition And Reframing`
-- Current batch: `V2-01` completed locally; not yet committed or published
+- Current active gate: V2-02 Frame Composition And Reframing
+- Gate state: completed locally; ready for one-version publication
+- Completed published capability: `V2-01` Real Video Aesthetic Baseline
+- Current complete version: `V2-02 Frame Composition And Reframing`
+- Current batch: `V2-02` completed locally
 - Latest published release baseline: `v0.30.0`
 - Current published capability work: V1-08 revision promotion and V1 release
   packaging
 - Current acceptance stage: `ACCEPTANCE-STAGE-07` completed locally with full
   checks and current real-project delivery acceptance
-- Next release policy: no commit, tag, or push until V2-01 closes as one
-  coherent capability version and the user approves publication
+- Next release policy: no commit or push until complete V2-02 validation closes
+  as one coherent capability version
 
 ## Capability Dashboard
 
@@ -132,7 +132,8 @@ the active gate and immediate development direction.
 
 ## Next Major Decision
 
-Publish the completed V2-01 version only when the user approves commit/push.
-The next development run must plan and execute the complete `V2-02 Frame
-Composition And Reframing` version, with internal checks kept descriptive and
-never reported as numbered subversions.
+Publish complete V2-02 as one commit after its 60-second interview native-frame
+contrast, 72.10-second stage reframe playback, 243 tests, quality passes,
+package/install simulation, documentation consistency, release candidate, and
+diff validation. The next complete version is V2-03 evidence fusion and is not
+active inside this batch.

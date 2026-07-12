@@ -11,6 +11,19 @@ decision history is archived in [DECISIONS_HISTORY.md](archive/DECISIONS_HISTORY
 
 ## Active Decisions
 
+### DEC-044: Reframing is an explicit non-destructive playback boundary
+
+- Status: `active`
+- Decision: every segment explicitly selects a current composition candidate or
+  preserves the frame. Application binds timeline, final, composition,
+  contact-sheet, and selection hashes; rejected candidates and protected-region
+  loss are blocked. Output is separate playable media with preserved final audio
+  and crop-jump audit, never a replacement canonical final.
+- Rationale: static crop proposals do not prove that a moving edit is safe or
+  that media changed. Playable provenance-bound evidence exposes motion,
+  subject-containment, and shot-change failures honestly.
+- Revisit when: temporal subject tracking or supervised promotion is introduced.
+
 ### DEC-001: Separate strategy from execution records
 
 - Status: `active`

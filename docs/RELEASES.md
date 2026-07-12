@@ -11,8 +11,8 @@ This file records only current publication state and recent release facts. Full 
   post-refactor, single-root history baseline selected for remote publication.
 - Published scope: the V1 capability surface plus the complete architecture,
   JSON-governance, test, package-boundary, and history reset refactor.
-- Active local work: `V2-01 Real Video Aesthetic Baseline`, completed locally
-  but not yet released.
+- Active local work: `V2-02 Frame Composition And Reframing`, completed locally
+  and ready for one-version publication.
   Its current prerequisite batch is `ACCEPTANCE-STAGE-07 Real Media
   Truthfulness And Baseline Recovery`.
 - Publication policy: do not publish the next capability release until the
@@ -47,7 +47,15 @@ This file records only current publication state and recent release facts. Full 
   contrast benchmark, fixed duration precedence/recommendation and required clip
   ordering, resolved `ISSUE-020`, and passed 243 tests plus golden, BGM/rhythm,
   NLE, package/install, schema, release-readiness, and diff validation. No commit,
-  tag, or push has been performed.
+  tag, or push was performed during local closeout; the complete capability was
+  subsequently published to `main` as commit
+  `bccf4fb0ca52d98c0404245e226f4c1b5afe3d83`.
+- V2-02 local real-media validation rendered a 60-second `1280x720` interview
+  no-op contrast with six explicit native-frame choices and a 72.10-second
+  `1080x1920` stage playback with seven visible reframes plus one explicit
+  promo-card preservation. Both retain audio and leave canonical final/timeline
+  files untouched. Stage conditional performer and crop-jump risks remain
+  warnings, not aesthetic acceptance claims.
 
 - Architecture baseline validation passed on `2026-07-10`: `.venv/bin/python
   run_checks.py` completed successfully with `239 passed`, schema generation,

@@ -79,8 +79,8 @@ release-candidate validation path:
 Current published capability work: `V1-08 Revision promotion, revised render
 readiness, and V1 release packaging` in the retained `v0.30.0` baseline.
 Current local acceptance stage: `ACCEPTANCE-STAGE-07 Real Media Truthfulness And Baseline Recovery`.
-V2-01 Real Video Aesthetic Baseline is complete locally. Next complete version:
-`V2-02 Frame Composition And Reframing`.
+Current V2-02 Frame Composition And Reframing is complete locally and awaiting
+one-version publication. V2-01 Real Video Aesthetic Baseline is published.
 The latest published acceptance release remains `ACCEPTANCE-STAGE-06 Release
 candidate and publication` in `v0.28.0`; the latest published V1 capability
 release baseline is `v0.30.0`.
@@ -277,6 +277,12 @@ publishability; it never selects a concept, moves edits, or renders media.
 chosen direction into ordered selection, structure, trim, per-shot reframe,
 source-audio, BGM, text, transition, pause, ending, and verification actions,
 while leaving the canonical timeline and media unchanged.
+`reframe` requires one explicit selection covering every timeline segment with
+either a current composition candidate or `preserve`. It binds current
+timeline/final/composition fingerprints, blocks rejected candidates and
+protected-region loss, preserves final audio, audits crop-center jumps, and
+renders independent `output/reframe_playback.mp4` evidence without overwriting
+the canonical timeline or final export.
 `propose` prepares a host-Agent handoff and can import an explicit quarantined
 ProposalSet candidate; it does not call paid APIs or access the network.
 

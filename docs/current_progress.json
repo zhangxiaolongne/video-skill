@@ -1,7 +1,7 @@
 {
   "schema_version": "1.5",
-  "capability_gate": "V2-01",
-  "milestone": "V2-01 Real Video Aesthetic Baseline",
+  "capability_gate": "V2-02",
+  "milestone": "V2-02 Frame Composition And Reframing",
   "documentation_system": {
     "master": "artist_portrait_editor_revision5_optimized.md",
     "current_progress": "docs/DEVELOPMENT_PROGRESS.md",
@@ -18,14 +18,14 @@
     "current_files_keep_only": "active decisions, current validation, active batch, and next development direction"
   },
   "active_batch": {
-    "id": "V2-01",
-    "name": "Real Video Aesthetic Baseline",
+    "id": "V2-02",
+    "name": "Frame Composition And Reframing",
     "status": "completed",
-    "started": "2026-07-11",
-    "capability_gate": "V2-01",
+    "started": "2026-07-12",
+    "capability_gate": "V2-02",
     "acceptance_stage": null,
     "prerequisite_acceptance_stage": "ACCEPTANCE-STAGE-07_completed_locally",
-    "commit_policy": "commit_tag_and_push_only_after_v2_01_capability_and_validation_close_as_one_version"
+    "commit_policy": "v2_02_complete_and_ready_for_one_commit_push"
   },
   "latest_release": {
     "tag": "v0.30.0",
@@ -40,13 +40,13 @@
     "full_pytest": ".venv/bin/python -m pytest passed with 243 passed",
     "project_checks": ".venv/bin/python run_checks.py passed with golden, BGM/rhythm, NLE round-trip, schema, package, install simulation, release-candidate, and diff checks",
     "real_benchmark": "stage baseline plus user-provided 448.333s actress interview contrast; interview final is chronological 60s at 1280x720 with six reviewed frames and a separate not-publishable aesthetic verdict",
-    "current_doc_followup": "V2-01 completed locally as one version; 243 tests plus golden, BGM/rhythm, NLE, package/install, schema, release readiness, and diff validation passed; no commit or push performed"
+    "current_doc_followup": "V2-02 completed locally: 60-second interview no-op contrast and 72.10-second stage reframe playback; 243 tests plus golden, BGM/rhythm, NLE, package/install, schema, release readiness, and diff validation passed"
   },
   "capability_summary": {
     "engineering_substrate": "published",
     "v1_aesthetic_foundation": "published",
     "real_video_aesthetic_maturity": "baseline_complete",
-    "current_gap": "V2-01 can expose real aesthetic failures across stage and interview sources; V2-02 must turn supervised frame composition and reframing into applied playback-validated media"
+    "current_gap": "V2-02 can render supervised provenance-bound reframes; V2-03 must fuse transcript, vision, and audio evidence without fabricating missing semantics"
   },
   "json_governance": {
     "canonical_rule": "JSON is kept only for canonical machine truth, boundary evidence, generated schema contracts, media validation, run audit, or release-critical evidence.",
@@ -111,43 +111,43 @@
   },
   "tasks": [
     {
-      "id": "real_evidence",
+      "id": "explicit_selection",
       "status": "completed"
     },
     {
-      "id": "duration_contract",
+      "id": "fresh_bindings",
       "status": "completed"
     },
     {
-      "id": "composition_audit",
+      "id": "segment_applicability",
       "status": "completed"
     },
     {
-      "id": "supervised_reframe",
+      "id": "protected_regions",
       "status": "completed"
     },
     {
-      "id": "range_map",
+      "id": "playback_render",
       "status": "completed"
     },
     {
-      "id": "concept_comparison",
+      "id": "crop_change_audit",
       "status": "completed"
     },
     {
-      "id": "audiovisual_decision",
+      "id": "non_destructive_output",
       "status": "completed"
     },
     {
-      "id": "first_cut_review",
+      "id": "media_qc",
       "status": "completed"
     },
     {
-      "id": "second_cut_plan",
+      "id": "cross_source_truth",
       "status": "completed"
     },
     {
-      "id": "cross_source_acceptance",
+      "id": "version_validation",
       "status": "completed"
     }
   ]

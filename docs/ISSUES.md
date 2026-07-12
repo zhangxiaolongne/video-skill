@@ -49,9 +49,9 @@ here only when they block a current or planned milestone.
 
 ### ISSUE-018: Real-video export preserves unusable source layout
 
-- Status: `open`
+- Status: `resolved`
 - Severity: high
-- Owner: `V2-01 Real Video Aesthetic Baseline`
+- Owner: `V2-02 Frame Composition And Reframing`
 - Blocking condition: the primary benchmark's 1080x1920 export retains large
   persistent source title/branding bands above and below the actual performance;
   the performer occupies only a small central area in sampled frames. V2-01
@@ -60,10 +60,11 @@ here only when they block a current or planned milestone.
 - Impact: a technically valid portrait MP4 can still be visually unpublishable.
   Existing timeline, BGM, rhythm, and export checks do not evaluate final-frame
   composition or safe reframing.
-- Resolution condition: composition audit and candidate planning are complete;
-  V2-01 binds selected candidates into an explicit second-cut plan; V2-02 must
-  produce playback-validated applied media before
-  the issue can close.
+- Resolution: V2-02 requires explicit per-segment selection, blocks rejected
+  candidates and protected-region loss, preserves final audio, and renders an
+  independent playback candidate. The real stage benchmark applies seven
+  visible reframes and explicitly preserves the rejected promo-card segment;
+  conditional performer and crop-jump risks remain visible warnings.
 - Related decision: `DEC-062`
 
 ### ISSUE-016: Final acceptance usability is not complete

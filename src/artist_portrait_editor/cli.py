@@ -87,6 +87,7 @@ from artist_portrait_editor.sound_decision import (
     build_sound_decision_workspace,
 )
 from artist_portrait_editor.second_cut import SecondCutError, build_second_cut_candidate
+from artist_portrait_editor.reframe import ReframeError, apply_reframe_selection
 from artist_portrait_editor.run_records import (
     environment_snapshot,
     new_run_id,
@@ -326,6 +327,13 @@ def build_parser() -> argparse.ArgumentParser:
     composition_sub.add_argument("--json", action="store_true")
     composition_sub.add_argument("--quiet", action="store_true")
     composition_sub.add_argument("--verbose", action="store_true")
+
+    reframe_sub = subparsers.add_parser("reframe")
+    reframe_sub.add_argument("--project", required=True)
+    reframe_sub.add_argument("--selection", required=True)
+    reframe_sub.add_argument("--json", action="store_true")
+    reframe_sub.add_argument("--quiet", action="store_true")
+    reframe_sub.add_argument("--verbose", action="store_true")
 
     baseline_sub = subparsers.add_parser("baseline")
     baseline_sub.add_argument("--project", required=True)
@@ -1981,6 +1989,36 @@ def cmd_composition(args: argparse.Namespace) -> int:
     return int(ExitCode.success_with_warnings if warnings else ExitCode.success)
 
 
+def cmd_reframe(args: argparse.Namespace) -> int:
+    if error := _validate_common_flags(args):
+        return int(error)
+    project_path = Path(args.project)
+    try:
+        canonical, report, application, warnings = apply_reframe_selection(
+            project_path, selection_path=Path(args.selection)
+        )
+    except ConfigLoadError as exc:
+        print(str(exc), file=sys.stderr)
+        return int(ExitCode.invalid_project_config)
+    except (ReframeError, CompositionEvidenceError, ValueError) as exc:
+        print(str(exc), file=sys.stderr)
+        return int(ExitCode.output_or_reference_validation_failed)
+    root = project_root(project_path)
+    payload = {
+        "output": canonical.relative_to(root).as_posix(),
+        "report": report.relative_to(root).as_posix(),
+        "playback": application.output_ref,
+        "reframe_application": application.model_dump(mode="json"),
+        "warnings": warnings,
+    }
+    if args.json:
+        print(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True))
+    elif not args.quiet:
+        print(f"wrote {payload['output']}")
+        print(f"wrote {payload['playback']}")
+    return int(ExitCode.success_with_warnings if warnings else ExitCode.success)
+
+
 def cmd_baseline(args: argparse.Namespace) -> int:
     if error := _validate_common_flags(args):
         return int(error)
@@ -2827,6 +2865,7 @@ def main(argv: list[str] | None = None) -> int:
         "sound": cmd_sound,
         "cut-review": cmd_cut_review,
         "composition": cmd_composition,
+        "reframe": cmd_reframe,
         "baseline": cmd_baseline,
         "second-cut": cmd_second_cut,
         "revise": cmd_revise,

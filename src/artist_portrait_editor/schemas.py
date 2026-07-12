@@ -24,6 +24,7 @@ from artist_portrait_editor.models.clip import ClipRecord
 from artist_portrait_editor.models.clip_score import ClipScoreRecord
 from artist_portrait_editor.models.config import ProjectConfig
 from artist_portrait_editor.models.composition import CompositionReview
+from artist_portrait_editor.models.reframe import ReframeApplication, ReframeSelection
 from artist_portrait_editor.models.cut_review import CutReviewReport
 from artist_portrait_editor.models.edit_brief import EditBrief
 from artist_portrait_editor.models.editor_package import EditorPackage
@@ -92,6 +93,8 @@ def write_schema_files(output_dir: Path) -> None:
         ),
         "clip_score_record.schema.json": ClipScoreRecord.model_json_schema(),
         "composition_review.schema.json": CompositionReview.model_json_schema(),
+        "reframe_application.schema.json": ReframeApplication.model_json_schema(),
+        "reframe_selection.schema.json": ReframeSelection.model_json_schema(),
         "editor_package.schema.json": EditorPackage.model_json_schema(),
         "edit_brief.schema.json": EditBrief.model_json_schema(),
         "fcpxml_draft.schema.json": FcpxmlDraft.model_json_schema(),

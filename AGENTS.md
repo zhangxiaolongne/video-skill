@@ -3,9 +3,19 @@
 Follow `artist_portrait_editor_revision5_optimized.md` as the governing V0
 engineering-freeze document.
 
-Current gate: V2-01 Real Video Aesthetic Baseline. It is complete locally and
-awaiting publication as one version. The next complete version is V2-02 Frame
-Composition And Reframing, but it is not active yet.
+Current gate: V2-02 Frame Composition And Reframing. V2-01 Real Video Aesthetic
+Baseline is published. V2-02 is complete locally and awaiting publication as
+one version. V2-03 is not active yet.
+
+V2-02 may import one explicit per-segment reframe selection bound to the current
+timeline, final export, composition review, contact sheet, and selection bytes.
+It may block rejected candidates and protected-region loss, audit sampled
+performer containment and crop-center jumps, and render an independent local
+playback candidate while preserving current final audio. Every timeline segment
+must explicitly select a candidate or preserve the full frame. It must not
+automatically choose candidates, overwrite the canonical timeline/final, claim
+sampled-frame safety is full-motion safety, call models from the CLI, access the
+network, or hide conditional aesthetic risks.
 
 Current prerequisite acceptance stage: ACCEPTANCE-STAGE-07 Real Media
 Truthfulness And Baseline Recovery. It may refactor preview/final rendering into

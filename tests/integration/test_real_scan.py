@@ -1,3 +1,4 @@
+import hashlib
 import json
 import math
 import shutil
@@ -379,6 +380,43 @@ def test_real_media_acceptance_profiles_reach_delivery(tmp_path, capsys):
     assert reframe_preview["candidate_preview_rendered"] is True
     assert reframe_preview["crop_applied_to_final"] is False
     assert (tmp_path / reframe_preview["preview_ref"]).is_file()
+    timeline_path = tmp_path / "output" / "timeline_draft.json"
+    review_path = tmp_path / ".artist-portrait" / "data" / "composition_review.json"
+    timeline = json.loads(timeline_path.read_text(encoding="utf-8"))
+    selection = {
+        "selection_id": "explicit_fixture_reframe",
+        "project_id": composition["project_id"],
+        "timeline_id": composition["timeline_id"],
+        "timeline_fingerprint": "sha256:" + hashlib.sha256(timeline_path.read_bytes()).hexdigest(),
+        "final_export_hash": composition["final_export_hash"],
+        "composition_review_id": review_candidate["review_id"],
+        "composition_review_fingerprint": "sha256:" + hashlib.sha256(review_path.read_bytes()).hexdigest(),
+        "choices": [
+            {
+                "segment_id": item["segment_id"],
+                "mode": "candidate",
+                "candidate_id": "reframe_full_frame",
+                "reason": "Explicit synthetic full-frame playback validation.",
+            }
+            for item in timeline["segments"]
+        ],
+        "approved_by": "host_agent",
+        "approval_note": "Synthetic integration fixture only.",
+    }
+    selection_path = tmp_path / "reframe_selection.json"
+    selection_path.write_text(json.dumps(selection, indent=2) + "\n", encoding="utf-8")
+    assert main([
+        "reframe", "--project", str(project_path),
+        "--selection", str(selection_path), "--json",
+    ]) == 0
+    reframe = json.loads(capsys.readouterr().out)["reframe_application"]
+    assert reframe["explicit_selection_used"] is True
+    assert reframe["automatic_candidate_selection"] is False
+    assert reframe["canonical_timeline_mutated"] is False
+    assert reframe["canonical_final_overwritten"] is False
+    assert reframe["video_present"] is True
+    assert reframe["audio_present"] is True
+    assert (tmp_path / reframe["output_ref"]).is_file()
     assert main(["acceptance", "--project", str(project_path), "--profile", "delivery", "--json"]) == 0
     delivery = json.loads(capsys.readouterr().out)
     stages = {stage["stage_id"]: stage for stage in delivery["acceptance"]["stages"]}

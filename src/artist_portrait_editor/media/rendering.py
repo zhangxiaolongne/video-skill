@@ -9,6 +9,7 @@ from pathlib import Path
 from artist_portrait_editor.bgm import load_ledger
 from artist_portrait_editor.models.bgm import BgmFitPlan
 from artist_portrait_editor.models.timeline import TimelineDraft
+from artist_portrait_editor.models.composition import PixelCropBox
 
 
 class MediaRenderError(ValueError):
@@ -63,8 +64,12 @@ def render_video_segment(
     preset: str,
     crf: int,
     timeout: int,
+    crop_box: PixelCropBox | None = None,
 ) -> tuple[bool, str | None]:
-    filters = [
+    filters = []
+    if crop_box is not None:
+        filters.append(f"crop={crop_box.width}:{crop_box.height}:{crop_box.x}:{crop_box.y}")
+    filters.extend([
         (
             f"scale={canvas.width}:{canvas.height}:force_original_aspect_ratio=decrease,"
             f"pad={canvas.width}:{canvas.height}:(ow-iw)/2:(oh-ih)/2:color=black,"
@@ -72,7 +77,7 @@ def render_video_segment(
         ),
         f"fps={canvas.fps}",
         "format=yuv420p",
-    ]
+    ])
     rendered, warning = _video_transition_filters(filters, video_transition, duration)
     run_ffmpeg(
         [

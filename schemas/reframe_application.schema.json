@@ -1,0 +1,385 @@
+{
+  "$defs": {
+    "AppliedSegmentReframe": {
+      "additionalProperties": false,
+      "properties": {
+        "applicable_sample_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Applicable Sample Ids",
+          "type": "array"
+        },
+        "candidate_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Candidate Id"
+        },
+        "crop_box": {
+          "$ref": "#/$defs/PixelCropBox"
+        },
+        "mode": {
+          "enum": [
+            "candidate",
+            "preserve"
+          ],
+          "title": "Mode",
+          "type": "string"
+        },
+        "performer_regions_preserved": {
+          "title": "Performer Regions Preserved",
+          "type": "boolean"
+        },
+        "protected_regions_preserved": {
+          "title": "Protected Regions Preserved",
+          "type": "boolean"
+        },
+        "segment_id": {
+          "title": "Segment Id",
+          "type": "string"
+        },
+        "timeline_end": {
+          "exclusiveMinimum": 0,
+          "title": "Timeline End",
+          "type": "number"
+        },
+        "timeline_start": {
+          "minimum": 0,
+          "title": "Timeline Start",
+          "type": "number"
+        },
+        "visible_crop_applied": {
+          "title": "Visible Crop Applied",
+          "type": "boolean"
+        },
+        "warnings": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Warnings",
+          "type": "array"
+        }
+      },
+      "required": [
+        "segment_id",
+        "timeline_start",
+        "timeline_end",
+        "mode",
+        "crop_box",
+        "protected_regions_preserved",
+        "performer_regions_preserved",
+        "visible_crop_applied"
+      ],
+      "title": "AppliedSegmentReframe",
+      "type": "object"
+    },
+    "CropChangeAudit": {
+      "additionalProperties": false,
+      "properties": {
+        "candidate_changed": {
+          "title": "Candidate Changed",
+          "type": "boolean"
+        },
+        "from_segment_id": {
+          "title": "From Segment Id",
+          "type": "string"
+        },
+        "normalized_center_jump": {
+          "minimum": 0,
+          "title": "Normalized Center Jump",
+          "type": "number"
+        },
+        "risk": {
+          "enum": [
+            "low",
+            "medium",
+            "high"
+          ],
+          "title": "Risk",
+          "type": "string"
+        },
+        "to_segment_id": {
+          "title": "To Segment Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "from_segment_id",
+        "to_segment_id",
+        "candidate_changed",
+        "normalized_center_jump",
+        "risk"
+      ],
+      "title": "CropChangeAudit",
+      "type": "object"
+    },
+    "PixelCropBox": {
+      "additionalProperties": false,
+      "properties": {
+        "height": {
+          "exclusiveMinimum": 1,
+          "title": "Height",
+          "type": "integer"
+        },
+        "width": {
+          "exclusiveMinimum": 1,
+          "title": "Width",
+          "type": "integer"
+        },
+        "x": {
+          "minimum": 0,
+          "title": "X",
+          "type": "integer"
+        },
+        "y": {
+          "minimum": 0,
+          "title": "Y",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "x",
+        "y",
+        "width",
+        "height"
+      ],
+      "title": "PixelCropBox",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "application_id": {
+      "minLength": 1,
+      "title": "Application Id",
+      "type": "string"
+    },
+    "audio_present": {
+      "title": "Audio Present",
+      "type": "boolean"
+    },
+    "audio_preserved_from_final": {
+      "title": "Audio Preserved From Final",
+      "type": "boolean"
+    },
+    "automatic_candidate_selection": {
+      "default": false,
+      "title": "Automatic Candidate Selection",
+      "type": "boolean"
+    },
+    "canonical_final_overwritten": {
+      "default": false,
+      "title": "Canonical Final Overwritten",
+      "type": "boolean"
+    },
+    "canonical_timeline_mutated": {
+      "default": false,
+      "title": "Canonical Timeline Mutated",
+      "type": "boolean"
+    },
+    "composition_review_fingerprint": {
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "title": "Composition Review Fingerprint",
+      "type": "string"
+    },
+    "composition_review_id": {
+      "minLength": 1,
+      "title": "Composition Review Id",
+      "type": "string"
+    },
+    "composition_review_ref": {
+      "minLength": 1,
+      "title": "Composition Review Ref",
+      "type": "string"
+    },
+    "contact_sheet_hash": {
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "title": "Contact Sheet Hash",
+      "type": "string"
+    },
+    "contact_sheet_ref": {
+      "minLength": 1,
+      "title": "Contact Sheet Ref",
+      "type": "string"
+    },
+    "crop_changes": {
+      "items": {
+        "$ref": "#/$defs/CropChangeAudit"
+      },
+      "title": "Crop Changes",
+      "type": "array"
+    },
+    "duration": {
+      "exclusiveMinimum": 0,
+      "title": "Duration",
+      "type": "number"
+    },
+    "explicit_selection_used": {
+      "default": true,
+      "title": "Explicit Selection Used",
+      "type": "boolean"
+    },
+    "final_export_hash": {
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "title": "Final Export Hash",
+      "type": "string"
+    },
+    "final_export_ref": {
+      "minLength": 1,
+      "title": "Final Export Ref",
+      "type": "string"
+    },
+    "frame_rate": {
+      "anyOf": [
+        {
+          "exclusiveMinimum": 0,
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Frame Rate"
+    },
+    "height": {
+      "exclusiveMinimum": 0,
+      "title": "Height",
+      "type": "integer"
+    },
+    "media_rendered": {
+      "default": true,
+      "title": "Media Rendered",
+      "type": "boolean"
+    },
+    "model_call_performed_by_cli": {
+      "default": false,
+      "title": "Model Call Performed By Cli",
+      "type": "boolean"
+    },
+    "network_performed": {
+      "default": false,
+      "title": "Network Performed",
+      "type": "boolean"
+    },
+    "output_hash": {
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "title": "Output Hash",
+      "type": "string"
+    },
+    "output_ref": {
+      "minLength": 1,
+      "title": "Output Ref",
+      "type": "string"
+    },
+    "project_id": {
+      "minLength": 1,
+      "title": "Project Id",
+      "type": "string"
+    },
+    "quality_status": {
+      "enum": [
+        "passed",
+        "warning",
+        "failed"
+      ],
+      "title": "Quality Status",
+      "type": "string"
+    },
+    "schema_version": {
+      "default": "0.3",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "segments": {
+      "items": {
+        "$ref": "#/$defs/AppliedSegmentReframe"
+      },
+      "minItems": 1,
+      "title": "Segments",
+      "type": "array"
+    },
+    "selection_fingerprint": {
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "title": "Selection Fingerprint",
+      "type": "string"
+    },
+    "selection_id": {
+      "minLength": 1,
+      "title": "Selection Id",
+      "type": "string"
+    },
+    "selection_ref": {
+      "minLength": 1,
+      "title": "Selection Ref",
+      "type": "string"
+    },
+    "timeline_fingerprint": {
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "title": "Timeline Fingerprint",
+      "type": "string"
+    },
+    "timeline_id": {
+      "minLength": 1,
+      "title": "Timeline Id",
+      "type": "string"
+    },
+    "timeline_ref": {
+      "minLength": 1,
+      "title": "Timeline Ref",
+      "type": "string"
+    },
+    "video_present": {
+      "title": "Video Present",
+      "type": "boolean"
+    },
+    "warnings": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Warnings",
+      "type": "array"
+    },
+    "width": {
+      "exclusiveMinimum": 0,
+      "title": "Width",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "application_id",
+    "project_id",
+    "selection_id",
+    "selection_ref",
+    "selection_fingerprint",
+    "timeline_id",
+    "timeline_ref",
+    "timeline_fingerprint",
+    "final_export_ref",
+    "final_export_hash",
+    "composition_review_id",
+    "composition_review_ref",
+    "composition_review_fingerprint",
+    "contact_sheet_ref",
+    "contact_sheet_hash",
+    "output_ref",
+    "output_hash",
+    "duration",
+    "width",
+    "height",
+    "video_present",
+    "audio_present",
+    "audio_preserved_from_final",
+    "quality_status",
+    "segments"
+  ],
+  "title": "ReframeApplication",
+  "type": "object"
+}
