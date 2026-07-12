@@ -11,7 +11,7 @@ This file records only current publication state and recent release facts. Full 
   post-refactor, single-root history baseline selected for remote publication.
 - Published scope: V1 engineering substrate plus the V2 real-video aesthetic
   baseline from evidence fusion through second-cut candidates and benchmarks.
-- Active local work: `V2-11 V2 Release`, completed locally.
+- Active local work: `V3-01 Multi-Version Creative Strategies`, completed locally.
   Its current prerequisite batch is `ACCEPTANCE-STAGE-07 Real Media
   Truthfulness And Baseline Recovery`.
 - Publication policy: do not publish the next capability release until the
@@ -83,6 +83,10 @@ This file records only current publication state and recent release facts. Full 
   only benchmark truth, and validates local-only package/provider boundaries.
   Pre-tag validation passes 251 tests plus golden, BGM/rhythm, NLE, package,
   install, benchmark, release-candidate, and diff checks.
+- V3-01 local validation generates emotional-arc, high-energy, narrative-
+  clarity, and portrait-highlight strategies for both 60-second real projects.
+  Each project has four distinct ordered range signatures; no strategy is
+  selected, applied, rendered, or promoted beyond degraded evidence confidence.
 
 - Architecture baseline validation passed on `2026-07-10`: `.venv/bin/python
   run_checks.py` completed successfully with `239 passed`, schema generation,

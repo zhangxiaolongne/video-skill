@@ -37,6 +37,7 @@ from artist_portrait_editor.cut_review import (
     CutReviewError,
     build_cut_review_workspace,
 )
+from artist_portrait_editor.creative_strategies import CreativeStrategiesError, build_creative_strategy_package
 from artist_portrait_editor.editor_package import EditorPackageError, build_editor_package
 from artist_portrait_editor.editorial_scoring import EditorialScoringError, build_editorial_scores
 from artist_portrait_editor.bgm_recommendation import (
@@ -379,6 +380,11 @@ def build_parser() -> argparse.ArgumentParser:
     benchmark_pack_sub.add_argument("--json", action="store_true")
     benchmark_pack_sub.add_argument("--quiet", action="store_true")
     benchmark_pack_sub.add_argument("--verbose", action="store_true")
+    creative_strategies_sub = subparsers.add_parser("creative-strategies")
+    creative_strategies_sub.add_argument("--project", required=True)
+    creative_strategies_sub.add_argument("--json", action="store_true")
+    creative_strategies_sub.add_argument("--quiet", action="store_true")
+    creative_strategies_sub.add_argument("--verbose", action="store_true")
 
     baseline_sub = subparsers.add_parser("baseline")
     baseline_sub.add_argument("--project", required=True)
@@ -2222,6 +2228,28 @@ def cmd_benchmark_pack(args: argparse.Namespace) -> int:
     return int(ExitCode.success_with_warnings if warnings else ExitCode.success)
 
 
+def cmd_creative_strategies(args: argparse.Namespace) -> int:
+    if error := _validate_common_flags(args):
+        return int(error)
+    project_path = Path(args.project)
+    try:
+        canonical, report, package, warnings = build_creative_strategy_package(project_path)
+    except ConfigLoadError as exc:
+        print(str(exc), file=sys.stderr)
+        return int(ExitCode.invalid_project_config)
+    except (CreativeStrategiesError, ValueError) as exc:
+        print(str(exc), file=sys.stderr)
+        return int(ExitCode.output_or_reference_validation_failed)
+    root = project_root(project_path)
+    payload = {"output": canonical.relative_to(root).as_posix(), "report": report.relative_to(root).as_posix(), "creative_strategy_package": package.model_dump(mode="json"), "warnings": warnings}
+    if args.json:
+        print(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True))
+    elif not args.quiet:
+        print(f"wrote {payload['output']}")
+        print(f"wrote {payload['report']}")
+    return int(ExitCode.success_with_warnings if warnings else ExitCode.success)
+
+
 def cmd_baseline(args: argparse.Namespace) -> int:
     if error := _validate_common_flags(args):
         return int(error)
@@ -3077,6 +3105,7 @@ def main(argv: list[str] | None = None) -> int:
         "first-cut-review": cmd_first_cut_review,
         "second-cut-render": cmd_second_cut_render,
         "benchmark-pack": cmd_benchmark_pack,
+        "creative-strategies": cmd_creative_strategies,
         "baseline": cmd_baseline,
         "second-cut": cmd_second_cut,
         "revise": cmd_revise,

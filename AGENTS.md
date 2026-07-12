@@ -3,9 +3,18 @@
 Follow `artist_portrait_editor_revision5_optimized.md` as the governing V0
 engineering-freeze document.
 
-Current gate: V2-11 V2 Release. V2-10 Real Video Benchmark Pack is published.
-V2-11 is complete locally and awaiting publication as version `0.40.0`. V3-01
-is not active yet.
+Current gate: V3-01 Multi-Version Creative Strategies. V2-11 is published as
+`v0.40.0`. V3-01 is complete locally and awaiting publication as one version.
+V3-02 is not active yet.
+
+V3-01 may generate exactly four materially distinct emotional-arc, high-energy,
+narrative-clarity, and portrait-highlight strategies from current real editorial
+evidence. Every strategy must bind exact source ranges, duration, ordering,
+retained qualities, sacrifices, source-audio/BGM/text/transition/composition
+policies, confidence, and acceptance checks. All four must have distinct range
+signatures. It must not select a strategy for the user, mutate timelines, render
+media, choose BGM, invent emotion/dialogue/narrative semantics, call models, or
+access the network from the CLI.
 
 V2-11 may freeze and audit the V2 evidence chain, validate current real
 benchmark classes and closed-loop second-cut media hashes, verify local-only

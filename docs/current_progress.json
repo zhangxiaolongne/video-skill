@@ -1,7 +1,7 @@
 {
   "schema_version": "1.5",
-  "capability_gate": "V2-11",
-  "milestone": "V2-11 V2 Release",
+  "capability_gate": "V3-01",
+  "milestone": "V3-01 Multi-Version Creative Strategies",
   "documentation_system": {
     "master": "artist_portrait_editor_revision5_optimized.md",
     "current_progress": "docs/DEVELOPMENT_PROGRESS.md",
@@ -18,14 +18,14 @@
     "current_files_keep_only": "active decisions, current validation, active batch, and next development direction"
   },
   "active_batch": {
-    "id": "V2-11",
-    "name": "V2 Release",
+    "id": "V3-01",
+    "name": "Multi-Version Creative Strategies",
     "status": "completed",
     "started": "2026-07-12",
-    "capability_gate": "V2-11",
+    "capability_gate": "V3-01",
     "acceptance_stage": null,
     "prerequisite_acceptance_stage": "ACCEPTANCE-STAGE-07_completed_locally",
-    "commit_policy": "v2_11_one_source_commit_annotated_v0_40_0_tag_and_push"
+    "commit_policy": "v3_01_complete_and_ready_for_one_commit_push"
   },
   "latest_release": {
     "tag": "v0.40.0",
@@ -37,16 +37,16 @@
   },
   "latest_local_validation": {
     "date": "2026-07-13",
-    "full_pytest": ".venv/bin/python -m pytest passed with 251 passed",
-    "project_checks": ".venv/bin/python run_checks.py passed with golden, BGM/rhythm, NLE round-trip, schema, package, install simulation, V2 benchmark release-candidate, and diff checks",
+    "full_pytest": ".venv/bin/python -m pytest passed with 253 passed",
+    "project_checks": ".venv/bin/python run_checks.py passed with golden, BGM/rhythm, NLE round-trip, schema, package, install simulation, V2 release baseline, benchmark audit, and diff checks",
     "real_benchmark": "three-class pack covers stage and interview closed loops plus a four-source 189.74s CC0 event/promo input baseline with an explicit 30s goal",
-    "current_doc_followup": "V2-11 completed functionally: version 0.40.0 and two-phase release audit preserve current media hashes, benchmark degradation, package isolation, and offline provider boundaries"
+    "current_doc_followup": "V3-01 completed functionally: stage and interview each produce four distinct 60-second strategy signatures with explicit audiovisual policies, sacrifices, and semantic degradation"
   },
   "capability_summary": {
     "engineering_substrate": "published",
     "v1_aesthetic_foundation": "published",
     "real_video_aesthetic_maturity": "baseline_complete",
-    "current_gap": "V2 is releasable as a degraded aesthetic baseline, not a mature editor; V3 must close transcript-backed continuity, candidate-specific composition, fine pacing, and event/promo second-cut iteration"
+    "current_gap": "V3-01 creates distinct strategies but does not yet provide reusable style templates, strategy selection/application, rendered A/B versions, or mature semantic confidence"
   },
   "json_governance": {
     "canonical_rule": "JSON is kept only for canonical machine truth, boundary evidence, generated schema contracts, media validation, run audit, or release-critical evidence.",
@@ -111,43 +111,43 @@
   },
   "tasks": [
     {
-      "id": "capability_freeze",
+      "id": "four_strategy_contract",
       "status": "completed"
     },
     {
-      "id": "evidence_chain",
+      "id": "distinct_range_signatures",
       "status": "completed"
     },
     {
-      "id": "benchmark_release",
+      "id": "shared_duration",
       "status": "completed"
     },
     {
-      "id": "media_hash_audit",
+      "id": "evidence_weighting",
       "status": "completed"
     },
     {
-      "id": "package_isolation",
+      "id": "ordering_logic",
       "status": "completed"
     },
     {
-      "id": "offline_provider_audit",
+      "id": "audiovisual_policy",
       "status": "completed"
     },
     {
-      "id": "document_consistency",
+      "id": "sacrifice_accounting",
       "status": "completed"
     },
     {
-      "id": "version_boundary",
+      "id": "semantic_degradation",
       "status": "completed"
     },
     {
-      "id": "two_phase_candidate",
+      "id": "selection_boundary",
       "status": "completed"
     },
     {
-      "id": "git_publication",
+      "id": "real_cross_project_validation",
       "status": "completed"
     }
   ]

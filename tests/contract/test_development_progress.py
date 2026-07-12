@@ -202,10 +202,10 @@ def test_machine_readable_progress_matches_current_dashboard():
     payload = snapshot()
 
     assert payload["schema_version"] == "1.5"
-    assert payload["capability_gate"] == "V2-11"
+    assert payload["capability_gate"] == "V3-01"
     assert payload["milestone"] in progress
     assert payload["active_batch"]["id"] in progress
-    assert payload["active_batch"]["id"] == "V2-11"
+    assert payload["active_batch"]["id"] == "V3-01"
     assert payload["active_batch"]["acceptance_stage"] is None
     assert payload["active_batch"]["status"] == "completed"
     assert payload["latest_release"]["tag"] == "v0.40.0"
@@ -220,9 +220,9 @@ def test_machine_readable_progress_matches_current_dashboard():
     assert payload["capability_summary"]["engineering_substrate"] == "published"
     assert payload["capability_summary"]["v1_aesthetic_foundation"] == "published"
     assert payload["capability_summary"]["real_video_aesthetic_maturity"] == "baseline_complete"
-    assert "V2 Release" in progress
-    assert payload["tasks"][0]["id"] == "capability_freeze"
-    assert payload["tasks"][-1]["id"] == "git_publication"
+    assert "Multi-Version Creative Strategies" in progress
+    assert payload["tasks"][0]["id"] == "four_strategy_contract"
+    assert payload["tasks"][-1]["id"] == "real_cross_project_validation"
     assert len(payload["tasks"]) == 10
     assert all(task["status"] == "completed" for task in payload["tasks"])
 

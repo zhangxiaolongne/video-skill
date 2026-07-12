@@ -16,17 +16,17 @@ issue tracker, or master strategy document.
 
 ## Current State
 
-- Current active gate: V2-11 V2 Release
+- Current active gate: V3-01 Multi-Version Creative Strategies
 - Gate state: completed locally; ready for one-version publication
-- Completed published capability: `V2-10` Real Video Benchmark Pack
-- Current complete version: `V2-11 V2 Release`
-- Current batch: `V2-11` completed locally
+- Completed published capability: `V2-11` V2 Release as `v0.40.0`
+- Current complete version: `V3-01 Multi-Version Creative Strategies`
+- Current batch: `V3-01` completed locally
 - Latest published release baseline: `v0.40.0`
 - Current published capability work: V1-08 revision promotion and V1 release
   packaging
 - Current acceptance stage: `ACCEPTANCE-STAGE-07` completed locally with full
   checks and current real-project delivery acceptance
-- Next release policy: publish one V2 source commit and annotated `v0.40.0` tag only after complete V2-11 validation
+- Next release policy: publish V3-01 only after both real projects and full checks close as one capability version
   as one coherent capability version
 
 ## Capability Dashboard
@@ -132,7 +132,7 @@ the active gate and immediate development direction.
 
 ## Next Major Decision
 
-Publish V2 as `v0.40.0` after full checks, current closed-loop media hashes,
-three-class benchmark truth, package isolation, offline boundaries, pre-tag
-candidate audit, annotated tag, and post-tag audit all pass. The pre-tag suite
-passes with 251 tests. V3-01 is next but not active.
+Publish V3-01 after stage and interview each produce four materially distinct
+60-second creative strategies with explicit sacrifices, audiovisual policies,
+low-confidence semantic degradation, and no silent selection or rendering.
+All 253 tests and quality/package checks pass. V3-02 style templates are next.

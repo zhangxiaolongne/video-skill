@@ -1,0 +1,406 @@
+{
+  "$defs": {
+    "CreativeStrategy": {
+      "additionalProperties": false,
+      "properties": {
+        "acceptance_checks": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 5,
+          "title": "Acceptance Checks",
+          "type": "array"
+        },
+        "bgm_policy": {
+          "title": "Bgm Policy",
+          "type": "string"
+        },
+        "composition_policy": {
+          "title": "Composition Policy",
+          "type": "string"
+        },
+        "creative_intent": {
+          "title": "Creative Intent",
+          "type": "string"
+        },
+        "ordering_logic": {
+          "title": "Ordering Logic",
+          "type": "string"
+        },
+        "planned_duration_seconds": {
+          "exclusiveMinimum": 0,
+          "title": "Planned Duration Seconds",
+          "type": "number"
+        },
+        "ranges": {
+          "items": {
+            "$ref": "#/$defs/StrategyRange"
+          },
+          "minItems": 1,
+          "title": "Ranges",
+          "type": "array"
+        },
+        "retained_qualities": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Retained Qualities",
+          "type": "array"
+        },
+        "sacrifices": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Sacrifices",
+          "type": "array"
+        },
+        "source_audio_policy": {
+          "title": "Source Audio Policy",
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "ready",
+            "degraded",
+            "blocked"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "strategy_confidence": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Strategy Confidence",
+          "type": "number"
+        },
+        "strategy_id": {
+          "enum": [
+            "emotional_arc",
+            "high_energy",
+            "narrative_clarity",
+            "portrait_highlight"
+          ],
+          "title": "Strategy Id",
+          "type": "string"
+        },
+        "target_duration_seconds": {
+          "exclusiveMinimum": 0,
+          "title": "Target Duration Seconds",
+          "type": "number"
+        },
+        "text_density_policy": {
+          "enum": [
+            "minimal",
+            "restrained",
+            "moderate"
+          ],
+          "title": "Text Density Policy",
+          "type": "string"
+        },
+        "title": {
+          "title": "Title",
+          "type": "string"
+        },
+        "transition_policy": {
+          "title": "Transition Policy",
+          "type": "string"
+        },
+        "warnings": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Warnings",
+          "type": "array"
+        }
+      },
+      "required": [
+        "strategy_id",
+        "title",
+        "creative_intent",
+        "target_duration_seconds",
+        "planned_duration_seconds",
+        "ranges",
+        "ordering_logic",
+        "retained_qualities",
+        "sacrifices",
+        "source_audio_policy",
+        "bgm_policy",
+        "text_density_policy",
+        "transition_policy",
+        "composition_policy",
+        "acceptance_checks",
+        "strategy_confidence",
+        "status"
+      ],
+      "title": "CreativeStrategy",
+      "type": "object"
+    },
+    "StrategyRange": {
+      "additionalProperties": false,
+      "properties": {
+        "candidate_id": {
+          "title": "Candidate Id",
+          "type": "string"
+        },
+        "evidence_confidence": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Evidence Confidence",
+          "type": "number"
+        },
+        "planned_duration": {
+          "exclusiveMinimum": 0,
+          "title": "Planned Duration",
+          "type": "number"
+        },
+        "role": {
+          "enum": [
+            "hook",
+            "build",
+            "payoff"
+          ],
+          "title": "Role",
+          "type": "string"
+        },
+        "selection_reason": {
+          "minLength": 1,
+          "title": "Selection Reason",
+          "type": "string"
+        },
+        "semantic_status": {
+          "enum": [
+            "available",
+            "partial",
+            "unavailable"
+          ],
+          "title": "Semantic Status",
+          "type": "string"
+        },
+        "source_id": {
+          "title": "Source Id",
+          "type": "string"
+        },
+        "source_in": {
+          "minimum": 0,
+          "title": "Source In",
+          "type": "number"
+        },
+        "source_out": {
+          "exclusiveMinimum": 0,
+          "title": "Source Out",
+          "type": "number"
+        },
+        "strategy_score": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Strategy Score",
+          "type": "number"
+        }
+      },
+      "required": [
+        "candidate_id",
+        "source_id",
+        "source_in",
+        "source_out",
+        "planned_duration",
+        "role",
+        "strategy_score",
+        "evidence_confidence",
+        "selection_reason",
+        "semantic_status"
+      ],
+      "title": "StrategyRange",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "automatic_bgm_selection": {
+      "default": false,
+      "title": "Automatic Bgm Selection",
+      "type": "boolean"
+    },
+    "bgm_match_fingerprint": {
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "title": "Bgm Match Fingerprint",
+      "type": "string"
+    },
+    "bgm_match_ref": {
+      "title": "Bgm Match Ref",
+      "type": "string"
+    },
+    "distinct_range_signatures": {
+      "maximum": 4,
+      "minimum": 1,
+      "title": "Distinct Range Signatures",
+      "type": "integer"
+    },
+    "editorial_scores_fingerprint": {
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "title": "Editorial Scores Fingerprint",
+      "type": "string"
+    },
+    "editorial_scores_ref": {
+      "title": "Editorial Scores Ref",
+      "type": "string"
+    },
+    "first_cut_review_fingerprint": {
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "title": "First Cut Review Fingerprint",
+      "type": "string"
+    },
+    "first_cut_review_ref": {
+      "title": "First Cut Review Ref",
+      "type": "string"
+    },
+    "invented_semantics": {
+      "default": false,
+      "title": "Invented Semantics",
+      "type": "boolean"
+    },
+    "materially_distinct": {
+      "title": "Materially Distinct",
+      "type": "boolean"
+    },
+    "media_rendered": {
+      "default": false,
+      "title": "Media Rendered",
+      "type": "boolean"
+    },
+    "model_call_performed_by_cli": {
+      "default": false,
+      "title": "Model Call Performed By Cli",
+      "type": "boolean"
+    },
+    "network_performed_by_cli": {
+      "default": false,
+      "title": "Network Performed By Cli",
+      "type": "boolean"
+    },
+    "package_id": {
+      "title": "Package Id",
+      "type": "string"
+    },
+    "project_id": {
+      "title": "Project Id",
+      "type": "string"
+    },
+    "schema_version": {
+      "default": "0.3",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "second_cut_fingerprint": {
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "title": "Second Cut Fingerprint",
+      "type": "string"
+    },
+    "second_cut_ref": {
+      "title": "Second Cut Ref",
+      "type": "string"
+    },
+    "selected_strategy_id": {
+      "anyOf": [
+        {
+          "enum": [
+            "emotional_arc",
+            "high_energy",
+            "narrative_clarity",
+            "portrait_highlight"
+          ],
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Selected Strategy Id"
+    },
+    "status": {
+      "enum": [
+        "ready",
+        "degraded",
+        "blocked"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "strategies": {
+      "items": {
+        "$ref": "#/$defs/CreativeStrategy"
+      },
+      "maxItems": 4,
+      "minItems": 4,
+      "title": "Strategies",
+      "type": "array"
+    },
+    "structure_fingerprint": {
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "title": "Structure Fingerprint",
+      "type": "string"
+    },
+    "structure_ref": {
+      "title": "Structure Ref",
+      "type": "string"
+    },
+    "target_duration_seconds": {
+      "exclusiveMinimum": 0,
+      "title": "Target Duration Seconds",
+      "type": "number"
+    },
+    "text_plan_fingerprint": {
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "title": "Text Plan Fingerprint",
+      "type": "string"
+    },
+    "text_plan_ref": {
+      "title": "Text Plan Ref",
+      "type": "string"
+    },
+    "timeline_mutated": {
+      "default": false,
+      "title": "Timeline Mutated",
+      "type": "boolean"
+    },
+    "transcript_coverage_ratio": {
+      "maximum": 1,
+      "minimum": 0,
+      "title": "Transcript Coverage Ratio",
+      "type": "number"
+    },
+    "warnings": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Warnings",
+      "type": "array"
+    }
+  },
+  "required": [
+    "package_id",
+    "project_id",
+    "target_duration_seconds",
+    "editorial_scores_ref",
+    "editorial_scores_fingerprint",
+    "structure_ref",
+    "structure_fingerprint",
+    "bgm_match_ref",
+    "bgm_match_fingerprint",
+    "text_plan_ref",
+    "text_plan_fingerprint",
+    "first_cut_review_ref",
+    "first_cut_review_fingerprint",
+    "second_cut_ref",
+    "second_cut_fingerprint",
+    "strategies",
+    "materially_distinct",
+    "distinct_range_signatures",
+    "transcript_coverage_ratio",
+    "status"
+  ],
+  "title": "CreativeStrategyPackage",
+  "type": "object"
+}
