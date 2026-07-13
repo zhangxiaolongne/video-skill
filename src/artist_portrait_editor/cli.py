@@ -66,6 +66,7 @@ from artist_portrait_editor.nle_interchange import (
     NleInterchangeError,
     build_nle_interchange_plan,
 )
+from artist_portrait_editor.nle_roundtrip import NleRoundTripError, build_nle_roundtrip_workspace
 from artist_portrait_editor.operator_runbook import build_operator_runbook
 from artist_portrait_editor.preview_workspace import (
     preview_workspace,
@@ -215,6 +216,13 @@ def build_parser() -> argparse.ArgumentParser:
     nle_plan_sub.add_argument("--json", action="store_true")
     nle_plan_sub.add_argument("--quiet", action="store_true")
     nle_plan_sub.add_argument("--verbose", action="store_true")
+
+    nle_roundtrip_sub = subparsers.add_parser("nle-roundtrip")
+    nle_roundtrip_sub.add_argument("--project", required=True)
+    nle_roundtrip_sub.add_argument("--frame-rate", type=float, default=25.0)
+    nle_roundtrip_sub.add_argument("--json", action="store_true")
+    nle_roundtrip_sub.add_argument("--quiet", action="store_true")
+    nle_roundtrip_sub.add_argument("--verbose", action="store_true")
 
     fcpxml_sub = subparsers.add_parser("fcpxml")
     fcpxml_sub.add_argument("--project", required=True)
@@ -1045,6 +1053,42 @@ def cmd_nle_plan(args: argparse.Namespace) -> int:
         print(f"wrote {payload['report']}")
         print(f"wrote {payload['mapping_csv']}")
     return int(ExitCode.success if plan.status == "ready" else ExitCode.success_with_warnings)
+
+
+def cmd_nle_roundtrip(args: argparse.Namespace) -> int:
+    if error := _validate_common_flags(args):
+        return int(error)
+    project_path = Path(args.project)
+    try:
+        json_path, md_path, package, warnings = build_nle_roundtrip_workspace(
+            project_path, frame_rate=args.frame_rate
+        )
+    except ConfigLoadError as exc:
+        print(str(exc), file=sys.stderr)
+        return int(ExitCode.invalid_project_config)
+    except WorkspacePrerequisiteError as exc:
+        print(str(exc), file=sys.stderr)
+        return int(ExitCode.prerequisite_step_missing)
+    except (NleRoundTripError, ValueError) as exc:
+        print(str(exc), file=sys.stderr)
+        return int(ExitCode.output_or_reference_validation_failed)
+    root = project_root(project_path)
+    payload = {
+        "output": json_path.relative_to(root).as_posix(),
+        "report": md_path.relative_to(root).as_posix(),
+        "status": package.status,
+        "nle_roundtrip": package.model_dump(mode="json"),
+        "warnings": warnings,
+    }
+    if args.json:
+        print(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True))
+    elif not args.quiet:
+        print(f"nle-roundtrip {package.status}")
+        print(f"wrote {payload['output']}")
+        print(f"wrote {payload['report']}")
+    if package.status == "blocked":
+        return int(ExitCode.output_or_reference_validation_failed)
+    return int(ExitCode.success_with_warnings if warnings else ExitCode.success)
 
 
 def cmd_fcpxml(args: argparse.Namespace) -> int:
@@ -3134,6 +3178,7 @@ def main(argv: list[str] | None = None) -> int:
         "operator": cmd_operator,
         "editor-package": cmd_editor_package,
         "nle-plan": cmd_nle_plan,
+        "nle-roundtrip": cmd_nle_roundtrip,
         "fcpxml": cmd_fcpxml,
         "acceptance": cmd_acceptance,
         "scan": cmd_scan,

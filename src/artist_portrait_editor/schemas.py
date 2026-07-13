@@ -46,6 +46,7 @@ from artist_portrait_editor.models.final_export import (
     FinalExportValidationReport,
 )
 from artist_portrait_editor.models.nle_interchange import NleInterchangePlan
+from artist_portrait_editor.models.nle_roundtrip import NleRoundTripPackage
 from artist_portrait_editor.models.operator import OperatorRunbook
 from artist_portrait_editor.models.proposal import ProposalSet
 from artist_portrait_editor.models.proposal_context import ProposalContext
@@ -134,6 +135,7 @@ def write_schema_files(output_dir: Path) -> None:
         "revision_application.schema.json": RevisionApplication.model_json_schema(),
         "revision_promotion.schema.json": RevisionPromotion.model_json_schema(),
         "nle_interchange_plan.schema.json": NleInterchangePlan.model_json_schema(),
+        "nle_roundtrip.schema.json": NleRoundTripPackage.model_json_schema(),
         "operator_runbook.schema.json": OperatorRunbook.model_json_schema(),
         "edit_guidance_report.schema.json": EditGuidanceReport.model_json_schema(),
         "rhythm_agent_candidate.schema.json": RhythmAgentCandidate.model_json_schema(),

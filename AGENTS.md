@@ -10,9 +10,19 @@ master principles/roadmap, `docs/CURRENT_BATCH.md`, `docs/DEVELOPMENT_PROGRESS.m
 contracts. State the allowed scope, forbidden claims, user corrections, current
 conflicts, real-media acceptance, and non-counting support work before editing.
 
-Current gate: V3-04 A/B Version Review. V3-03 Interactive Revision Semantics is
-published. V3-04 is complete locally and awaiting publication as one version.
-V3-05 is not active yet.
+Current gate: V3-05 NLE Round-Trip Plus. V3-04 A/B Version Review is published.
+V3-05 is complete locally and awaiting publication as one version. V3-06 is not
+active yet.
+
+V3-05 may bind current timeline/editor-package/version-review evidence into one
+local NLE round-trip package with source existence/hash/file-URI relink
+bindings, editable FCPXML, EDL, Resolve/Premiere marker CSV files, a unified cue
+sheet, relink manifest, and pending external acceptance checks. Direct linking
+requires exact source hash match; missing or substituted media must remain
+blocked. It must distinguish written candidates from verified import, relink,
+playback, and re-export. It must not open an NLE, claim import or round-trip
+success, hide missing media, mutate timelines, render, choose music, call
+models, or access the network from the CLI.
 
 V3-04 may discover and compare at least two current canonical timelines,
 rendered second cuts, or controlled revision candidates across hook, emotional

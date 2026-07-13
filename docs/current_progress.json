@@ -1,7 +1,7 @@
 {
   "schema_version": "1.5",
-  "capability_gate": "V3-04",
-  "milestone": "V3-04 A/B Version Review",
+  "capability_gate": "V3-05",
+  "milestone": "V3-05 NLE Round-Trip Plus",
   "documentation_system": {
     "master": "artist_portrait_editor_revision5_optimized.md",
     "current_progress": "docs/DEVELOPMENT_PROGRESS.md",
@@ -19,14 +19,14 @@
     "current_files_keep_only": "active decisions, current validation, active batch, and next development direction"
   },
   "active_batch": {
-    "id": "V3-04",
-    "name": "A/B Version Review",
+    "id": "V3-05",
+    "name": "NLE Round-Trip Plus",
     "status": "completed",
     "started": "2026-07-13",
-    "capability_gate": "V3-04",
+    "capability_gate": "V3-05",
     "acceptance_stage": null,
     "prerequisite_acceptance_stage": "ACCEPTANCE-STAGE-07_completed_locally",
-    "commit_policy": "v3_04_complete_then_one_commit_push_after_full_validation"
+    "commit_policy": "v3_05_complete_then_one_commit_push_after_full_validation"
   },
   "latest_release": {
     "tag": "v0.40.0",
@@ -41,13 +41,13 @@
     "full_pytest": ".venv/bin/python -m pytest passed with 267 passed",
     "project_checks": ".venv/bin/python run_checks.py passed with golden, BGM/rhythm, NLE round-trip, schema, package, install simulation, V2 release baseline, benchmark audit, and diff checks",
     "real_benchmark": "three-class pack covers stage and interview closed loops plus a four-source 189.74s CC0 event/promo input baseline with an explicit 30s goal",
-    "current_doc_followup": "V3-04 compares multiple versions across seven domains with freshness, confidence, pairwise tradeoffs, goal-specific advantages, and no overall winner"
+    "current_doc_followup": "V3-05 writes source-bound FCPXML, EDL, Resolve/Premiere markers, cue/relink sidecars, version identity, and external round-trip checks"
   },
   "capability_summary": {
     "engineering_substrate": "published",
     "v1_aesthetic_foundation": "published",
     "real_video_aesthetic_maturity": "baseline_complete",
-    "current_gap": "V3-04 supports evidence-bound A/B review; V3-05 still needs stronger editable NLE round-trip handoff"
+    "current_gap": "V3-05 provides truthful editable NLE handoff; V3-06 still needs explicit publishability tiers"
   },
   "json_governance": {
     "canonical_rule": "JSON is kept only for canonical machine truth, boundary evidence, generated schema contracts, media validation, run audit, or release-critical evidence.",
@@ -112,43 +112,43 @@
   },
   "tasks": [
     {
-      "id": "multi_version_discovery",
+      "id": "source_relink_manifest",
       "status": "completed"
     },
     {
-      "id": "evidence_level_separation",
+      "id": "source_freshness",
       "status": "completed"
     },
     {
-      "id": "freshness_binding",
+      "id": "version_identity",
       "status": "completed"
     },
     {
-      "id": "seven_domain_review",
+      "id": "editable_fcpxml",
       "status": "completed"
     },
     {
-      "id": "uncertainty_preservation",
+      "id": "edl_handoff",
       "status": "completed"
     },
     {
-      "id": "pairwise_tradeoffs",
+      "id": "resolve_markers",
       "status": "completed"
     },
     {
-      "id": "goal_specific_advantage",
+      "id": "premiere_markers",
       "status": "completed"
     },
     {
-      "id": "no_total_winner",
+      "id": "unified_cue_sheet",
       "status": "completed"
     },
     {
-      "id": "audiovisual_truth",
+      "id": "editor_markers",
       "status": "completed"
     },
     {
-      "id": "real_project_comparison",
+      "id": "external_acceptance",
       "status": "completed"
     }
   ]

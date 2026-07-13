@@ -1,0 +1,369 @@
+{
+  "$defs": {
+    "NleAcceptanceCheck": {
+      "additionalProperties": false,
+      "properties": {
+        "check_id": {
+          "title": "Check Id",
+          "type": "string"
+        },
+        "evidence_required": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Evidence Required",
+          "type": "array"
+        },
+        "instruction": {
+          "title": "Instruction",
+          "type": "string"
+        },
+        "required": {
+          "default": true,
+          "title": "Required",
+          "type": "boolean"
+        },
+        "stage": {
+          "pattern": "^(pre_import|import|relink|timeline|markers|audio|playback|roundtrip_export)$",
+          "title": "Stage",
+          "type": "string"
+        },
+        "status": {
+          "default": "pending",
+          "pattern": "^(pending|passed|failed|unavailable)$",
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "check_id",
+        "stage",
+        "instruction"
+      ],
+      "title": "NleAcceptanceCheck",
+      "type": "object"
+    },
+    "NleDeliverable": {
+      "additionalProperties": false,
+      "properties": {
+        "deliverable_id": {
+          "title": "Deliverable Id",
+          "type": "string"
+        },
+        "format": {
+          "pattern": "^(fcpxml|edl|resolve_markers_csv|premiere_markers_csv|cue_sheet_csv|relink_manifest_csv)$",
+          "title": "Format",
+          "type": "string"
+        },
+        "import_verified": {
+          "default": false,
+          "title": "Import Verified",
+          "type": "boolean"
+        },
+        "limitations": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Limitations",
+          "type": "array"
+        },
+        "purpose": {
+          "title": "Purpose",
+          "type": "string"
+        },
+        "ref": {
+          "title": "Ref",
+          "type": "string"
+        },
+        "status": {
+          "pattern": "^(written|blocked)$",
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "deliverable_id",
+        "format",
+        "ref",
+        "status",
+        "purpose"
+      ],
+      "title": "NleDeliverable",
+      "type": "object"
+    },
+    "NleSourceBinding": {
+      "additionalProperties": false,
+      "properties": {
+        "actual_hash": {
+          "anyOf": [
+            {
+              "pattern": "^sha256:[0-9a-f]{64}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Actual Hash"
+        },
+        "exists": {
+          "title": "Exists",
+          "type": "boolean"
+        },
+        "expected_hash": {
+          "pattern": "^sha256:[0-9a-f]{64}$",
+          "title": "Expected Hash",
+          "type": "string"
+        },
+        "hash_matches": {
+          "title": "Hash Matches",
+          "type": "boolean"
+        },
+        "nle_uri": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Nle Uri"
+        },
+        "relink_status": {
+          "pattern": "^(direct_uri|missing|hash_mismatch)$",
+          "title": "Relink Status",
+          "type": "string"
+        },
+        "source_id": {
+          "title": "Source Id",
+          "type": "string"
+        },
+        "source_ref": {
+          "title": "Source Ref",
+          "type": "string"
+        },
+        "timeline_item_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Timeline Item Ids",
+          "type": "array"
+        }
+      },
+      "required": [
+        "source_id",
+        "source_ref",
+        "expected_hash",
+        "exists",
+        "hash_matches",
+        "relink_status"
+      ],
+      "title": "NleSourceBinding",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "acceptance_checks": {
+      "items": {
+        "$ref": "#/$defs/NleAcceptanceCheck"
+      },
+      "minItems": 8,
+      "title": "Acceptance Checks",
+      "type": "array"
+    },
+    "automatic_music_selection": {
+      "default": false,
+      "title": "Automatic Music Selection",
+      "type": "boolean"
+    },
+    "canonical_timeline_mutated": {
+      "default": false,
+      "title": "Canonical Timeline Mutated",
+      "type": "boolean"
+    },
+    "cue_count": {
+      "minimum": 1,
+      "title": "Cue Count",
+      "type": "integer"
+    },
+    "deliverables": {
+      "items": {
+        "$ref": "#/$defs/NleDeliverable"
+      },
+      "minItems": 6,
+      "title": "Deliverables",
+      "type": "array"
+    },
+    "directly_linked_source_count": {
+      "minimum": 0,
+      "title": "Directly Linked Source Count",
+      "type": "integer"
+    },
+    "editor_package_fingerprint": {
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "title": "Editor Package Fingerprint",
+      "type": "string"
+    },
+    "editor_package_id": {
+      "title": "Editor Package Id",
+      "type": "string"
+    },
+    "exported_version_id": {
+      "default": "canonical_timeline",
+      "title": "Exported Version Id",
+      "type": "string"
+    },
+    "frame_rate": {
+      "exclusiveMinimum": 0,
+      "title": "Frame Rate",
+      "type": "number"
+    },
+    "import_performed": {
+      "default": false,
+      "title": "Import Performed",
+      "type": "boolean"
+    },
+    "marker_count": {
+      "minimum": 0,
+      "title": "Marker Count",
+      "type": "integer"
+    },
+    "media_rendered": {
+      "default": false,
+      "title": "Media Rendered",
+      "type": "boolean"
+    },
+    "model_call_performed_by_cli": {
+      "default": false,
+      "title": "Model Call Performed By Cli",
+      "type": "boolean"
+    },
+    "network_performed": {
+      "default": false,
+      "title": "Network Performed",
+      "type": "boolean"
+    },
+    "package_id": {
+      "title": "Package Id",
+      "type": "string"
+    },
+    "playback_checked": {
+      "default": false,
+      "title": "Playback Checked",
+      "type": "boolean"
+    },
+    "project_id": {
+      "title": "Project Id",
+      "type": "string"
+    },
+    "relink_performed": {
+      "default": false,
+      "title": "Relink Performed",
+      "type": "boolean"
+    },
+    "roundtrip_verified": {
+      "default": false,
+      "title": "Roundtrip Verified",
+      "type": "boolean"
+    },
+    "schema_version": {
+      "default": "0.3",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "source_bindings": {
+      "items": {
+        "$ref": "#/$defs/NleSourceBinding"
+      },
+      "minItems": 1,
+      "title": "Source Bindings",
+      "type": "array"
+    },
+    "source_count": {
+      "minimum": 1,
+      "title": "Source Count",
+      "type": "integer"
+    },
+    "status": {
+      "pattern": "^(ready|warning|blocked)$",
+      "title": "Status",
+      "type": "string"
+    },
+    "timeline_fingerprint": {
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "title": "Timeline Fingerprint",
+      "type": "string"
+    },
+    "timeline_id": {
+      "title": "Timeline Id",
+      "type": "string"
+    },
+    "timeline_item_count": {
+      "minimum": 1,
+      "title": "Timeline Item Count",
+      "type": "integer"
+    },
+    "unresolved_source_count": {
+      "minimum": 0,
+      "title": "Unresolved Source Count",
+      "type": "integer"
+    },
+    "version_review_fingerprint": {
+      "anyOf": [
+        {
+          "pattern": "^sha256:[0-9a-f]{64}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Version Review Fingerprint"
+    },
+    "version_review_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Version Review Id"
+    },
+    "warnings": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Warnings",
+      "type": "array"
+    }
+  },
+  "required": [
+    "package_id",
+    "project_id",
+    "status",
+    "timeline_id",
+    "timeline_fingerprint",
+    "editor_package_id",
+    "editor_package_fingerprint",
+    "frame_rate",
+    "source_count",
+    "directly_linked_source_count",
+    "unresolved_source_count",
+    "timeline_item_count",
+    "marker_count",
+    "cue_count",
+    "source_bindings",
+    "deliverables",
+    "acceptance_checks"
+  ],
+  "title": "NleRoundTripPackage",
+  "type": "object"
+}

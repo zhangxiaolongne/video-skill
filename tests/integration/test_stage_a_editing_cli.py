@@ -1324,6 +1324,38 @@ def test_rhythm_cli_plans_bgm_edit_rhythm_without_mutating_outputs(tmp_path, cap
     assert (tmp_path / "output" / "nle_interchange_plan.md").exists()
     assert (tmp_path / "output" / "nle_interchange_handoff.json").exists()
 
+    assert main(["nle-roundtrip", "--project", str(project_path), "--frame-rate", "24", "--json"]) in (0, 1, 9)
+    roundtrip_payload = json.loads(capsys.readouterr().out)
+    roundtrip = roundtrip_payload["nle_roundtrip"]
+    assert roundtrip_payload["output"] == ".artist-portrait/data/nle_roundtrip.json"
+    assert roundtrip_payload["report"] == "output/nle_roundtrip.md"
+    assert roundtrip["exported_version_id"] == "canonical_timeline"
+    assert roundtrip["timeline_item_count"] == editor_package["timeline_item_count"]
+    assert roundtrip["source_count"] >= 1
+    assert roundtrip["directly_linked_source_count"] + roundtrip["unresolved_source_count"] == roundtrip["source_count"]
+    assert all(item["relink_status"] in {"direct_uri", "missing", "hash_mismatch"} for item in roundtrip["source_bindings"])
+    assert len(roundtrip["deliverables"]) == 6
+    assert {item["format"] for item in roundtrip["deliverables"]} == {
+        "fcpxml", "edl", "resolve_markers_csv", "premiere_markers_csv",
+        "cue_sheet_csv", "relink_manifest_csv",
+    }
+    assert len(roundtrip["acceptance_checks"]) == 8
+    assert all(item["status"] == "pending" for item in roundtrip["acceptance_checks"])
+    assert roundtrip["import_performed"] is False
+    assert roundtrip["relink_performed"] is False
+    assert roundtrip["playback_checked"] is False
+    assert roundtrip["roundtrip_verified"] is False
+    assert roundtrip["canonical_timeline_mutated"] is False
+    assert roundtrip["media_rendered"] is False
+    assert roundtrip["automatic_music_selection"] is False
+    assert roundtrip["model_call_performed_by_cli"] is False
+    assert roundtrip["network_performed"] is False
+    roundtrip_dir = tmp_path / "output" / "nle_roundtrip"
+    ET.fromstring((roundtrip_dir / "timeline.fcpxml").read_text(encoding="utf-8").split("\n", 2)[2])
+    assert "FROM CLIP NAME" in (roundtrip_dir / "timeline.edl").read_text(encoding="utf-8")
+    assert "Marker Name" in (roundtrip_dir / "resolve_markers.csv").read_text(encoding="utf-8")
+    assert "relink_status" in (roundtrip_dir / "relink_manifest.csv").read_text(encoding="utf-8")
+
     assert main(["fcpxml", "--project", str(project_path), "--draft", "--json"]) in (0, 1)
     fcpxml_payload = json.loads(capsys.readouterr().out)
     fcpxml_draft = fcpxml_payload["fcpxml_draft"]

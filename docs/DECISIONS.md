@@ -317,6 +317,18 @@ decision history is archived in [DECISIONS_HISTORY.md](archive/DECISIONS_HISTORY
 - Revisit when: repeated independent human playback reviews provide a validated
   preference model while preserving explicit user goals and selection.
 
+### DEC-075: NLE files are deliverables, not round-trip success evidence
+
+- Status: `active`
+- Decision: package source identity/hash/URI, version identity, editable
+  timeline files, markers, cues, and relink guidance together. Claim round-trip
+  success only after external import, relink, timeline, marker, audio, playback,
+  and re-export evidence is explicitly reviewed.
+- Rationale: syntactically valid FCPXML or a marker CSV can still import badly,
+  point at substituted media, lose audio intent, or fail playback.
+- Revisit when: the host can operate a supported NLE and import/re-export
+  evidence through a validated local integration.
+
 ## Archive Policy
 
 Archived decisions remain searchable in `docs/archive/DECISIONS_HISTORY.md`.

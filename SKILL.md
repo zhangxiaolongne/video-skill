@@ -275,6 +275,7 @@ artist-portrait baseline --project ./project.yaml
 artist-portrait baseline --project ./project.yaml --agent-output ./aesthetic_baseline_candidate.json
 artist-portrait second-cut --project ./project.yaml --concept-id <concept-id>
 artist-portrait version-review --project ./project.yaml
+artist-portrait nle-roundtrip --project ./project.yaml --frame-rate 25
 ```
 
 Preview and final export resolve an explicit canvas from the project aspect
@@ -311,6 +312,11 @@ media, timeline candidates, and plan-only revisions; compares hook, emotional
 arc, information density, BGM conflict, text burden, ending strength, and
 platform fit; and leaves the overall winner null. Unsupported or low-confidence
 comparisons remain unavailable and require human playback.
+
+`nle-roundtrip` writes editable NLE candidates and sidecars from the current
+editor package. It binds source existence, hashes, local file URIs, canonical
+version identity, markers, cues, and acceptance checks. It never claims import,
+relink, playback, or round-trip success without external evidence.
 
 `reframe` is the supervised application boundary. Its byte-visible selection
 must cover every timeline segment, bind current timeline/final/composition
