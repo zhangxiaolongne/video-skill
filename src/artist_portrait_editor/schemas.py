@@ -79,6 +79,7 @@ from artist_portrait_editor.models.workflow import (
     WorkflowExecutionReview,
     WorkflowPlan,
 )
+from artist_portrait_editor.models.version_review import VersionReview
 
 
 def write_schema_files(output_dir: Path) -> None:
@@ -106,6 +107,7 @@ def write_schema_files(output_dir: Path) -> None:
         "clip_score_record.schema.json": ClipScoreRecord.model_json_schema(),
         "composition_review.schema.json": CompositionReview.model_json_schema(),
         "creative_strategy_package.schema.json": CreativeStrategyPackage.model_json_schema(),
+        "version_review.schema.json": VersionReview.model_json_schema(),
         "reframe_application.schema.json": ReframeApplication.model_json_schema(),
         "reframe_selection.schema.json": ReframeSelection.model_json_schema(),
         "editor_package.schema.json": EditorPackage.model_json_schema(),

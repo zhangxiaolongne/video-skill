@@ -11,7 +11,7 @@ This file records only current publication state and recent release facts. Full 
   post-refactor, single-root history baseline selected for remote publication.
 - Published scope: V1 engineering substrate plus the V2 real-video aesthetic
   baseline from evidence fusion through second-cut candidates and benchmarks.
-- Active local work: `V3-03 Interactive Revision Semantics`, completed locally.
+- Active local work: `V3-04 A/B Version Review`, completed locally.
   Its current prerequisite batch is `ACCEPTANCE-STAGE-07 Real Media
   Truthfulness And Baseline Recovery`.
 - Publication policy: do not publish the next capability release until the
@@ -52,6 +52,13 @@ This file records only current publication state and recent release facts. Full 
   acceptance; and tracks clause outcomes through controlled revision
   application without mutating the canonical timeline or rendering media.
   Full local validation passes 264 tests plus schema, package/install, golden,
+  BGM/rhythm, NLE, benchmark, release-audit, and diff checks.
+- V3-04 compares canonical timeline, rendered second cut, and controlled
+  revision candidates across seven domains, with artifact freshness,
+  evidence-level separation, pairwise tradeoffs, and goal-specific advantages.
+  It leaves the overall winner null and marks unsupported comparisons
+  unavailable instead of ranking weak proxies as fact.
+  Full local validation passes 267 tests plus schema, package/install, golden,
   BGM/rhythm, NLE, benchmark, release-audit, and diff checks.
 
 - Architecture baseline validation passed on `2026-07-10`: `.venv/bin/python

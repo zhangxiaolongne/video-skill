@@ -52,7 +52,7 @@ def test_release_check_writes_hardening_report_without_publication(tmp_path, cap
 
     assert payload["output"] == ".artist-portrait/data/release_hardening_report.json"
     assert payload["report"] == "output/release_hardening_report.md"
-    assert report["capability_gate"] == "V3-03"
+    assert report["capability_gate"] == "V3-04"
     assert report["status"] in {"warning", "ready_for_local_release"}
     assert report["failed_count"] == 0
     assert report["commit_allowed"] is False

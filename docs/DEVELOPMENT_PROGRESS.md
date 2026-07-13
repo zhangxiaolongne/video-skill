@@ -17,19 +17,19 @@ issue tracker, or master strategy document.
 
 ## Current State
 
-- Current active gate: V3-03 Interactive Revision Semantics
-- Published predecessor: V3-02 Style Templates
+- Current active gate: V3-04 A/B Version Review
+- Published predecessor: V3-03 Interactive Revision Semantics
 - Gate state: completed locally; ready for one-version publication
 - Completed published capability: `V2-11` V2 Release as `v0.40.0`
-- Current complete version: `V3-03 Interactive Revision Semantics`
-- Current batch: `V3-03` completed locally
+- Current complete version: `V3-04 A/B Version Review`
+- Current batch: `V3-04` completed locally
 - Latest published release baseline: `v0.40.0`
 - Current published capability work: V1-08 revision promotion and V1 release
   packaging
 - Current acceptance stage: `ACCEPTANCE-STAGE-07` completed locally with full
   checks and current real-project delivery acceptance
-- Next release policy: publish V3-03 only after compound semantics, application
-  tracking, real-project truth, and full checks close as one coherent version
+- Next release policy: publish V3-04 only after multi-version evidence,
+  seven-domain tradeoffs, no-winner truth, and full checks close as one version
 
 ## Capability Dashboard
 
@@ -134,8 +134,7 @@ the active gate and immediate development direction.
 
 ## Next Major Decision
 
-Publish V3-03 after compound revision feedback is preserved across style,
-rhythm, text, voice/BGM, transitions, emotion, and ending; contradictions and
-unavailable real-project prerequisites remain visible; and semantic application
-status is proven by the existing controlled revision chain. V3-04 A/B review is
+Publish V3-04 after at least two versions are compared across seven domains,
+rendered/timeline/plan evidence remains distinct, unreliable comparisons stay
+unavailable, and the overall winner remains null. V3-05 NLE Round-Trip Plus is
 next only after full validation and publication.

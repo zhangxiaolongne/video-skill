@@ -10,9 +10,21 @@ master principles/roadmap, `docs/CURRENT_BATCH.md`, `docs/DEVELOPMENT_PROGRESS.m
 contracts. State the allowed scope, forbidden claims, user corrections, current
 conflicts, real-media acceptance, and non-counting support work before editing.
 
-Current gate: V3-03 Interactive Revision Semantics. V3-02 Style Templates is
-published. V3-03 is complete locally and awaiting publication as one version.
-V3-04 is not active yet.
+Current gate: V3-04 A/B Version Review. V3-03 Interactive Revision Semantics is
+published. V3-04 is complete locally and awaiting publication as one version.
+V3-05 is not active yet.
+
+V3-04 may discover and compare at least two current canonical timelines,
+rendered second cuts, or controlled revision candidates across hook, emotional
+arc, information density, BGM conflict, text burden, ending strength, and
+platform fit. It must distinguish rendered, timeline-candidate, and plan-only
+evidence; bind fingerprints and media freshness; expose confidence,
+limitations, pairwise tradeoffs, and goal-specific advantages. A supported
+leader requires at least two reliable comparable versions. It must leave the
+overall winner null and require explicit user selection. It must not promote
+technical validity to aesthetic acceptance, compare stale evidence as current,
+silently select/promote a version, mutate timelines, render, choose music, call
+models, or access the network from the CLI.
 
 V3-03 may parse compound natural-language revision feedback into multiple
 prioritized semantic clauses covering duration, structure, rhythm, emotion,

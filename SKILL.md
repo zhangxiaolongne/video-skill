@@ -274,6 +274,7 @@ artist-portrait composition --project ./project.yaml --preview-candidate <candid
 artist-portrait baseline --project ./project.yaml
 artist-portrait baseline --project ./project.yaml --agent-output ./aesthetic_baseline_candidate.json
 artist-portrait second-cut --project ./project.yaml --concept-id <concept-id>
+artist-portrait version-review --project ./project.yaml
 ```
 
 Preview and final export resolve an explicit canvas from the project aspect
@@ -304,6 +305,12 @@ honest first-cut publishability verdict. Import does not apply edits or render m
 omitted concept ids and writes one canonical supervised candidate plan covering
 selection, structure, trims, per-shot reframes, audio/BGM, text, transitions,
 pauses, ending, and verification. Planned actions are never reported as applied.
+
+`version-review` requires at least two existing versions. It separates rendered
+media, timeline candidates, and plan-only revisions; compares hook, emotional
+arc, information density, BGM conflict, text burden, ending strength, and
+platform fit; and leaves the overall winner null. Unsupported or low-confidence
+comparisons remain unavailable and require human playback.
 
 `reframe` is the supervised application boundary. Its byte-visible selection
 must cover every timeline segment, bind current timeline/final/composition

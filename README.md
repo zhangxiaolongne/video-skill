@@ -79,7 +79,7 @@ release-candidate validation path:
 Current published capability work: `V1-08 Revision promotion, revised render
 readiness, and V1 release packaging` in the retained `v0.30.0` baseline.
 Current local acceptance stage: `ACCEPTANCE-STAGE-07 Real Media Truthfulness And Baseline Recovery`.
-Current V3-03 Interactive Revision Semantics is complete locally and awaiting publication. V3-02 Style Templates is published; V2 remains `v0.40.0`.
+Current V3-04 A/B Version Review is complete locally and awaiting publication. V3-03 Interactive Revision Semantics is published; V2 remains `v0.40.0`.
 The latest published acceptance release remains `ACCEPTANCE-STAGE-06 Release
 candidate and publication` in `v0.28.0`; the latest published V1 capability
 release baseline is `v0.40.0`.
@@ -120,6 +120,14 @@ ending, reduce subtitles, or reduce BGM, then compares the current version with
 manual revision candidates. It does not render media, mutate the timeline, move
 edit points, select or fit music, call models, access the network, or claim the
 revision actions were applied.
+
+`artist-portrait version-review --project <project.yaml>` compares every
+available canonical timeline, rendered second cut, and controlled revision
+candidate across hook, emotional arc, information density, BGM conflict, text
+burden, ending strength, and platform fit. It records evidence level,
+fingerprints, confidence, unresolved domains, pairwise tradeoffs, and
+goal-specific advantages. It never selects an overall winner or treats a
+plan-only candidate as rendered playback.
 
 `artist-portrait promote-revision --project <project.yaml>
 --revision-application-id <id>` is the V1-08 promotion gate. It validates the

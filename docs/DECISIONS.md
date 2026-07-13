@@ -304,6 +304,19 @@ decision history is archived in [DECISIONS_HISTORY.md](archive/DECISIONS_HISTORY
 - Revisit when: a validated host semantic interpreter can exceed the local
   deterministic vocabulary while retaining the same provenance and tracking.
 
+### DEC-074: Version comparison is goal-specific, never a universal winner
+
+- Status: `active`
+- Decision: compare versions domain by domain and distinguish rendered media,
+  timeline candidates, and plan-only revisions. A goal leader requires at least
+  two versions with sufficient confidence; otherwise the result is unavailable.
+  The system must not produce or apply an overall winner.
+- Rationale: a technically valid render, a high ranking proxy, and an unrendered
+  revision plan have different evidentiary strength. Collapsing them into one
+  score creates fake certainty and hides tradeoffs.
+- Revisit when: repeated independent human playback reviews provide a validated
+  preference model while preserving explicit user goals and selection.
+
 ## Archive Policy
 
 Archived decisions remain searchable in `docs/archive/DECISIONS_HISTORY.md`.

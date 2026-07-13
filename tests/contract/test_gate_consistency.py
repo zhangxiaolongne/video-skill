@@ -12,7 +12,7 @@ def test_current_gate_is_consistent_across_primary_docs():
     readme = (ROOT / "README.md").read_text(encoding="utf-8")
     progress = (ROOT / "docs" / "DEVELOPMENT_PROGRESS.md").read_text(encoding="utf-8")
 
-    gate = "V3-03 Interactive Revision Semantics"
+    gate = "V3-04 A/B Version Review"
     assert f"Current gate: {gate}." in agents
     assert "V2：真实视频审美剪辑基线" in master
     assert "V4：导演型创作系统" in master

@@ -2,51 +2,51 @@
 
 ## Batch Header
 
-- Batch ID: `V3-03`
-- Name: Interactive Revision Semantics
+- Batch ID: `V3-04`
+- Name: A/B Version Review
 - Type: product capability milestone
 - Status: `completed`
-- Capability gate: `V3-03`
-- Prerequisite: published `V3-02 Style Templates`
+- Capability gate: `V3-04`
+- Prerequisite: published `V3-03 Interactive Revision Semantics`
 - Publication: one commit/push only after complete validation
 
 ## Goal Delta
 
-V3-03 converts compound natural-language feedback into explicit, evidence-bound
-editing semantics and tracks whether each semantic request was applied,
-partially applied, left manual, skipped, or blocked. It extends the existing
-revision plan/application chain instead of creating a parallel approval system.
+V3-04 compares two or more existing edit versions across seven editorial and
+audiovisual domains. It distinguishes rendered media, timeline candidates, and
+plan-only revisions; reports pairwise tradeoffs and goal-specific advantages;
+and never silently selects an overall winner.
 
 ## Internal Acceptance Checklist
 
 | ID | Outcome | Acceptance | Status |
 |---|---|---|---|
-| `compound_intent` | Preserve compound feedback | One note produces every recognized request instead of stopping at the first keyword. | `completed` |
-| `scope_intensity_priority` | Make interpretation operational | Every clause binds scope, intensity, priority, confidence, and matched text. | `completed` |
-| `cross_domain_actions` | Translate language into edit work | Style, rhythm, text, voice, BGM, transition, duration, hook, emotion, and ending requests map to concrete actions. | `completed` |
-| `audiovisual_coupling` | Prevent isolated edits | Actions expose coupled BGM, source-audio, text, rhythm, transition, composition, and emotion domains. | `completed` |
-| `evidence_limits` | Preserve truthfulness | Every clause requires current timeline/cut-review or host/user interpretation and playback evidence; unknown language stays low-confidence custom. | `completed` |
-| `conflict_detection` | Expose contradictory notes | Shorter/longer and faster/breathing conflicts remain visible with section-scoping resolution. | `completed` |
-| `observable_acceptance` | Define what success looks like | Every clause and action has playback-observable acceptance, not subjective labels alone. | `completed` |
-| `application_tracking` | Track real execution | Revision application reports semantic outcomes as applied, partial, manual-only, unselected, or blocked. | `completed` |
-| `canonical_convergence` | Avoid workflow fragmentation | Existing revision JSON/Markdown and application JSON/Markdown own the feature; no new approval chain exists. | `completed` |
-| `real_project_truth` | Validate real boundaries | Interview real media completes plan/application semantics; stage stale proposal state and event input-only state remain explicit unavailable boundaries. | `completed` |
+| `multi_version_discovery` | Compare real alternatives | Discover canonical timeline, rendered second cut, and controlled revision candidate when present; require at least two. | `completed` |
+| `evidence_level_separation` | Do not equate plans with playback | Every version is explicitly rendered media, timeline candidate, or plan-only. | `completed` |
+| `freshness_binding` | Reject stale confidence | Bind artifact hashes, verify rendered media hash, and null stale revision confidence. | `completed` |
+| `seven_domain_review` | Cover the master comparison | Independently assess hook, emotional arc, information density, BGM conflict, text burden, ending strength, and platform fit. | `completed` |
+| `uncertainty_preservation` | Avoid fake scores | Missing or weak evidence remains unavailable/partial with confidence and limitations. | `completed` |
+| `pairwise_tradeoffs` | Explain A vs B | Compare every version pair with advantages, unresolved domains, and no winner claim. | `completed` |
+| `goal_specific_advantage` | Support different user goals | Report fast-hook, emotional, clarity, voice-first, text-light, ending, and delivery leaders only when two reliable candidates exist. | `completed` |
+| `no_total_winner` | Preserve user choice | Overall winner is always null; explicit selection remains required. | `completed` |
+| `audiovisual_truth` | Keep BGM/text/media honest | Candidate-specific BGM and text claims require matching evidence; rendered validity is not aesthetic acceptance. | `completed` |
+| `real_project_comparison` | Prove actual multi-version use | Interview compares three real project versions; stale stage and input-only event boundaries remain explicit. | `completed` |
 
 ## Guardrails
 
-- Natural-language interpretation is deterministic CLI guidance, not proof of hidden content understanding.
-- “More premium” changes hierarchy, restraint, sound, pacing, text, transition, and composition together; it is not a filter name.
-- No semantic clause is called applied unless revision-application action evidence supports that status.
-- The canonical timeline is not mutated, media is not rendered, and music/style is not silently selected.
-- CLI performs no model call or network access. Host-Agent interpretation may be added through a future validated boundary.
+- Scores are evidence summaries, not universal taste or mature publishability.
+- A domain leader requires at least two sufficiently reliable comparable versions.
+- No low-confidence plan proxy may outrank real playback as a supported conclusion.
+- No version is selected, promoted, rendered, or written into the canonical timeline.
+- CLI performs no model call, network access, or music selection.
 
 ## Real Acceptance
 
-- `runs/interview_contrast`: compound Chinese feedback produced four semantic clauses, five actions, and explicit manual-only application outcomes without timeline mutation.
-- `runs/chenhaoyu_klein_blue`: existing timeline/cut review are invalidated by a newer brief/proposal boundary; V3-03 correctly refuses to use stale evidence.
-- `runs/public_event_mix`: no canonical timeline/cut review exists; V3-03 correctly refuses to fabricate revision semantics as an applied loop.
+- `runs/interview_contrast`: three versions, three pairwise comparisons, seven domains, null overall winner, and goal-specific evidence boundaries.
+- `runs/chenhaoyu_klein_blue`: stale upstream timeline/proposal state remains unsuitable for current revision/A-B claims.
+- `runs/public_event_mix`: input-only baseline remains unavailable for A/B review because it has no two edit versions.
 
 ## Next Work
 
-V3-04 A/B Version Review may begin only after V3-03 passes full project checks
+V3-05 NLE Round-Trip Plus may begin only after V3-04 passes full project checks
 and is published as one complete capability version.

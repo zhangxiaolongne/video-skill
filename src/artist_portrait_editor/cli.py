@@ -87,6 +87,7 @@ from artist_portrait_editor.revision_promotion import (
     RevisionPromotionError,
     build_revision_promotion_workspace,
 )
+from artist_portrait_editor.version_review import VersionReviewError, build_version_review_workspace
 from artist_portrait_editor.sound_decision import (
     SoundDecisionError,
     build_sound_decision_workspace,
@@ -445,6 +446,12 @@ def build_parser() -> argparse.ArgumentParser:
     promote_revision_sub.add_argument("--json", action="store_true")
     promote_revision_sub.add_argument("--quiet", action="store_true")
     promote_revision_sub.add_argument("--verbose", action="store_true")
+
+    version_review_sub = subparsers.add_parser("version-review")
+    version_review_sub.add_argument("--project", required=True)
+    version_review_sub.add_argument("--json", action="store_true")
+    version_review_sub.add_argument("--quiet", action="store_true")
+    version_review_sub.add_argument("--verbose", action="store_true")
 
     bgm_sub = subparsers.add_parser("bgm")
     bgm_sub.add_argument("action", choices=("import", "list", "analyze", "rhythm", "recommend", "select", "fit", "review"))
@@ -2480,6 +2487,25 @@ def cmd_promote_revision(args: argparse.Namespace) -> int:
     return int(ExitCode.success_with_warnings if warnings else ExitCode.success)
 
 
+def cmd_version_review(args: argparse.Namespace) -> int:
+    if error := _validate_common_flags(args): return int(error)
+    project_path = Path(args.project)
+    try:
+        json_path, md_path, review, warnings = build_version_review_workspace(project_path)
+    except ConfigLoadError as exc:
+        print(str(exc), file=sys.stderr); return int(ExitCode.invalid_project_config)
+    except WorkspacePrerequisiteError as exc:
+        print(str(exc), file=sys.stderr); return int(ExitCode.prerequisite_step_missing)
+    except (VersionReviewError, ValueError) as exc:
+        print(str(exc), file=sys.stderr); return int(ExitCode.output_or_reference_validation_failed)
+    root = project_root(project_path)
+    payload = {"output": json_path.relative_to(root).as_posix(), "report": md_path.relative_to(root).as_posix(), "status": review.status, "version_review": review.model_dump(mode="json"), "warnings": warnings}
+    if args.json: print(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True))
+    elif not args.quiet:
+        print(f"version review {review.status}"); print(f"wrote {payload['output']}"); print(f"wrote {payload['report']}")
+    return int(ExitCode.success_with_warnings if warnings else ExitCode.success)
+
+
 def cmd_export(args: argparse.Namespace) -> int:
     if error := _validate_common_flags(args):
         return int(error)
@@ -3140,6 +3166,7 @@ def main(argv: list[str] | None = None) -> int:
         "revise": cmd_revise,
         "apply-revision": cmd_apply_revision,
         "promote-revision": cmd_promote_revision,
+        "version-review": cmd_version_review,
         "preview": cmd_preview,
         "export": cmd_export,
         "rhythm": cmd_rhythm,
