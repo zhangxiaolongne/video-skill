@@ -79,7 +79,7 @@ release-candidate validation path:
 Current published capability work: `V1-08 Revision promotion, revised render
 readiness, and V1 release packaging` in the retained `v0.30.0` baseline.
 Current local acceptance stage: `ACCEPTANCE-STAGE-07 Real Media Truthfulness And Baseline Recovery`.
-Current V3-05 NLE Round-Trip Plus is complete locally and awaiting publication. V3-04 A/B Version Review is published; V2 remains `v0.40.0`.
+Current V3-06 Publishability Tiers is published as one complete capability version. V3-07 is not active; the tagged V2 baseline remains `v0.40.0`.
 The latest published acceptance release remains `ACCEPTANCE-STAGE-06 Release
 candidate and publication` in `v0.28.0`; the latest published V1 capability
 release baseline is `v0.40.0`.
@@ -133,6 +133,12 @@ plan-only candidate as rendered playback.
 writes source-bound FCPXML, EDL, Resolve/Premiere marker CSV files, a unified cue
 sheet, and a relink manifest. Direct media URIs require exact source hash match.
 Import, relink, playback, and re-export remain pending external acceptance.
+
+`artist-portrait publishability --project <project.yaml>` classifies every
+reviewed version as publishable, previewable, manual-refinement-required, or
+unusable. It binds current media/hash validity, first-cut aesthetics, rendered
+second-cut comparisons, seven-domain A/B evidence, and canonical editable-NLE
+gaps. Technical validity never implies aesthetic approval; no winner is selected.
 
 `artist-portrait promote-revision --project <project.yaml>
 --revision-application-id <id>` is the V1-08 promotion gate. It validates the

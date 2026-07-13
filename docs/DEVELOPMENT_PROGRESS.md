@@ -17,19 +17,19 @@ issue tracker, or master strategy document.
 
 ## Current State
 
-- Current active gate: V3-05 NLE Round-Trip Plus
-- Published predecessor: V3-04 A/B Version Review
-- Gate state: completed locally; ready for one-version publication
+- Current active gate: V3-06 Publishability Tiers
+- Published predecessor: V3-05 NLE Round-Trip Plus
+- Gate state: completed and published as one capability version
 - Completed published capability: `V2-11` V2 Release as `v0.40.0`
-- Current complete version: `V3-05 NLE Round-Trip Plus`
-- Current batch: `V3-05` completed locally
+- Current complete version: `V3-06 Publishability Tiers`
+- Current batch: `V3-06` completed and published
 - Latest published release baseline: `v0.40.0`
 - Current published capability work: V1-08 revision promotion and V1 release
   packaging
 - Current acceptance stage: `ACCEPTANCE-STAGE-07` completed locally with full
   checks and current real-project delivery acceptance
-- Next release policy: publish V3-05 only after source-bound NLE deliverables,
-  truthful relink state, acceptance checks, and full validation close together
+- Next release policy: keep V3-07 closed until its memory/privacy/provenance
+  boundary is planned from the published V3-06 evidence contract
 
 ## Capability Dashboard
 
@@ -54,6 +54,15 @@ error primitives. This is not a V2 capability outcome and does not advance any
 V2-01 task by itself.
 
 ## Current Batch Focus
+
+V3-06 now gives every reviewed candidate one exclusive release tier. The real
+interview canonical final and 60-second second cut remain technically playable
+but require manual refinement; the unrendered revision plan is unusable. The
+system exposes blockers across hook, emotion, information, BGM/voice, text,
+ending, transitions, composition, platform, and editable NLE delivery without
+selecting a winner or promoting technical validity to aesthetic approval.
+Full project validation passes 274 tests plus all golden, BGM/rhythm, NLE,
+schema, package/install, benchmark, release-audit, and diff checks.
 
 `ACCEPTANCE-STAGE-07` made the existing real-media pipeline truthful. V2-01 is
 now complete locally, and its acceptance outcomes live only in `docs/CURRENT_BATCH.md`.
@@ -134,7 +143,7 @@ the active gate and immediate development direction.
 
 ## Next Major Decision
 
-Publish V3-05 after FCPXML, EDL, Resolve/Premiere markers, cue sheet, relink
-manifest, version binding, source freshness, and external acceptance checks form
-one truthful handoff. V3-06 Publishability Tiers is next only after validation
-and publication.
+V3-06 is published with the four-tier decision contract, real interview
+evidence, no-auto-selection boundary, schemas, package checks, and full
+validation closed together. The next planning target is V3-07 Personal/Subject
+Memory; it is not active yet.

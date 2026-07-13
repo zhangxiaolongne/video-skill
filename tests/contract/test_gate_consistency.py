@@ -12,11 +12,11 @@ def test_current_gate_is_consistent_across_primary_docs():
     readme = (ROOT / "README.md").read_text(encoding="utf-8")
     progress = (ROOT / "docs" / "DEVELOPMENT_PROGRESS.md").read_text(encoding="utf-8")
 
-    gate = "V3-05 NLE Round-Trip Plus"
+    gate = "V3-06 Publishability Tiers"
     assert f"Current gate: {gate}." in agents
     assert "V2：真实视频审美剪辑基线" in master
     assert "V4：导演型创作系统" in master
-    assert f"Current {gate} is complete locally" in readme
+    assert f"Current {gate} is published" in readme
     assert f"Current active gate: {gate}" in progress
     assert "`V2-11` V2 Release" in progress
     assert "Current published capability work: `V1-08 Revision promotion, revised render" in readme
@@ -79,6 +79,7 @@ def test_current_gate_preserves_remaining_boundaries():
     assert "nle_interchange" in docs
     assert "FCPXML draft" in docs
     assert "fcpxml" in docs
+    assert "publishability" in docs
     assert "import-review" in docs
     assert "release hardening" in docs
     assert "auto-run pipeline" in docs or "auto-run" in docs

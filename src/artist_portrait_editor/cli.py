@@ -72,6 +72,10 @@ from artist_portrait_editor.preview_workspace import (
     preview_workspace,
     review_preview_workspace,
 )
+from artist_portrait_editor.publishability import (
+    PublishabilityError,
+    build_publishability_workspace,
+)
 from artist_portrait_editor.release_hardening import (
     ReleaseHardeningError,
     build_release_hardening_report,
@@ -460,6 +464,12 @@ def build_parser() -> argparse.ArgumentParser:
     version_review_sub.add_argument("--json", action="store_true")
     version_review_sub.add_argument("--quiet", action="store_true")
     version_review_sub.add_argument("--verbose", action="store_true")
+
+    publishability_sub = subparsers.add_parser("publishability")
+    publishability_sub.add_argument("--project", required=True)
+    publishability_sub.add_argument("--json", action="store_true")
+    publishability_sub.add_argument("--quiet", action="store_true")
+    publishability_sub.add_argument("--verbose", action="store_true")
 
     bgm_sub = subparsers.add_parser("bgm")
     bgm_sub.add_argument("action", choices=("import", "list", "analyze", "rhythm", "recommend", "select", "fit", "review"))
@@ -2550,6 +2560,43 @@ def cmd_version_review(args: argparse.Namespace) -> int:
     return int(ExitCode.success_with_warnings if warnings else ExitCode.success)
 
 
+def cmd_publishability(args: argparse.Namespace) -> int:
+    if error := _validate_common_flags(args):
+        return int(error)
+    project_path = Path(args.project)
+    try:
+        json_path, md_path, report, warnings = build_publishability_workspace(project_path)
+    except ConfigLoadError as exc:
+        print(str(exc), file=sys.stderr)
+        return int(ExitCode.invalid_project_config)
+    except WorkspacePrerequisiteError as exc:
+        print(str(exc), file=sys.stderr)
+        return int(ExitCode.prerequisite_step_missing)
+    except (PublishabilityError, ValueError) as exc:
+        print(str(exc), file=sys.stderr)
+        return int(ExitCode.output_or_reference_validation_failed)
+    root = project_root(project_path)
+    payload = {
+        "output": json_path.relative_to(root).as_posix(),
+        "report": md_path.relative_to(root).as_posix(),
+        "status": report.status,
+        "highest_available_tier": report.highest_available_tier,
+        "highest_tier_version_ids": report.highest_tier_version_ids,
+        "selected_version_id": None,
+        "publishability": report.model_dump(mode="json"),
+        "warnings": warnings,
+    }
+    if args.json:
+        print(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True))
+    elif not args.quiet:
+        print(f"publishability {report.status}")
+        print(f"highest available tier: {report.highest_available_tier}")
+        print("selected version: none")
+        print(f"wrote {payload['output']}")
+        print(f"wrote {payload['report']}")
+    return int(ExitCode.success_with_warnings if warnings else ExitCode.success)
+
+
 def cmd_export(args: argparse.Namespace) -> int:
     if error := _validate_common_flags(args):
         return int(error)
@@ -3212,6 +3259,7 @@ def main(argv: list[str] | None = None) -> int:
         "apply-revision": cmd_apply_revision,
         "promote-revision": cmd_promote_revision,
         "version-review": cmd_version_review,
+        "publishability": cmd_publishability,
         "preview": cmd_preview,
         "export": cmd_export,
         "rhythm": cmd_rhythm,

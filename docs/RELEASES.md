@@ -11,7 +11,7 @@ This file records only current publication state and recent release facts. Full 
   post-refactor, single-root history baseline selected for remote publication.
 - Published scope: V1 engineering substrate plus the V2 real-video aesthetic
   baseline from evidence fusion through second-cut candidates and benchmarks.
-- Active local work: `V3-05 NLE Round-Trip Plus`, completed locally.
+- Active local work: `V3-06 Publishability Tiers`, completed and published.
   Its current prerequisite batch is `ACCEPTANCE-STAGE-07 Real Media
   Truthfulness And Baseline Recovery`.
 - Publication policy: do not publish the next capability release until the
@@ -66,6 +66,14 @@ This file records only current publication state and recent release facts. Full 
   after an exact hash match; missing fixture media remains visibly blocked.
   Full local validation passes 267 tests plus schema, package/install, golden,
   BGM/rhythm, legacy NLE/FCPXML, benchmark, release-audit, and diff checks.
+- V3-06 assigns one of four exclusive tiers to every reviewed version and keeps
+  media freshness, technical validity, first/second-cut aesthetics, BGM/voice,
+  text, composition, transitions, ending, platform, and editable-delivery gaps
+  visible. On the real interview project, both playable cuts require manual
+  refinement, the plan-only revision is unusable, no version is publishable,
+  and selected version remains null. Full local validation passes 274 tests plus
+  schema, package/install, golden, BGM/rhythm, NLE, benchmark, release-audit,
+  and diff checks.
 
 - Architecture baseline validation passed on `2026-07-10`: `.venv/bin/python
   run_checks.py` completed successfully with `239 passed`, schema generation,

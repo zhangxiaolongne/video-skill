@@ -10,9 +10,20 @@ master principles/roadmap, `docs/CURRENT_BATCH.md`, `docs/DEVELOPMENT_PROGRESS.m
 contracts. State the allowed scope, forbidden claims, user corrections, current
 conflicts, real-media acceptance, and non-counting support work before editing.
 
-Current gate: V3-05 NLE Round-Trip Plus. V3-04 A/B Version Review is published.
-V3-05 is complete locally and awaiting publication as one version. V3-06 is not
-active yet.
+Current gate: V3-06 Publishability Tiers. V3-05 NLE Round-Trip Plus is published.
+V3-06 is published as one complete capability version. V3-07 is not active yet.
+
+V3-06 may combine current version review, media validation, first-cut aesthetic
+review, rendered second-cut comparison, and canonical NLE delivery evidence
+into exactly four per-version tiers: `publishable`, `previewable`,
+`manual_refinement_required`, and `unusable`. Every deficit must retain domain,
+severity, disposition, evidence, and next action. Technical validity is required
+for playable media but is never sufficient for aesthetic publishability.
+Plan-only or stale candidates cannot be called previewable. The report may show
+the highest available tier and tied candidate ids, but selection must remain
+null. It must not silently select/promote a version, mutate timelines, render,
+choose music, call models, access the network, or claim human/NLE playback that
+did not occur.
 
 V3-05 may bind current timeline/editor-package/version-review evidence into one
 local NLE round-trip package with source existence/hash/file-URI relink

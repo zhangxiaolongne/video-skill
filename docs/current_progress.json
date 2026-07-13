@@ -1,7 +1,7 @@
 {
   "schema_version": "1.5",
-  "capability_gate": "V3-05",
-  "milestone": "V3-05 NLE Round-Trip Plus",
+  "capability_gate": "V3-06",
+  "milestone": "V3-06 Publishability Tiers",
   "documentation_system": {
     "master": "artist_portrait_editor_revision5_optimized.md",
     "current_progress": "docs/DEVELOPMENT_PROGRESS.md",
@@ -19,14 +19,15 @@
     "current_files_keep_only": "active decisions, current validation, active batch, and next development direction"
   },
   "active_batch": {
-    "id": "V3-05",
-    "name": "NLE Round-Trip Plus",
+    "id": "V3-06",
+    "name": "Publishability Tiers",
     "status": "completed",
+    "publication": "published",
     "started": "2026-07-13",
-    "capability_gate": "V3-05",
+    "capability_gate": "V3-06",
     "acceptance_stage": null,
     "prerequisite_acceptance_stage": "ACCEPTANCE-STAGE-07_completed_locally",
-    "commit_policy": "v3_05_complete_then_one_commit_push_after_full_validation"
+    "commit_policy": "v3_06_complete_then_one_commit_push_after_full_validation"
   },
   "latest_release": {
     "tag": "v0.40.0",
@@ -38,16 +39,16 @@
   },
   "latest_local_validation": {
     "date": "2026-07-13",
-    "full_pytest": ".venv/bin/python -m pytest passed with 267 passed",
-    "project_checks": ".venv/bin/python run_checks.py passed with golden, BGM/rhythm, NLE round-trip, schema, package, install simulation, V2 release baseline, benchmark audit, and diff checks",
+    "full_pytest": ".venv/bin/python -m pytest passed with 274 passed",
+    "project_checks": ".venv/bin/python run_checks.py passed with golden, BGM/rhythm, NLE round-trip, schema, package, install simulation, V2 release baseline, benchmark audit, release audit, and diff checks",
     "real_benchmark": "three-class pack covers stage and interview closed loops plus a four-source 189.74s CC0 event/promo input baseline with an explicit 30s goal",
-    "current_doc_followup": "V3-05 writes source-bound FCPXML, EDL, Resolve/Premiere markers, cue/relink sidecars, version identity, and external round-trip checks"
+    "current_doc_followup": "V3-06 assigns four exclusive per-version quality tiers while preserving media freshness, technical/aesthetic separation, blockers, and null selection"
   },
   "capability_summary": {
     "engineering_substrate": "published",
     "v1_aesthetic_foundation": "published",
     "real_video_aesthetic_maturity": "baseline_complete",
-    "current_gap": "V3-05 provides truthful editable NLE handoff; V3-06 still needs explicit publishability tiers"
+    "current_gap": "V3-06 provides truthful publishability tiers; V3-07 still needs auditable personal/subject creative memory"
   },
   "json_governance": {
     "canonical_rule": "JSON is kept only for canonical machine truth, boundary evidence, generated schema contracts, media validation, run audit, or release-critical evidence.",
@@ -112,43 +113,43 @@
   },
   "tasks": [
     {
-      "id": "source_relink_manifest",
+      "id": "exclusive_quality_tiers",
       "status": "completed"
     },
     {
-      "id": "source_freshness",
+      "id": "media_existence_truth",
       "status": "completed"
     },
     {
-      "id": "version_identity",
+      "id": "technical_validity_boundary",
       "status": "completed"
     },
     {
-      "id": "editable_fcpxml",
+      "id": "first_cut_aesthetic_binding",
       "status": "completed"
     },
     {
-      "id": "edl_handoff",
+      "id": "second_cut_comparison_binding",
       "status": "completed"
     },
     {
-      "id": "resolve_markers",
+      "id": "sound_and_bgm_gate",
       "status": "completed"
     },
     {
-      "id": "premiere_markers",
+      "id": "text_and_composition_gate",
       "status": "completed"
     },
     {
-      "id": "unified_cue_sheet",
+      "id": "editable_delivery_boundary",
       "status": "completed"
     },
     {
-      "id": "editor_markers",
+      "id": "actionable_recovery",
       "status": "completed"
     },
     {
-      "id": "external_acceptance",
+      "id": "no_automatic_selection",
       "status": "completed"
     }
   ]

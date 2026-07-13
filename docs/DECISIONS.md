@@ -329,6 +329,21 @@ decision history is archived in [DECISIONS_HISTORY.md](archive/DECISIONS_HISTORY
 - Revisit when: the host can operate a supported NLE and import/re-export
   evidence through a validated local integration.
 
+### DEC-076: Publishability is a per-version evidence verdict, not a winner
+
+- Status: `active`
+- Decision: assign exactly one of `publishable`, `previewable`,
+  `manual_refinement_required`, or `unusable` to each current reviewed version.
+  Missing/stale media and plan-only candidates are unusable. Technical validity
+  permits playback but cannot satisfy aesthetic publishing. Publish blockers,
+  bounded refinements, evidence gaps, and next actions remain separate. The
+  highest tier may be summarized, but version selection remains null.
+- Rationale: collapsing technical delivery, proxy scores, aesthetic review, and
+  user preference into one winner would falsely publish weak cuts and erase the
+  exact work still required.
+- Revisit when: repeated independent human playback decisions support a
+  calibrated quality model while explicit user selection remains intact.
+
 ## Archive Policy
 
 Archived decisions remain searchable in `docs/archive/DECISIONS_HISTORY.md`.

@@ -52,6 +52,7 @@ from artist_portrait_editor.models.proposal import ProposalSet
 from artist_portrait_editor.models.proposal_context import ProposalContext
 from artist_portrait_editor.models.proposal_validation import ProposalValidationReport
 from artist_portrait_editor.models.preview import PreviewRenderManifest, PreviewValidationReport
+from artist_portrait_editor.models.publishability import PublishabilityReport
 from artist_portrait_editor.models.release import ReleaseHardeningReport
 from artist_portrait_editor.models.revision import RevisionPlan
 from artist_portrait_editor.models.revision_application import RevisionApplication
@@ -130,6 +131,7 @@ def write_schema_files(output_dir: Path) -> None:
         "project_state.schema.json": ProjectState.model_json_schema(),
         "preview_render_manifest.schema.json": PreviewRenderManifest.model_json_schema(),
         "preview_validation_report.schema.json": PreviewValidationReport.model_json_schema(),
+        "publishability_report.schema.json": PublishabilityReport.model_json_schema(),
         "release_hardening_report.schema.json": ReleaseHardeningReport.model_json_schema(),
         "revision_plan.schema.json": RevisionPlan.model_json_schema(),
         "revision_application.schema.json": RevisionApplication.model_json_schema(),

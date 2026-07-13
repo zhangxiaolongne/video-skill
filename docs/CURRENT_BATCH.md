@@ -2,51 +2,71 @@
 
 ## Batch Header
 
-- Batch ID: `V3-05`
-- Name: NLE Round-Trip Plus
+- Batch ID: `V3-06`
+- Name: Publishability Tiers
 - Type: product capability milestone
 - Status: `completed`
-- Capability gate: `V3-05`
-- Prerequisite: published `V3-04 A/B Version Review`
-- Publication: one commit/push only after complete validation
+- Capability gate: `V3-06`
+- Prerequisite: published `V3-05 NLE Round-Trip Plus`
+- Publication: `published` as one commit/push after complete validation
 
 ## Goal Delta
 
-V3-05 turns the existing editor package and planning-only interchange maps into
-a practical local NLE handoff: source-bound FCPXML, EDL, Resolve/Premiere marker
-sidecars, cue sheet, relink manifest, version identity, and an explicit external
-import/relink/playback/round-trip acceptance checklist.
+V3-06 turns scattered technical and aesthetic evidence into one honest,
+per-version release decision. It classifies playable outputs and plan-only
+candidates into four exclusive tiers, preserves every blocker and evidence gap,
+and gives concrete next actions without choosing a version for the user.
 
 ## Internal Acceptance Checklist
 
 | ID | Outcome | Acceptance | Status |
 |---|---|---|---|
-| `source_relink_manifest` | Make source identity actionable | Every used source binds location, expected/actual hash, file URI, timeline items, and relink status. | `completed` |
-| `source_freshness` | Prevent silent substitution | Missing or hash-mismatched media blocks direct-link FCPXML instead of claiming success. | `completed` |
-| `version_identity` | Preserve compared-version context | Package identifies canonical timeline and binds current A/B review when available. | `completed` |
-| `editable_fcpxml` | Deliver an editable FCP timeline | Write structurally valid FCPXML with direct source URIs, timeline ranges, and markers. | `completed` |
-| `edl_handoff` | Support broad NLE interchange | Write a picture edit decision list with source/record timecodes and clip names. | `completed` |
-| `resolve_markers` | Carry review intent into Resolve | Write Resolve marker CSV with manual and A/B findings. | `completed` |
-| `premiere_markers` | Carry review intent into Premiere | Write Premiere marker CSV without pretending it is a native project. | `completed` |
-| `unified_cue_sheet` | Keep clip/audio intent readable | Write clip ranges, source ranges, audio guidance, and creative intent in one cue sheet. | `completed` |
-| `editor_markers` | Enable continued refinement | Manual priorities and A/B goal findings become inspectable timeline markers. | `completed` |
-| `external_acceptance` | Define real round-trip proof | Eight pending checks cover pre-import, import, relink, timeline, markers, audio, playback, and re-export. | `completed` |
+| `exclusive_quality_tiers` | Produce one unambiguous verdict | Every reviewed version is exactly `publishable`, `previewable`, `manual_refinement_required`, or `unusable`. | `completed` |
+| `media_existence_truth` | Reject missing outputs | A render record without current media, or with a changed hash, is unusable. | `completed` |
+| `technical_validity_boundary` | Preserve delivery truth | Technical validity is required for playback but never sufficient for publishing. | `completed` |
+| `first_cut_aesthetic_binding` | Carry the nine-domain first-cut judgment | Canonical output binds opening, pacing, emotion, BGM/voice, text, ending, transitions, composition, and delivery review. | `completed` |
+| `second_cut_comparison_binding` | Carry rendered A/B evidence | Second cut binds all nine comparison domains and its explicit publishability verdict. | `completed` |
+| `sound_and_bgm_gate` | Keep sound coupled to editing | Source audio, added BGM, voice pressure, and unresolved music decisions remain visible blockers or refinements. | `completed` |
+| `text_and_composition_gate` | Prevent plan-only aesthetic promotion | Missing transcript/text render, candidate-specific framing, and transition/ending gaps cannot be hidden by technical QC. | `completed` |
+| `editable_delivery_boundary` | Separate MP4 use from NLE delivery | NLE relink/round-trip gaps apply only to the canonical editable-delivery boundary and do not invalidate unrelated rendered media. | `completed` |
+| `actionable_recovery` | Make every deficit repairable | Every issue carries domain, severity, disposition, evidence, and a concrete next action. | `completed` |
+| `no_automatic_selection` | Preserve user authorship | The report may expose the highest available tier and tied candidates, but selected version and automatic winner remain null. | `completed` |
+
+## Tier Semantics
+
+- `publishable`: current playable media has technical validity, explicit
+  aesthetic approval, and no known publish blocker, refinement, or evidence gap.
+- `previewable`: current playable media has no known publish blocker, but still
+  has bounded refinement work or evidence gaps.
+- `manual_refinement_required`: current playable media has at least one explicit
+  publish blocker that requires human/editorial work.
+- `unusable`: media is absent/stale, technical validity failed, or the candidate
+  is still plan-only.
 
 ## Guardrails
 
-- Written files are NLE candidates, not proof of successful import or playback.
-- Direct URI requires both file existence and exact source-ledger hash.
-- Missing media blocks direct FCPXML linking but does not hide usable sidecars.
-- Audio automation remains cue guidance unless the target format truly carries it.
-- CLI does not open an NLE, relink, render, mutate timelines, select music, call models, or access the network.
+- A valid MP4, rhythm pass, schema pass, or delivery acceptance cannot produce
+  `publishable` without aesthetic evidence.
+- A plan-only revision can never become previewable merely because its proxy
+  scores are high.
+- The CLI does not select a version, mutate timelines, render media, choose BGM,
+  call models, access the network, or claim human playback occurred.
+- Fields, schema, tests, documentation, and incidental fixes are support work,
+  not separate V3-06 tasks.
 
 ## Real Acceptance
 
-- `runs/interview_contrast`: one real source hash matches; six deliverables written; 6 timeline clips, 7 markers, 6 cues; import/relink/playback remain pending.
-- Generated integration fixture: absent fake source produces visible missing/relink state and blocked FCPXML direct-link status while sidecars remain inspectable.
-- Stage/event projects are not promoted to current round-trip proof when their current editor-package prerequisites are absent or stale.
+- `runs/interview_contrast` contains three reviewed versions.
+- Canonical final: media present and technically valid, but first-cut review is
+  `not_publishable`; tier is `manual_refinement_required`.
+- Rendered 60-second second cut: media/hash current and technically valid, but
+  semantic continuity, text, composition, fine pacing, and full aesthetic
+  approval remain unresolved; tier is `manual_refinement_required`.
+- Controlled revision application: plan-only with no playable media; tier is
+  `unusable`.
+- No version is called publishable and no version is selected automatically.
 
 ## Next Work
 
-V3-06 Publishability Tiers may begin only after V3-05 passes full project checks
-and is published as one complete capability version.
+V3-07 Personal/Subject Memory may begin only after V3-06 passes full project
+checks and is published as one complete capability version.

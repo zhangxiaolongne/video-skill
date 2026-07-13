@@ -276,6 +276,7 @@ artist-portrait baseline --project ./project.yaml --agent-output ./aesthetic_bas
 artist-portrait second-cut --project ./project.yaml --concept-id <concept-id>
 artist-portrait version-review --project ./project.yaml
 artist-portrait nle-roundtrip --project ./project.yaml --frame-rate 25
+artist-portrait publishability --project ./project.yaml
 ```
 
 Preview and final export resolve an explicit canvas from the project aspect
@@ -317,6 +318,12 @@ comparisons remain unavailable and require human playback.
 editor package. It binds source existence, hashes, local file URIs, canonical
 version identity, markers, cues, and acceptance checks. It never claims import,
 relink, playback, or round-trip success without external evidence.
+
+`publishability` assigns exactly one quality tier to each current reviewed
+version: publishable, previewable, manual refinement required, or unusable. It
+requires current playable media for every usable tier, preserves technical and
+aesthetic evidence separately, lists blockers/refinements/evidence gaps and
+next actions, and leaves version selection null.
 
 `reframe` is the supervised application boundary. Its byte-visible selection
 must cover every timeline segment, bind current timeline/final/composition
