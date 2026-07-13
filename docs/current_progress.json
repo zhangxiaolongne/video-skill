@@ -1,7 +1,7 @@
 {
   "schema_version": "1.5",
-  "capability_gate": "V3-07",
-  "milestone": "V3-07 Personal/Subject Memory",
+  "capability_gate": "V3-08",
+  "milestone": "V3-08 V3 Release",
   "documentation_system": {
     "master": "artist_portrait_editor_revision5_optimized.md",
     "current_progress": "docs/DEVELOPMENT_PROGRESS.md",
@@ -19,36 +19,36 @@
     "current_files_keep_only": "active decisions, current validation, active batch, and next development direction"
   },
   "active_batch": {
-    "id": "V3-07",
-    "name": "Personal/Subject Memory",
+    "id": "V3-08",
+    "name": "V3 Release",
     "status": "completed",
     "publication": "published",
     "started": "2026-07-13",
-    "capability_gate": "V3-07",
+    "capability_gate": "V3-08",
     "acceptance_stage": null,
     "prerequisite_acceptance_stage": "ACCEPTANCE-STAGE-07_completed_locally",
-    "commit_policy": "v3_07_published_as_one_complete_commit_push"
+    "commit_policy": "v3_08_published_as_one_release_commit_annotated_tag_and_push"
   },
   "latest_release": {
-    "tag": "v0.40.0",
+    "tag": "v0.50.0",
     "status": "published",
     "release_commit": null,
     "tag_object": null,
     "remote_main_publication_ledger": "9013abc83455ea9bfbbd6a7fd8299920a924636b",
-    "scope": "V2 real-video aesthetic baseline with evidence fusion, editorial ranking, duration and audiovisual planning, first-cut review, second-cut media, and three-class benchmarks"
+    "scope": "V3 mature assistant workflow with multi-strategy planning, human revision truth, A/B review, publishability tiers, NLE handoff, creative memory, and retained maturity gaps"
   },
   "latest_local_validation": {
     "date": "2026-07-13",
-    "full_pytest": ".venv/bin/python -m pytest passed with 283 passed",
-    "project_checks": ".venv/bin/python run_checks.py passed with golden, BGM/rhythm, NLE round-trip, schema, package, install simulation, V2 release baseline, benchmark audit, release audit, and diff checks",
+    "full_pytest": ".venv/bin/python -m pytest passed with 286 passed",
+    "project_checks": ".venv/bin/python run_checks.py passed with golden, BGM/rhythm, NLE round-trip, schema, package, install simulation, V3 release candidate, benchmark audit, release audit, and diff checks",
     "real_benchmark": "three-class pack covers stage and interview closed loops plus a four-source 189.74s CC0 event/promo input baseline with an explicit 30s goal",
-    "current_doc_followup": "V3-07 stores auditable project/subject creative memory with explicit identity, provenance, fulfillment truth, exact-identity import, conflicts, and no automatic application"
+    "current_doc_followup": "V3-08 audits exactly ten real workflow outcomes and limits the release claim to a mature assistant workflow"
   },
   "capability_summary": {
     "engineering_substrate": "published",
     "v1_aesthetic_foundation": "published",
     "real_video_aesthetic_maturity": "baseline_complete",
-    "current_gap": "V3-07 provides auditable creative memory; V3-08 still needs a complete V3 workflow release audit"
+    "current_gap": "V3 is published as a mature assistant workflow; mature-editor output, applied human revisions, publishable real cuts, verified NLE round-trip, and event/promo closed loop remain future work"
   },
   "json_governance": {
     "canonical_rule": "JSON is kept only for canonical machine truth, boundary evidence, generated schema contracts, media validation, run audit, or release-critical evidence.",
@@ -113,43 +113,43 @@
   },
   "tasks": [
     {
-      "id": "identity_scope",
+      "id": "workflow_chain",
       "status": "completed"
     },
     {
-      "id": "alias_binding",
+      "id": "real_media_binding",
       "status": "completed"
     },
     {
-      "id": "explicit_preferences",
+      "id": "multi_version_strategies",
       "status": "completed"
     },
     {
-      "id": "hard_constraints",
+      "id": "human_revision_truth",
       "status": "completed"
     },
     {
-      "id": "revision_history",
+      "id": "ab_review_truth",
       "status": "completed"
     },
     {
-      "id": "fulfillment_truth",
+      "id": "publishability_truth",
       "status": "completed"
     },
     {
-      "id": "selected_style_only",
+      "id": "nle_handoff_truth",
       "status": "completed"
     },
     {
-      "id": "cross_project_import",
+      "id": "creative_memory_boundary",
       "status": "completed"
     },
     {
-      "id": "conflict_preservation",
+      "id": "audiovisual_coupling",
       "status": "completed"
     },
     {
-      "id": "advisory_retrieval",
+      "id": "benchmark_package_boundary",
       "status": "completed"
     }
   ]

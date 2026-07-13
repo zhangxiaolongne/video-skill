@@ -1,0 +1,276 @@
+{
+  "$defs": {
+    "V3ReleaseEvidence": {
+      "additionalProperties": false,
+      "properties": {
+        "current": {
+          "title": "Current",
+          "type": "boolean"
+        },
+        "fingerprint": {
+          "pattern": "^sha256:[0-9a-f]{64}$",
+          "title": "Fingerprint",
+          "type": "string"
+        },
+        "label": {
+          "minLength": 1,
+          "title": "Label",
+          "type": "string"
+        },
+        "limitation": {
+          "title": "Limitation",
+          "type": "string"
+        },
+        "ref": {
+          "minLength": 1,
+          "title": "Ref",
+          "type": "string"
+        }
+      },
+      "required": [
+        "label",
+        "ref",
+        "fingerprint",
+        "current",
+        "limitation"
+      ],
+      "title": "V3ReleaseEvidence",
+      "type": "object"
+    },
+    "V3ReleaseOutcome": {
+      "additionalProperties": false,
+      "properties": {
+        "evidence_refs": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Evidence Refs",
+          "type": "array"
+        },
+        "limitations": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Limitations",
+          "type": "array"
+        },
+        "next_actions": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Next Actions",
+          "type": "array"
+        },
+        "outcome_id": {
+          "enum": [
+            "workflow_chain",
+            "real_media_binding",
+            "multi_version_strategies",
+            "human_revision_truth",
+            "ab_review_truth",
+            "publishability_truth",
+            "nle_handoff_truth",
+            "creative_memory_boundary",
+            "audiovisual_coupling",
+            "benchmark_package_boundary"
+          ],
+          "title": "Outcome Id",
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "passed",
+            "warning",
+            "failed"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "summary": {
+          "minLength": 1,
+          "title": "Summary",
+          "type": "string"
+        }
+      },
+      "required": [
+        "outcome_id",
+        "status",
+        "summary",
+        "evidence_refs"
+      ],
+      "title": "V3ReleaseOutcome",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "aesthetic_maturity": {
+      "const": "manual_refinement_still_required",
+      "default": "manual_refinement_still_required",
+      "title": "Aesthetic Maturity",
+      "type": "string"
+    },
+    "audit_id": {
+      "minLength": 1,
+      "title": "Audit Id",
+      "type": "string"
+    },
+    "automatic_music_selection": {
+      "default": false,
+      "title": "Automatic Music Selection",
+      "type": "boolean"
+    },
+    "automatic_version_selection": {
+      "default": false,
+      "title": "Automatic Version Selection",
+      "type": "boolean"
+    },
+    "canonical_timeline_mutated": {
+      "default": false,
+      "title": "Canonical Timeline Mutated",
+      "type": "boolean"
+    },
+    "evidence": {
+      "items": {
+        "$ref": "#/$defs/V3ReleaseEvidence"
+      },
+      "minItems": 10,
+      "title": "Evidence",
+      "type": "array"
+    },
+    "failed_count": {
+      "minimum": 0,
+      "title": "Failed Count",
+      "type": "integer"
+    },
+    "human_playback_claimed": {
+      "default": false,
+      "title": "Human Playback Claimed",
+      "type": "boolean"
+    },
+    "known_gaps": {
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Known Gaps",
+      "type": "array"
+    },
+    "mature_editor_claimed": {
+      "default": false,
+      "title": "Mature Editor Claimed",
+      "type": "boolean"
+    },
+    "media_rendered": {
+      "default": false,
+      "title": "Media Rendered",
+      "type": "boolean"
+    },
+    "memory_applied_to_edit": {
+      "default": false,
+      "title": "Memory Applied To Edit",
+      "type": "boolean"
+    },
+    "model_call_performed_by_cli": {
+      "default": false,
+      "title": "Model Call Performed By Cli",
+      "type": "boolean"
+    },
+    "network_performed": {
+      "default": false,
+      "title": "Network Performed",
+      "type": "boolean"
+    },
+    "nle_roundtrip_claimed": {
+      "default": false,
+      "title": "Nle Roundtrip Claimed",
+      "type": "boolean"
+    },
+    "outcome_count": {
+      "maximum": 10,
+      "minimum": 10,
+      "title": "Outcome Count",
+      "type": "integer"
+    },
+    "outcomes": {
+      "items": {
+        "$ref": "#/$defs/V3ReleaseOutcome"
+      },
+      "maxItems": 10,
+      "minItems": 10,
+      "title": "Outcomes",
+      "type": "array"
+    },
+    "passed_count": {
+      "minimum": 0,
+      "title": "Passed Count",
+      "type": "integer"
+    },
+    "product_claim": {
+      "const": "mature_assistant_workflow",
+      "default": "mature_assistant_workflow",
+      "title": "Product Claim",
+      "type": "string"
+    },
+    "project_id": {
+      "minLength": 1,
+      "title": "Project Id",
+      "type": "string"
+    },
+    "release_statement": {
+      "minLength": 1,
+      "title": "Release Statement",
+      "type": "string"
+    },
+    "release_tag": {
+      "default": "v0.50.0",
+      "title": "Release Tag",
+      "type": "string"
+    },
+    "release_version": {
+      "pattern": "^0\\.50\\.0$",
+      "title": "Release Version",
+      "type": "string"
+    },
+    "schema_version": {
+      "default": "0.3",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "selected_version_id": {
+      "default": null,
+      "title": "Selected Version Id",
+      "type": "null"
+    },
+    "status": {
+      "enum": [
+        "release_ready_with_known_gaps",
+        "blocked"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "warning_count": {
+      "minimum": 0,
+      "title": "Warning Count",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "audit_id",
+    "project_id",
+    "release_version",
+    "status",
+    "outcome_count",
+    "passed_count",
+    "warning_count",
+    "failed_count",
+    "outcomes",
+    "evidence",
+    "known_gaps",
+    "release_statement"
+  ],
+  "title": "V3ReleaseAudit",
+  "type": "object"
+}

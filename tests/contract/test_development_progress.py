@@ -203,14 +203,14 @@ def test_machine_readable_progress_matches_current_dashboard():
     payload = snapshot()
 
     assert payload["schema_version"] == "1.5"
-    assert payload["capability_gate"] == "V3-07"
+    assert payload["capability_gate"] == "V3-08"
     assert payload["milestone"] in progress
     assert payload["active_batch"]["id"] in progress
-    assert payload["active_batch"]["id"] == "V3-07"
+    assert payload["active_batch"]["id"] == "V3-08"
     assert payload["active_batch"]["acceptance_stage"] is None
     assert payload["active_batch"]["status"] == "completed"
     assert payload["active_batch"]["publication"] == "published"
-    assert payload["latest_release"]["tag"] == "v0.40.0"
+    assert payload["latest_release"]["tag"] == "v0.50.0"
     assert payload["latest_release"]["status"] == "published"
     assert payload["latest_release"]["release_commit"] is None
     assert payload["archive_policy"]["decision_history"] == (
@@ -222,9 +222,9 @@ def test_machine_readable_progress_matches_current_dashboard():
     assert payload["capability_summary"]["engineering_substrate"] == "published"
     assert payload["capability_summary"]["v1_aesthetic_foundation"] == "published"
     assert payload["capability_summary"]["real_video_aesthetic_maturity"] == "baseline_complete"
-    assert "Personal/Subject Memory" in progress
-    assert payload["tasks"][0]["id"] == "identity_scope"
-    assert payload["tasks"][-1]["id"] == "advisory_retrieval"
+    assert "V3 Release" in progress
+    assert payload["tasks"][0]["id"] == "workflow_chain"
+    assert payload["tasks"][-1]["id"] == "benchmark_package_boundary"
     assert len(payload["tasks"]) == 10
     assert all(task["status"] == "completed" for task in payload["tasks"])
 

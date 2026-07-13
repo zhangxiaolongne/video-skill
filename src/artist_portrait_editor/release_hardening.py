@@ -25,6 +25,7 @@ REQUIRED_SCHEMA_FILES = [
     "workflow_execution_record.schema.json",
     "workflow_execution_review.schema.json",
     "workflow_plan.schema.json",
+    "v3_release_audit.schema.json",
 ]
 
 
@@ -39,6 +40,7 @@ REQUIRED_ARTIFACT_TOKENS = [
     "edit_brief.json",
     "edit_guidance.json",
     "revision_plan.json",
+    "v3_release_audit.json",
 ]
 
 

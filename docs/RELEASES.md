@@ -4,14 +4,15 @@ This file records only current publication state and recent release facts. Full 
 
 ## Current Release State
 
-- Latest published source baseline: `v0.40.0`
-- Release commit: resolved by annotated tag `v0.40.0`
-- Annotated tag: `v0.40.0`
+- Latest published source baseline: `v0.50.0`
+- Release commit: resolved by annotated tag `v0.50.0`
+- Annotated tag: `v0.50.0`
 - Publication ledger: `9013abc83455ea9bfbbd6a7fd8299920a924636b` records the
   post-refactor, single-root history baseline selected for remote publication.
 - Published scope: V1 engineering substrate plus the V2 real-video aesthetic
   baseline from evidence fusion through second-cut candidates and benchmarks.
-- Latest published capability work: `V3-07 Personal/Subject Memory`.
+- Latest published capability work: `V3-08 V3 Release` as `v0.50.0`.
+  It includes `V3-07 Personal/Subject Memory`.
   Its current prerequisite batch is `ACCEPTANCE-STAGE-07 Real Media
   Truthfulness And Baseline Recovery`.
 - Publication policy: do not publish the next capability release until the
@@ -83,20 +84,24 @@ This file records only current publication state and recent release facts. Full 
   passes 283 tests via `.venv/bin/python -m pytest`; `.venv/bin/python
   run_checks.py` also passes schema, package/install, golden, BGM/rhythm, NLE,
   benchmark, release-audit, and diff checks.
-
-- Architecture baseline validation passed on `2026-07-10`: `.venv/bin/python
-  run_checks.py` completed successfully with `239 passed`, schema generation,
-  skill validation, install simulation, release-candidate checks, and clean
-  diff validation.
-- The `v0.30.0` tag is the sole retained Git baseline. Detailed pre-reset
-  release history remains readable in `docs/archive/RELEASES_HISTORY.md` but is
-  intentionally not retained as Git object history.
+- V3-08 binds V3-01 through V3-07 into exactly ten release outcomes against the
+  current real interview project and three-class benchmark pack. Eight outcomes
+  pass and two warn: all four human revision clauses remain `manual_only`, and
+  all eight external NLE checks remain pending. Current real media hashes match,
+  four strategy signatures differ, three versions are compared without a
+  winner, publishability remains honest, memory is advisory, and audiovisual
+  evidence remains coupled. The release claim is
+  `mature_assistant_workflow`; mature-editor output is explicitly not claimed.
+  Full project validation passes 286 tests via `.venv/bin/python -m pytest`;
+  `.venv/bin/python run_checks.py` also passes Schema, Skill/package/install,
+  golden, BGM/rhythm, NLE, real benchmark, release-candidate, and diff checks.
 
 ## Recent Releases
 
 | Release | Scope | Publication |
 | --- | --- | --- |
-| `v0.40.0` | V2 real-video aesthetic baseline | Current release |
+| `v0.50.0` | V3 mature assistant workflow | Current release |
+| `v0.40.0` | V2 real-video aesthetic baseline | Previous release |
 | `v0.30.0` | Single-root V1 architecture baseline | Previous retained baseline |
 | Pre-`v0.30.0` | Historical releases | Details retained as Markdown archive only |
 

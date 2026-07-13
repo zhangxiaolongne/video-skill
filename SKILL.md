@@ -336,6 +336,14 @@ current config facts; a different canonical identity requires
 `--replace-existing`. Retrieval remains advisory: no style, BGM, shot, or edit
 is selected or applied automatically.
 
+`v3-release-audit` binds the current V3 strategy, revision, A/B review,
+publishability, NLE handoff, creative memory, audiovisual, rendered-media, and
+real-benchmark evidence into `.artist-portrait/data/v3_release_audit.json` and
+one Markdown report. It requires exactly ten release outcomes and limits the
+claim to `mature_assistant_workflow`. Manual-only human changes, pending NLE
+acceptance, and non-publishable real cuts remain release gaps; the command does
+not select, edit, render, apply memory, call models, or access the network.
+
 `reframe` is the supervised application boundary. Its byte-visible selection
 must cover every timeline segment, bind current timeline/final/composition
 fingerprints, and explicitly choose a candidate or preserve the frame. It

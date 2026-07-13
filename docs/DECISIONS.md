@@ -361,6 +361,23 @@ decision history is archived in [DECISIONS_HISTORY.md](archive/DECISIONS_HISTORY
 - Revisit when: explicit user satisfaction evidence and repeated cross-project
   outcomes support promotion rules without removing provenance or user control.
 
+### DEC-078: V3 releases workflow maturity, not mature-editor output
+
+- Status: `active`
+- Decision: V3-08 requires exactly ten release outcomes spanning the complete
+  V3 chain, current real media, four strategy alternatives, explicit human
+  revision evidence, A/B review, publishability, NLE handoff, creative memory,
+  audiovisual coupling, and benchmark/package boundaries. The release claim is
+  `mature_assistant_workflow`; `mature_editor_claimed` remains false. Manual-only
+  revisions, non-publishable cuts, pending NLE checks, and input-only benchmark
+  classes remain first-class release facts rather than blockers hidden by tests.
+- Rationale: engineering completeness and truthful human control are releasable,
+  but they do not prove that current media has mature pacing, semantic editing,
+  playback approval, or professional NLE round-trip acceptance.
+- Revisit when: repeated real projects contain applied human revision loops,
+  independent playback approval, publishable candidates, and verified NLE
+  round trips without weakening the evidence contract.
+
 ## Archive Policy
 
 Archived decisions remain searchable in `docs/archive/DECISIONS_HISTORY.md`.

@@ -10,9 +10,21 @@ master principles/roadmap, `docs/CURRENT_BATCH.md`, `docs/DEVELOPMENT_PROGRESS.m
 contracts. State the allowed scope, forbidden claims, user corrections, current
 conflicts, real-media acceptance, and non-counting support work before editing.
 
-Current gate: V3-07 Personal/Subject Memory. V3-06 Publishability Tiers is
-published. V3-07 is published as one complete capability version. V3-08 is not
-active yet.
+Current gate: V3-08 V3 Release. V3-07 Personal/Subject Memory is published.
+V3-08 is published as `v0.50.0`. V4-01 is not active yet.
+
+V3-08 may audit the complete V3-01 through V3-07 workflow against one current
+real project and the three-class real benchmark pack. It may bind four distinct
+creative strategies, an explicit human revision and clause outcomes, multi-
+version A/B review, per-version publishability, source-bound NLE deliverables,
+creative memory, audiovisual coupling, current rendered-media hashes, offline
+package boundaries, and exactly ten release outcomes. It may release version
+`0.50.0` as a `mature_assistant_workflow` with known gaps. Human revisions that
+remain `manual_only`, non-publishable cuts, input-only benchmarks, and pending
+NLE checks must stay visible. It must not claim mature-editor output, human
+playback, NLE round-trip success, user satisfaction, or aesthetic
+publishability; select a version; apply memory; mutate timelines; render media;
+choose BGM; call models; access the network; or package local benchmark media.
 
 V3-07 may build one canonical auditable creative memory plus one human report
 for either current project identity or an explicitly supplied subject identity.

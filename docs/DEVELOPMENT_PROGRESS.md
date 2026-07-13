@@ -17,19 +17,19 @@ issue tracker, or master strategy document.
 
 ## Current State
 
-- Current active gate: V3-07 Personal/Subject Memory
-- Published predecessor: V3-06 Publishability Tiers
-- Gate state: published as one complete capability version
+- Current active gate: V3-08 V3 Release
+- Published predecessor: V3-07 Personal/Subject Memory
+- Gate state: published as `v0.50.0`
 - Completed published capability: `V2-11` V2 Release as `v0.40.0`
-- Current complete version: `V3-07 Personal/Subject Memory`
-- Current batch: `V3-07` completed and published
-- Latest published release baseline: `v0.40.0`
+- Current complete version: `V3-08 V3 Release`
+- Current batch: `V3-08` completed and published
+- Latest published release baseline: `v0.50.0`
 - Current published capability work: V1-08 revision promotion and V1 release
   packaging
 - Current acceptance stage: `ACCEPTANCE-STAGE-07` completed locally with full
   checks and current real-project delivery acceptance
-- Next release policy: plan V3-08 as one complete V3 workflow release audit;
-  do not activate it as isolated cleanup or test work
+- Next release policy: plan V4-01 from retained V3 maturity gaps; do not activate
+  it as isolated cleanup, schema, test, or speculative semantic work
 
 ## Capability Dashboard
 
@@ -55,6 +55,21 @@ V2-01 task by itself.
 
 ## Current Batch Focus
 
+V3-08 binds the complete V3 workflow into one real-project release audit. The
+interview audit has exactly ten independent outcomes: eight pass and two warn.
+The current rendered second cut matches its recorded hash, four creative
+strategies remain materially distinct, three versions are compared without a
+winner, every publishability tier remains truthful, memory is advisory, and
+sound/text/rhythm/picture state stays coupled. The release claim is limited to
+`mature_assistant_workflow`.
+
+The two warnings are deliberate release facts, not test failures: all four
+human revision clauses remain `manual_only`, and all eight external NLE checks
+remain pending. Neither playable real cut is aesthetically publishable without
+manual refinement, and event/promo remains an input-only benchmark. V3-08 does
+not claim mature-editor output, human playback, NLE round-trip success, or user
+satisfaction.
+
 V3-07 now records explicit project or subject creative memory without guessing
 identity or applying edits. The real interview project yields 13 entries: eight
 confirmed project facts and five requested revision memories. The full user
@@ -71,6 +86,9 @@ ending, transitions, composition, platform, and editable NLE delivery without
 selecting a winner or promoting technical validity to aesthetic approval.
 Full project validation passes 283 tests plus all golden, BGM/rhythm, NLE,
 schema, package/install, benchmark, release-audit, and diff checks.
+
+V3-08 release validation passes 286 tests plus Schema, Skill/package/install,
+golden, BGM/rhythm, NLE, real benchmark, release-candidate, and diff checks.
 
 `ACCEPTANCE-STAGE-07` made the existing real-media pipeline truthful. V2-01 is
 now complete locally, and its acceptance outcomes live only in `docs/CURRENT_BATCH.md`.
@@ -151,7 +169,5 @@ the active gate and immediate development direction.
 
 ## Next Major Decision
 
-Plan V3-08 as one complete V3 release audit covering the published V3-01 through
-V3-07 workflow, real-media evidence, human revision truth, A/B review, NLE
-handoff, package boundaries, and unresolved maturity gaps. V3-08 is not active
-until that batch is explicit.
+Plan V4-01 from the retained V3 gaps only after rereading the canonical rules.
+Do not start V4 as isolated schema, test, cleanup, or speculative semantic work.

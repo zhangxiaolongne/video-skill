@@ -42,6 +42,10 @@ from artist_portrait_editor.creative_memory import (
     CreativeMemoryError,
     build_creative_memory_workspace,
 )
+from artist_portrait_editor.v3_release import (
+    V3ReleaseError,
+    build_v3_release_audit_workspace,
+)
 from artist_portrait_editor.editor_package import EditorPackageError, build_editor_package
 from artist_portrait_editor.editorial_scoring import EditorialScoringError, build_editorial_scores
 from artist_portrait_editor.bgm_recommendation import (
@@ -490,6 +494,13 @@ def build_parser() -> argparse.ArgumentParser:
     memory_sub.add_argument("--json", action="store_true")
     memory_sub.add_argument("--quiet", action="store_true")
     memory_sub.add_argument("--verbose", action="store_true")
+
+    v3_release_sub = subparsers.add_parser("v3-release-audit")
+    v3_release_sub.add_argument("--project", required=True)
+    v3_release_sub.add_argument("--benchmark-pack", required=True)
+    v3_release_sub.add_argument("--json", action="store_true")
+    v3_release_sub.add_argument("--quiet", action="store_true")
+    v3_release_sub.add_argument("--verbose", action="store_true")
 
     bgm_sub = subparsers.add_parser("bgm")
     bgm_sub.add_argument("action", choices=("import", "list", "analyze", "rhythm", "recommend", "select", "fit", "review"))
@@ -2669,6 +2680,47 @@ def cmd_memory(args: argparse.Namespace) -> int:
     return int(ExitCode.success_with_warnings if warnings else ExitCode.success)
 
 
+def cmd_v3_release_audit(args: argparse.Namespace) -> int:
+    if error := _validate_common_flags(args):
+        return int(error)
+    project_path = Path(args.project)
+    try:
+        json_path, md_path, audit, warnings = build_v3_release_audit_workspace(
+            project_path, benchmark_pack_path=Path(args.benchmark_pack)
+        )
+    except ConfigLoadError as exc:
+        print(str(exc), file=sys.stderr)
+        return int(ExitCode.invalid_project_config)
+    except WorkspacePrerequisiteError as exc:
+        print(str(exc), file=sys.stderr)
+        return int(ExitCode.prerequisite_step_missing)
+    except (V3ReleaseError, OSError, ValueError) as exc:
+        print(str(exc), file=sys.stderr)
+        return int(ExitCode.output_or_reference_validation_failed)
+    root = project_root(project_path)
+    payload = {
+        "output": json_path.relative_to(root).as_posix(),
+        "report": md_path.relative_to(root).as_posix(),
+        "status": audit.status,
+        "release_version": audit.release_version,
+        "product_claim": audit.product_claim,
+        "mature_editor_claimed": False,
+        "v3_release_audit": audit.model_dump(mode="json"),
+        "warnings": warnings,
+    }
+    if args.json:
+        print(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True))
+    elif not args.quiet:
+        print(f"v3 release audit {audit.status}")
+        print(f"release version: {audit.release_version}")
+        print("mature editor claimed: false")
+        print(f"wrote {payload['output']}")
+        print(f"wrote {payload['report']}")
+    if audit.status == "blocked":
+        return int(ExitCode.output_or_reference_validation_failed)
+    return int(ExitCode.success_with_warnings if warnings else ExitCode.success)
+
+
 def cmd_export(args: argparse.Namespace) -> int:
     if error := _validate_common_flags(args):
         return int(error)
@@ -3333,6 +3385,7 @@ def main(argv: list[str] | None = None) -> int:
         "version-review": cmd_version_review,
         "publishability": cmd_publishability,
         "memory": cmd_memory,
+        "v3-release-audit": cmd_v3_release_audit,
         "preview": cmd_preview,
         "export": cmd_export,
         "rhythm": cmd_rhythm,

@@ -79,7 +79,7 @@ release-candidate validation path:
 Current published capability work: `V1-08 Revision promotion, revised render
 readiness, and V1 release packaging` in the retained `v0.30.0` baseline.
 Current local acceptance stage: `ACCEPTANCE-STAGE-07 Real Media Truthfulness And Baseline Recovery`.
-Current V3-07 Personal/Subject Memory is published. V3-06 Publishability Tiers is published; V3-08 is not active, and the tagged V2 baseline remains `v0.40.0`.
+Current V3-08 V3 Release is published as `v0.50.0`. V3-07 Personal/Subject Memory is included; V4-01 is not active.
 The latest published acceptance release remains `ACCEPTANCE-STAGE-06 Release
 candidate and publication` in `v0.28.0`; the latest published V1 capability
 release baseline is `v0.40.0`.
@@ -147,6 +147,14 @@ explicit `--subject-id` and `--subject-name`; `--source-memory` reuses only an
 exact matching local identity. Same-identity reruns retain explicit memory while
 refreshing project-config facts; identity replacement requires
 `--replace-existing`. Memory is advisory and never applied implicitly.
+
+`artist-portrait v3-release-audit --project <project.yaml> --benchmark-pack
+<real_video_benchmark_pack.json>` writes canonical
+`.artist-portrait/data/v3_release_audit.json` plus one Markdown report. It audits
+exactly ten V3 workflow outcomes against current real media and preserves
+manual-only revisions, non-publishable candidates, pending NLE checks, and the
+event/promo input-only baseline. Its product claim is limited to a mature
+assistant workflow; it never claims mature-editor output or performs edits.
 
 `artist-portrait promote-revision --project <project.yaml>
 --revision-application-id <id>` is the V1-08 promotion gate. It validates the

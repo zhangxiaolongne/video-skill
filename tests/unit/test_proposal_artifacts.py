@@ -43,5 +43,5 @@ def test_progress_snapshot_keeps_current_v2_boundaries_machine_readable():
     )
 
     assert payload["schema_version"] == "1.5"
-    assert payload["capability_gate"] == "V3-07"
+    assert payload["capability_gate"] == "V3-08"
     assert payload["active_batch"]["capability_gate"] == payload["capability_gate"]
