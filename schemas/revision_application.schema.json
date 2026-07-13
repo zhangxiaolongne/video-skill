@@ -290,6 +290,60 @@
       "title": "RevisionSegmentChange",
       "type": "object"
     },
+    "RevisionSemanticOutcome": {
+      "additionalProperties": false,
+      "properties": {
+        "acceptance_observations": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Acceptance Observations",
+          "type": "array"
+        },
+        "action_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Action Ids",
+          "type": "array"
+        },
+        "clause_id": {
+          "minLength": 1,
+          "title": "Clause Id",
+          "type": "string"
+        },
+        "domain": {
+          "minLength": 1,
+          "title": "Domain",
+          "type": "string"
+        },
+        "evidence": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Evidence",
+          "type": "array"
+        },
+        "operation": {
+          "minLength": 1,
+          "title": "Operation",
+          "type": "string"
+        },
+        "status": {
+          "pattern": "^(applied|partially_applied|manual_only|not_selected|blocked)$",
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "clause_id",
+        "domain",
+        "operation",
+        "status"
+      ],
+      "title": "RevisionSemanticOutcome",
+      "type": "object"
+    },
     "TimelineSegment": {
       "additionalProperties": false,
       "properties": {
@@ -665,6 +719,13 @@
       "minLength": 1,
       "title": "Selected Version Id",
       "type": "string"
+    },
+    "semantic_outcomes": {
+      "items": {
+        "$ref": "#/$defs/RevisionSemanticOutcome"
+      },
+      "title": "Semantic Outcomes",
+      "type": "array"
     },
     "skipped_action_count": {
       "minimum": 0,

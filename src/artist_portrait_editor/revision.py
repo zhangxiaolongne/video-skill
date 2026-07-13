@@ -17,6 +17,8 @@ from artist_portrait_editor.models.revision import (
     RevisionComparison,
     RevisionIntent,
     RevisionPlan,
+    RevisionSemanticClause,
+    RevisionSemanticConflict,
     RevisionVersionCandidate,
 )
 from artist_portrait_editor.models.rhythm import RhythmPlan
@@ -189,6 +191,8 @@ def build_revision_plan(
 
     ordered = sorted(timeline.segments, key=lambda item: item.timeline_start)
     classified, reasons = _classify_request(request_text, request_type)
+    semantic_clauses = _parse_revision_semantics(request_text, classified, request_type is not None)
+    semantic_conflicts = _find_semantic_conflicts(semantic_clauses)
     intent = RevisionIntent(
         intent_id=_id("intent", request_text, classified, ",".join(keep_segment_ids), ",".join(remove_segment_ids)),
         request_text=request_text,
@@ -216,6 +220,7 @@ def build_revision_plan(
         timeline_ref=timeline_ref,
         cut_review_ref=cut_review_ref,
     )
+    _append_semantic_actions(actions, semantic_clauses, ordered, timeline_ref, cut_review_ref)
     candidates = _build_candidates(intent, timeline, actions)
     comparison = RevisionComparison(
         baseline_version_id="current_version",
@@ -254,6 +259,9 @@ def build_revision_plan(
         final_export_validation_ref=final_validation_ref,
         final_export_validation_fingerprint=final_validation_fingerprint,
         intent=intent,
+        semantic_clauses=semantic_clauses,
+        semantic_conflicts=semantic_conflicts,
+        covered_domains=sorted({clause.domain for clause in semantic_clauses}),
         current_duration_seconds=timeline.actual_duration,
         target_duration_seconds=target_duration_seconds,
         action_count=len(actions),
@@ -284,6 +292,27 @@ def render_revision_plan(plan: RevisionPlan) -> str:
         f"{plan.comparison.summary}",
         "",
     ]
+    lines.extend(["## Interpreted Revision Semantics", ""])
+    for clause in plan.semantic_clauses:
+        lines.extend(
+            [
+                f"### {clause.priority}. {clause.domain} / {clause.operation}",
+                "",
+                f"- Scope: `{clause.scope}`",
+                f"- Intensity: `{clause.intensity}`",
+                f"- Confidence: `{clause.confidence:.2f}`",
+                f"- Coupled domains: `{', '.join(clause.coupled_domains) or 'none'}`",
+                f"- Application status: `{clause.application_status}`",
+                "- Acceptance observations:",
+                *[f"  - {item}" for item in clause.acceptance_observations],
+                "",
+            ]
+        )
+    if plan.semantic_conflicts:
+        lines.extend(["## Semantic Conflicts", ""])
+        for conflict in plan.semantic_conflicts:
+            lines.append(f"- `{conflict.status}`: {conflict.description} Resolution: {conflict.resolution}")
+        lines.append("")
     for candidate in plan.version_candidates:
         lines.extend(
             [
@@ -318,6 +347,8 @@ def render_revision_plan(plan: RevisionPlan) -> str:
                 f"- Recommendation: {action.recommendation}",
                 f"- Rationale: {action.rationale}",
                 f"- Expected effect: {action.expected_effect}",
+                f"- Affected domains: `{', '.join(action.affected_domains) or 'unspecified'}`",
+                f"- Application status: `{action.application_status}`",
                 f"- Edits applied: `{action.edits_applied}`",
                 "",
             ]
@@ -510,7 +541,7 @@ def _classify_request(request_text: str, request_type: str | None) -> tuple[str,
         return request_type, [f"explicit request type: {request_type}"]
     lowered = request_text.lower()
     checks = [
-        ("shorter", ("shorter", "short", "trim", "短", "缩短", "快一点")),
+        ("shorter", ("shorter", "short", "trim", "短", "缩短")),
         ("longer", ("longer", "extend", "more context", "长", "更完整")),
         ("stronger_hook", ("hook", "opening", "开头", "开场", "冲击")),
         ("more_emotional", ("emotional", "emotion", "moving", "情绪", "感动")),
@@ -524,6 +555,112 @@ def _classify_request(request_text: str, request_type: str | None) -> tuple[str,
         if any(token in lowered for token in tokens):
             return value, [f"matched keyword for {value}"]
     return "custom", ["no deterministic keyword match; classified as custom"]
+
+
+_SEMANTIC_RULES = (
+    ("duration", "shorten", ("shorter", "trim", "缩短", "短一点"), "whole_cut", ("structure", "rhythm"), "Playback duration is lower without removing protected material."),
+    ("duration", "lengthen", ("longer", "extend", "长一点", "更完整"), "whole_cut", ("structure", "rhythm"), "Playback adds useful context without obvious dead space."),
+    ("structure", "strengthen_hook", ("stronger hook", "hook", "开头更强", "开场", "抓人"), "opening", ("rhythm", "source_audio", "text"), "The first meaningful beat arrives earlier and states the premise more clearly."),
+    ("rhythm", "accelerate", ("faster", "快点", "快一点", "节奏快", "更紧凑"), "whole_cut", ("duration", "text", "transition", "bgm"), "Dead time decreases while dialogue, performance, and emotional buildup remain intelligible."),
+    ("rhythm", "slow_or_breathe", ("slower", "慢一点", "留白", "呼吸感"), "whole_cut", ("emotion", "source_audio", "bgm"), "Key moments gain breathing room without turning into accidental dead space."),
+    ("emotion", "strengthen", ("more emotional", "emotion", "更有情绪", "感动", "情绪更强"), "whole_cut", ("rhythm", "bgm", "source_audio", "ending"), "The emotional turn is clearer in playback and remains supported by real evidence."),
+    ("style", "refine_premium", ("高级", "premium", "更克制", "质感"), "whole_cut", ("rhythm", "text", "transition", "composition", "bgm"), "Playback shows fewer decorative interventions, cleaner hierarchy, and deliberate restraint."),
+    ("text", "reduce_density", ("少点字", "少一点字", "减少字幕", "字幕少", "less text", "fewer subtitles"), "whole_cut", ("rhythm", "composition", "source_audio"), "Text occupancy and simultaneous reading pressure decrease without losing required meaning."),
+    ("source_audio", "protect_voice", ("别压人声", "不要压人声", "人声清楚", "voice clearer", "protect voice"), "whole_cut", ("bgm", "text", "rhythm"), "Dialogue remains intelligible at every BGM overlap and ducking is audible but not pumping."),
+    ("bgm", "reduce_prominence", ("reduce bgm", "less music", "音乐小", "配乐小", "bgm小"), "whole_cut", ("source_audio", "rhythm", "emotion"), "BGM supports rather than masks voice, ambience, or intended silence."),
+    ("ending", "strengthen", ("结尾更有力量", "ending stronger", "stronger ending", "收尾更强", "结尾"), "ending", ("emotion", "rhythm", "bgm", "text"), "The final image/sound decision resolves or deliberately suspends the chosen arc."),
+    ("transition", "restrain", ("少点转场", "转场克制", "fewer transitions"), "whole_cut", ("rhythm", "style", "composition"), "Transitions stop drawing attention away from the subject and remain motivated."),
+)
+
+
+def _parse_revision_semantics(request_text: str, primary: str, explicit: bool) -> list[RevisionSemanticClause]:
+    lowered = request_text.lower()
+    clauses: list[RevisionSemanticClause] = []
+    for domain, operation, tokens, scope, coupled, observation in _SEMANTIC_RULES:
+        matched = [token for token in tokens if token in lowered]
+        if not matched:
+            continue
+        intensity = "strong" if any(token in lowered for token in ("极度", "非常", "更强", "stronger")) else "moderate"
+        clauses.append(
+            RevisionSemanticClause(
+                clause_id=f"semantic_{len(clauses) + 1:03d}",
+                domain=domain,
+                operation=operation,
+                intensity=intensity,
+                scope=scope,
+                priority=len(clauses) + 1,
+                matched_text=matched,
+                evidence_requirements=["current timeline binding", "latest cut-review evidence", "playback comparison before promotion"],
+                coupled_domains=list(coupled),
+                acceptance_observations=[observation],
+                confidence=1.0 if explicit else 0.85,
+            )
+        )
+    if not clauses:
+        clauses.append(
+            RevisionSemanticClause(
+                clause_id="semantic_001", domain="custom", operation=primary,
+                intensity="unspecified", scope="whole_cut", priority=1,
+                matched_text=[request_text],
+                evidence_requirements=["host or user interpretation", "playback comparison before promotion"],
+                acceptance_observations=["The user confirms that the revised playback answers the original note."],
+                confidence=0.25,
+            )
+        )
+    return clauses
+
+
+def _find_semantic_conflicts(clauses: list[RevisionSemanticClause]) -> list[RevisionSemanticConflict]:
+    conflicts: list[RevisionSemanticConflict] = []
+    by_operation = {item.operation: item for item in clauses}
+    for left, right, description in (
+        ("shorten", "lengthen", "The request asks for both a shorter and a longer cut."),
+        ("accelerate", "slow_or_breathe", "The request asks for both faster pacing and more breathing room."),
+    ):
+        if left in by_operation and right in by_operation:
+            conflicts.append(
+                RevisionSemanticConflict(
+                    conflict_id=f"semantic_conflict_{len(conflicts) + 1:03d}",
+                    clause_ids=[by_operation[left].clause_id, by_operation[right].clause_id],
+                    description=description,
+                    resolution="Scope the opposing requests to different sections or ask the user to prioritize one.",
+                    status="warning",
+                )
+            )
+    return conflicts
+
+
+def _append_semantic_actions(
+    actions: list[RevisionAction], clauses: list[RevisionSemanticClause], ordered: list[TimelineSegment],
+    timeline_ref: str, cut_review_ref: str,
+) -> None:
+    existing = {action.action_type for action in actions}
+    mapping = {
+        "accelerate": ("accelerate_pacing", ordered[0], "Tighten pauses and low-value edges section by section; do not speed through intelligible speech."),
+        "refine_premium": ("refine_style", None, "Reduce decorative text/transitions and review spacing, composition, sound restraint, and shot holds together."),
+        "reduce_density": ("reduce_subtitles", None, "Remove redundant on-screen text and preserve only evidence-backed, necessary reading beats."),
+        "protect_voice": ("protect_voice", None, "Audit every voice/music overlap and define local ducking or source-audio priority before rendering."),
+        "reduce_prominence": ("rebalance_bgm", None, "Lower BGM prominence while preserving phrase continuity and intended emotional support."),
+        "strengthen_hook": ("frontload_hook", ordered[0], "Tighten or replace the opening using current hook evidence without inventing a premise."),
+        "strengthen": ("strengthen_emotion", max(ordered, key=lambda item: item.clip_overall_score or 0.0), "Build more space and audiovisual support around the strongest evidenced emotional candidate."),
+        "restrain": ("adjust_transition", None, "Replace unmotivated transitions with direct cuts, holds, or evidenced continuity."),
+    }
+    for clause in clauses:
+        if clause.domain == "ending" and clause.operation == "strengthen":
+            spec = ("replace_ending", ordered[-1], "Strengthen the final image/sound relation and verify the chosen emotional arc in playback.")
+        else:
+            spec = mapping.get(clause.operation)
+        if not spec or spec[0] in existing:
+            continue
+        action_type, segment, recommendation = spec
+        _append_action(
+            actions, action_type, segment, recommendation,
+            f"Interpreted from semantic clause {clause.clause_id}: {clause.domain}/{clause.operation}.",
+            clause.acceptance_observations[0], [timeline_ref, cut_review_ref, clause.clause_id],
+            affected_domains=[clause.domain, *clause.coupled_domains],
+            acceptance=clause.acceptance_observations,
+        )
+        existing.add(action_type)
 
 
 def _estimate_duration(intent: RevisionIntent, current: float, target: float) -> float:
@@ -601,6 +738,8 @@ def _append_action(
     evidence: list[str],
     *,
     required: bool = True,
+    affected_domains: list[str] | None = None,
+    acceptance: list[str] | None = None,
 ) -> None:
     order = len(actions) + 1
     actions.append(
@@ -614,6 +753,8 @@ def _append_action(
             recommendation=recommendation,
             rationale=rationale,
             expected_effect=expected_effect,
+            affected_domains=affected_domains or [],
+            acceptance_observations=acceptance or [expected_effect],
             evidence_refs=evidence,
             required_for_intent=required,
         )

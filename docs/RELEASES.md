@@ -11,7 +11,7 @@ This file records only current publication state and recent release facts. Full 
   post-refactor, single-root history baseline selected for remote publication.
 - Published scope: V1 engineering substrate plus the V2 real-video aesthetic
   baseline from evidence fusion through second-cut candidates and benchmarks.
-- Active local work: `V3-02 Style Templates`, completed locally.
+- Active local work: `V3-03 Interactive Revision Semantics`, completed locally.
   Its current prerequisite batch is `ACCEPTANCE-STAGE-07 Real Media
   Truthfulness And Baseline Recovery`.
 - Publication policy: do not publish the next capability release until the
@@ -46,6 +46,13 @@ This file records only current publication state and recent release facts. Full 
   capability separates 16 content forms, 14 aesthetic styles, 10 creative
   techniques, 10 emotional arcs, and `follow/bend/break`; no combination is
   selected, applied, rendered, or allowed to invent semantics.
+- V3-03 preserves compound natural-language feedback as multiple scoped,
+  prioritized semantic clauses; maps clauses across style/rhythm/text/voice/BGM/
+  transition/emotion/ending; detects contradictions; defines playback
+  acceptance; and tracks clause outcomes through controlled revision
+  application without mutating the canonical timeline or rendering media.
+  Full local validation passes 264 tests plus schema, package/install, golden,
+  BGM/rhythm, NLE, benchmark, release-audit, and diff checks.
 
 - Architecture baseline validation passed on `2026-07-10`: `.venv/bin/python
   run_checks.py` completed successfully with `239 passed`, schema generation,

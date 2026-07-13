@@ -3,14 +3,34 @@
     "RevisionAction": {
       "additionalProperties": false,
       "properties": {
+        "acceptance_observations": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Acceptance Observations",
+          "type": "array"
+        },
         "action_id": {
           "minLength": 1,
           "title": "Action Id",
           "type": "string"
         },
         "action_type": {
-          "pattern": "^(trim|extend|keep|remove|frontload_hook|strengthen_emotion|replace_ending|reduce_subtitles|rebalance_bgm|manual_review)$",
+          "pattern": "^(trim|extend|keep|remove|frontload_hook|strengthen_emotion|replace_ending|reduce_subtitles|rebalance_bgm|refine_style|accelerate_pacing|protect_voice|adjust_transition|manual_review)$",
           "title": "Action Type",
+          "type": "string"
+        },
+        "affected_domains": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Affected Domains",
+          "type": "array"
+        },
+        "application_status": {
+          "default": "planned",
+          "pattern": "^(planned|applied|manual_only|blocked|skipped)$",
+          "title": "Application Status",
           "type": "string"
         },
         "edits_applied": {
@@ -213,6 +233,134 @@
       "title": "RevisionIntent",
       "type": "object"
     },
+    "RevisionSemanticClause": {
+      "additionalProperties": false,
+      "properties": {
+        "acceptance_observations": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Acceptance Observations",
+          "type": "array"
+        },
+        "application_status": {
+          "default": "planned",
+          "pattern": "^(planned|applied|manual_only|blocked|unavailable)$",
+          "title": "Application Status",
+          "type": "string"
+        },
+        "clause_id": {
+          "minLength": 1,
+          "title": "Clause Id",
+          "type": "string"
+        },
+        "confidence": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Confidence",
+          "type": "number"
+        },
+        "coupled_domains": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Coupled Domains",
+          "type": "array"
+        },
+        "domain": {
+          "pattern": "^(duration|structure|rhythm|emotion|style|text|source_audio|bgm|transition|ending|constraint|custom)$",
+          "title": "Domain",
+          "type": "string"
+        },
+        "evidence_requirements": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Evidence Requirements",
+          "type": "array"
+        },
+        "intensity": {
+          "pattern": "^(subtle|moderate|strong|unspecified)$",
+          "title": "Intensity",
+          "type": "string"
+        },
+        "matched_text": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Matched Text",
+          "type": "array"
+        },
+        "operation": {
+          "minLength": 1,
+          "title": "Operation",
+          "type": "string"
+        },
+        "priority": {
+          "minimum": 1,
+          "title": "Priority",
+          "type": "integer"
+        },
+        "scope": {
+          "pattern": "^(opening|middle|ending|segment|whole_cut)$",
+          "title": "Scope",
+          "type": "string"
+        }
+      },
+      "required": [
+        "clause_id",
+        "domain",
+        "operation",
+        "intensity",
+        "scope",
+        "priority",
+        "confidence"
+      ],
+      "title": "RevisionSemanticClause",
+      "type": "object"
+    },
+    "RevisionSemanticConflict": {
+      "additionalProperties": false,
+      "properties": {
+        "clause_ids": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 2,
+          "title": "Clause Ids",
+          "type": "array"
+        },
+        "conflict_id": {
+          "minLength": 1,
+          "title": "Conflict Id",
+          "type": "string"
+        },
+        "description": {
+          "minLength": 1,
+          "title": "Description",
+          "type": "string"
+        },
+        "resolution": {
+          "minLength": 1,
+          "title": "Resolution",
+          "type": "string"
+        },
+        "status": {
+          "pattern": "^(warning|blocked)$",
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "conflict_id",
+        "clause_ids",
+        "description",
+        "resolution",
+        "status"
+      ],
+      "title": "RevisionSemanticConflict",
+      "type": "object"
+    },
     "RevisionVersionCandidate": {
       "additionalProperties": false,
       "properties": {
@@ -330,6 +478,13 @@
     },
     "comparison": {
       "$ref": "#/$defs/RevisionComparison"
+    },
+    "covered_domains": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Covered Domains",
+      "type": "array"
     },
     "current_duration_seconds": {
       "exclusiveMinimum": 0,
@@ -485,6 +640,20 @@
       "default": "0.3",
       "title": "Schema Version",
       "type": "string"
+    },
+    "semantic_clauses": {
+      "items": {
+        "$ref": "#/$defs/RevisionSemanticClause"
+      },
+      "title": "Semantic Clauses",
+      "type": "array"
+    },
+    "semantic_conflicts": {
+      "items": {
+        "$ref": "#/$defs/RevisionSemanticConflict"
+      },
+      "title": "Semantic Conflicts",
+      "type": "array"
     },
     "sound_decision_fingerprint": {
       "anyOf": [

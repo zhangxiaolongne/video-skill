@@ -2,48 +2,51 @@
 
 ## Batch Header
 
-- Batch ID: `V3-02`
-- Name: Style Templates
+- Batch ID: `V3-03`
+- Name: Interactive Revision Semantics
 - Type: product capability milestone
 - Status: `completed`
-- Capability gate: `V3-02`
-- Prerequisite: published `V3-01 Multi-Version Creative Strategies`
+- Capability gate: `V3-03`
+- Prerequisite: published `V3-02 Style Templates`
 - Publication: one commit/push only after complete validation
 
 ## Goal Delta
 
-V3-02 provides an open composable style grammar. Content/output forms, aesthetic
-styles, creative techniques, emotional arcs, and rule modes remain independent
-and extensible, allowing cross-media, mixed-style, intentional rule breaking,
-and extreme reversal without silently applying or inventing meaning.
+V3-03 converts compound natural-language feedback into explicit, evidence-bound
+editing semantics and tracks whether each semantic request was applied,
+partially applied, left manual, skipped, or blocked. It extends the existing
+revision plan/application chain instead of creating a parallel approval system.
 
 ## Internal Acceptance Checklist
 
 | ID | Outcome | Acceptance | Status |
 |---|---|---|---|
-| `open_content_forms` | Broad media scope | 16 extensible forms cover performance, fiction, process, event, cross-media, and fan creation. | `completed` |
-| `aesthetic_style_axis` | Real style vocabulary | 14 styles include idol, hot-blooded, inspirational, premium, cinematic, healing, romantic, melancholic, dreamy, epic, nostalgic, raw, and experimental. | `completed` |
-| `creative_technique_axis` | Nonlinear craft | 10 techniques include delay, rupture, sound-image dislocation, long holds, contrast, and extreme reversal. | `completed` |
-| `emotional_arc_axis` | Dynamic feeling | 10 arcs include suppression/explosion, fall/return, admiration/vulnerability, and extreme reframing. | `completed` |
-| `rule_modes` | Rules are tools | Every rule may be followed, bent, or deliberately broken. | `completed` |
-| `break_explanation` | Accountable freedom | Breaks bind form, feeling, meaning, risk, verification, and fallback. | `completed` |
-| `cross_media_mixing` | Non-exclusive composition | Mixed content forms and mixed aesthetic styles are supported. | `completed` |
-| `custom_extension` | No closed enum | Host/user project-specific forms and styles can extend the vocabulary. | `completed` |
-| `combination_space` | Full creative grammar | Type × style × strategy × technique × arc examples remain illustrative and unselected. | `completed` |
-| `three_project_truth` | Real validation | Stage, interview, and event projects expose open combinations without fabricated semantics or application. | `completed` |
+| `compound_intent` | Preserve compound feedback | One note produces every recognized request instead of stopping at the first keyword. | `completed` |
+| `scope_intensity_priority` | Make interpretation operational | Every clause binds scope, intensity, priority, confidence, and matched text. | `completed` |
+| `cross_domain_actions` | Translate language into edit work | Style, rhythm, text, voice, BGM, transition, duration, hook, emotion, and ending requests map to concrete actions. | `completed` |
+| `audiovisual_coupling` | Prevent isolated edits | Actions expose coupled BGM, source-audio, text, rhythm, transition, composition, and emotion domains. | `completed` |
+| `evidence_limits` | Preserve truthfulness | Every clause requires current timeline/cut-review or host/user interpretation and playback evidence; unknown language stays low-confidence custom. | `completed` |
+| `conflict_detection` | Expose contradictory notes | Shorter/longer and faster/breathing conflicts remain visible with section-scoping resolution. | `completed` |
+| `observable_acceptance` | Define what success looks like | Every clause and action has playback-observable acceptance, not subjective labels alone. | `completed` |
+| `application_tracking` | Track real execution | Revision application reports semantic outcomes as applied, partial, manual-only, unselected, or blocked. | `completed` |
+| `canonical_convergence` | Avoid workflow fragmentation | Existing revision JSON/Markdown and application JSON/Markdown own the feature; no new approval chain exists. | `completed` |
+| `real_project_truth` | Validate real boundaries | Interview real media completes plan/application semantics; stage stale proposal state and event input-only state remain explicit unavailable boundaries. | `completed` |
 
 ## Guardrails
 
-- Examples are seeds, never a closed product boundary.
-- Source/content form and aesthetic style are different axes.
-- Creative rules may be broken deliberately but never randomly or without explanation.
-- Do not invent evidence, select/apply combinations, mutate timelines, render, or choose BGM.
-- Local CLI remains deterministic and offline; host creativity may extend the vocabulary through a future validated boundary.
+- Natural-language interpretation is deterministic CLI guidance, not proof of hidden content understanding.
+- “More premium” changes hierarchy, restraint, sound, pacing, text, transition, and composition together; it is not a filter name.
+- No semantic clause is called applied unless revision-application action evidence supports that status.
+- The canonical timeline is not mutated, media is not rendered, and music/style is not silently selected.
+- CLI performs no model call or network access. Host-Agent interpretation may be added through a future validated boundary.
+
+## Real Acceptance
+
+- `runs/interview_contrast`: compound Chinese feedback produced four semantic clauses, five actions, and explicit manual-only application outcomes without timeline mutation.
+- `runs/chenhaoyu_klein_blue`: existing timeline/cut review are invalidated by a newer brief/proposal boundary; V3-03 correctly refuses to use stale evidence.
+- `runs/public_event_mix`: no canonical timeline/cut review exists; V3-03 correctly refuses to fabricate revision semantics as an applied loop.
 
 ## Next Work
 
-All three projects now expose 16 content forms, 14 aesthetic styles, 10
-techniques, 10 emotional arcs, six illustrative combinations, and
-`follow/bend/break`. Selection/application remain null and semantic confidence
-remains degraded. V3-03 is blocked until this corrected V3-02 passes full
-validation and publication.
+V3-04 A/B Version Review may begin only after V3-03 passes full project checks
+and is published as one complete capability version.

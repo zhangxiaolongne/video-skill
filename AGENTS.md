@@ -10,9 +10,20 @@ master principles/roadmap, `docs/CURRENT_BATCH.md`, `docs/DEVELOPMENT_PROGRESS.m
 contracts. State the allowed scope, forbidden claims, user corrections, current
 conflicts, real-media acceptance, and non-counting support work before editing.
 
-Current gate: V3-02 Style Templates. V3-01 Multi-Version Creative Strategies is
-published. V3-02 is complete locally and awaiting publication as one version.
-V3-03 is not active yet.
+Current gate: V3-03 Interactive Revision Semantics. V3-02 Style Templates is
+published. V3-03 is complete locally and awaiting publication as one version.
+V3-04 is not active yet.
+
+V3-03 may parse compound natural-language revision feedback into multiple
+prioritized semantic clauses covering duration, structure, rhythm, emotion,
+style, text, source audio, BGM, transitions, ending, and explicit constraints.
+Every clause must bind matched text, scope, intensity, confidence, evidence
+requirements, coupled domains, playback acceptance, and application status.
+Contradictions must remain visible. Revision application must track each clause
+as applied, partially applied, manual-only, not selected, or blocked. It must
+not treat deterministic keywords as hidden content understanding, silently
+select style/music, mutate the canonical timeline, render media, invent
+semantics, call models, or access the network from the CLI.
 
 V3-02 may expose an open, extensible creative grammar with separate content/form
 templates, aesthetic styles, creative techniques, emotional arcs, and

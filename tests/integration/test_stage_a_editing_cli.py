@@ -519,6 +519,33 @@ def test_revision_plan_classifies_note_and_compares_versions(tmp_path, capsys):
     assert "Manual Revision Actions" in report
 
 
+def test_revision_plan_expands_compound_semantics_and_tracks_application(tmp_path, capsys):
+    project_path = build_valid_proposal_project(tmp_path, capsys)
+    assert main(["timeline", "--project", str(project_path), "--proposal", "proposal_safe", "--quiet"]) in (0, 1)
+    assert main(["sound", "--project", str(project_path), "--quiet"]) in (0, 1)
+    assert main(["cut-review", "--project", str(project_path), "--quiet"]) in (0, 1)
+    capsys.readouterr()
+
+    note = "整体更高级一点，节奏快点，少点字，别压人声，结尾更有力量"
+    assert main(["revise", "--project", str(project_path), "--intent", note, "--json"]) in (0, 1)
+    plan = json.loads(capsys.readouterr().out)["revision_plan"]
+    assert set(plan["covered_domains"]) >= {"style", "rhythm", "text", "source_audio", "ending"}
+    assert {item["action_type"] for item in plan["actions"]} >= {
+        "refine_style", "accelerate_pacing", "reduce_subtitles", "protect_voice", "replace_ending"
+    }
+    assert all(item["acceptance_observations"] for item in plan["actions"])
+
+    assert main([
+        "apply-revision", "--project", str(project_path),
+        "--version-id", "revision_candidate_1", "--json",
+    ]) in (0, 1)
+    application = json.loads(capsys.readouterr().out)["revision_application"]
+    outcomes = {item["domain"]: item["status"] for item in application["semantic_outcomes"]}
+    assert set(outcomes) >= {"style", "rhythm", "text", "source_audio", "ending"}
+    assert set(outcomes.values()) <= {"applied", "partially_applied", "manual_only", "not_selected", "blocked"}
+    assert all(item["acceptance_observations"] for item in application["semantic_outcomes"])
+
+
 def test_apply_revision_requires_revision_plan(tmp_path, capsys):
     project_path = build_valid_proposal_project(tmp_path, capsys)
     assert (

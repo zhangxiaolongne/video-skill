@@ -291,6 +291,19 @@ decision history is archived in [DECISIONS_HISTORY.md](archive/DECISIONS_HISTORY
 - Revisit when: a future host-Agent grammar can generate and validate these axes
   without retaining a reusable local vocabulary.
 
+### DEC-073: Revision meaning is compound, cross-domain, and evidence-tracked
+
+- Status: `active`
+- Decision: preserve every recognized clause in a natural-language revision
+  note. Bind each clause to scope, intensity, priority, confidence, evidence,
+  coupled audiovisual domains, playback acceptance, and an application status
+  derived from controlled action results. Contradictions remain visible.
+- Rationale: first-match keyword classification loses most of feedback such as
+  “more premium, faster, less text, protect voice, stronger ending” and can make
+  a plan appear more complete than the edit actually is.
+- Revisit when: a validated host semantic interpreter can exceed the local
+  deterministic vocabulary while retaining the same provenance and tracking.
+
 ## Archive Policy
 
 Archived decisions remain searchable in `docs/archive/DECISIONS_HISTORY.md`.

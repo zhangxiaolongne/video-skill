@@ -12,6 +12,7 @@ from artist_portrait_editor.models.revision_application import (
     DownstreamRevisionFreshness,
     RevisionApplication,
     RevisionAppliedAction,
+    RevisionSemanticOutcome,
     RevisionSegmentChange,
 )
 from artist_portrait_editor.models.state import ActiveMode, OverallStatus, StepLedgerEntry, StepStatus
@@ -247,6 +248,7 @@ def build_revision_application(
             revision_plan_fingerprint,
         ]
     )
+    semantic_outcomes = _semantic_outcomes(revision_plan, action_results)
     return RevisionApplication(
         revision_application_id="revision_application_" + hashlib.sha256(key.encode("utf-8")).hexdigest()[:20],
         project_id=project_id,
@@ -271,6 +273,7 @@ def build_revision_application(
         revised_segments=revised_segments,
         segment_changes=segment_changes,
         action_results=action_results,
+        semantic_outcomes=semantic_outcomes,
         downstream_freshness=downstream,
         warnings=warnings,
         next_command="artist-portrait preview --project <project.yaml>",
@@ -319,6 +322,11 @@ def render_revision_application(application: RevisionApplication) -> str:
                 f"- `{change.source_segment_id}` -> `{change.status}`; delta `{change.duration_delta_seconds:.2f}s`; {change.detail}",
             ]
         )
+    lines.extend(["", "## Semantic Outcomes", ""])
+    for outcome in application.semantic_outcomes:
+        lines.append(
+            f"- `{outcome.clause_id}` {outcome.domain}/{outcome.operation}: `{outcome.status}`; actions `{', '.join(outcome.action_ids) or 'none'}`"
+        )
     lines.extend(["", "## Downstream Freshness", ""])
     for item in application.downstream_freshness:
         lines.extend(
@@ -346,6 +354,43 @@ def render_revision_application(application: RevisionApplication) -> str:
         ]
     )
     return "\n".join(lines)
+
+
+def _semantic_outcomes(
+    plan: RevisionPlan, results: list[RevisionAppliedAction]
+) -> list[RevisionSemanticOutcome]:
+    result_by_id = {item.action_id: item for item in results}
+    outcomes: list[RevisionSemanticOutcome] = []
+    for clause in plan.semantic_clauses:
+        actions = [
+            action for action in plan.actions
+            if clause.clause_id in action.evidence_refs
+        ]
+        statuses = [result_by_id[action.action_id].status for action in actions if action.action_id in result_by_id]
+        if not actions or not statuses:
+            status = "manual_only"
+        elif all(item in {"applied", "preserved"} for item in statuses):
+            status = "applied"
+        elif any(item == "conflict" for item in statuses):
+            status = "blocked"
+        elif any(item in {"applied", "preserved"} for item in statuses):
+            status = "partially_applied"
+        elif all(item == "skipped" for item in statuses):
+            status = "not_selected"
+        else:
+            status = "manual_only"
+        outcomes.append(
+            RevisionSemanticOutcome(
+                clause_id=clause.clause_id,
+                domain=clause.domain,
+                operation=clause.operation,
+                action_ids=[item.action_id for item in actions],
+                status=status,
+                evidence=[item.reason_code for item in (result_by_id[a.action_id] for a in actions if a.action_id in result_by_id)],
+                acceptance_observations=clause.acceptance_observations,
+            )
+        )
+    return outcomes
 
 
 def _apply_keep(action: RevisionAction, by_segment: dict[str, _WorkingSegment]) -> RevisionAppliedAction:

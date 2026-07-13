@@ -48,6 +48,18 @@ class DownstreamRevisionFreshness(BaseModel):
     next_command: str | None = None
 
 
+class RevisionSemanticOutcome(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    clause_id: str = Field(min_length=1)
+    domain: str = Field(min_length=1)
+    operation: str = Field(min_length=1)
+    action_ids: list[str] = Field(default_factory=list)
+    status: str = Field(pattern=r"^(applied|partially_applied|manual_only|not_selected|blocked)$")
+    evidence: list[str] = Field(default_factory=list)
+    acceptance_observations: list[str] = Field(default_factory=list)
+
+
 class RevisionApplication(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -75,6 +87,7 @@ class RevisionApplication(BaseModel):
     revised_segments: list[TimelineSegment] = Field(min_length=1)
     segment_changes: list[RevisionSegmentChange] = Field(default_factory=list)
     action_results: list[RevisionAppliedAction] = Field(default_factory=list)
+    semantic_outcomes: list[RevisionSemanticOutcome] = Field(default_factory=list)
     downstream_freshness: list[DownstreamRevisionFreshness] = Field(default_factory=list)
     warnings: list[str] = Field(default_factory=list)
     next_command: str | None = None

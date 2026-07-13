@@ -1,7 +1,7 @@
 {
   "schema_version": "1.5",
-  "capability_gate": "V3-02",
-  "milestone": "V3-02 Style Templates",
+  "capability_gate": "V3-03",
+  "milestone": "V3-03 Interactive Revision Semantics",
   "documentation_system": {
     "master": "artist_portrait_editor_revision5_optimized.md",
     "current_progress": "docs/DEVELOPMENT_PROGRESS.md",
@@ -19,14 +19,14 @@
     "current_files_keep_only": "active decisions, current validation, active batch, and next development direction"
   },
   "active_batch": {
-    "id": "V3-02",
-    "name": "Style Templates",
+    "id": "V3-03",
+    "name": "Interactive Revision Semantics",
     "status": "completed",
-    "started": "2026-07-12",
-    "capability_gate": "V3-02",
+    "started": "2026-07-13",
+    "capability_gate": "V3-03",
     "acceptance_stage": null,
     "prerequisite_acceptance_stage": "ACCEPTANCE-STAGE-07_completed_locally",
-    "commit_policy": "v3_02_complete_and_ready_for_one_commit_push"
+    "commit_policy": "v3_03_complete_then_one_commit_push_after_full_validation"
   },
   "latest_release": {
     "tag": "v0.40.0",
@@ -38,16 +38,16 @@
   },
   "latest_local_validation": {
     "date": "2026-07-13",
-    "full_pytest": ".venv/bin/python -m pytest passed with 260 passed",
+    "full_pytest": ".venv/bin/python -m pytest passed with 264 passed",
     "project_checks": ".venv/bin/python run_checks.py passed with golden, BGM/rhythm, NLE round-trip, schema, package, install simulation, V2 release baseline, benchmark audit, and diff checks",
     "real_benchmark": "three-class pack covers stage and interview closed loops plus a four-source 189.74s CC0 event/promo input baseline with an explicit 30s goal",
-    "current_doc_followup": "V3-02 corrected functionally: open content forms, aesthetic styles, techniques, emotional arcs, follow/bend/break, custom extension, and extreme reversal replace the erroneous closed six-template boundary"
+    "current_doc_followup": "V3-03 preserves compound revision semantics, cross-domain coupling, contradictions, playback acceptance, and action-derived application status"
   },
   "capability_summary": {
     "engineering_substrate": "published",
     "v1_aesthetic_foundation": "published",
     "real_video_aesthetic_maturity": "baseline_complete",
-    "current_gap": "Corrected V3-02 exposes open creative grammar but host-generated custom styles still need a future validated import boundary and V3-03 revision semantics"
+    "current_gap": "V3-03 supports deterministic compound revision semantics; V3-04 still needs evidence-based A/B review of multiple actual versions"
   },
   "json_governance": {
     "canonical_rule": "JSON is kept only for canonical machine truth, boundary evidence, generated schema contracts, media validation, run audit, or release-critical evidence.",
@@ -112,43 +112,43 @@
   },
   "tasks": [
     {
-      "id": "open_content_forms",
+      "id": "compound_intent",
       "status": "completed"
     },
     {
-      "id": "aesthetic_style_axis",
+      "id": "scope_intensity_priority",
       "status": "completed"
     },
     {
-      "id": "creative_technique_axis",
+      "id": "cross_domain_actions",
       "status": "completed"
     },
     {
-      "id": "emotional_arc_axis",
+      "id": "audiovisual_coupling",
       "status": "completed"
     },
     {
-      "id": "rule_modes",
+      "id": "evidence_limits",
       "status": "completed"
     },
     {
-      "id": "break_explanation",
+      "id": "conflict_detection",
       "status": "completed"
     },
     {
-      "id": "cross_media_mixing",
+      "id": "observable_acceptance",
       "status": "completed"
     },
     {
-      "id": "custom_extension",
+      "id": "application_tracking",
       "status": "completed"
     },
     {
-      "id": "combination_space",
+      "id": "canonical_convergence",
       "status": "completed"
     },
     {
-      "id": "three_project_truth",
+      "id": "real_project_truth",
       "status": "completed"
     }
   ]

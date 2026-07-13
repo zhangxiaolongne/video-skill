@@ -23,6 +23,35 @@ class RevisionIntent(BaseModel):
     classification_reasons: list[str] = Field(default_factory=list)
 
 
+class RevisionSemanticClause(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    clause_id: str = Field(min_length=1)
+    domain: str = Field(
+        pattern=r"^(duration|structure|rhythm|emotion|style|text|source_audio|bgm|transition|ending|constraint|custom)$"
+    )
+    operation: str = Field(min_length=1)
+    intensity: str = Field(pattern=r"^(subtle|moderate|strong|unspecified)$")
+    scope: str = Field(pattern=r"^(opening|middle|ending|segment|whole_cut)$")
+    priority: int = Field(ge=1)
+    matched_text: list[str] = Field(default_factory=list)
+    evidence_requirements: list[str] = Field(default_factory=list)
+    coupled_domains: list[str] = Field(default_factory=list)
+    acceptance_observations: list[str] = Field(default_factory=list)
+    application_status: str = Field(default="planned", pattern=r"^(planned|applied|manual_only|blocked|unavailable)$")
+    confidence: float = Field(ge=0, le=1)
+
+
+class RevisionSemanticConflict(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    conflict_id: str = Field(min_length=1)
+    clause_ids: list[str] = Field(min_length=2)
+    description: str = Field(min_length=1)
+    resolution: str = Field(min_length=1)
+    status: str = Field(pattern=r"^(warning|blocked)$")
+
+
 class RevisionAction(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -31,7 +60,8 @@ class RevisionAction(BaseModel):
     action_type: str = Field(
         pattern=(
             r"^(trim|extend|keep|remove|frontload_hook|strengthen_emotion|"
-            r"replace_ending|reduce_subtitles|rebalance_bgm|manual_review)$"
+            r"replace_ending|reduce_subtitles|rebalance_bgm|refine_style|"
+            r"accelerate_pacing|protect_voice|adjust_transition|manual_review)$"
         )
     )
     segment_id: str | None = None
@@ -40,6 +70,9 @@ class RevisionAction(BaseModel):
     recommendation: str = Field(min_length=1)
     rationale: str = Field(min_length=1)
     expected_effect: str = Field(min_length=1)
+    affected_domains: list[str] = Field(default_factory=list)
+    acceptance_observations: list[str] = Field(default_factory=list)
+    application_status: str = Field(default="planned", pattern=r"^(planned|applied|manual_only|blocked|skipped)$")
     evidence_refs: list[str] = Field(default_factory=list)
     required_for_intent: bool = True
     manual_only: bool = True
@@ -103,6 +136,9 @@ class RevisionPlan(BaseModel):
         default=None, pattern=r"^sha256:[0-9a-f]{64}$"
     )
     intent: RevisionIntent
+    semantic_clauses: list[RevisionSemanticClause] = Field(default_factory=list)
+    semantic_conflicts: list[RevisionSemanticConflict] = Field(default_factory=list)
+    covered_domains: list[str] = Field(default_factory=list)
     current_duration_seconds: float = Field(gt=0)
     target_duration_seconds: float | None = Field(default=None, gt=0)
     action_count: int = Field(ge=0)
