@@ -5,7 +5,7 @@ engineering-freeze document.
 
 Before planning any new capability version, reread this file, the governing
 master principles/roadmap, `docs/CURRENT_BATCH.md`, `docs/DEVELOPMENT_PROGRESS.md`,
-`docs/ISSUES.md`, `docs/DECISIONS.md`, `docs/RELEASES.md`,
+`docs/CREATIVE_GRAMMAR.md`, `docs/ISSUES.md`, `docs/DECISIONS.md`, `docs/RELEASES.md`,
 `docs/current_progress.json`, current Git state, and the relevant implementation
 contracts. State the allowed scope, forbidden claims, user corrections, current
 conflicts, real-media acceptance, and non-counting support work before editing.

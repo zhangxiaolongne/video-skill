@@ -8,6 +8,7 @@ issue tracker, or master strategy document.
 - Master strategy: `artist_portrait_editor_revision5_optimized.md`
 - Current dashboard: `docs/DEVELOPMENT_PROGRESS.md`
 - Current task ledger: `docs/CURRENT_BATCH.md`
+- Creative grammar: `docs/CREATIVE_GRAMMAR.md`
 - Issues and blockers: `docs/ISSUES.md`
 - Active decisions: `docs/DECISIONS.md`
 - Release state: `docs/RELEASES.md`
@@ -26,8 +27,8 @@ issue tracker, or master strategy document.
   packaging
 - Current acceptance stage: `ACCEPTANCE-STAGE-07` completed locally with full
   checks and current real-project delivery acceptance
-- Next release policy: publish V3-02 only after all three real classes and full checks close as one capability version
-  as one coherent capability version
+- Next release policy: publish V3-02 only after all three real classes and full
+  checks close as one coherent capability version
 
 ## Capability Dashboard
 
@@ -136,4 +137,4 @@ Publish corrected V3-02 after all three projects expose an open style grammar
 with broad content forms, aesthetic styles, techniques, emotional arcs,
 `follow/bend/break`, custom extension, and extreme reversal while preserving
 evidence confidence and no-application boundaries. V3-03 is next only after
-this correction closes. All 257 tests and quality/package checks pass.
+this correction closes. All 260 tests and quality/package checks pass.

@@ -27,6 +27,7 @@
 |---|---|
 | `docs/DEVELOPMENT_PROGRESS.md` | 当前阶段、能力完成度、主要阻塞和下一大方向 |
 | `docs/CURRENT_BATCH.md` | 当前批次、十项版本任务、状态、验收证据和收口 |
+| `docs/CREATIVE_GRAMMAR.md` | 内容形态、审美风格、创意技法、情绪曲线、规则突破与扩展契约 |
 | `docs/ISSUES.md` | open、blocked、accepted、resolved、superseded 问题与风险 |
 | `docs/DECISIONS.md` | 长期有效的产品、架构、流程和发布决策 |
 | `docs/RELEASES.md` | 大版本结果、当前验证证据和 Git 发布状态 |

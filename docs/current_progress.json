@@ -6,6 +6,7 @@
     "master": "artist_portrait_editor_revision5_optimized.md",
     "current_progress": "docs/DEVELOPMENT_PROGRESS.md",
     "current_batch": "docs/CURRENT_BATCH.md",
+    "creative_grammar": "docs/CREATIVE_GRAMMAR.md",
     "issues": "docs/ISSUES.md",
     "decisions": "docs/DECISIONS.md",
     "releases": "docs/RELEASES.md",
@@ -37,7 +38,7 @@
   },
   "latest_local_validation": {
     "date": "2026-07-13",
-    "full_pytest": ".venv/bin/python -m pytest passed with 257 passed",
+    "full_pytest": ".venv/bin/python -m pytest passed with 260 passed",
     "project_checks": ".venv/bin/python run_checks.py passed with golden, BGM/rhythm, NLE round-trip, schema, package, install simulation, V2 release baseline, benchmark audit, and diff checks",
     "real_benchmark": "three-class pack covers stage and interview closed loops plus a four-source 189.74s CC0 event/promo input baseline with an explicit 30s goal",
     "current_doc_followup": "V3-02 corrected functionally: open content forms, aesthetic styles, techniques, emotional arcs, follow/bend/break, custom extension, and extreme reversal replace the erroneous closed six-template boundary"

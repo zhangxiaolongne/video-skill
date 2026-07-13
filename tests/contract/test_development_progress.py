@@ -31,6 +31,7 @@ def test_six_canonical_document_owners_exist_and_are_linked():
         "master": "artist_portrait_editor_revision5_optimized.md",
         "current_progress": "docs/DEVELOPMENT_PROGRESS.md",
         "current_batch": "docs/CURRENT_BATCH.md",
+        "creative_grammar": "docs/CREATIVE_GRAMMAR.md",
         "issues": "docs/ISSUES.md",
         "decisions": "docs/DECISIONS.md",
         "releases": "docs/RELEASES.md",
