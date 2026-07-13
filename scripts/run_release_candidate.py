@@ -82,6 +82,13 @@ def build_manifest(
     )
 
     benchmark = validate_benchmark_pack(benchmark_pack_path) if benchmark_pack_path else None
+    capability_state_recorded = any(
+        token in releases
+        for token in (
+            f"Active local work: `{milestone}`",
+            f"Latest published capability work: `{milestone}`",
+        )
+    )
     checks = {
         "version_matches_target_release": bool(target_version) and version == target_version,
         "target_release_tag_exists_or_is_precommit": target_tag_exists or allow_missing_tag,
@@ -89,7 +96,7 @@ def build_manifest(
             target_tag_commit == expected_release_commit if expected_release_commit else True
         ),
         "current_batch_records_active_gate": bool(gate) and f"Capability gate: `{gate}`" in current_batch,
-        "release_ledger_records_published_and_active_state": target_tag in releases and f"Active local work: `{milestone}`" in releases,
+        "release_ledger_records_published_and_active_state": target_tag in releases and capability_state_recorded,
         "preflight_ok": preflight.get("error_count") == 0,
         "install_simulation_ok": install.get("ok") is True,
         "quick_validate_ok": quick_validate_ok,

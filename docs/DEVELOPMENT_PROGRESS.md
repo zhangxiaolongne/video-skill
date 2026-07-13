@@ -17,19 +17,19 @@ issue tracker, or master strategy document.
 
 ## Current State
 
-- Current active gate: V3-06 Publishability Tiers
-- Published predecessor: V3-05 NLE Round-Trip Plus
-- Gate state: completed and published as one capability version
+- Current active gate: V3-07 Personal/Subject Memory
+- Published predecessor: V3-06 Publishability Tiers
+- Gate state: published as one complete capability version
 - Completed published capability: `V2-11` V2 Release as `v0.40.0`
-- Current complete version: `V3-06 Publishability Tiers`
-- Current batch: `V3-06` completed and published
+- Current complete version: `V3-07 Personal/Subject Memory`
+- Current batch: `V3-07` completed and published
 - Latest published release baseline: `v0.40.0`
 - Current published capability work: V1-08 revision promotion and V1 release
   packaging
 - Current acceptance stage: `ACCEPTANCE-STAGE-07` completed locally with full
   checks and current real-project delivery acceptance
-- Next release policy: keep V3-07 closed until its memory/privacy/provenance
-  boundary is planned from the published V3-06 evidence contract
+- Next release policy: plan V3-08 as one complete V3 workflow release audit;
+  do not activate it as isolated cleanup or test work
 
 ## Capability Dashboard
 
@@ -55,13 +55,21 @@ V2-01 task by itself.
 
 ## Current Batch Focus
 
+V3-07 now records explicit project or subject creative memory without guessing
+identity or applying edits. The real interview project yields 13 entries: eight
+confirmed project facts and five requested revision memories. The full user
+request and four parsed clauses remain separate; all four clause outcomes are
+`manual_only`. Unselected style vocabulary and publishability verdicts are
+excluded from preferences, while exact-identity local import, hard forbids,
+deduplication, unresolved conflicts, and advisory retrieval are supported.
+
 V3-06 now gives every reviewed candidate one exclusive release tier. The real
 interview canonical final and 60-second second cut remain technically playable
 but require manual refinement; the unrendered revision plan is unusable. The
 system exposes blockers across hook, emotion, information, BGM/voice, text,
 ending, transitions, composition, platform, and editable NLE delivery without
 selecting a winner or promoting technical validity to aesthetic approval.
-Full project validation passes 274 tests plus all golden, BGM/rhythm, NLE,
+Full project validation passes 283 tests plus all golden, BGM/rhythm, NLE,
 schema, package/install, benchmark, release-audit, and diff checks.
 
 `ACCEPTANCE-STAGE-07` made the existing real-media pipeline truthful. V2-01 is
@@ -143,7 +151,7 @@ the active gate and immediate development direction.
 
 ## Next Major Decision
 
-V3-06 is published with the four-tier decision contract, real interview
-evidence, no-auto-selection boundary, schemas, package checks, and full
-validation closed together. The next planning target is V3-07 Personal/Subject
-Memory; it is not active yet.
+Plan V3-08 as one complete V3 release audit covering the published V3-01 through
+V3-07 workflow, real-media evidence, human revision truth, A/B review, NLE
+handoff, package boundaries, and unresolved maturity gaps. V3-08 is not active
+until that batch is explicit.

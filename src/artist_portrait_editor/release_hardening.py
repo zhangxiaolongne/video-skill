@@ -131,7 +131,6 @@ def _check_gate_docs(repo_root: Path, gate: str, milestone: str) -> ReleaseHarde
         "README.md": gate,
         "docs/DEVELOPMENT_PROGRESS.md": f"Current active gate: {milestone}",
         "docs/CURRENT_BATCH.md": f"Capability gate: `{gate}`",
-        "docs/RELEASES.md": f"Active local work: `{milestone}`",
         "artist_portrait_editor_revision5_optimized.md": gate,
     }
     missing = [
@@ -139,6 +138,15 @@ def _check_gate_docs(repo_root: Path, gate: str, milestone: str) -> ReleaseHarde
         for path, token in expected.items()
         if token not in (repo_root / path).read_text(encoding="utf-8")
     ]
+    releases = (repo_root / "docs/RELEASES.md").read_text(encoding="utf-8")
+    release_tokens = (
+        f"Active local work: `{milestone}`",
+        f"Latest published capability work: `{milestone}`",
+    )
+    if not any(token in releases for token in release_tokens):
+        missing.append(
+            "docs/RELEASES.md:active or published capability state for " + milestone
+        )
     return ReleaseHardeningCheck(
         check_id="gate_doc_consistency",
         status="failed" if missing else "passed",

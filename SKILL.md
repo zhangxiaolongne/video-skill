@@ -277,6 +277,7 @@ artist-portrait second-cut --project ./project.yaml --concept-id <concept-id>
 artist-portrait version-review --project ./project.yaml
 artist-portrait nle-roundtrip --project ./project.yaml --frame-rate 25
 artist-portrait publishability --project ./project.yaml
+artist-portrait memory --project ./project.yaml --scope project
 ```
 
 Preview and final export resolve an explicit canvas from the project aspect
@@ -324,6 +325,16 @@ version: publishable, previewable, manual refinement required, or unusable. It
 requires current playable media for every usable tier, preserves technical and
 aesthetic evidence separately, lists blockers/refinements/evidence gaps and
 next actions, and leaves version selection null.
+
+`memory` writes one canonical auditable creative memory and one Markdown report.
+Project scope retains explicit brief/policy facts and prior revision requests;
+subject scope requires explicit identity and supports exact-identity local
+imports. Use repeated `--preference category=statement`, `--constraint
+category=statement`, or `--forbid category=statement` inputs for confirmed
+instructions. Same-identity reruns preserve explicit/history entries and refresh
+current config facts; a different canonical identity requires
+`--replace-existing`. Retrieval remains advisory: no style, BGM, shot, or edit
+is selected or applied automatically.
 
 `reframe` is the supervised application boundary. Its byte-visible selection
 must cover every timeline segment, bind current timeline/final/composition

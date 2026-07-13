@@ -12,7 +12,7 @@ def test_current_gate_is_consistent_across_primary_docs():
     readme = (ROOT / "README.md").read_text(encoding="utf-8")
     progress = (ROOT / "docs" / "DEVELOPMENT_PROGRESS.md").read_text(encoding="utf-8")
 
-    gate = "V3-06 Publishability Tiers"
+    gate = "V3-07 Personal/Subject Memory"
     assert f"Current gate: {gate}." in agents
     assert "V2：真实视频审美剪辑基线" in master
     assert "V4：导演型创作系统" in master
@@ -80,6 +80,7 @@ def test_current_gate_preserves_remaining_boundaries():
     assert "FCPXML draft" in docs
     assert "fcpxml" in docs
     assert "publishability" in docs
+    assert "creative memory" in docs or "Creative memory" in docs
     assert "import-review" in docs
     assert "release hardening" in docs
     assert "auto-run pipeline" in docs or "auto-run" in docs

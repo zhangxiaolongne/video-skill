@@ -52,7 +52,7 @@ def test_release_check_writes_hardening_report_without_publication(tmp_path, cap
 
     assert payload["output"] == ".artist-portrait/data/release_hardening_report.json"
     assert payload["report"] == "output/release_hardening_report.md"
-    assert report["capability_gate"] == "V3-06"
+    assert report["capability_gate"] == "V3-07"
     assert report["status"] in {"warning", "ready_for_local_release"}
     assert report["failed_count"] == 0
     assert report["commit_allowed"] is False
@@ -64,6 +64,43 @@ def test_release_check_writes_hardening_report_without_publication(tmp_path, cap
     assert checks["gate_doc_consistency"]["status"] == "passed"
     assert checks["schema_coverage"]["status"] == "passed"
     assert checks["forbidden_source_surface"]["status"] == "passed"
+
+
+def test_memory_cli_builds_auditable_project_memory_without_edit_side_effects(
+    tmp_path, capsys
+):
+    project_path = tmp_path / "project.yaml"
+    project_path.write_text(project_fixture_with_scene_detection("off"), encoding="utf-8")
+    assert main(["init", "--project", str(project_path), "--quiet"]) in (0, 1)
+    capsys.readouterr()
+
+    assert main(
+        [
+            "memory", "--project", str(project_path), "--scope", "project",
+            "--preference", "cover=clean portrait",
+            "--forbid", "shot=accidental closed-eye frame",
+            "--json",
+        ]
+    ) in (0, 1)
+    payload = json.loads(capsys.readouterr().out)
+    memory = payload["creative_memory"]
+
+    assert payload["output"] == ".artist-portrait/data/creative_memory.json"
+    assert payload["report"] == "output/creative_memory.md"
+    assert memory["identity"]["scope"] == "project"
+    assert memory["identity"]["identity_source"] == "project_config"
+    assert any(item["category"] == "cover" for item in memory["entries"])
+    assert any(
+        item["category"] == "shot" and item["polarity"] == "forbid"
+        for item in memory["entries"]
+    )
+    assert memory["memory_applied_to_edit"] is False
+    assert memory["timeline_mutated"] is False
+    assert memory["media_rendered"] is False
+    assert memory["automatic_style_selection"] is False
+    assert memory["automatic_bgm_selection"] is False
+    assert memory["model_call_performed_by_cli"] is False
+    assert memory["network_performed"] is False
 
 
 def test_validate_valid_project(capsys):

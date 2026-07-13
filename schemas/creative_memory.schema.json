@@ -1,0 +1,491 @@
+{
+  "$defs": {
+    "CreativeMemoryEntry": {
+      "additionalProperties": false,
+      "properties": {
+        "acceptance_required": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Acceptance Required",
+          "type": "array"
+        },
+        "applicability": {
+          "enum": [
+            "project_only",
+            "subject_reusable"
+          ],
+          "title": "Applicability",
+          "type": "string"
+        },
+        "category": {
+          "enum": [
+            "style",
+            "shot",
+            "bgm",
+            "text",
+            "cover",
+            "rhythm",
+            "transition",
+            "composition",
+            "duration",
+            "audio",
+            "ending",
+            "constraint",
+            "theme",
+            "audience",
+            "platform",
+            "custom"
+          ],
+          "title": "Category",
+          "type": "string"
+        },
+        "confidence": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Confidence",
+          "type": "number"
+        },
+        "fulfillment": {
+          "enum": [
+            "applied",
+            "partially_applied",
+            "manual_only",
+            "not_selected",
+            "blocked",
+            "not_applicable",
+            "unverified"
+          ],
+          "title": "Fulfillment",
+          "type": "string"
+        },
+        "memory_entry_id": {
+          "minLength": 1,
+          "title": "Memory Entry Id",
+          "type": "string"
+        },
+        "polarity": {
+          "enum": [
+            "prefer",
+            "avoid",
+            "require",
+            "forbid",
+            "context"
+          ],
+          "title": "Polarity",
+          "type": "string"
+        },
+        "provenance": {
+          "items": {
+            "$ref": "#/$defs/MemoryProvenance"
+          },
+          "minItems": 1,
+          "title": "Provenance",
+          "type": "array"
+        },
+        "statement": {
+          "minLength": 1,
+          "title": "Statement",
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "confirmed",
+            "requested",
+            "observed",
+            "rejected",
+            "unresolved"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "strength": {
+          "enum": [
+            "soft",
+            "hard"
+          ],
+          "title": "Strength",
+          "type": "string"
+        }
+      },
+      "required": [
+        "memory_entry_id",
+        "category",
+        "polarity",
+        "statement",
+        "strength",
+        "status",
+        "fulfillment",
+        "applicability",
+        "confidence",
+        "provenance"
+      ],
+      "title": "CreativeMemoryEntry",
+      "type": "object"
+    },
+    "MemoryConflict": {
+      "additionalProperties": false,
+      "properties": {
+        "category": {
+          "enum": [
+            "style",
+            "shot",
+            "bgm",
+            "text",
+            "cover",
+            "rhythm",
+            "transition",
+            "composition",
+            "duration",
+            "audio",
+            "ending",
+            "constraint",
+            "theme",
+            "audience",
+            "platform",
+            "custom"
+          ],
+          "title": "Category",
+          "type": "string"
+        },
+        "conflict_id": {
+          "minLength": 1,
+          "title": "Conflict Id",
+          "type": "string"
+        },
+        "detail": {
+          "minLength": 1,
+          "title": "Detail",
+          "type": "string"
+        },
+        "entry_ids": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 2,
+          "title": "Entry Ids",
+          "type": "array"
+        },
+        "resolution": {
+          "minLength": 1,
+          "title": "Resolution",
+          "type": "string"
+        },
+        "status": {
+          "const": "unresolved",
+          "default": "unresolved",
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "conflict_id",
+        "category",
+        "entry_ids",
+        "detail",
+        "resolution"
+      ],
+      "title": "MemoryConflict",
+      "type": "object"
+    },
+    "MemoryEvidenceBinding": {
+      "additionalProperties": false,
+      "properties": {
+        "fingerprint": {
+          "pattern": "^sha256:[0-9a-f]{64}$",
+          "title": "Fingerprint",
+          "type": "string"
+        },
+        "label": {
+          "title": "Label",
+          "type": "string"
+        },
+        "limitation": {
+          "title": "Limitation",
+          "type": "string"
+        },
+        "ref": {
+          "title": "Ref",
+          "type": "string"
+        },
+        "used_for_memory": {
+          "title": "Used For Memory",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "label",
+        "ref",
+        "fingerprint",
+        "used_for_memory",
+        "limitation"
+      ],
+      "title": "MemoryEvidenceBinding",
+      "type": "object"
+    },
+    "MemoryIdentity": {
+      "additionalProperties": false,
+      "properties": {
+        "aliases": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Aliases",
+          "type": "array"
+        },
+        "display_name": {
+          "minLength": 1,
+          "title": "Display Name",
+          "type": "string"
+        },
+        "identity_id": {
+          "minLength": 1,
+          "title": "Identity Id",
+          "type": "string"
+        },
+        "identity_source": {
+          "enum": [
+            "project_config",
+            "explicit_cli"
+          ],
+          "title": "Identity Source",
+          "type": "string"
+        },
+        "scope": {
+          "enum": [
+            "project",
+            "subject"
+          ],
+          "title": "Scope",
+          "type": "string"
+        }
+      },
+      "required": [
+        "scope",
+        "identity_id",
+        "display_name",
+        "identity_source"
+      ],
+      "title": "MemoryIdentity",
+      "type": "object"
+    },
+    "MemoryProvenance": {
+      "additionalProperties": false,
+      "properties": {
+        "evidence_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Evidence Ids",
+          "type": "array"
+        },
+        "project_id": {
+          "minLength": 1,
+          "title": "Project Id",
+          "type": "string"
+        },
+        "provenance_id": {
+          "minLength": 1,
+          "title": "Provenance Id",
+          "type": "string"
+        },
+        "source_fingerprint": {
+          "pattern": "^sha256:[0-9a-f]{64}$",
+          "title": "Source Fingerprint",
+          "type": "string"
+        },
+        "source_ref": {
+          "minLength": 1,
+          "title": "Source Ref",
+          "type": "string"
+        },
+        "source_type": {
+          "enum": [
+            "project_config",
+            "user_explicit",
+            "revision_request",
+            "revision_application",
+            "selected_style",
+            "imported_memory"
+          ],
+          "title": "Source Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "provenance_id",
+        "source_type",
+        "project_id",
+        "source_ref",
+        "source_fingerprint"
+      ],
+      "title": "MemoryProvenance",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "automatic_bgm_selection": {
+      "default": false,
+      "title": "Automatic Bgm Selection",
+      "type": "boolean"
+    },
+    "automatic_style_selection": {
+      "default": false,
+      "title": "Automatic Style Selection",
+      "type": "boolean"
+    },
+    "confirmed_count": {
+      "minimum": 0,
+      "title": "Confirmed Count",
+      "type": "integer"
+    },
+    "conflicts": {
+      "items": {
+        "$ref": "#/$defs/MemoryConflict"
+      },
+      "title": "Conflicts",
+      "type": "array"
+    },
+    "entries": {
+      "items": {
+        "$ref": "#/$defs/CreativeMemoryEntry"
+      },
+      "minItems": 1,
+      "title": "Entries",
+      "type": "array"
+    },
+    "entry_count": {
+      "minimum": 1,
+      "title": "Entry Count",
+      "type": "integer"
+    },
+    "evidence_bindings": {
+      "items": {
+        "$ref": "#/$defs/MemoryEvidenceBinding"
+      },
+      "minItems": 1,
+      "title": "Evidence Bindings",
+      "type": "array"
+    },
+    "excluded_candidate_claims": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Excluded Candidate Claims",
+      "type": "array"
+    },
+    "explicit_identity_required": {
+      "default": true,
+      "title": "Explicit Identity Required",
+      "type": "boolean"
+    },
+    "hard_constraint_count": {
+      "minimum": 0,
+      "title": "Hard Constraint Count",
+      "type": "integer"
+    },
+    "identity": {
+      "$ref": "#/$defs/MemoryIdentity"
+    },
+    "media_rendered": {
+      "default": false,
+      "title": "Media Rendered",
+      "type": "boolean"
+    },
+    "memory_applied_to_edit": {
+      "default": false,
+      "title": "Memory Applied To Edit",
+      "type": "boolean"
+    },
+    "memory_id": {
+      "minLength": 1,
+      "title": "Memory Id",
+      "type": "string"
+    },
+    "model_call_performed_by_cli": {
+      "default": false,
+      "title": "Model Call Performed By Cli",
+      "type": "boolean"
+    },
+    "network_performed": {
+      "default": false,
+      "title": "Network Performed",
+      "type": "boolean"
+    },
+    "project_id": {
+      "minLength": 1,
+      "title": "Project Id",
+      "type": "string"
+    },
+    "requested_count": {
+      "minimum": 0,
+      "title": "Requested Count",
+      "type": "integer"
+    },
+    "retrieval_context": {
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Retrieval Context",
+      "type": "array"
+    },
+    "schema_version": {
+      "default": "0.3",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "source_project_ids": {
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Source Project Ids",
+      "type": "array"
+    },
+    "status": {
+      "enum": [
+        "ready",
+        "warning",
+        "blocked"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "timeline_mutated": {
+      "default": false,
+      "title": "Timeline Mutated",
+      "type": "boolean"
+    },
+    "unresolved_conflict_count": {
+      "minimum": 0,
+      "title": "Unresolved Conflict Count",
+      "type": "integer"
+    },
+    "warnings": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Warnings",
+      "type": "array"
+    }
+  },
+  "required": [
+    "memory_id",
+    "project_id",
+    "identity",
+    "status",
+    "entry_count",
+    "confirmed_count",
+    "requested_count",
+    "hard_constraint_count",
+    "unresolved_conflict_count",
+    "source_project_ids",
+    "entries",
+    "evidence_bindings",
+    "retrieval_context"
+  ],
+  "title": "CreativeMemory",
+  "type": "object"
+}

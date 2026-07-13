@@ -38,6 +38,10 @@ from artist_portrait_editor.cut_review import (
     build_cut_review_workspace,
 )
 from artist_portrait_editor.creative_strategies import CreativeStrategiesError, build_creative_strategy_package
+from artist_portrait_editor.creative_memory import (
+    CreativeMemoryError,
+    build_creative_memory_workspace,
+)
 from artist_portrait_editor.editor_package import EditorPackageError, build_editor_package
 from artist_portrait_editor.editorial_scoring import EditorialScoringError, build_editorial_scores
 from artist_portrait_editor.bgm_recommendation import (
@@ -470,6 +474,22 @@ def build_parser() -> argparse.ArgumentParser:
     publishability_sub.add_argument("--json", action="store_true")
     publishability_sub.add_argument("--quiet", action="store_true")
     publishability_sub.add_argument("--verbose", action="store_true")
+
+    memory_sub = subparsers.add_parser("memory")
+    memory_sub.add_argument("--project", required=True)
+    memory_sub.add_argument("--scope", required=True, choices=("project", "subject"))
+    memory_sub.add_argument("--subject-id")
+    memory_sub.add_argument("--subject-name")
+    memory_sub.add_argument("--alias", action="append", default=[])
+    memory_sub.add_argument("--preference", action="append", default=[])
+    memory_sub.add_argument("--constraint", action="append", default=[])
+    memory_sub.add_argument("--forbid", action="append", default=[])
+    memory_sub.add_argument("--source-memory")
+    memory_sub.add_argument("--include-project-revisions", action="store_true")
+    memory_sub.add_argument("--replace-existing", action="store_true")
+    memory_sub.add_argument("--json", action="store_true")
+    memory_sub.add_argument("--quiet", action="store_true")
+    memory_sub.add_argument("--verbose", action="store_true")
 
     bgm_sub = subparsers.add_parser("bgm")
     bgm_sub.add_argument("action", choices=("import", "list", "analyze", "rhythm", "recommend", "select", "fit", "review"))
@@ -2597,6 +2617,58 @@ def cmd_publishability(args: argparse.Namespace) -> int:
     return int(ExitCode.success_with_warnings if warnings else ExitCode.success)
 
 
+def cmd_memory(args: argparse.Namespace) -> int:
+    if error := _validate_common_flags(args):
+        return int(error)
+    project_path = Path(args.project)
+    try:
+        json_path, md_path, memory, warnings = build_creative_memory_workspace(
+            project_path,
+            scope=args.scope,
+            subject_id=args.subject_id,
+            subject_name=args.subject_name,
+            aliases=args.alias,
+            preferences=args.preference,
+            constraints=args.constraint,
+            forbids=args.forbid,
+            source_memory_path=Path(args.source_memory) if args.source_memory else None,
+            include_project_revisions=args.include_project_revisions,
+            replace_existing=args.replace_existing,
+        )
+    except ConfigLoadError as exc:
+        print(str(exc), file=sys.stderr)
+        return int(ExitCode.invalid_project_config)
+    except WorkspacePrerequisiteError as exc:
+        print(str(exc), file=sys.stderr)
+        return int(ExitCode.prerequisite_step_missing)
+    except (CreativeMemoryError, OSError, ValueError) as exc:
+        print(str(exc), file=sys.stderr)
+        return int(ExitCode.output_or_reference_validation_failed)
+    root = project_root(project_path)
+    payload = {
+        "output": json_path.relative_to(root).as_posix(),
+        "report": md_path.relative_to(root).as_posix(),
+        "status": memory.status,
+        "memory_id": memory.memory_id,
+        "identity": memory.identity.model_dump(mode="json"),
+        "entry_count": memory.entry_count,
+        "unresolved_conflict_count": memory.unresolved_conflict_count,
+        "memory_applied_to_edit": False,
+        "creative_memory": memory.model_dump(mode="json"),
+        "warnings": warnings,
+    }
+    if args.json:
+        print(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True))
+    elif not args.quiet:
+        print(f"memory {memory.status}")
+        print(f"identity: {memory.identity.scope}:{memory.identity.identity_id}")
+        print(f"entries: {memory.entry_count}")
+        print("memory applied to edit: false")
+        print(f"wrote {payload['output']}")
+        print(f"wrote {payload['report']}")
+    return int(ExitCode.success_with_warnings if warnings else ExitCode.success)
+
+
 def cmd_export(args: argparse.Namespace) -> int:
     if error := _validate_common_flags(args):
         return int(error)
@@ -3260,6 +3332,7 @@ def main(argv: list[str] | None = None) -> int:
         "promote-revision": cmd_promote_revision,
         "version-review": cmd_version_review,
         "publishability": cmd_publishability,
+        "memory": cmd_memory,
         "preview": cmd_preview,
         "export": cmd_export,
         "rhythm": cmd_rhythm,

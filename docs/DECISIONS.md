@@ -344,6 +344,23 @@ decision history is archived in [DECISIONS_HISTORY.md](archive/DECISIONS_HISTORY
 - Revisit when: repeated independent human playback decisions support a
   calibrated quality model while explicit user selection remains intact.
 
+### DEC-077: Creative memory stores sourced instructions, not inferred taste
+
+- Status: `active`
+- Decision: project identity may come from project config, but subject identity
+  requires an explicit id and display name. Every memory entry retains category,
+  polarity, strength, status, fulfillment, applicability, provenance, and
+  acceptance needs. A revision request remains requested even if an action was
+  applied; selected style history remains observed until user-confirmed. Only
+  exact matching subject identity may import reusable entries. Conflicts remain
+  unresolved and memory remains advisory until explicit selection/application.
+- Rationale: filenames, generic artist labels, style candidates, proxy scores,
+  and one-off revision actions cannot establish personal identity or durable
+  taste. Treating them as memory would silently compound wrong assumptions over
+  future projects.
+- Revisit when: explicit user satisfaction evidence and repeated cross-project
+  outcomes support promotion rules without removing provenance or user control.
+
 ## Archive Policy
 
 Archived decisions remain searchable in `docs/archive/DECISIONS_HISTORY.md`.

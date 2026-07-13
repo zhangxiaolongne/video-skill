@@ -1,7 +1,7 @@
 {
   "schema_version": "1.5",
-  "capability_gate": "V3-06",
-  "milestone": "V3-06 Publishability Tiers",
+  "capability_gate": "V3-07",
+  "milestone": "V3-07 Personal/Subject Memory",
   "documentation_system": {
     "master": "artist_portrait_editor_revision5_optimized.md",
     "current_progress": "docs/DEVELOPMENT_PROGRESS.md",
@@ -19,15 +19,15 @@
     "current_files_keep_only": "active decisions, current validation, active batch, and next development direction"
   },
   "active_batch": {
-    "id": "V3-06",
-    "name": "Publishability Tiers",
+    "id": "V3-07",
+    "name": "Personal/Subject Memory",
     "status": "completed",
     "publication": "published",
     "started": "2026-07-13",
-    "capability_gate": "V3-06",
+    "capability_gate": "V3-07",
     "acceptance_stage": null,
     "prerequisite_acceptance_stage": "ACCEPTANCE-STAGE-07_completed_locally",
-    "commit_policy": "v3_06_complete_then_one_commit_push_after_full_validation"
+    "commit_policy": "v3_07_published_as_one_complete_commit_push"
   },
   "latest_release": {
     "tag": "v0.40.0",
@@ -39,16 +39,16 @@
   },
   "latest_local_validation": {
     "date": "2026-07-13",
-    "full_pytest": ".venv/bin/python -m pytest passed with 274 passed",
+    "full_pytest": ".venv/bin/python -m pytest passed with 283 passed",
     "project_checks": ".venv/bin/python run_checks.py passed with golden, BGM/rhythm, NLE round-trip, schema, package, install simulation, V2 release baseline, benchmark audit, release audit, and diff checks",
     "real_benchmark": "three-class pack covers stage and interview closed loops plus a four-source 189.74s CC0 event/promo input baseline with an explicit 30s goal",
-    "current_doc_followup": "V3-06 assigns four exclusive per-version quality tiers while preserving media freshness, technical/aesthetic separation, blockers, and null selection"
+    "current_doc_followup": "V3-07 stores auditable project/subject creative memory with explicit identity, provenance, fulfillment truth, exact-identity import, conflicts, and no automatic application"
   },
   "capability_summary": {
     "engineering_substrate": "published",
     "v1_aesthetic_foundation": "published",
     "real_video_aesthetic_maturity": "baseline_complete",
-    "current_gap": "V3-06 provides truthful publishability tiers; V3-07 still needs auditable personal/subject creative memory"
+    "current_gap": "V3-07 provides auditable creative memory; V3-08 still needs a complete V3 workflow release audit"
   },
   "json_governance": {
     "canonical_rule": "JSON is kept only for canonical machine truth, boundary evidence, generated schema contracts, media validation, run audit, or release-critical evidence.",
@@ -113,43 +113,43 @@
   },
   "tasks": [
     {
-      "id": "exclusive_quality_tiers",
+      "id": "identity_scope",
       "status": "completed"
     },
     {
-      "id": "media_existence_truth",
+      "id": "alias_binding",
       "status": "completed"
     },
     {
-      "id": "technical_validity_boundary",
+      "id": "explicit_preferences",
       "status": "completed"
     },
     {
-      "id": "first_cut_aesthetic_binding",
+      "id": "hard_constraints",
       "status": "completed"
     },
     {
-      "id": "second_cut_comparison_binding",
+      "id": "revision_history",
       "status": "completed"
     },
     {
-      "id": "sound_and_bgm_gate",
+      "id": "fulfillment_truth",
       "status": "completed"
     },
     {
-      "id": "text_and_composition_gate",
+      "id": "selected_style_only",
       "status": "completed"
     },
     {
-      "id": "editable_delivery_boundary",
+      "id": "cross_project_import",
       "status": "completed"
     },
     {
-      "id": "actionable_recovery",
+      "id": "conflict_preservation",
       "status": "completed"
     },
     {
-      "id": "no_automatic_selection",
+      "id": "advisory_retrieval",
       "status": "completed"
     }
   ]

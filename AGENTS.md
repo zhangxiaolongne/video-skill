@@ -10,8 +10,22 @@ master principles/roadmap, `docs/CURRENT_BATCH.md`, `docs/DEVELOPMENT_PROGRESS.m
 contracts. State the allowed scope, forbidden claims, user corrections, current
 conflicts, real-media acceptance, and non-counting support work before editing.
 
-Current gate: V3-06 Publishability Tiers. V3-05 NLE Round-Trip Plus is published.
-V3-06 is published as one complete capability version. V3-07 is not active yet.
+Current gate: V3-07 Personal/Subject Memory. V3-06 Publishability Tiers is
+published. V3-07 is published as one complete capability version. V3-08 is not
+active yet.
+
+V3-07 may build one canonical auditable creative memory plus one human report
+for either current project identity or an explicitly supplied subject identity.
+It may retain explicit aliases, categorized preferences, hard requirements and
+forbids, complete revision requests, clause-level application outcomes, selected
+style history, provenance/fingerprints, exact-identity local imports, duplicate
+merging, unresolved conflicts, and advisory retrieval context. Project revision
+requests must remain project-only unless explicitly included in subject memory;
+requested, applied, and user-confirmed states must remain distinct. Unselected
+style vocabulary, publishability results, filenames, generic artist labels, and
+proxy scores must not become preferences or identity evidence. It must not
+silently infer identity, apply memory, select style/BGM/shots, mutate timelines,
+render media, call models, access the network, or expose absolute local paths.
 
 V3-06 may combine current version review, media validation, first-cut aesthetic
 review, rendered second-cut comparison, and canonical NLE delivery evidence

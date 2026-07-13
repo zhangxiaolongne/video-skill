@@ -79,7 +79,7 @@ release-candidate validation path:
 Current published capability work: `V1-08 Revision promotion, revised render
 readiness, and V1 release packaging` in the retained `v0.30.0` baseline.
 Current local acceptance stage: `ACCEPTANCE-STAGE-07 Real Media Truthfulness And Baseline Recovery`.
-Current V3-06 Publishability Tiers is published as one complete capability version. V3-07 is not active; the tagged V2 baseline remains `v0.40.0`.
+Current V3-07 Personal/Subject Memory is published. V3-06 Publishability Tiers is published; V3-08 is not active, and the tagged V2 baseline remains `v0.40.0`.
 The latest published acceptance release remains `ACCEPTANCE-STAGE-06 Release
 candidate and publication` in `v0.28.0`; the latest published V1 capability
 release baseline is `v0.40.0`.
@@ -139,6 +139,14 @@ reviewed version as publishable, previewable, manual-refinement-required, or
 unusable. It binds current media/hash validity, first-cut aesthetics, rendered
 second-cut comparisons, seven-domain A/B evidence, and canonical editable-NLE
 gaps. Technical validity never implies aesthetic approval; no winner is selected.
+
+`artist-portrait memory --project <project.yaml> --scope project` builds one
+auditable project memory from explicit config, user preferences, revision
+requests, and actual application outcomes. Subject memory additionally requires
+explicit `--subject-id` and `--subject-name`; `--source-memory` reuses only an
+exact matching local identity. Same-identity reruns retain explicit memory while
+refreshing project-config facts; identity replacement requires
+`--replace-existing`. Memory is advisory and never applied implicitly.
 
 `artist-portrait promote-revision --project <project.yaml>
 --revision-application-id <id>` is the V1-08 promotion gate. It validates the
